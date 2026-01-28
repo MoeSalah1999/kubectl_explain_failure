@@ -71,30 +71,79 @@ def load_rules(rule_folder=None) -> List[FailureRule]:
 # ----------------------------
 
 def explain_failure(pod: Dict[str, Any], events: List[Dict[str, Any]], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """
+    Explains why a Pod is failing by evaluating all applicable rules.
+    - Aggregates multiple rule matches
+    - Picks the rule with highest confidence for root_cause
+    - Merges evidence, likely causes, and suggested checks
+    - Normalizes confidence with basic sanity checks
+    """
     context = context or {}
 
-    result = {
-        "pod": get_pod_name(pod),
-        "phase": get_pod_phase(pod),
-        "root_cause": "Unknown",
+    explanations = []
+    for rule in RULES:
+        if rule.matches(pod, events, context):
+            explanations.append(rule.explain(pod, events, context))
+
+    pod_name = get_pod_name(pod)
+    pod_phase = get_pod_phase(pod)
+
+    if not explanations:
+        # No rule matched
+        return {
+            "pod": pod_name,
+            "phase": pod_phase,
+            "root_cause": "Unknown",
+            "evidence": [],
+            "likely_causes": [],
+            "suggested_checks": [],
+            "confidence": 0.0,
+        }
+
+    # Pick the explanation with the highest confidence for root_cause
+    best_explanation = max(explanations, key=lambda e: e.get("confidence", 0))
+
+    # Merge all evidence, likely_causes, suggested_checks from all rules
+    merged_explanation = {
+        "pod": pod_name,
+        "phase": pod_phase,
+        "root_cause": best_explanation["root_cause"],
+        "confidence": best_explanation.get("confidence", 0.0),
         "evidence": [],
         "likely_causes": [],
         "suggested_checks": [],
-        "confidence": 0.0,
     }
 
-    for rule in RULES:
-        if rule.matches(pod, events, context):
-            result.update(rule.explain(pod, events, context))
-            return result
+    for e in explanations:
+        merged_explanation["evidence"].extend(e.get("evidence", []))
+        merged_explanation["likely_causes"].extend(e.get("likely_causes", []))
+        merged_explanation["suggested_checks"].extend(e.get("suggested_checks", []))
 
-    return result
+    # Remove duplicates for cleaner output
+    merged_explanation["evidence"] = list(dict.fromkeys(merged_explanation["evidence"]))
+    merged_explanation["likely_causes"] = list(dict.fromkeys(merged_explanation["likely_causes"]))
+    merged_explanation["suggested_checks"] = list(dict.fromkeys(merged_explanation["suggested_checks"]))
+
+    # Sanity check: if Pod is Pending but no events, reduce confidence
+    if pod_phase == "Pending" and not events:
+        merged_explanation["confidence"] *= 0.5
+
+    # Clamp confidence to [0.0, 1.0]
+    merged_explanation["confidence"] = min(1.0, max(0.0, merged_explanation["confidence"]))
+
+    return merged_explanation
 
 # ----------------------------
 # Output formatting
 # ----------------------------
 
 def output_result(result: Dict[str, Any], fmt: str) -> None:
+    """
+    Nicely prints the Pod failure explanation.
+    - Shows root_cause from the highest-confidence rule
+    - Displays merged evidence, likely causes, suggested checks
+    - Sorts items alphabetically for deterministic output
+    """
     if fmt == "json":
         print(json.dumps(result, indent=2))
         return
@@ -103,11 +152,15 @@ def output_result(result: Dict[str, Any], fmt: str) -> None:
     print(f"Phase: {result['phase']}")
     print(f"\nRoot cause:\n  {result['root_cause']}")
     print(f"\nConfidence: {int(result['confidence'] * 100)}%")
+
+    # Alphabetically sort lists for cleaner deterministic output
     for key in ("evidence", "likely_causes", "suggested_checks"):
-        if result[key]:
+        items = sorted(result[key])
+        if items:
             print(f"\n{key.replace('_', ' ').title()}:")
-            for item in result[key]:
+            for item in items:
                 print(f"  - {item}")
+
 
 # ----------------------------
 # CLI
@@ -148,5 +201,5 @@ if __name__ == "__main__":
     print(f"[INFO] Loaded {len(RULES)} rules:")
     for r in RULES:
         print(f" - {r.name}")
-        
+
     main()
