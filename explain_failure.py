@@ -193,12 +193,150 @@ class FailedMountRule(FailureRule):
         }
 
 
+class UnschedulableTaintRule(FailureRule):
+    name = "UnschedulableTaint"
+
+    def matches(self, pod, events, context) -> bool:
+        return has_event(events, "FailedScheduling") and any(
+            "taint" in e.get("message", "").lower() for e in events
+        )
+
+    def explain(self, pod, events, context) -> Dict[str, Any]:
+        return {
+            "root_cause": "Pod cannot tolerate node taints",
+            "evidence": ["FailedScheduling mentions taints"],
+            "likely_causes": [
+                "Pod lacks required tolerations",
+                "Node taints block all eligible nodes",
+            ],
+            "suggested_checks": [
+                "kubectl describe pod <name>",
+                "kubectl describe nodes",
+            ],
+            "confidence": 0.92,
+        }
+
+
+class PVCNotBoundRule(FailureRule):
+    name = "PVCNotBound"
+
+    def matches(self, pod, events, context) -> bool:
+        pvc = context.get("pvc")
+        if not pvc:
+            return False
+        return pvc.get("status", {}).get("phase") != "Bound"
+
+    def explain(self, pod, events, context) -> Dict[str, Any]:
+        pvc = context["pvc"]
+        return {
+            "root_cause": "Pod is blocked by unbound PersistentVolumeClaim",
+            "evidence": [
+                f"PVC {pvc.get('metadata', {}).get('name')} phase is {pvc.get('status', {}).get('phase')}"
+            ],
+            "likely_causes": [
+                "No matching PersistentVolume available",
+                "StorageClass provisioning failed",
+            ],
+            "suggested_checks": [
+                "kubectl get pvc",
+                "kubectl describe pvc <name>",
+                "kubectl get pv",
+            ],
+            "confidence": 0.95,
+        }
+
+
+class NodeDiskPressureRule(FailureRule):
+    name = "NodeDiskPressure"
+
+    def matches(self, pod, events, context) -> bool:
+        node = context.get("node")
+        if not node:
+            return False
+        conditions = node.get("status", {}).get("conditions", [])
+        return any(
+            c.get("type") == "DiskPressure" and c.get("status") == "True"
+            for c in conditions
+        )
+
+    def explain(self, pod, events, context) -> Dict[str, Any]:
+        return {
+            "root_cause": "Node is under disk pressure",
+            "evidence": ["Node condition DiskPressure=True"],
+            "likely_causes": [
+                "Node disk is full",
+                "Log or image garbage collection not keeping up",
+            ],
+            "suggested_checks": [
+                "kubectl describe node <name>",
+                "Check node disk usage",
+            ],
+            "confidence": 0.93,
+        }
+
+
+class ImagePullSecretMissingRule(FailureRule):
+    name = "ImagePullSecretMissing"
+
+    def matches(self, pod, events, context) -> bool:
+        return any(
+            "pull access denied" in e.get("message", "").lower()
+            for e in events
+        )
+
+    def explain(self, pod, events, context) -> Dict[str, Any]:
+        return {
+            "root_cause": "Image pull secret missing or invalid",
+            "evidence": ["Registry authentication error in event message"],
+            "likely_causes": [
+                "imagePullSecrets not defined",
+                "Secret exists in wrong namespace",
+            ],
+            "suggested_checks": [
+                "kubectl get secret",
+                "kubectl describe pod <name>",
+            ],
+            "confidence": 0.96,
+        }
+
+
+class ConfigMapNotFoundRule(FailureRule):
+    name = "ConfigMapNotFound"
+
+    def matches(self, pod, events, context) -> bool:
+        return any(
+            e.get("reason") == "CreateContainerConfigError"
+            and "configmap" in e.get("message", "").lower()
+            for e in events
+        )
+
+    def explain(self, pod, events, context) -> Dict[str, Any]:
+        return {
+            "root_cause": "Referenced ConfigMap does not exist",
+            "evidence": ["CreateContainerConfigError mentions ConfigMap"],
+            "likely_causes": [
+                "ConfigMap name typo",
+                "ConfigMap deleted or never created",
+            ],
+            "suggested_checks": [
+                "kubectl get configmap",
+                "kubectl describe pod <name>",
+            ],
+            "confidence": 0.94,
+        }
+
+
 RULES: List[FailureRule] = [
+    PVCNotBoundRule(),
+    NodeDiskPressureRule(),
+    UnschedulableTaintRule(),
+    ImagePullSecretMissingRule(),
+    ConfigMapNotFoundRule(),
     FailedSchedulingRule(),
-    ImagePullRule(),
-    CrashLoopRule(),
-    OOMKilledRule(),
     FailedMountRule(),
+    ImagePullRule(),
+    OOMKilledRule(),
+    CrashLoopRule(),
 ]
 
 # ----------------------------
