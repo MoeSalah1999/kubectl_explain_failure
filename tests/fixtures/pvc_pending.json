@@ -1,4 +1,10 @@
 {
-  "metadata": { "name": "data-pvc" },
-  "status": { "phase": "Pending" }
+  "apiVersion": "v1",
+  "kind": "PersistentVolumeClaim",
+  "metadata": {
+    "name": "test-pvc"
+  },
+  "status": {
+    "phase": "Pending"
+  }
 }

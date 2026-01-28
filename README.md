@@ -41,10 +41,10 @@ This is a **diagnostic explainer**, not a fixer.
 
 ## Usage
 python explain_failure.py \
-  --pod pod.json \
-  --events events.json \
-  --pvc pvc.json \
-  --node node.json
+  --pod tests/fixtures/pod.json \
+  --events tests/fixtures/events.json \
+  --pvc tests/fixtures/pvc.json \
+  --node tests/fixtures/node.json
 
 ## Supported failure patterns (initial)
 - Pending Pods due to FailedScheduling
