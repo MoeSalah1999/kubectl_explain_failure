@@ -1,7 +1,9 @@
 """
 # kubectl-explain-failure
 
-A small, read-only diagnostic tool that explains **why a Kubernetes Pod is failing** by
+This project explores a gap in Kubernetes diagnostics: the system exposes raw signals but not causal explanations. The tool reads Pod and Event data and applies explicit heuristics to explain why a workload failed. It’s intentionally read-only and file-based to keep scope controlled.
+
+A small, diagnostic tool that explains **why a Kubernetes Pod is failing** by
 correlating Pod status and Events into a human-readable explanation.
 
 ## Problem
