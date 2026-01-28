@@ -27,10 +27,14 @@ def get_pod_phase(pod: Dict[str, Any]) -> str:
 def get_pod_name(pod: Dict[str, Any]) -> str:
     return pod.get("metadata", {}).get("name", "<unknown>")
 
-def normalize_events(events: Dict[str, Any]) -> List[Dict[str, Any]]:
+def normalize_events(events: Any) -> List[Dict[str, Any]]:
+    if isinstance(events, list):
+        # Already a list of event dicts
+        return events
     if events.get("kind") == "List":
         return events.get("items", [])
     return [events]
+
 
 def has_event(events: List[Dict[str, Any]], reason: str) -> bool:
     return any(e.get("reason") == reason for e in events)
