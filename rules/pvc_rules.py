@@ -1,7 +1,9 @@
-from explain_failure import FailureRule, get_pod_name
+from rules.base_rule import FailureRule
+from explain_failure import get_pod_name, get_pod_phase, has_event
 
 class PVCNotBoundRule(FailureRule):
     name = "PVCNotBound"
+    priority = 10
 
     def matches(self, pod, events, context):
         pvc = context.get("pvc")

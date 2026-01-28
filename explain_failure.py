@@ -11,6 +11,7 @@ import os
 import glob
 import importlib.util
 from typing import List, Dict, Any, Optional
+from rules.base_rule import FailureRule
 
 # ----------------------------
 # Parsing utilities
@@ -34,35 +35,36 @@ def normalize_events(events: Dict[str, Any]) -> List[Dict[str, Any]]:
 def has_event(events: List[Dict[str, Any]], reason: str) -> bool:
     return any(e.get("reason") == reason for e in events)
 
-# ----------------------------
-# Base Rule Class
-# ----------------------------
-
-class FailureRule:
-    name: str
-
-    def matches(self, pod: Dict[str, Any], events: List[Dict[str, Any]], context: Dict[str, Any]) -> bool:
-        raise NotImplementedError
-
-    def explain(self, pod: Dict[str, Any], events: List[Dict[str, Any]], context: Dict[str, Any]) -> Dict[str, Any]:
-        raise NotImplementedError
 
 # ----------------------------
 # Dynamic Rule Loader
 # ----------------------------
 
-def load_rules(rule_folder="rules") -> List[FailureRule]:
+def load_rules(rule_folder=None) -> List[FailureRule]:
+    if rule_folder is None:
+        rule_folder = os.path.join(os.path.dirname(__file__), "rules")
+
     rules: List[FailureRule] = []
     for file in glob.glob(os.path.join(rule_folder, "*.py")):
+        if os.path.basename(file) == "base_rule.py":
+            continue  # skip the base class
+
         module_name = os.path.splitext(os.path.basename(file))[0]
-        spec = importlib.util.spec_from_file_location(module_name, file)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        for attr in dir(module):
-            cls = getattr(module, attr)
-            if isinstance(cls, type) and issubclass(cls, FailureRule) and cls != FailureRule:
-                rules.append(cls())
+        try:
+            spec = importlib.util.spec_from_file_location(module_name, file)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+
+            for attr in dir(module):
+                cls = getattr(module, attr)
+                if isinstance(cls, type) and issubclass(cls, FailureRule) and cls is not FailureRule:
+                    rules.append(cls())
+
+        except Exception as e:
+            print(f"[ERROR] Failed to load rule {file}: {e}")
+
     return rules
+
 
 # ----------------------------
 # Heuristic engine
@@ -139,7 +141,12 @@ def main():
 # ----------------------------
 # Load rules dynamically at runtime
 # ----------------------------
-RULES = load_rules()
+RULES = sorted(load_rules(rule_folder=os.path.join(os.path.dirname(__file__), "rules")), key=lambda r: getattr(r, "priority", 100))
+
 
 if __name__ == "__main__":
+    print(f"[INFO] Loaded {len(RULES)} rules:")
+    for r in RULES:
+        print(f" - {r.name}")
+        
     main()
