@@ -93,13 +93,42 @@ def explain_failure(
     context = context or {}
 
     explanations = []
+    pod_phase = get_pod_phase(pod)
+    container_states = [c.get("state", {}) for c in pod.get("status", {}).get("containerStatuses", [])]
+
+    filtered_rules = []
     for rule in RULES:
+        # Skip rules irrelevant to this pod phase
+        applicable_phases = getattr(rule, "phases", None)
+        if applicable_phases and pod_phase not in applicable_phases:
+            continue
+
+        # Optional: skip rules based on container state
+        required_states = getattr(rule, "container_states", None)
+        if required_states and not any(s.get("terminated") or s.get("waiting") for s in container_states):
+            continue
+
+        filtered_rules.append(rule)
+
+    for rule in filtered_rules:
         cat = getattr(rule, "category", None)
         if enabled_categories and cat not in enabled_categories:
             continue
         if disabled_categories and cat in disabled_categories:
             continue
 
+        # Check rule dependencies
+        dependencies_met = True
+        for dep_name in getattr(rule, "dependencies", []):
+            if not any(e["root_cause"] == dep_name for e in explanations):
+                dependencies_met = False
+                if verbose:
+                    print(f"[DEBUG] Skipping '{rule.name}' because dependency '{dep_name}' not met")
+                break
+        if not dependencies_met:
+            continue
+
+        # Evaluate rule
         if rule.matches(pod, events, context):
             exp = rule.explain(pod, events, context)
             explanations.append(exp)
@@ -207,6 +236,10 @@ def main():
     parser.add_argument("--pvc", help="Path to PVC JSON", required=False)
     parser.add_argument("--node", help="Path to Node JSON", required=False)
     parser.add_argument("--pvcs", help="Path to multiple PVC JSONs folder", required=False)
+    parser.add_argument("--service", help="Path to Service JSON", required=False)
+    parser.add_argument("--endpoints", help="Path to Endpoints JSON", required=False)
+    parser.add_argument("--statefulsets", help="Folder of StatefulSet JSONs", required=False)
+    parser.add_argument("--daemonsets", help="Folder of DaemonSet JSONs", required=False)
     parser.add_argument(
         "--enable-categories",
         nargs="*",
@@ -234,6 +267,15 @@ def main():
         context["pvcs"] = [load_json(os.path.join(args.pvcs, f)) for f in os.listdir(args.pvcs) if f.endswith(".json")]
     if args.node:
         context["node"] = load_json(args.node)
+    if args.service:
+        context["svc"] = load_json(args.service)
+    if args.endpoints:
+        context["ep"] = load_json(args.endpoints)
+    if args.statefulsets:
+        context["sts"] = [load_json(os.path.join(args.statefulsets, f)) for f in os.listdir(args.statefulsets) if f.endswith(".json")]
+    if args.daemonsets:
+        context["ds"] = [load_json(os.path.join(args.daemonsets, f)) for f in os.listdir(args.daemonsets) if f.endswith(".json")]
+
 
     pod = load_json(args.pod)
     events_raw = load_json(args.events)
