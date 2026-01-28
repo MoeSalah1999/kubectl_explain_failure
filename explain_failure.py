@@ -80,7 +80,7 @@ def explain_failure(pod: Dict[str, Any], events: List[Dict[str, Any]], context: 
     - Aggregates multiple rule matches
     - Picks the rule with highest confidence for root_cause
     - Merges evidence, likely causes, and suggested checks
-    - Normalizes confidence with basic sanity checks
+    - Normalizes confidence using noisy-OR
     """
     context = context or {}
 
@@ -93,7 +93,6 @@ def explain_failure(pod: Dict[str, Any], events: List[Dict[str, Any]], context: 
     pod_phase = get_pod_phase(pod)
 
     if not explanations:
-        # No rule matched
         return {
             "pod": pod_name,
             "phase": pod_phase,
@@ -104,15 +103,21 @@ def explain_failure(pod: Dict[str, Any], events: List[Dict[str, Any]], context: 
             "confidence": 0.0,
         }
 
-    # Pick the explanation with the highest confidence for root_cause
+    # Pick root_cause from the highest-confidence rule
     best_explanation = max(explanations, key=lambda e: e.get("confidence", 0))
 
-    # Merge all evidence, likely_causes, suggested_checks from all rules
+    # Noisy-OR aggregation of confidence from all matching rules
+    combined_confidence = 1.0
+    for e in explanations:
+        combined_confidence *= 1.0 - e.get("confidence", 0.0)
+    combined_confidence = 1.0 - combined_confidence  # final combined confidence
+
+    # Merge all evidence, likely_causes, suggested_checks
     merged_explanation = {
         "pod": pod_name,
         "phase": pod_phase,
         "root_cause": best_explanation["root_cause"],
-        "confidence": best_explanation.get("confidence", 0.0),
+        "confidence": combined_confidence,
         "evidence": [],
         "likely_causes": [],
         "suggested_checks": [],
@@ -128,7 +133,7 @@ def explain_failure(pod: Dict[str, Any], events: List[Dict[str, Any]], context: 
     merged_explanation["likely_causes"] = list(dict.fromkeys(merged_explanation["likely_causes"]))
     merged_explanation["suggested_checks"] = list(dict.fromkeys(merged_explanation["suggested_checks"]))
 
-    # Sanity check: if Pod is Pending but no events, reduce confidence
+    # Sanity check: reduce confidence for Pending Pods with no events
     if pod_phase == "Pending" and not events:
         merged_explanation["confidence"] *= 0.5
 
@@ -136,6 +141,7 @@ def explain_failure(pod: Dict[str, Any], events: List[Dict[str, Any]], context: 
     merged_explanation["confidence"] = min(1.0, max(0.0, merged_explanation["confidence"]))
 
     return merged_explanation
+
 
 # ----------------------------
 # Output formatting
