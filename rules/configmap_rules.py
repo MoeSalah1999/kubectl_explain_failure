@@ -3,6 +3,7 @@ from explain_failure import get_pod_name, get_pod_phase, has_event
 
 class ConfigMapNotFoundRule(FailureRule):
     name = "ConfigMapNotFound"
+    priority = 30
 
     def matches(self, pod, events, context):
         return any(

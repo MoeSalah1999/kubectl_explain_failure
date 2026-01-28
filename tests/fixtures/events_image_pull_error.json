@@ -1,0 +1,9 @@
+{
+  "kind": "List",
+  "items": [
+    {
+      "reason": "ErrImagePull",
+      "message": "Failed to pull image 'myimage:latest'"
+    }
+  ]
+}

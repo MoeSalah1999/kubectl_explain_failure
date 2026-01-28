@@ -3,6 +3,7 @@ from explain_failure import get_pod_name, get_pod_phase, has_event
 
 class ImagePullRule(FailureRule):
     name = "ImagePullError"
+    priority = 50
 
     def matches(self, pod, events, context):
         return has_event(events, "ImagePullBackOff") or has_event(events, "ErrImagePull")
@@ -27,6 +28,7 @@ class ImagePullRule(FailureRule):
 
 class ImagePullSecretMissingRule(FailureRule):
     name = "ImagePullSecretMissing"
+    priority = 40
 
     def matches(self, pod, events, context):
         return any("pull access denied" in e.get("message", "").lower() for e in events)

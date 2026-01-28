@@ -3,6 +3,7 @@ from explain_failure import get_pod_name, get_pod_phase, has_event
 
 class NodeDiskPressureRule(FailureRule):
     name = "NodeDiskPressure"
+    priority = 80
 
     def matches(self, pod, events, context):
         node = context.get("node")

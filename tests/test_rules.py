@@ -35,7 +35,7 @@ def test_failed_scheduling_taint():
 
 def test_image_pull_error():
     pod = load_json(os.path.join(FIXTURES_DIR, "pending_pod.json"))
-    events = normalize_events(load_json(os.path.join(FIXTURES_DIR, "events_image_pull_secret_missing.json")))
+    events = normalize_events(load_json(os.path.join(FIXTURES_DIR, "events_image_pull_error.json")))
 
     result = explain_failure(pod, events)
     assert "image" in result["root_cause"].lower()

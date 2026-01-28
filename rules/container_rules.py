@@ -3,7 +3,7 @@ from explain_failure import get_pod_name, get_pod_phase
 
 class OOMKilledRule(FailureRule):
     name = "OOMKilled"
-    priority = 20
+    priority = 70
 
     def matches(self, pod, events, context):
         for cs in pod.get("status", {}).get("containerStatuses", []):
@@ -28,7 +28,7 @@ class OOMKilledRule(FailureRule):
 
 class CrashLoopBackOffRule(FailureRule):
     name = "CrashLoopBackOff"
-    priority = 15
+    priority = 60
 
     def matches(self, pod, events, context):
         return any(e.get("reason") == "BackOff" for e in events)

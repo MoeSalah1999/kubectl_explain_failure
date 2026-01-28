@@ -3,6 +3,7 @@ from explain_failure import get_pod_name, get_pod_phase, has_event
 
 class FailedSchedulingRule(FailureRule):
     name = "FailedScheduling"
+    priority = 90
 
     def matches(self, pod, events, context):
         return get_pod_phase(pod) == "Pending" and has_event(events, "FailedScheduling")
@@ -27,6 +28,7 @@ class FailedSchedulingRule(FailureRule):
 
 class FailedMountRule(FailureRule):
     name = "FailedMount"
+    priority = 20
 
     def matches(self, pod, events, context):
         return has_event(events, "FailedMount")
@@ -49,6 +51,7 @@ class FailedMountRule(FailureRule):
 
 class UnschedulableTaintRule(FailureRule):
     name = "UnschedulableTaint"
+    priority = 100
 
     def matches(self, pod, events, context):
         return has_event(events, "FailedScheduling") and any(
