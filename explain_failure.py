@@ -7,6 +7,7 @@ Scalable: Supports dynamic rule loading and cross-object reasoning.
 
 import argparse
 import json
+import yaml
 import os
 import glob
 import importlib.util
@@ -74,7 +75,14 @@ def load_rules(rule_folder=None) -> List[FailureRule]:
 # Heuristic engine
 # ----------------------------
 
-def explain_failure(pod: Dict[str, Any], events: List[Dict[str, Any]], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def explain_failure(
+    pod: Dict[str, Any],
+    events: List[Dict[str, Any]],
+    context: Optional[Dict[str, Any]] = None,
+    enabled_categories: Optional[List[str]] = None,
+    disabled_categories: Optional[List[str]] = None,
+    verbose: bool = False
+) -> Dict[str, Any]:
     """
     Explains why a Pod is failing by evaluating all applicable rules.
     - Aggregates multiple rule matches
@@ -86,8 +94,18 @@ def explain_failure(pod: Dict[str, Any], events: List[Dict[str, Any]], context: 
 
     explanations = []
     for rule in RULES:
+        cat = getattr(rule, "category", None)
+        if enabled_categories and cat not in enabled_categories:
+            continue
+        if disabled_categories and cat in disabled_categories:
+            continue
+
         if rule.matches(pod, events, context):
-            explanations.append(rule.explain(pod, events, context))
+            exp = rule.explain(pod, events, context)
+            explanations.append(exp)
+            if verbose:
+                print(f"[DEBUG] Rule '{rule.name}' matched (category='{cat}') with confidence {exp.get('confidence', 0.0):.2f}")
+
 
     pod_name = get_pod_name(pod)
     pod_phase = get_pod_phase(pod)
@@ -180,10 +198,33 @@ def main():
     parser = argparse.ArgumentParser(description="Explain Kubernetes Pod failures")
     parser.add_argument("--pod", required=True, help="Path to Pod JSON")
     parser.add_argument("--events", required=True, help="Path to Events JSON")
-    parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    parser.add_argument(
+        "--format",
+        choices=["text", "json", "yaml"],
+        default="text",
+        help="Output format (text, json, yaml)"
+    )
     parser.add_argument("--pvc", help="Path to PVC JSON", required=False)
     parser.add_argument("--node", help="Path to Node JSON", required=False)
     parser.add_argument("--pvcs", help="Path to multiple PVC JSONs folder", required=False)
+    parser.add_argument(
+        "--enable-categories",
+        nargs="*",
+        default=None,
+        help="Only evaluate rules in these categories"
+    )
+    parser.add_argument(
+        "--disable-categories",
+        nargs="*",
+        default=None,
+        help="Skip rules in these categories"
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Log evaluated rules and their confidence"
+    )
+
     args = parser.parse_args()
 
     context = {}
@@ -198,7 +239,15 @@ def main():
     events_raw = load_json(args.events)
     events = normalize_events(events_raw)
 
-    result = explain_failure(pod, events, context)
+    result = explain_failure(
+        pod,
+        events,
+        context,
+        enabled_categories=args.enable_categories,
+        disabled_categories=args.disable_categories,
+        verbose=args.verbose
+    )
+
     output_result(result, args.format)
 
 # ----------------------------
