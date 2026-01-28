@@ -66,6 +66,15 @@ The same inputs always produce the same explanation.
 - Reviewable architecture
 Heuristics are isolated from parsing and output logic.
 
+## Why this exists (despite kubectl describe)
+
+kubectl describe exposes raw data.
+This tool answers a different question:
+
+“Given these signals, what is the most likely reason this Pod is failing?”
+
+It complements existing tooling rather than replacing it.
+
 ## Architecture overview
 
 - FailureRule defines a diagnostic contract:
@@ -78,10 +87,13 @@ Heuristics are isolated from parsing and output logic.
 This structure allows incremental expansion without increasing complexity.
 
 ## Future work
-- Live cluster mode using kubectl or Kubernetes client
-- Additional heuristics
-- Structured output (JSON / YAML)
-- kubectl plugin wrapper
+
+- Additional failure heuristics
+- Cross-object reasoning (Pod ↔ PVC ↔ Node)
+- Structured output for automation
+- Optional kubectl plugin wrapper
+
+Live cluster access is intentionally out of scope for the initial design.
 
 License: MIT
 """
