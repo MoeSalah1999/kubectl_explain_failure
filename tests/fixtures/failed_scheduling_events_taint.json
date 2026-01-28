@@ -1,0 +1,9 @@
+{
+  "kind": "List",
+  "items": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/1 nodes are available: 1 node(s) had taints that the pod didn't tolerate"
+    }
+  ]
+}

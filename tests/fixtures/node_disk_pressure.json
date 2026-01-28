@@ -1,0 +1,10 @@
+{
+  "metadata": { "name": "worker-node-1" },
+  "status": {
+    "conditions": [
+      { "type": "DiskPressure", "status": "True" },
+      { "type": "MemoryPressure", "status": "False" },
+      { "type": "Ready", "status": "True" }
+    ]
+  }
+}
