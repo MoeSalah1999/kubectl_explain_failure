@@ -1,17 +1,10 @@
 {
-  "apiVersion": "v1",
-  "kind": "Node",
-  "metadata": {
-    "name": "test-node"
-  },
-  "status": {
-    "conditions": [
-      {
-        "type": "DiskPressure",
-        "status": "True",
-        "reason": "KubeletHasDiskPressure",
-        "message": "Node has disk pressure"
-      }
-    ]
-  }
+  "kind": "List",
+  "items": [
+    {
+      "reason": "NodeHasDiskPressure",
+      "message": "Node test-node has disk pressure"
+    }
+  ]
 }
+
