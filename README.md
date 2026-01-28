@@ -20,7 +20,9 @@ This tool explores how **causal explanations** can be constructed from existing 
 
 ## What this tool does
 - Reads Kubernetes objects from JSON files (Pod, Events; optional PVC / Node)
-- Applies explicit, rule-based heuristics
+  - Required: Pod, Events
+  - Optional: PVC, Node, or folder of multiple PVCs
+- Applies explicit, rule-based heuristics for common failure patterns
 - Produces a structured explanation containing:
   - Root cause
   - Evidence
@@ -40,11 +42,18 @@ The output is deterministic and fully testable.
 This is a **diagnostic explainer**, not a fixer.
 
 ## Usage
+Basic usage:
 python explain_failure.py \
   --pod tests/fixtures/pod.json \
-  --events tests/fixtures/events.json \
-  --pvc tests/fixtures/pvc.json \
-  --node tests/fixtures/node.json
+  --events tests/fixtures/events.json
+
+
+With optional PVC or Node context:
+python explain_failure.py \
+  --pod tests/fixtures/pending_pod.json \
+  --events tests/fixtures/empty_events.json \
+  --pvc tests/fixtures/pvc_pending.json \
+  --node tests/fixtures/node_disk_pressure.json
 
 ## Supported failure patterns (initial)
 - Pending Pods due to FailedScheduling
