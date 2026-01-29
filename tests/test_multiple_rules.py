@@ -1,6 +1,6 @@
 import os
 import sys
-import pytest
+import pytest, json, subprocess
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from explain_failure import explain_failure, normalize_events, load_json
 
@@ -59,6 +59,22 @@ def test_pending_with_no_events_low_confidence():
     result = explain_failure(pod, events)
     assert result["confidence"] <= 0.5  # confidence halved for no events
     assert "unknown" in result["root_cause"].lower()
+
+
+def test_pvc_not_bound():
+    pod = load_fixture("pending_pod.json")
+    pvc = load_fixture("pvc_pending.json")
+    events = load_fixture("events_pvc_not_bound.json")
+    normalized_events = normalize_events(events["items"])
+
+    result = explain_failure(pod, normalized_events, {"pvc": pvc})
+
+    # Root cause should reference PVC not being bound
+    assert "persistentvolumeclaim" in result["root_cause"].lower()
+    # Confidence should be non-zero
+    assert 0 < result["confidence"] <= 1.0
+    # Evidence should include something about PVC or Pending status
+    assert any("PVC" in e or "volume" in e or "Pending" in e for e in result["evidence"])
 
 
 # ----------------------------

@@ -12,7 +12,8 @@ EVENTS = $(FIXTURES_DIR)/empty_events.json \
          $(FIXTURES_DIR)/events_image_pull_secret_missing.json \
          $(FIXTURES_DIR)/failed_scheduling_events_taint.json \
          $(FIXTURES_DIR)/failed_scheduling_events.json \
-         $(FIXTURES_DIR)/node_disk_pressure.json
+         $(FIXTURES_DIR)/node_disk_pressure.json \
+		 $(FIXTURES_DIR)/events_pvc_not_bound.json
 
 # Categories examples
 ENABLE_CATS = Scheduling Volume Image

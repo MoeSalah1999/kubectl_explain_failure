@@ -1,0 +1,9 @@
+{
+  "kind": "List",
+  "items": [
+    {
+      "reason": "FailedMount",
+      "message": "Unable to attach or mount volumes: unbound PersistentVolumeClaims"
+    }
+  ]
+}
