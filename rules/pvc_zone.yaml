@@ -1,0 +1,20 @@
+name: PVCZoneMismatch
+category: Volume
+severity: High
+priority: 30
+
+if: >
+  context.get("node") and context.get("pvc") and
+  context["node"]["metadata"]["labels"]["topology.kubernetes.io/zone"]
+  != context["pvc"]["metadata"]["annotations"]["volume.kubernetes.io/selected-node"]
+
+then:
+  root_cause: PVC bound to a different availability zone
+  confidence: 0.85
+  evidence:
+    - PVC zone does not match node zone
+  likely_causes:
+    - StatefulSet rescheduled across zones
+  suggested_checks:
+    - Recreate PVC in correct zone
+    - Enable volume topology spreading

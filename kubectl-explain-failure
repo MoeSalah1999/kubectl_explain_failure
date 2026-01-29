@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+
+import argparse
+import json
+import subprocess
+import sys
+import tempfile
+import os
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ENGINE = os.path.join(SCRIPT_DIR, "explain_failure.py")
+
+
+def kubectl_get(kind, name=None, namespace=None):
+    cmd = ["kubectl", "get", kind]
+    if name:
+        cmd.append(name)
+    if namespace:
+        cmd += ["-n", namespace]
+    cmd += ["-o", "json"]
+
+    try:
+        out = subprocess.check_output(cmd, stderr=subprocess.PIPE)
+        return json.loads(out)
+    except subprocess.CalledProcessError as e:
+        print(e.stderr.decode(), file=sys.stderr)
+        sys.exit(1)
+
+
+def write_tmp(obj):
+    f = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
+    json.dump(obj, f)
+    f.close()
+    return f.name
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Explain Kubernetes Pod failures (kubectl plugin)"
+    )
+    parser.add_argument("pod", help="Pod name")
+    parser.add_argument("-n", "--namespace", default="default")
+    parser.add_argument("--format", choices=["text", "json"], default="text")
+    parser.add_argument("--verbose", action="store_true")
+
+    args = parser.parse_args()
+
+    pod = kubectl_get("pod", args.pod, args.namespace)
+    events = kubectl_get(
+        "events",
+        namespace=args.namespace
+    )
+
+    pod_file = write_tmp(pod)
+    events_file = write_tmp(events)
+
+    cmd = [
+        sys.executable,
+        ENGINE,
+        "--pod", pod_file,
+        "--events", events_file,
+        "--format", args.format,
+    ]
+
+    if args.verbose:
+        cmd.append("--verbose")
+
+    os.execv(sys.executable, cmd)
+
+
+if __name__ == "__main__":
+    main()
