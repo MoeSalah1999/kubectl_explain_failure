@@ -6,26 +6,41 @@ class NodeDiskPressureRule(FailureRule):
     priority = 80
 
     def matches(self, pod, events, context):
-        node = context.get("node")
-        if not node:
+        node_events = context.get("node")
+        if not node_events:
             return False
-        conditions = node.get("status", {}).get("conditions", [])
+
+        if node_events.get("kind") == "List":
+            items = node_events.get("items", [])
+        else:
+            items = [node_events]
+
         return any(
-            c.get("type") == "DiskPressure" and c.get("status") == "True"
-            for c in conditions
+            e.get("reason") == "NodeHasDiskPressure"
+            for e in items
         )
 
+
     def explain(self, pod, events, context):
+        node_events = context.get("node")
+        items = node_events.get("items", []) if node_events else []
+
+        messages = [
+            e.get("message", "")
+            for e in items
+            if e.get("reason") == "NodeHasDiskPressure"
+        ]
+
         return {
-            "root_cause": "Node is under disk pressure",
-            "evidence": ["Node condition DiskPressure=True"],
+            "root_cause": "Node has disk pressure",
+            "evidence": messages or ["Node reported disk pressure"],
             "likely_causes": [
                 "Node disk is full",
                 "Log or image garbage collection not keeping up",
             ],
             "suggested_checks": [
-                "kubectl describe node <name>",
+                "kubectl describe node <node-name>",
                 "Check node disk usage",
             ],
-            "confidence": 0.93,
+            "confidence": 0.9,
         }
