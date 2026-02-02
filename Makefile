@@ -1,87 +1,99 @@
 # Makefile to test kubectl_explain_failure scenarios
 
 PYTHON = python
-SCRIPT = explain_failure.py
+SCRIPT = run_explain.py
 FIXTURES_DIR = tests/fixtures
-POD = $(FIXTURES_DIR)/pending_pod.json
 
-# List of events fixtures
-EVENTS = $(FIXTURES_DIR)/empty_events.json \
-         $(FIXTURES_DIR)/events_configmap_missing.json \
-         $(FIXTURES_DIR)/events_image_pull_error.json \
-         $(FIXTURES_DIR)/events_image_pull_secret_missing.json \
-         $(FIXTURES_DIR)/failed_scheduling_events_taint.json \
-         $(FIXTURES_DIR)/failed_scheduling_events.json \
-         $(FIXTURES_DIR)/node_disk_pressure.json \
-		 $(FIXTURES_DIR)/events_pvc_not_bound.json
+PODS := $(wildcard $(FIXTURES_DIR)/*pod*.json)
+EVENTS := $(wildcard $(FIXTURES_DIR)/*events*.json)
 
-# Categories examples
 ENABLE_CATS = Scheduling Volume Image
 DISABLE_CATS = ConfigMap
 
-# Default target
 .PHONY: all
 all: text json yaml verbose enabled disabled full
 
+# ----------------------------
 # 1. Default text output
+# ----------------------------
 .PHONY: text
 text:
 	@echo "=== TEXT OUTPUT ==="
-	@for ev in $(EVENTS); do \
-		$(PYTHON) $(SCRIPT) --pod $(POD) --events $$ev; \
+	@for pod in $(PODS); do \
+		for ev in $(EVENTS); do \
+			$(PYTHON) $(SCRIPT) --pod $$pod --events $$ev; \
+		done \
 	done
 
+# ----------------------------
 # 2. JSON output
+# ----------------------------
 .PHONY: json
 json:
 	@echo "=== JSON OUTPUT ==="
-	@for ev in $(EVENTS); do \
-		$(PYTHON) $(SCRIPT) --pod $(POD) --events $$ev --format json; \
+	@for pod in $(PODS); do \
+		for ev in $(EVENTS); do \
+			$(PYTHON) $(SCRIPT) --pod $$pod --events $$ev --format json; \
+		done \
 	done
 
+# ----------------------------
 # 3. YAML output
+# ----------------------------
 .PHONY: yaml
 yaml:
 	@echo "=== YAML OUTPUT ==="
-	@for ev in $(EVENTS); do \
-		$(PYTHON) $(SCRIPT) --pod $(POD) --events $$ev --format yaml; \
+	@for pod in $(PODS); do \
+		for ev in $(EVENTS); do \
+			$(PYTHON) $(SCRIPT) --pod $$pod --events $$ev --format yaml; \
+		done \
 	done
 
+# ----------------------------
 # 4. Verbose logging
+# ----------------------------
 .PHONY: verbose
 verbose:
 	@echo "=== VERBOSE MODE ==="
-	@for ev in $(EVENTS); do \
-		$(PYTHON) $(SCRIPT) --pod $(POD) --events $$ev --verbose; \
+	@for pod in $(PODS); do \
+		for ev in $(EVENTS); do \
+			$(PYTHON) $(SCRIPT) --pod $$pod --events $$ev --verbose; \
+		done \
 	done
 
+# ----------------------------
 # 5. Enable categories
+# ----------------------------
 .PHONY: enabled
 enabled:
 	@echo "=== ENABLE CATEGORIES ($(ENABLE_CATS)) ==="
-	@for ev in $(EVENTS); do \
-		$(PYTHON) $(SCRIPT) --pod $(POD) --events $$ev --enable-categories $(ENABLE_CATS) --verbose; \
+	@for pod in $(PODS); do \
+		for ev in $(EVENTS); do \
+			$(PYTHON) $(SCRIPT) --pod $$pod --events $$ev --enable-categories "$(ENABLE_CATS)" --verbose; \
+		done \
 	done
 
+# ----------------------------
 # 6. Disable categories
+# ----------------------------
 .PHONY: disabled
 disabled:
 	@echo "=== DISABLE CATEGORIES ($(DISABLE_CATS)) ==="
-	@for ev in $(EVENTS); do \
-		$(PYTHON) $(SCRIPT) --pod $(POD) --events $$ev --disable-categories $(DISABLE_CATS) --verbose; \
+	@for pod in $(PODS); do \
+		for ev in $(EVENTS); do \
+			$(PYTHON) $(SCRIPT) --pod $$pod --events $$ev --disable-categories "$(DISABLE_CATS)" --verbose; \
+		done \
 	done
 
-# 7. Full test: verbose + enabled + disabled + JSON + YAML
+# ----------------------------
+# 7. Full test
+# ----------------------------
 .PHONY: full
 full:
 	@echo "=== FULL DIAGNOSTIC ==="
-	@for ev in $(EVENTS); do \
-		$(PYTHON) $(SCRIPT) --pod $(POD) --events $$ev \
-			--enable-categories $(ENABLE_CATS) \
-			--disable-categories $(DISABLE_CATS) \
-			--verbose --format json; \
-		$(PYTHON) $(SCRIPT) --pod $(POD) --events $$ev \
-			--enable-categories $(ENABLE_CATS) \
-			--disable-categories $(DISABLE_CATS) \
-			--verbose --format yaml; \
+	@for pod in $(PODS); do \
+		for ev in $(EVENTS); do \
+			$(PYTHON) $(SCRIPT) --pod $$pod --events $$ev --enable-categories "$(ENABLE_CATS)" --disable-categories "$(DISABLE_CATS)" --verbose --format json; \
+			$(PYTHON) $(SCRIPT) --pod $$pod --events $$ev --enable-categories "$(ENABLE_CATS)" --disable-categories "$(DISABLE_CATS)" --verbose --format yaml; \
+		done \
 	done
