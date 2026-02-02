@@ -4,13 +4,14 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from explain_failure import explain_failure, load_json, normalize_events
+from engine import explain_failure
+from model import load_json, normalize_events
 
 # ----------------------------
 # Fixtures directory
 # ----------------------------
-FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 
+FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 
 # ----------------------------
 # Basic Pod Failure Rules

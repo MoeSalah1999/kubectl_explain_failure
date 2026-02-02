@@ -1,17 +1,33 @@
+import os
 from typing import Dict, Any, List, Optional
 from rules.base_rule import FailureRule
+from loader import load_rules
 from model import get_pod_name, get_pod_phase
+
+
+_DEFAULT_RULES = None
+
+def get_default_rules() -> List[FailureRule]:
+    global _DEFAULT_RULES
+    if _DEFAULT_RULES is None:
+        rules_path = os.path.join(os.path.dirname(__file__), "rules")
+        _DEFAULT_RULES = sorted(
+            load_rules(rules_path),
+            key=lambda r: getattr(r, "priority", 100),
+        )
+    return _DEFAULT_RULES
 
 
 # ----------------------------
 # Heuristic engine
 # ----------------------------
 
+
 def explain_failure(
     pod: Dict[str, Any],
     events: List[Dict[str, Any]],
-    context: Optional[Dict[str, Any]],
-    rules: List[FailureRule],
+    context: Optional[Dict[str, Any]] = None,
+    rules: Optional[List[FailureRule]] = None,
     enabled_categories: Optional[List[str]] = None,
     disabled_categories: Optional[List[str]] = None,
     verbose: bool = False,
@@ -25,9 +41,17 @@ def explain_failure(
     """
     context = context or {}
 
+    if rules is None:
+        rules = get_default_rules()
+
     explanations = []
     pod_phase = get_pod_phase(pod)
-    container_states = [c.get("state", {}) for c in pod.get("status", {}).get("containerStatuses", [])]
+    container_states = []
+    for c in pod.get("status", {}).get("containerStatuses", []):
+        if "state" in c:
+            container_states.append(c["state"])
+        if "lastState" in c:
+            container_states.append(c["lastState"])
 
     filtered_rules = []
     for rule in rules:
@@ -65,9 +89,6 @@ def explain_failure(
         req = getattr(rule, "requires", {})
 
         if req.get("pod") and not pod:
-            continue
-
-        if req.get("events") and not events:
             continue
 
         missing_context = [

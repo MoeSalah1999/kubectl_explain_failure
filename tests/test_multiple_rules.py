@@ -1,8 +1,9 @@
 import os
 import sys
-import pytest, json, subprocess
+import json, subprocess
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from explain_failure import explain_failure, normalize_events, load_json
+from engine import explain_failure
+from model import normalize_events, load_json
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 
