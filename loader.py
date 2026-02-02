@@ -6,6 +6,27 @@ from typing import List, Dict, Any
 from rules.base_rule import FailureRule
 
 
+def load_plugins(plugin_folder: str):
+    plugin_rules = []
+    if not os.path.exists(plugin_folder):
+        return plugin_rules
+
+    for py_file in glob.glob(os.path.join(plugin_folder, "*.py")):
+        if py_file.endswith("__init__.py"):
+            continue
+        module_name = os.path.splitext(os.path.basename(py_file))[0]
+        spec = importlib.util.spec_from_file_location(module_name, py_file)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        for attr in dir(mod):
+            obj = getattr(mod, attr)
+            try:
+                if issubclass(obj, FailureRule) and obj is not FailureRule:
+                    plugin_rules.append(obj())
+            except TypeError:
+                continue
+    return plugin_rules
+
 # ----------------------------
 # Dynamic Rule Loader
 # ----------------------------

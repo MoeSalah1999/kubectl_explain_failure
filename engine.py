@@ -1,7 +1,7 @@
 import os
 from typing import Dict, Any, List, Optional
 from rules.base_rule import FailureRule
-from loader import load_rules
+from loader import load_rules, load_plugins
 from model import get_pod_name, get_pod_phase
 
 
@@ -11,8 +11,9 @@ def get_default_rules() -> List[FailureRule]:
     global _DEFAULT_RULES
     if _DEFAULT_RULES is None:
         rules_path = os.path.join(os.path.dirname(__file__), "rules")
+        plugin_path = os.path.join(os.path.dirname(__file__), "plugins")
         _DEFAULT_RULES = sorted(
-            load_rules(rules_path),
+            load_rules(rules_path) + load_plugins(plugin_path),
             key=lambda r: getattr(r, "priority", 100),
         )
     return _DEFAULT_RULES
@@ -77,7 +78,7 @@ def explain_failure(
         # Check rule dependencies
         dependencies_met = True
         for dep_name in getattr(rule, "dependencies", []):
-            if not any(e["root_cause"] == dep_name for e in explanations):
+            if not any(exp.get("root_cause") == dep_name for exp, _ in explanations):
                 dependencies_met = False
                 if verbose:
                     print(f"[DEBUG] Skipping '{rule.name}' because dependency '{dep_name}' not met")
@@ -104,7 +105,7 @@ def explain_failure(
         # Evaluate rule
         if rule.matches(pod, events, context):
             exp = rule.explain(pod, events, context)
-            explanations.append(exp)
+            explanations.append((exp, rule))
             if verbose:
                 print(f"[DEBUG] Rule '{rule.name}' matched (category='{cat}') with confidence {exp.get('confidence', 0.0):.2f}")
 
@@ -123,30 +124,71 @@ def explain_failure(
             "confidence": 0.0,
         }
 
-    # Pick root_cause from the highest-confidence rule
-    best_explanation = max(explanations, key=lambda e: e.get("confidence", 0))
+    # ----------------------------
+    # Weighted root_cause selection (PVC-prioritized)
+    # ----------------------------
+
+    # explanations now contains (exp, rule) tuples
+    eval_list = explanations
+
+    # If any PVC rules matched, ONLY consider them
+    pvc_eval = [
+        (exp, rule)
+        for exp, rule in eval_list
+        if getattr(rule, "category", None) == "PersistentVolumeClaim"
+    ]
+
+    if pvc_eval:
+        eval_list = pvc_eval
+
+    root_score_map = {}
+
+    for exp, rule in eval_list:
+        if not exp.get("root_cause"):
+            continue
+
+        # Base score
+        score = exp.get("confidence", 0.0) * getattr(rule, "priority", 100)
+
+        # Context boost
+        required_context = getattr(rule, "requires", {}).get("context", [])
+        present_context = sum(1 for ctx in required_context if ctx in context)
+        if present_context:
+            score *= 1.0 + 0.5 * present_context
+
+        root = exp["root_cause"]
+        root_score_map[root] = max(root_score_map.get(root, 0.0), score)
+
+    best_root_cause = (
+        max(root_score_map.items(), key=lambda x: x[1])[0]
+        if root_score_map
+        else "Unknown"
+    )
+
+    if verbose:
+        print("[DEBUG] Weighted root_cause scores:", root_score_map)
 
     # Noisy-OR aggregation of confidence from all matching rules
     combined_confidence = 1.0
-    for e in explanations:
-        combined_confidence *= 1.0 - e.get("confidence", 0.0)
-    combined_confidence = 1.0 - combined_confidence  # final combined confidence
+    for exp, _ in explanations:
+        combined_confidence *= 1.0 - exp.get("confidence", 0.0)
+    combined_confidence = 1.0 - combined_confidence
 
     # Merge all evidence, likely_causes, suggested_checks
     merged_explanation = {
         "pod": pod_name,
         "phase": pod_phase,
-        "root_cause": best_explanation["root_cause"],
+        "root_cause": best_root_cause,
         "confidence": combined_confidence,
         "evidence": [],
         "likely_causes": [],
         "suggested_checks": [],
     }
 
-    for e in explanations:
-        merged_explanation["evidence"].extend(e.get("evidence", []))
-        merged_explanation["likely_causes"].extend(e.get("likely_causes", []))
-        merged_explanation["suggested_checks"].extend(e.get("suggested_checks", []))
+    for exp, _ in explanations:
+        merged_explanation["evidence"].extend(exp.get("evidence", []))
+        merged_explanation["likely_causes"].extend(exp.get("likely_causes", []))
+        merged_explanation["suggested_checks"].extend(exp.get("suggested_checks", []))
 
     # Remove duplicates for cleaner output
     merged_explanation["evidence"] = list(dict.fromkeys(merged_explanation["evidence"]))
