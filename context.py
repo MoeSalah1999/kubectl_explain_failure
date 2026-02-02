@@ -1,28 +1,78 @@
 import os
 from model import load_json
 
+
+def _is_pvc_unbound(pvc: dict) -> bool:
+    """
+    Return True if the PVC exists and is not Bound.
+    """
+    if not pvc:
+        return False
+
+    phase = pvc.get("status", {}).get("phase")
+    return phase is not None and phase != "Bound"
+
+
+def _select_blocking_pvc(pvcs: list) -> dict | None:
+    """
+    Return the first unbound PVC, or None if all are bound.
+    """
+    for pvc in pvcs:
+        if _is_pvc_unbound(pvc):
+            return pvc
+    return None
+
+
 def build_context(args) -> dict:
     context = {}
 
+    # ----------------------------
+    # PersistentVolumeClaim(s)
+    # ----------------------------
+    single_pvc = None
+    pvcs = []
+
     if args.pvc:
-        context["pvc"] = load_json(args.pvc)
+        single_pvc = load_json(args.pvc)
+        pvcs.append(single_pvc)
 
     if args.pvcs:
-        context["pvcs"] = [
+        pvcs.extend(
             load_json(os.path.join(args.pvcs, f))
             for f in os.listdir(args.pvcs)
             if f.endswith(".json")
-        ]
+        )
 
+    if pvcs:
+        context["pvcs"] = pvcs
+
+        blocking = _select_blocking_pvc(pvcs)
+        if blocking:
+            context["pvc_unbound"] = True
+            context["blocking_pvc"] = blocking
+
+            # Promote single blocking PVC for rule compatibility
+            context["pvc"] = blocking
+
+
+    # ----------------------------
+    # Node
+    # ----------------------------
     if args.node:
         context["node"] = load_json(args.node)
 
+    # ----------------------------
+    # Service / Endpoints
+    # ----------------------------
     if args.service:
         context["svc"] = load_json(args.service)
 
     if args.endpoints:
         context["ep"] = load_json(args.endpoints)
 
+    # ----------------------------
+    # Controllers
+    # ----------------------------
     if args.statefulsets:
         context["sts"] = [
             load_json(os.path.join(args.statefulsets, f))
