@@ -5,7 +5,7 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from engine import explain_failure
+from kubectl_explain_failure.engine import explain_failure
 
 
 # Minimal fake rules for testing without real cluster

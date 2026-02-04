@@ -26,6 +26,7 @@ kubectl_explain_failure/rules/image_rules.py
 kubectl_explain_failure/rules/node_rules.py
 kubectl_explain_failure/rules/pod_rules.py
 kubectl_explain_failure/rules/pvc_rules.py
+kubectl_explain_failure/tests/__init__.py
 kubectl_explain_failure/tests/test_engine_regression.py
 kubectl_explain_failure/tests/test_multiple_rules.py
 kubectl_explain_failure/tests/test_rule_meta.py

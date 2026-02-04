@@ -5,8 +5,9 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from engine import explain_failure
 from model import load_json, normalize_events
+
+from kubectl_explain_failure.engine import explain_failure
 
 # ----------------------------
 # Fixtures directory
