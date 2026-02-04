@@ -2,10 +2,10 @@
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import tempfile
-import os
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ENGINE = os.path.join(SCRIPT_DIR, "explain_failure.py")

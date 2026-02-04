@@ -1,9 +1,10 @@
 import json
-from typing import Dict, Any
+from typing import Any, Dict
 
 # ----------------------------
 # Output formatting
 # ----------------------------
+
 
 def output_result(result: Dict[str, Any], fmt: str) -> None:
     """
@@ -28,4 +29,3 @@ def output_result(result: Dict[str, Any], fmt: str) -> None:
             print(f"\n{key.replace('_', ' ').title()}:")
             for item in items:
                 print(f"  - {item}")
-

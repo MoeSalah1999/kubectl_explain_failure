@@ -1,5 +1,6 @@
-from rules.base_rule import FailureRule
 from model import get_pod_name, get_pod_phase, has_event
+from rules.base_rule import FailureRule
+
 
 class NodeDiskPressureRule(FailureRule):
     name = "NodeDiskPressure"
@@ -15,11 +16,7 @@ class NodeDiskPressureRule(FailureRule):
         else:
             items = [node_events]
 
-        return any(
-            e.get("reason") == "NodeHasDiskPressure"
-            for e in items
-        )
-
+        return any(e.get("reason") == "NodeHasDiskPressure" for e in items)
 
     def explain(self, pod, events, context):
         node_events = context.get("node")

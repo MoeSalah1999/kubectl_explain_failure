@@ -1,5 +1,6 @@
 import os
 import sys
+
 import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -17,9 +18,12 @@ FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 # Basic Pod Failure Rules
 # ----------------------------
 
+
 def test_failed_scheduling():
     pod = load_json(os.path.join(FIXTURES_DIR, "pending_pod.json"))
-    events = normalize_events(load_json(os.path.join(FIXTURES_DIR, "failed_scheduling_events.json")))
+    events = normalize_events(
+        load_json(os.path.join(FIXTURES_DIR, "failed_scheduling_events.json"))
+    )
 
     result = explain_failure(pod, events)
     assert result["root_cause"] == "Pod could not be scheduled"
@@ -28,7 +32,9 @@ def test_failed_scheduling():
 
 def test_failed_scheduling_taint():
     pod = load_json(os.path.join(FIXTURES_DIR, "pending_pod.json"))
-    events = normalize_events(load_json(os.path.join(FIXTURES_DIR, "failed_scheduling_events_taint.json")))
+    events = normalize_events(
+        load_json(os.path.join(FIXTURES_DIR, "failed_scheduling_events_taint.json"))
+    )
 
     result = explain_failure(pod, events)
     assert any("taint" in cause.lower() for cause in result["likely_causes"])
@@ -36,7 +42,9 @@ def test_failed_scheduling_taint():
 
 def test_image_pull_error():
     pod = load_json(os.path.join(FIXTURES_DIR, "pending_pod.json"))
-    events = normalize_events(load_json(os.path.join(FIXTURES_DIR, "events_image_pull_error.json")))
+    events = normalize_events(
+        load_json(os.path.join(FIXTURES_DIR, "events_image_pull_error.json"))
+    )
 
     result = explain_failure(pod, events)
     assert "image" in result["root_cause"].lower()
@@ -82,6 +90,7 @@ def test_failed_mount():
 # Contextual / Cross-object Rules
 # ----------------------------
 
+
 def test_pvc_not_bound():
     pod = load_json(os.path.join(FIXTURES_DIR, "pending_pod.json"))
     pvc = load_json(os.path.join(FIXTURES_DIR, "pvc_pending.json"))
@@ -106,9 +115,12 @@ def test_node_disk_pressure():
 # ConfigMap Rules
 # ----------------------------
 
+
 def test_missing_configmap():
     pod = load_json(os.path.join(FIXTURES_DIR, "pending_pod.json"))
-    events = normalize_events(load_json(os.path.join(FIXTURES_DIR, "events_configmap_missing.json")))
+    events = normalize_events(
+        load_json(os.path.join(FIXTURES_DIR, "events_configmap_missing.json"))
+    )
 
     result = explain_failure(pod, events)
     assert "ConfigMap" in result["root_cause"]
@@ -116,7 +128,9 @@ def test_missing_configmap():
 
 def test_image_pull_secret_missing():
     pod = load_json(os.path.join(FIXTURES_DIR, "pending_pod.json"))
-    events = normalize_events(load_json(os.path.join(FIXTURES_DIR, "events_image_pull_secret_missing.json")))
+    events = normalize_events(
+        load_json(os.path.join(FIXTURES_DIR, "events_image_pull_secret_missing.json"))
+    )
 
     result = explain_failure(pod, events)
     assert "image" in result["root_cause"].lower()
@@ -126,6 +140,7 @@ def test_image_pull_secret_missing():
 # ----------------------------
 # Placeholder for future high-signal rules
 # ----------------------------
+
 
 @pytest.mark.skip(reason="Add more high-signal rules here")
 def test_placeholder_new_rule():

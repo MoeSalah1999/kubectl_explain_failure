@@ -1,8 +1,9 @@
-import os
 import glob
-import yaml
 import importlib.util
-from typing import List, Dict, Any
+import os
+from typing import Any, Dict, List
+
+import yaml
 from rules.base_rule import FailureRule
 
 
@@ -27,9 +28,11 @@ def load_plugins(plugin_folder: str):
                 continue
     return plugin_rules
 
+
 # ----------------------------
 # Dynamic Rule Loader
 # ----------------------------
+
 
 class YamlFailureRule(FailureRule):
     def __init__(self, spec: Dict[str, Any]):
@@ -56,7 +59,6 @@ class YamlFailureRule(FailureRule):
 
         return eval(expr, {}, safe_context)
 
-
     def explain(self, pod, events, context):
         return {
             "root_cause": self.spec["then"]["root_cause"],
@@ -65,6 +67,7 @@ class YamlFailureRule(FailureRule):
             "likely_causes": self.spec["then"].get("likely_causes", []),
             "suggested_checks": self.spec["then"].get("suggested_checks", []),
         }
+
 
 def build_yaml_rule(spec: Dict[str, Any]) -> FailureRule:
     return YamlFailureRule(spec)
@@ -88,7 +91,11 @@ def load_rules(rule_folder=None) -> List[FailureRule]:
 
         for attr in dir(module):
             cls = getattr(module, attr)
-            if isinstance(cls, type) and issubclass(cls, FailureRule) and cls is not FailureRule:
+            if (
+                isinstance(cls, type)
+                and issubclass(cls, FailureRule)
+                and cls is not FailureRule
+            ):
                 rules.append(cls())
 
     # ---- YAML rules ----
@@ -98,5 +105,3 @@ def load_rules(rule_folder=None) -> List[FailureRule]:
             rules.append(build_yaml_rule(spec))
 
     return rules
-
-

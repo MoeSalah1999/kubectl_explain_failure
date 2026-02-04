@@ -1,12 +1,15 @@
-from rules.base_rule import FailureRule
 from model import get_pod_name, get_pod_phase, has_event
+from rules.base_rule import FailureRule
+
 
 class ImagePullRule(FailureRule):
     name = "ImagePullError"
     priority = 50
 
     def matches(self, pod, events, context):
-        return has_event(events, "ImagePullBackOff") or has_event(events, "ErrImagePull")
+        return has_event(events, "ImagePullBackOff") or has_event(
+            events, "ErrImagePull"
+        )
 
     def explain(self, pod, events, context):
         return {

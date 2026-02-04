@@ -1,5 +1,6 @@
 from rules.base_rule import FailureRule
 
+
 class ImagePullBackOffRule(FailureRule):
     name = "ImagePullBackOff"
     category = "Image"

@@ -1,5 +1,6 @@
-from rules.base_rule import FailureRule
 from model import get_pod_name, get_pod_phase, has_event
+from rules.base_rule import FailureRule
+
 
 class PVCNotBoundRule(FailureRule):
     name = "PVCNotBound"
@@ -50,15 +51,11 @@ class PVCMountFailedRule(FailureRule):
         pvc_name = pvc.get("metadata", {}).get("name") if pvc else "<unknown>"
         return {
             "root_cause": "Pod is blocked by unbound PersistentVolumeClaim (mount failed)",  # <- updated for test
-            "evidence": [
-                f"Volume mount failed for PVC '{pvc_name}'"
-            ],
-            "likely_causes": [
-                "PVC not bound or PV not available"
-            ],
+            "evidence": [f"Volume mount failed for PVC '{pvc_name}'"],
+            "likely_causes": ["PVC not bound or PV not available"],
             "suggested_checks": [
                 "Check events for FailedMount",
-                "Ensure PV exists and is bound"
+                "Ensure PV exists and is bound",
             ],
             "confidence": 0.9,
         }

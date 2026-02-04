@@ -1,11 +1,12 @@
 import os
-from typing import Dict, Any, List, Tuple, Optional
-from rules.base_rule import FailureRule
-from loader import load_rules, load_plugins
-from model import get_pod_name, get_pod_phase
+from typing import Any, Dict, List, Optional, Tuple
 
+from loader import load_plugins, load_rules
+from model import get_pod_name, get_pod_phase
+from rules.base_rule import FailureRule
 
 _DEFAULT_RULES = None
+
 
 def get_default_rules() -> List[FailureRule]:
     global _DEFAULT_RULES
@@ -74,8 +75,7 @@ def explain_failure(
         required_states = getattr(rule, "container_states", None)
         if required_states:
             if not any(
-                s.get("terminated") or s.get("waiting")
-                for s in container_states
+                s.get("terminated") or s.get("waiting") for s in container_states
             ):
                 continue
 
@@ -112,8 +112,7 @@ def explain_failure(
             continue
 
         missing_context = [
-            key for key in requires.get("context", [])
-            if key not in context
+            key for key in requires.get("context", []) if key not in context
         ]
         if missing_context:
             if verbose:

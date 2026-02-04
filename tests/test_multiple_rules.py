@@ -1,15 +1,18 @@
+import json
 import os
+import subprocess
 import sys
-import json, subprocess
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from engine import explain_failure
-from model import normalize_events, load_json
+from model import load_json, normalize_events
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 
 # ----------------------------
 # Fixture helpers
 # ----------------------------
+
 
 def load_fixture(filename):
     return load_json(os.path.join(FIXTURES_DIR, filename))
@@ -24,16 +27,23 @@ def test_pending_pvc_and_failed_scheduling():
     assert "persistentvolumeclaim" in result["root_cause"].lower()
     assert 0 < result["confidence"] <= 1.0
     # Evidence should include both rules firing
-    assert any("Pending" in e for e in result["evidence"]) or len(result["evidence"]) > 0
+    assert (
+        any("Pending" in e for e in result["evidence"]) or len(result["evidence"]) > 0
+    )
+
 
 def test_image_pull_and_crashloop():
     pod = load_fixture("pending_pod.json")
     events = normalize_events([{"reason": "ErrImagePull"}, {"reason": "BackOff"}])
 
     result = explain_failure(pod, events)
-    assert "image" in result["root_cause"].lower() or "crash" in result["root_cause"].lower()
+    assert (
+        "image" in result["root_cause"].lower()
+        or "crash" in result["root_cause"].lower()
+    )
     assert 0 < result["confidence"] <= 1.0
     assert len(result["evidence"]) >= 2
+
 
 def test_oom_and_failed_mount():
     pod = {
@@ -42,16 +52,20 @@ def test_oom_and_failed_mount():
             "phase": "Running",
             "containerStatuses": [
                 {"lastState": {"terminated": {"reason": "OOMKilled"}}}
-            ]
-        }
+            ],
+        },
     }
     events = normalize_events([{"reason": "FailedMount"}])
 
     result = explain_failure(pod, events)
     # Root cause comes from highest confidence, others merged
-    assert "out-of-memory" in result["root_cause"].lower() or "mount" in result["root_cause"].lower()
+    assert (
+        "out-of-memory" in result["root_cause"].lower()
+        or "mount" in result["root_cause"].lower()
+    )
     assert len(result["evidence"]) >= 1
     assert 0 < result["confidence"] <= 1.0
+
 
 def test_pending_with_no_events_low_confidence():
     pod = load_fixture("pending_pod.json")
@@ -75,12 +89,15 @@ def test_pvc_not_bound():
     # Confidence should be non-zero
     assert 0 < result["confidence"] <= 1.0
     # Evidence should include something about PVC or Pending status
-    assert any("PVC" in e or "volume" in e or "Pending" in e for e in result["evidence"])
+    assert any(
+        "PVC" in e or "volume" in e or "Pending" in e for e in result["evidence"]
+    )
 
 
 # ----------------------------
 # Edge cases
 # ----------------------------
+
 
 def test_empty_pod_and_events():
     pod = {}
@@ -89,6 +106,7 @@ def test_empty_pod_and_events():
     result = explain_failure(pod, events)
     assert result["root_cause"].lower() == "unknown"
     assert result["confidence"] == 0.0
+
 
 def test_multiple_pods_independent():
     pod1 = load_fixture("pending_pod.json")

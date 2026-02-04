@@ -1,4 +1,5 @@
 import os
+
 from model import load_json
 
 
@@ -53,7 +54,6 @@ def build_context(args) -> dict:
 
             # Promote single blocking PVC for rule compatibility
             context["pvc"] = blocking
-
 
     # ----------------------------
     # Node

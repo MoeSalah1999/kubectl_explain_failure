@@ -2,9 +2,9 @@ import argparse
 import os
 
 from context import build_context
-from model import load_json, normalize_events
 from engine import explain_failure
 from loader import load_rules
+from model import load_json, normalize_events
 from output import output_result
 
 
@@ -18,7 +18,7 @@ def main():
         "--format",
         choices=["text", "json", "yaml"],
         default="text",
-        help="Output format (text, json, yaml)"
+        help="Output format (text, json, yaml)",
     )
 
     parser.add_argument("--pvc")

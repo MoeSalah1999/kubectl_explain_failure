@@ -1,4 +1,5 @@
-from typing import Dict, List, Any, Literal
+from typing import Any, Dict, List, Literal
+
 
 class FailureRule:
     """
@@ -12,30 +13,24 @@ class FailureRule:
     priority: int = 100
 
     # ---- Optional execution hints ----
-    phases: List[str] = []            # e.g. ["Pending", "Running"]
+    phases: List[str] = []  # e.g. ["Pending", "Running"]
     container_states: List[str] = []  # e.g. ["waiting", "terminated"]
-    dependencies: List[str] = []      # names of other rules
+    dependencies: List[str] = []  # names of other rules
 
     # ---- Contract requirements ----
     requires = {
         "pod": True,
         "events": True,
-        "context": [],   # e.g. ["node", "pvcs"]
+        "context": [],  # e.g. ["node", "pvcs"]
     }
 
     def matches(
-        self,
-        pod: Dict[str, Any],
-        events: List[Dict[str, Any]],
-        context: Dict[str, Any]
+        self, pod: Dict[str, Any], events: List[Dict[str, Any]], context: Dict[str, Any]
     ) -> bool:
         raise NotImplementedError
 
     def explain(
-        self,
-        pod: Dict[str, Any],
-        events: List[Dict[str, Any]],
-        context: Dict[str, Any]
+        self, pod: Dict[str, Any], events: List[Dict[str, Any]], context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Must return:
@@ -48,4 +43,3 @@ class FailureRule:
         }
         """
         raise NotImplementedError
-

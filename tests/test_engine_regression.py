@@ -1,5 +1,7 @@
+import os
+import sys
+
 import pytest
-import os, sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -52,19 +54,31 @@ class FakeRulePVC:
         }
 
 
-@pytest.mark.parametrize("rule_class, pod, context, expected_root", [
-    (FakeRuleOOM,
-     {"metadata": {"name": "oom-pod"},
-      "status": {"phase": "Running",
-                 "containerStatuses": [{"lastState": {"terminated": {"reason": "OOMKilled"}}}]}},
-     {},
-     "Out-of-memory"),
-    (FakeRulePVC,
-     {"metadata": {"name": "pending-pod"},
-      "status": {"phase": "Pending"}},
-     {"pvc": {"status": "Pending"}},
-     "Pod is blocked by unbound PVC"),
-])
+@pytest.mark.parametrize(
+    "rule_class, pod, context, expected_root",
+    [
+        (
+            FakeRuleOOM,
+            {
+                "metadata": {"name": "oom-pod"},
+                "status": {
+                    "phase": "Running",
+                    "containerStatuses": [
+                        {"lastState": {"terminated": {"reason": "OOMKilled"}}}
+                    ],
+                },
+            },
+            {},
+            "Out-of-memory",
+        ),
+        (
+            FakeRulePVC,
+            {"metadata": {"name": "pending-pod"}, "status": {"phase": "Pending"}},
+            {"pvc": {"status": "Pending"}},
+            "Pod is blocked by unbound PVC",
+        ),
+    ],
+)
 def test_regression_eventless_rules(rule_class, pod, context, expected_root):
     """
     Regression test for Fix #2:

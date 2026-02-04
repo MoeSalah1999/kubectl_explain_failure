@@ -1,5 +1,6 @@
-from rules.base_rule import FailureRule
 from model import get_pod_name, get_pod_phase
+from rules.base_rule import FailureRule
+
 
 class OOMKilledRule(FailureRule):
     name = "OOMKilled"
@@ -20,7 +21,7 @@ class OOMKilledRule(FailureRule):
             "likely_causes": ["Memory limits too low", "Memory spike"],
             "suggested_checks": [
                 "kubectl describe pod {}".format(get_pod_name(pod)),
-                "Check container memory limits and usage"
+                "Check container memory limits and usage",
             ],
             "confidence": 0.9,
         }
@@ -37,17 +38,17 @@ class CrashLoopBackOffRule(FailureRule):
         return {
             "root_cause": "Pod container is crashing (CrashLoopBackOff)",
             "evidence": [
-                f"Event reason: {e.get('reason')} - {e.get('message', '')}" 
-                for e in events if e.get("reason") == "BackOff"
+                f"Event reason: {e.get('reason')} - {e.get('message', '')}"
+                for e in events
+                if e.get("reason") == "BackOff"
             ],
             "likely_causes": [
                 "Application is crashing immediately after start",
-                "Configuration error causing container failure"
+                "Configuration error causing container failure",
             ],
             "suggested_checks": [
                 f"kubectl logs {get_pod_name(pod)}",
-                f"kubectl describe pod {get_pod_name(pod)}"
+                f"kubectl describe pod {get_pod_name(pod)}",
             ],
-            "confidence": 0.9
+            "confidence": 0.9,
         }
-
