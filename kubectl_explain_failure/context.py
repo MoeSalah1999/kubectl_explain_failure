@@ -1,9 +1,10 @@
 import os
+from typing import Any
 
 from model import load_json
 
 
-def _is_pvc_unbound(pvc: dict) -> bool:
+def _is_pvc_unbound(pvc: dict[str, Any]) -> bool:
     """
     Return True if the PVC exists and is not Bound.
     """
@@ -14,7 +15,7 @@ def _is_pvc_unbound(pvc: dict) -> bool:
     return phase is not None and phase != "Bound"
 
 
-def _select_blocking_pvc(pvcs: list) -> dict | None:
+def _select_blocking_pvc(pvcs: list[dict[str, Any]]) -> dict[str, Any] | None:
     """
     Return the first unbound PVC, or None if all are bound.
     """
@@ -24,14 +25,14 @@ def _select_blocking_pvc(pvcs: list) -> dict | None:
     return None
 
 
-def build_context(args) -> dict:
-    context = {}
+def build_context(args) -> dict[str, Any]:
+    context: dict[str, Any] = {}
 
     # ----------------------------
     # PersistentVolumeClaim(s)
     # ----------------------------
     single_pvc = None
-    pvcs = []
+    pvcs: list[dict[str, Any]] = []
 
     if args.pvc:
         single_pvc = load_json(args.pvc)
