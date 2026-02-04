@@ -42,11 +42,20 @@ class YamlFailureRule(FailureRule):
     def matches(self, pod, events, context) -> bool:
         expr = self.spec["if"]
         # VERY conservative evaluation
-        return eval(expr, {}, {
-            "pod": pod,
-            "events": events,
-            "context": context
-        })
+        safe_context = {
+            "pod": pod or {},
+            "events": events or [],
+            "context": context or {},
+            "node": context.get("node", {}) or {},
+            "pvc": context.get("pvc", {}) or {},
+        }
+        # Ensure safe nesting
+        for obj in ("pod", "node", "pvc"):
+            safe_context[obj].setdefault("metadata", {})
+            safe_context[obj].setdefault("status", {})
+
+        return eval(expr, {}, safe_context)
+
 
     def explain(self, pod, events, context):
         return {
