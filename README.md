@@ -1,7 +1,7 @@
 """
 # kubectl-explain-failure
 
-This project explores a gap in Kubernetes diagnostics: the system exposes raw signals but not causal explanations. The tool reads Pod and Event data and applies explicit heuristics to explain why a workload failed. It’s intentionally read-only and file-based to keep scope controlled.
+This project explores a gap in Kubernetes diagnostics: the system exposes raw signals but not causal explanations. The tool reads Pod and Event data and applies explicit heuristics to explain why a workload failed.
 
 A small, diagnostic tool that explains **why a Kubernetes Pod is failing** by
 correlating Pod status and Events into a human-readable explanation.
@@ -33,13 +33,27 @@ This tool explores how **causal explanations** can be constructed from existing 
 The output is deterministic and fully testable.
 
 ## What this tool does NOT do
-- ❌ No live cluster access
-- ❌ No Kubernetes API client
-- ❌ No controllers, CRDs, or admission hooks
-- ❌ No automatic remediation
-- ❌ No machine learning or prediction
+- No live cluster access
+- No Kubernetes API client
+- No controllers, CRDs, or admission hooks
+- No automatic remediation
+- No machine learning or prediction
 
 This is a **diagnostic explainer**, not a fixer.
+
+## Installation (Development Mode)
+
+To install the package locally in development mode, allowing editable imports:
+
+- git clone <repo-url>
+- cd kubectl_explain_failure
+- python -m pip install -e .
+
+This ensures you can import the package as:
+
+from kubectl_explain_failure.engine import explain_failure
+
+and run tests or scripts directly.
 
 ## Usage
 Basic usage:
@@ -54,6 +68,26 @@ python explain_failure.py \
   --events tests/fixtures/empty_events.json \
   --pvc tests/fixtures/pvc_pending.json \
   --node tests/fixtures/node_disk_pressure.json
+
+
+## Testing
+
+This project uses pytest and tox.
+To run tests in the development environment:
+
+tox
+tox -e format
+tox -e lint
+tox -e typing
+tox -e test (runs pytest)
+
+Tox automatically installs required dependencies, including:
+
+pytest
+mypy
+PyYAML
+
+This ensures tests run in a clean environment and type checks are enforced.
 
 ## Supported failure patterns (initial)
 - Pending Pods due to FailedScheduling
