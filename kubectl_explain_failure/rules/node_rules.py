@@ -1,4 +1,4 @@
-from rules.base_rule import FailureRule
+from kubectl_explain_failure.rules.base_rule import FailureRule
 
 
 class NodeDiskPressureRule(FailureRule):

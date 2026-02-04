@@ -1,11 +1,11 @@
 import argparse
 import os
 
-from context import build_context
-from engine import explain_failure
-from loader import load_rules
-from model import load_json, normalize_events
-from output import output_result
+from kubectl_explain_failure.context import build_context
+from kubectl_explain_failure.engine import explain_failure
+from kubectl_explain_failure.loader import load_plugins, load_rules
+from kubectl_explain_failure.model import load_json, normalize_events
+from kubectl_explain_failure.output import output_result
 
 
 def main():
@@ -44,7 +44,20 @@ def main():
     events = normalize_events(events_raw)
 
     # Load rules
-    rules = load_rules(rule_folder=os.path.join(os.path.dirname(__file__), "rules"))
+    rules_folder = os.path.join(os.path.dirname(__file__), "rules")
+    rules = load_rules(rule_folder=rules_folder)
+
+    plugin_folder = os.path.join(os.path.dirname(__file__), "plugins")
+    rules += load_plugins(
+        plugin_folder
+    )  # if you want plugins, or use load_plugins(plugin_folder)
+
+    print(f"[DEBUG] Loaded {len(rules)} rules")
+    print("[DEBUG] Context keys:", list(context.keys()))
+    for k, v in context.items():
+        print(f"[DEBUG] {k} = {v}")
+    for r in rules:
+        print(f"  - {r.name} (category={r.category}, priority={r.priority})")
 
     # Run engine
     result = explain_failure(
@@ -56,5 +69,8 @@ def main():
         disabled_categories=args.disable_categories,
         verbose=args.verbose,
     )
+
+    if not rules:
+        print("[WARNING] No rules loaded, check your rules/ and plugins/ folders")
 
     output_result(result, args.format)

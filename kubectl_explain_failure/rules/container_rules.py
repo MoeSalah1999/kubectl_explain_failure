@@ -1,5 +1,5 @@
-from model import get_pod_name
-from rules.base_rule import FailureRule
+from kubectl_explain_failure.model import get_pod_name
+from kubectl_explain_failure.rules.base_rule import FailureRule
 
 
 class OOMKilledRule(FailureRule):

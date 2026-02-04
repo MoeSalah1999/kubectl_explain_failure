@@ -1,7 +1,7 @@
 import os
 from typing import Any
 
-from model import load_json
+from kubectl_explain_failure.model import load_json
 
 
 def _is_pvc_unbound(pvc: dict[str, Any]) -> bool:

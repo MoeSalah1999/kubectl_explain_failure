@@ -1,9 +1,9 @@
 import os
 from typing import Any
 
-from loader import load_plugins, load_rules
-from model import get_pod_name, get_pod_phase
-from rules.base_rule import FailureRule
+from kubectl_explain_failure.loader import load_plugins, load_rules
+from kubectl_explain_failure.model import get_pod_name, get_pod_phase
+from kubectl_explain_failure.rules.base_rule import FailureRule
 
 _DEFAULT_RULES = None
 
@@ -221,7 +221,7 @@ def explain_failure(
     # ----------------------------
     # Merge explanations
     # ----------------------------
-    merged = {
+    merged: dict[str, Any] = {
         "pod": pod_name,
         "phase": pod_phase,
         "root_cause": best_root_cause,
@@ -232,9 +232,9 @@ def explain_failure(
     }
 
     for exp, _ in explanations:
-        merged["evidence"].extend(exp.get("evidence", []))
-        merged["likely_causes"].extend(exp.get("likely_causes", []))
-        merged["suggested_checks"].extend(exp.get("suggested_checks", []))
+        merged["evidence"].extend(list(exp.get("evidence", [])))
+        merged["likely_causes"].extend(list(exp.get("likely_causes", [])))
+        merged["suggested_checks"].extend(list(exp.get("suggested_checks", [])))
 
     # Deduplicate
     merged["evidence"] = list(dict.fromkeys(merged["evidence"]))
@@ -243,7 +243,7 @@ def explain_failure(
 
     # Sanity dampening
     if pod_phase == "Pending" and not events:
-        merged["confidence"] *= 0.5
+        merged["confidence"] = float(merged["confidence"]) * 0.5
 
     merged["confidence"] = min(1.0, max(0.0, merged["confidence"]))
 
