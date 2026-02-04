@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import Any
 
 
 def parse_time(ts: str) -> datetime:
     return datetime.fromisoformat(ts.replace("Z", "+00:00"))
 
 
-def events_within(events: List[Dict[str, Any]], minutes: int) -> List[Dict[str, Any]]:
+def events_within(events: list[dict[str, Any]], minutes: int) -> list[dict[str, Any]]:
     cutoff = datetime.utcnow() - timedelta(minutes=minutes)
     result = []
 
@@ -20,5 +20,5 @@ def events_within(events: List[Dict[str, Any]], minutes: int) -> List[Dict[str, 
     return result
 
 
-def repeated_reason(events: List[Dict[str, Any]], reason: str, threshold: int) -> bool:
+def repeated_reason(events: list[dict[str, Any]], reason: str, threshold: int) -> bool:
     return sum(1 for e in events if e.get("reason") == reason) >= threshold

@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from loader import load_plugins, load_rules
 from model import get_pod_name, get_pod_phase
@@ -8,7 +8,7 @@ from rules.base_rule import FailureRule
 _DEFAULT_RULES = None
 
 
-def get_default_rules() -> List[FailureRule]:
+def get_default_rules() -> list[FailureRule]:
     global _DEFAULT_RULES
     if _DEFAULT_RULES is None:
         rules_path = os.path.join(os.path.dirname(__file__), "rules")
@@ -26,14 +26,14 @@ def get_default_rules() -> List[FailureRule]:
 
 
 def explain_failure(
-    pod: Dict[str, Any],
-    events: List[Dict[str, Any]],
-    context: Optional[Dict[str, Any]] = None,
-    rules: Optional[List[FailureRule]] = None,
-    enabled_categories: Optional[List[str]] = None,
-    disabled_categories: Optional[List[str]] = None,
+    pod: dict[str, Any],
+    events: list[dict[str, Any]],
+    context: dict[str, Any] | None = None,
+    rules: list[FailureRule] | None = None,
+    enabled_categories: list[str] | None = None,
+    disabled_categories: list[str] | None = None,
     verbose: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Explains why a Pod is failing by evaluating all applicable rules.
 
@@ -49,7 +49,7 @@ def explain_failure(
     pod_name = get_pod_name(pod)
     pod_phase = get_pod_phase(pod)
 
-    explanations: List[Tuple[Dict[str, Any], FailureRule]] = []
+    explanations: list[tuple[dict[str, Any], FailureRule]] = []
 
     # ----------------------------
     # Collect container states
@@ -186,7 +186,7 @@ def explain_failure(
     # ----------------------------
     # Weighted root-cause selection
     # ----------------------------
-    root_score_map: Dict[str, float] = {}
+    root_score_map: dict[str, float] = {}
 
     for exp, rule in explanations:
         root = exp.get("root_cause")

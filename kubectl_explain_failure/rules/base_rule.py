@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Literal
+from typing import Any, Literal
 
 
 class FailureRule:
@@ -13,9 +13,9 @@ class FailureRule:
     priority: int = 100
 
     # ---- Optional execution hints ----
-    phases: List[str] = []  # e.g. ["Pending", "Running"]
-    container_states: List[str] = []  # e.g. ["waiting", "terminated"]
-    dependencies: List[str] = []  # names of other rules
+    phases: list[str] = []  # e.g. ["Pending", "Running"]
+    container_states: list[str] = []  # e.g. ["waiting", "terminated"]
+    dependencies: list[str] = []  # names of other rules
 
     # ---- Contract requirements ----
     requires = {
@@ -25,13 +25,13 @@ class FailureRule:
     }
 
     def matches(
-        self, pod: Dict[str, Any], events: List[Dict[str, Any]], context: Dict[str, Any]
+        self, pod: dict[str, Any], events: list[dict[str, Any]], context: dict[str, Any]
     ) -> bool:
         raise NotImplementedError
 
     def explain(
-        self, pod: Dict[str, Any], events: List[Dict[str, Any]], context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, pod: dict[str, Any], events: list[dict[str, Any]], context: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Must return:
         {

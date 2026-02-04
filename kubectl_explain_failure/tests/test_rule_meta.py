@@ -1,4 +1,3 @@
-import pytest
 from loader import load_rules
 
 

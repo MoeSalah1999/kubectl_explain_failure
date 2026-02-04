@@ -1,4 +1,4 @@
-from model import get_pod_name, get_pod_phase
+from model import get_pod_name
 from rules.base_rule import FailureRule
 
 
@@ -20,7 +20,7 @@ class OOMKilledRule(FailureRule):
             "evidence": ["Container was OOMKilled"],
             "likely_causes": ["Memory limits too low", "Memory spike"],
             "suggested_checks": [
-                "kubectl describe pod {}".format(get_pod_name(pod)),
+                f"kubectl describe pod {get_pod_name(pod)}",
                 "Check container memory limits and usage",
             ],
             "confidence": 0.9,

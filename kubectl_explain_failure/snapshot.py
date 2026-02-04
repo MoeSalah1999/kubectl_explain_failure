@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class ClusterSnapshot:
@@ -8,20 +8,20 @@ class ClusterSnapshot:
 
     def __init__(
         self,
-        pod: Dict[str, Any],
-        events: List[Dict[str, Any]],
-        context: Dict[str, Any],
+        pod: dict[str, Any],
+        events: list[dict[str, Any]],
+        context: dict[str, Any],
     ):
         self.pod = pod
         self.events = events
 
-        self.node: Optional[Dict[str, Any]] = context.get("node")
-        self.pvcs: List[Dict[str, Any]] = context.get("pvcs", [])
-        self.pvc: Optional[Dict[str, Any]] = context.get("pvc")
-        self.services: List[Dict[str, Any]] = context.get("svc", [])
-        self.endpoints: List[Dict[str, Any]] = context.get("ep", [])
-        self.statefulsets: List[Dict[str, Any]] = context.get("sts", [])
-        self.daemonsets: List[Dict[str, Any]] = context.get("ds", [])
+        self.node: dict[str, Any] | None = context.get("node")
+        self.pvcs: list[dict[str, Any]] = context.get("pvcs", [])
+        self.pvc: dict[str, Any] | None = context.get("pvc")
+        self.services: list[dict[str, Any]] = context.get("svc", [])
+        self.endpoints: list[dict[str, Any]] = context.get("ep", [])
+        self.statefulsets: list[dict[str, Any]] = context.get("sts", [])
+        self.daemonsets: list[dict[str, Any]] = context.get("ds", [])
 
     @property
     def pod_phase(self) -> str:

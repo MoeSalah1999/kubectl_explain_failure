@@ -2,8 +2,6 @@
 # run_explain.py
 import argparse
 import json
-import os
-import sys
 
 from engine import explain_failure
 

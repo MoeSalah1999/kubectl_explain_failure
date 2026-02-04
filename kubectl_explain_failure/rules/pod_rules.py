@@ -1,4 +1,4 @@
-from model import get_pod_name, get_pod_phase, has_event
+from model import get_pod_phase, has_event
 from rules.base_rule import FailureRule
 
 

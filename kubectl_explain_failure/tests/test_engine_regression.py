@@ -6,7 +6,6 @@ import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from engine import explain_failure
-from model import get_pod_name
 
 
 # Minimal fake rules for testing without real cluster

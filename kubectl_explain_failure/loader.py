@@ -1,7 +1,7 @@
 import glob
 import importlib.util
 import os
-from typing import Any, Dict, List
+from typing import Any
 
 import yaml
 from rules.base_rule import FailureRule
@@ -35,7 +35,7 @@ def load_plugins(plugin_folder: str):
 
 
 class YamlFailureRule(FailureRule):
-    def __init__(self, spec: Dict[str, Any]):
+    def __init__(self, spec: dict[str, Any]):
         self.name = spec["name"]
         self.category = spec.get("category", "Generic")
         self.severity = spec.get("severity", "Medium")
@@ -69,15 +69,15 @@ class YamlFailureRule(FailureRule):
         }
 
 
-def build_yaml_rule(spec: Dict[str, Any]) -> FailureRule:
+def build_yaml_rule(spec: dict[str, Any]) -> FailureRule:
     return YamlFailureRule(spec)
 
 
-def load_rules(rule_folder=None) -> List[FailureRule]:
+def load_rules(rule_folder=None) -> list[FailureRule]:
     if rule_folder is None:
         rule_folder = os.path.join(os.path.dirname(__file__), "rules")
 
-    rules: List[FailureRule] = []
+    rules: list[FailureRule] = []
 
     # ---- Python rules ----
     for file in glob.glob(os.path.join(rule_folder, "*.py")):
@@ -100,7 +100,7 @@ def load_rules(rule_folder=None) -> List[FailureRule]:
 
     # ---- YAML rules ----
     for yfile in glob.glob(os.path.join(rule_folder, "*.yaml")):
-        with open(yfile, "r", encoding="utf-8") as f:
+        with open(yfile, encoding="utf-8") as f:
             spec = yaml.safe_load(f)
             rules.append(build_yaml_rule(spec))
 

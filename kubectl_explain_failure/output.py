@@ -1,12 +1,12 @@
 import json
-from typing import Any, Dict
+from typing import Any
 
 # ----------------------------
 # Output formatting
 # ----------------------------
 
 
-def output_result(result: Dict[str, Any], fmt: str) -> None:
+def output_result(result: dict[str, Any], fmt: str) -> None:
     """
     Nicely prints the Pod failure explanation.
     - Shows root_cause from the highest-confidence rule
