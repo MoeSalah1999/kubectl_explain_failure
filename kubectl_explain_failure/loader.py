@@ -7,8 +7,8 @@ import yaml
 from rules.base_rule import FailureRule
 
 
-def load_plugins(plugin_folder: str):
-    plugin_rules = []
+def load_plugins(plugin_folder: str) -> list[FailureRule]:
+    plugin_rules: list[FailureRule] = []
     if not os.path.exists(plugin_folder):
         return plugin_rules
 
@@ -17,6 +17,8 @@ def load_plugins(plugin_folder: str):
             continue
         module_name = os.path.splitext(os.path.basename(py_file))[0]
         spec = importlib.util.spec_from_file_location(module_name, py_file)
+        if spec is None or spec.loader is None:
+            continue
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         for attr in dir(mod):
@@ -45,9 +47,9 @@ class YamlFailureRule(FailureRule):
     def matches(self, pod, events, context) -> bool:
         expr = self.spec["if"]
         # VERY conservative evaluation
-        safe_context = {
+        safe_context: dict[str, dict[str, Any]] = {
             "pod": pod or {},
-            "events": events or [],
+            "events": events or {},
             "context": context or {},
             "node": context.get("node", {}) or {},
             "pvc": context.get("pvc", {}) or {},
@@ -86,6 +88,8 @@ def load_rules(rule_folder=None) -> list[FailureRule]:
 
         module_name = os.path.splitext(os.path.basename(file))[0]
         spec = importlib.util.spec_from_file_location(module_name, file)
+        if spec is None or spec.loader is None:
+            continue
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
 
