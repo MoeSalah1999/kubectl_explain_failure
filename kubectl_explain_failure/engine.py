@@ -175,7 +175,7 @@ def explain_failure(
         if pod_phase == "Pending" and not events:
             confidence = max(confidence, 0.5)
 
-        return {
+        result = {
             "pod": pod_name,
             "phase": pod_phase,
             "root_cause": best_exp.get(
@@ -187,6 +187,11 @@ def explain_failure(
             "likely_causes": best_exp.get("likely_causes", []),
             "suggested_checks": best_exp.get("suggested_checks", []),
         }
+
+        # Preserve object-scoped evidence if present
+        if "object_evidence" in best_exp:
+            result["object_evidence"] = best_exp["object_evidence"]
+        return result
 
     # ----------------------------
     # Weighted root-cause selection
