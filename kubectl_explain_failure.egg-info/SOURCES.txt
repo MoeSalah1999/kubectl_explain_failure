@@ -30,5 +30,6 @@ kubectl_explain_failure/rules/pvc_rules.py
 kubectl_explain_failure/tests/__init__.py
 kubectl_explain_failure/tests/test_engine_regression.py
 kubectl_explain_failure/tests/test_multiple_rules.py
+kubectl_explain_failure/tests/test_pvc_override_object_evidence.py
 kubectl_explain_failure/tests/test_rule_meta.py
 kubectl_explain_failure/tests/test_rules.py
