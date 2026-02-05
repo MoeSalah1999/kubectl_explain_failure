@@ -11,14 +11,11 @@ HERE = Path(__file__).resolve().parent
 FIXTURES = HERE.parent / "fixtures"
 
 
-
 def test_pvc_blocks_failed_scheduling():
     pod = load_json(FIXTURES / "pending_pod.json")
     pvc = load_json(FIXTURES / "pvc_pending.json")
 
-    events = normalize_events([
-        {"reason": "FailedScheduling"}
-    ])
+    events = normalize_events([{"reason": "FailedScheduling"}])
 
     result = explain_failure(
         pod,

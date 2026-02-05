@@ -1,5 +1,7 @@
 Metadata-Version: 2.4
-Name: kubectl_explain_failure
+Name: kubectl-explain-failure
 Version: 0.0.0
+Summary: Explain Kubernetes Pod failures using heuristics
+Requires-Python: >=3.10
 License-File: LICENSE
 Dynamic: license-file
