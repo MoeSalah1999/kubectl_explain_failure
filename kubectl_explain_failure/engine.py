@@ -3,7 +3,9 @@ from typing import Any
 
 from kubectl_explain_failure.loader import load_plugins, load_rules
 from kubectl_explain_failure.model import get_pod_name, get_pod_phase
+from kubectl_explain_failure.relations import build_relations
 from kubectl_explain_failure.rules.base_rule import FailureRule
+from kubectl_explain_failure.timeline import build_timeline
 
 _DEFAULT_RULES = None
 
@@ -48,6 +50,9 @@ def explain_failure(
 
     pod_name = get_pod_name(pod)
     pod_phase = get_pod_phase(pod)
+
+    context["relations"] = build_relations(pod, context)
+    context["timeline"] = build_timeline(events)
 
     explanations: list[tuple[dict[str, Any], FailureRule]] = []
 
@@ -236,10 +241,21 @@ def explain_failure(
         merged["likely_causes"].extend(list(exp.get("likely_causes", [])))
         merged["suggested_checks"].extend(list(exp.get("suggested_checks", [])))
 
+        object_evidence = exp.get("object_evidence", {})
+        if object_evidence:
+            merged.setdefault("object_evidence", {})
+            for obj, items in object_evidence.items():
+                merged["object_evidence"].setdefault(obj, [])
+                merged["object_evidence"][obj].extend(items)
+
     # Deduplicate
     merged["evidence"] = list(dict.fromkeys(merged["evidence"]))
     merged["likely_causes"] = list(dict.fromkeys(merged["likely_causes"]))
     merged["suggested_checks"] = list(dict.fromkeys(merged["suggested_checks"]))
+
+    if "object_evidence" in merged:
+        for obj, items in merged["object_evidence"].items():
+            merged["object_evidence"][obj] = list(dict.fromkeys(items))
 
     # Sanity dampening
     if pod_phase == "Pending" and not events:

@@ -17,10 +17,15 @@ class PVCNotBoundRule(FailureRule):
     def explain(self, pod, events, context):
         pvc = context["pvc"]
         return {
-            "root_cause": "Pod is blocked by unbound PersistentVolumeClaim",  # <- updated for test
+            "root_cause": "Pod is blocked by unbound PersistentVolumeClaim",
             "evidence": [
                 f"PVC '{pvc.get('metadata', {}).get('name')}' phase is {pvc.get('status', {}).get('phase')}"
             ],
+            "object_evidence": {
+                f"pvc:{pvc.get('metadata', {}).get('name')}": [
+                    "PVC is not in Bound phase"
+                ]
+            },
             "likely_causes": [
                 "No matching PersistentVolume available",
                 "StorageClass provisioning failed",
@@ -49,8 +54,9 @@ class PVCMountFailedRule(FailureRule):
         pvc = context.get("pvc")
         pvc_name = pvc.get("metadata", {}).get("name") if pvc else "<unknown>"
         return {
-            "root_cause": "Pod is blocked by unbound PersistentVolumeClaim (mount failed)",  # <- updated for test
+            "root_cause": "Pod is blocked by unbound PersistentVolumeClaim (mount failed)",
             "evidence": [f"Volume mount failed for PVC '{pvc_name}'"],
+            "object_evidence": {f"pvc:{pvc_name}": ["Volume mount failed"]},
             "likely_causes": ["PVC not bound or PV not available"],
             "suggested_checks": [
                 "Check events for FailedMount",

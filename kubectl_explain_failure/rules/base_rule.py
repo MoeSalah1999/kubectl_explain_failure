@@ -39,7 +39,11 @@ class FailureRule:
           "confidence": float (0..1),
           "evidence": [str],
           "likely_causes": [str],
-          "suggested_checks": [str]
+          "suggested_checks": [str],
+          "object_evidence": {
+              "<object-id>": [str]
+          }
+        }
         }
         """
         raise NotImplementedError

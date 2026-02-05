@@ -9,6 +9,7 @@ kubectl_explain_failure/engine.py
 kubectl_explain_failure/loader.py
 kubectl_explain_failure/model.py
 kubectl_explain_failure/output.py
+kubectl_explain_failure/relations.py
 kubectl_explain_failure/run_explain.py
 kubectl_explain_failure/snapshot.py
 kubectl_explain_failure/timeline.py

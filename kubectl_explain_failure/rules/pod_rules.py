@@ -13,6 +13,11 @@ class FailedSchedulingRule(FailureRule):
         return {
             "root_cause": "Pod could not be scheduled",
             "evidence": ["Event: FailedScheduling"],
+            "object_evidence": {
+                f"pod:{pod.get('metadata', {}).get('name')}": [
+                    "Scheduler could not place pod"
+                ]
+            },
             "likely_causes": [
                 "No nodes satisfy resource requests",
                 "Node taints or affinity rules prevent scheduling",

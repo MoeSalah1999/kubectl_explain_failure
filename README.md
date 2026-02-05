@@ -89,12 +89,21 @@ PyYAML
 
 This ensures tests run in a clean environment and type checks are enforced.
 
-## Supported failure patterns (initial)
-- Pending Pods due to FailedScheduling
-- ImagePullBackOff / ErrImagePull
-- CrashLoopBackOff (BackOff events)
-- OOMKilled containers
+## Supported failure patterns:
+- CrashLoopBackoff (BackOff events)
+- ConfigMapNotFound
+- FailedScheduling
 - FailedMount (volume mount failures)
+- ImagePullBackOff 
+- ImagePullError
+- ImagePullSecretMissing
+- NodeDiskPressure
+- OOMKilled containers
+- PVCMountFailed
+- PVCNotBound
+- PVCZoneMismatch
+- UnschedulableTaint
+
 
 ## Design notes
 - Rule-based, not implicit
