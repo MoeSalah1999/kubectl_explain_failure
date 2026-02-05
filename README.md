@@ -45,7 +45,7 @@ This is a **diagnostic explainer**, not a fixer.
 
 To install the package locally in development mode, allowing editable imports:
 
-- git clone <repo-url>
+- git clone https://github.com/MoeSalah1999/kubectl_explain_failure
 - cd kubectl_explain_failure
 - python -m pip install -e .
 
@@ -57,29 +57,29 @@ and run tests or scripts directly.
 
 ## Usage
 Basic usage:
-python explain_failure.py \
-  --pod tests/fixtures/pod.json \
-  --events tests/fixtures/events.json
+python -m kubectl_explain_failure \
+  --pod /kubectl_explain_failure/tests/fixtures/pod.json \
+  --events /kubectl_explain_failure/tests/fixtures/events.json
 
 
 With optional PVC or Node context:
-python explain_failure.py \
-  --pod tests/fixtures/pending_pod.json \
-  --events tests/fixtures/empty_events.json \
-  --pvc tests/fixtures/pvc_pending.json \
-  --node tests/fixtures/node_disk_pressure.json
+python -m kubectl_explain_failure \
+  --pod /kubectl_explain_failure/tests/fixtures/pending_pod.json \
+  --events /kubectl_explain_failure/tests/fixtures/empty_events.json \
+  --pvc /kubectl_explain_failure/tests/fixtures/pvc_pending.json \
+  --node /kubectl_explain_failure/tests/fixtures/node_disk_pressure.json
 
 
 ## Testing
 
-This project uses pytest and tox.
+This project uses pytest and tox. Tests are **not included in the installed package** and must be run from the source tree.
 To run tests in the development environment:
 
 tox
-tox -e format
-tox -e lint
-tox -e typing
-tox -e test (runs pytest)
+tox -e format   # code formatting
+tox -e lint     # static linting
+tox -e typing   # mypy type checks
+tox -e test     # pytest suite, including golden tests
 
 Tox automatically installs required dependencies, including:
 
@@ -89,20 +89,25 @@ PyYAML
 
 This ensures tests run in a clean environment and type checks are enforced.
 
-## Supported failure patterns:
+## Supported failure patterns: (some rules support suppression/resolution semantics):
 - CrashLoopBackoff (BackOff events)
 - ConfigMapNotFound
-- FailedScheduling
-- FailedMount (volume mount failures)
+- FailedScheduling ✅
+- FailedMount (volume mount failures) ✅
 - ImagePullBackOff 
 - ImagePullError
 - ImagePullSecretMissing
-- NodeDiskPressure
+- NodeDiskPressure ✅
 - OOMKilled containers
-- PVCMountFailed
-- PVCNotBound
+- PVCMountFailed ✅
+- PVCNotBound ✅
 - PVCZoneMismatch
-- UnschedulableTaint
+- UnschedulableTaint ✅
+
+- Rules are evaluated in priority order.
+- High-priority rules can suppress lower-priority rules, preventing misleading explanations.
+- First matching, unsuppressed rule produces the explanation.
+- Golden tests assert that suppression works correctly.
 
 
 ## Design notes
@@ -141,7 +146,6 @@ This structure allows incremental expansion without increasing complexity.
 ## Future work
 
 - Additional failure heuristics
-- Cross-object reasoning (Pod ↔ PVC ↔ Node)
 - Structured output for automation
 - Optional kubectl plugin wrapper
 
