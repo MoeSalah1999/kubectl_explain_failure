@@ -75,11 +75,11 @@ python -m kubectl_explain_failure \
 This project uses pytest and tox. Tests are **not included in the installed package** and must be run from the source tree.
 To run tests in the development environment:
 
-tox
-tox -e format   # code formatting
-tox -e lint     # static linting
-tox -e typing   # mypy type checks
-tox -e test     # pytest suite, including golden tests
+- tox
+- tox -e format   # code formatting
+- tox -e lint     # static linting
+- tox -e typing   # mypy type checks
+- tox -e test     # pytest suite, including golden tests
 
 Tox automatically installs required dependencies, including:
 
