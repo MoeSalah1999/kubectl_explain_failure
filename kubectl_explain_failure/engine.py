@@ -27,6 +27,39 @@ def get_default_rules() -> list[FailureRule]:
     return _DEFAULT_RULES
 
 
+def apply_suppressions(
+    explanations: list[tuple[dict[str, Any], FailureRule, CausalChain]],
+) -> tuple[list[tuple[dict[str, Any], FailureRule, CausalChain]], dict[str, list[str]]]:
+    """
+    Given a list of matched explanations, automatically suppress rules according to rule.blocks.
+
+    Returns:
+    - filtered_explanations: only unsuppressed explanations
+    - suppression_map: dict mapping winner rule -> list of suppressed rule names
+    """
+    winners = []
+    suppressed_map: dict[str, list[str]] = {}
+
+    # Track which rules are blocked
+    blocked_rules: set[str] = set()
+    for exp, rule, chain in sorted(
+        explanations, key=lambda e: getattr(e[1], "priority", 100)
+    ):
+        if rule.name in blocked_rules:
+            continue
+
+        # Determine which rules this winner blocks
+        blocks = getattr(rule, "blocks", [])
+        suppressed_map[rule.name] = []
+        for rname in blocks:
+            blocked_rules.add(rname)
+            suppressed_map[rule.name].append(rname)
+
+        winners.append((exp, rule, chain))
+
+    return winners, suppressed_map
+
+
 # ----------------------------
 # Heuristic engine
 # ----------------------------
@@ -159,31 +192,48 @@ def explain_failure(
         }
 
     # ----------------------------
+    # Apply automatic suppression
+    # ----------------------------
+    filtered_explanations, suppression_map = apply_suppressions(explanations)
+
+    if not filtered_explanations:
+        return {
+            "pod": pod_name,
+            "phase": pod_phase,
+            "root_cause": "Unknown",
+            "evidence": [],
+            "likely_causes": [],
+            "suggested_checks": [],
+            "confidence": 0.0,
+        }
+
+    # ----------------------------
     # STRONG CAUSAL OVERRIDE: PVC blocks scheduling
     # ----------------------------
     pvc_matches = [
         (exp, rule, chain)
-        for exp, rule, chain in explanations
+        for exp, rule, chain in filtered_explanations
         if getattr(rule, "category", None) == "PersistentVolumeClaim"
     ]
 
     if pvc_matches:
         best_exp, best_rule, best_chain = max(
-            pvc_matches,
-            key=lambda pair: pair[0].get("confidence", 0.0),
+            pvc_matches, key=lambda pair: pair[0].get("confidence", 0.0)
         )
 
         pvc = context.get("blocking_pvc", {})
         pvc_name = pvc.get("metadata", {}).get("name", "<unknown>")
 
-        # Pending pod with no events → partial certainty
         confidence = best_exp.get("confidence", 0.0)
         if pod_phase == "Pending" and not events:
             confidence = max(confidence, 0.5)
 
         resolution = Resolution(
             winner=best_rule.name,
-            suppressed=[r.name for _, r, _ in explanations if r is not best_rule],
+            suppressed=[
+                r.name for _, r, _ in filtered_explanations if r is not best_rule
+            ]
+            + suppression_map.get(best_rule.name, []),
             reason="PersistentVolumeClaim is a hard scheduling blocker",
         )
 
@@ -204,17 +254,15 @@ def explain_failure(
             "resolution": resolution.__dict__,
         }
 
-        # Preserve object-scoped evidence if present
         if "object_evidence" in best_exp:
             result["object_evidence"] = best_exp["object_evidence"]
         return result
 
     # ----------------------------
-    # Weighted root-cause selection
+    # Weighted root-cause selection for remaining rules
     # ----------------------------
     root_score_map: dict[str, float] = {}
-
-    for exp, rule, _chain in explanations:
+    for exp, rule, _chain in filtered_explanations:
         root = exp.get("root_cause")
         if not root:
             continue
@@ -228,10 +276,7 @@ def explain_failure(
 
         root_score_map[root] = max(root_score_map.get(root, 0.0), score)
 
-    best_root_cause = max(
-        root_score_map.items(),
-        key=lambda item: item[1],
-    )[0]
+    best_root_cause = max(root_score_map.items(), key=lambda item: item[1])[0]
 
     if verbose:
         print("[DEBUG] Root cause scores:", root_score_map)
@@ -252,6 +297,13 @@ def explain_failure(
     # ----------------------------
     # Merge explanations
     # ----------------------------
+
+    # Determine winner for suppression
+    winner_rule_name = filtered_explanations[0][1].name
+    suppressed_rules = [
+        r.name for _, r, _ in filtered_explanations[1:]
+    ] + suppression_map.get(winner_rule_name, [])
+
     merged: dict[str, Any] = {
         "pod": pod_name,
         "phase": pod_phase,
@@ -261,6 +313,11 @@ def explain_failure(
         "likely_causes": [],
         "suggested_checks": [],
         "causal_chain": [],
+        "resolution": {
+            "winner": winner_rule_name,
+            "suppressed": suppressed_rules,
+            "reason": "Automatic suppression applied based on rule.blocks",
+        },
     }
 
     for exp, _, chain in explanations:
