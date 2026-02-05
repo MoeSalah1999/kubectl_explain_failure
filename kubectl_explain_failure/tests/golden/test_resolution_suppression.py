@@ -1,17 +1,20 @@
 import os
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from kubectl_explain_failure.engine import explain_failure
 from kubectl_explain_failure.model import load_json, normalize_events
 
-FIXTURES = os.path.join(os.path.dirname(__file__), "fixtures")
+HERE = Path(__file__).resolve().parent
+FIXTURES = HERE.parent / "fixtures"
+
 
 
 def test_pvc_blocks_failed_scheduling():
-    pod = load_json(os.path.join(FIXTURES, "pending_pod.json"))
-    pvc = load_json(os.path.join(FIXTURES, "pvc_pending.json"))
+    pod = load_json(FIXTURES / "pending_pod.json")
+    pvc = load_json(FIXTURES / "pvc_pending.json")
 
     events = normalize_events([
         {"reason": "FailedScheduling"}
