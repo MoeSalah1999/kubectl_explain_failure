@@ -1,6 +1,11 @@
 import os
 from typing import Any
 
+from kubectl_explain_failure.causality import (
+    CausalChain,
+    Resolution,
+    build_chain,
+)
 from kubectl_explain_failure.loader import load_plugins, load_rules
 from kubectl_explain_failure.model import get_pod_name, get_pod_phase
 from kubectl_explain_failure.relations import build_relations
@@ -54,7 +59,7 @@ def explain_failure(
     context["relations"] = build_relations(pod, context)
     context["timeline"] = build_timeline(events)
 
-    explanations: list[tuple[dict[str, Any], FailureRule]] = []
+    explanations: list[tuple[dict[str, Any], FailureRule, CausalChain]] = []
 
     # ----------------------------
     # Collect container states
@@ -100,7 +105,7 @@ def explain_failure(
         # Dependency enforcement
         dependencies_met = True
         for dep in getattr(rule, "dependencies", []):
-            if not any(exp.get("root_cause") == dep for exp, _ in explanations):
+            if not any(exp.get("root_cause") == dep for exp, _, _ in explanations):
                 dependencies_met = False
                 if verbose:
                     print(
@@ -130,7 +135,8 @@ def explain_failure(
         # Rule match
         if rule.matches(pod, events, context):
             exp = rule.explain(pod, events, context)
-            explanations.append((exp, rule))
+            chain = build_chain(exp)
+            explanations.append((exp, rule, chain))
             if verbose:
                 print(
                     f"[DEBUG] Rule '{rule.name}' matched "
@@ -156,13 +162,13 @@ def explain_failure(
     # STRONG CAUSAL OVERRIDE: PVC blocks scheduling
     # ----------------------------
     pvc_matches = [
-        (exp, rule)
-        for exp, rule in explanations
+        (exp, rule, chain)
+        for exp, rule, chain in explanations
         if getattr(rule, "category", None) == "PersistentVolumeClaim"
     ]
 
     if pvc_matches:
-        best_exp, _ = max(
+        best_exp, best_rule, best_chain = max(
             pvc_matches,
             key=lambda pair: pair[0].get("confidence", 0.0),
         )
@@ -175,17 +181,27 @@ def explain_failure(
         if pod_phase == "Pending" and not events:
             confidence = max(confidence, 0.5)
 
+        resolution = Resolution(
+            winner=best_rule.name,
+            suppressed=[r.name for _, r, _ in explanations if r is not best_rule],
+            reason="PersistentVolumeClaim is a hard scheduling blocker",
+        )
+
+        root_cause_node = best_chain.root()
         result = {
             "pod": pod_name,
             "phase": pod_phase,
-            "root_cause": best_exp.get(
-                "root_cause",
-                f"Pod is blocked by unbound PersistentVolumeClaim '{pvc_name}'",
+            "pvc_name": pvc_name,
+            "root_cause": (
+                root_cause_node.message
+                if root_cause_node is not None
+                else best_exp.get("root_cause", "Unknown")
             ),
             "confidence": min(1.0, max(confidence, 0.95)),
             "evidence": best_exp.get("evidence", []),
             "likely_causes": best_exp.get("likely_causes", []),
             "suggested_checks": best_exp.get("suggested_checks", []),
+            "resolution": resolution.__dict__,
         }
 
         # Preserve object-scoped evidence if present
@@ -198,7 +214,7 @@ def explain_failure(
     # ----------------------------
     root_score_map: dict[str, float] = {}
 
-    for exp, rule in explanations:
+    for exp, rule, _chain in explanations:
         root = exp.get("root_cause")
         if not root:
             continue
@@ -223,10 +239,15 @@ def explain_failure(
     # ----------------------------
     # Noisy-OR confidence aggregation
     # ----------------------------
-    combined_confidence = 1.0
-    for exp, _ in explanations:
-        combined_confidence *= 1.0 - exp.get("confidence", 0.0)
-    combined_confidence = 1.0 - combined_confidence
+    signal_strength = 1.0
+    for exp, _, _ in explanations:
+        signal_strength *= 1.0 - exp.get("confidence", 0.0)
+    signal_strength = 1.0 - signal_strength
+
+    data_completeness = min(1.0, len(context) / 5.0)
+    conflict_penalty = 1.0 - (0.1 * max(0, len(explanations) - 1))
+
+    combined_confidence = signal_strength * data_completeness * conflict_penalty
 
     # ----------------------------
     # Merge explanations
@@ -239,12 +260,15 @@ def explain_failure(
         "evidence": [],
         "likely_causes": [],
         "suggested_checks": [],
+        "causal_chain": [],
     }
 
-    for exp, _ in explanations:
+    for exp, _, chain in explanations:
         merged["evidence"].extend(list(exp.get("evidence", [])))
         merged["likely_causes"].extend(list(exp.get("likely_causes", [])))
         merged["suggested_checks"].extend(list(exp.get("suggested_checks", [])))
+        for cause in chain.causes:
+            merged["causal_chain"].append(cause.message)
 
         object_evidence = exp.get("object_evidence", {})
         if object_evidence:
@@ -257,6 +281,7 @@ def explain_failure(
     merged["evidence"] = list(dict.fromkeys(merged["evidence"]))
     merged["likely_causes"] = list(dict.fromkeys(merged["likely_causes"]))
     merged["suggested_checks"] = list(dict.fromkeys(merged["suggested_checks"]))
+    merged["causal_chain"] = list(dict.fromkeys(merged["causal_chain"]))
 
     if "object_evidence" in merged:
         for obj, items in merged["object_evidence"].items():

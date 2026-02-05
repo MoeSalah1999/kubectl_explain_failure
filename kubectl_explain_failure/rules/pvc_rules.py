@@ -8,6 +8,9 @@ class PVCNotBoundRule(FailureRule):
     phases = ["Pending"]  # Only relevant for Pending pods
     requires = {"context": ["pvc"]}
 
+    # Hard blockers
+    blocks = ["FailedScheduling", "FailedMount"]
+
     def matches(self, pod, events, context):
         pvc = context.get("pvc")
         if not pvc:
@@ -45,6 +48,9 @@ class PVCMountFailedRule(FailureRule):
     category = "PersistentVolumeClaim"
     phases = ["Pending", "Running"]
     requires = {"context": ["pvc"]}
+
+    # Still blocks scheduler noise
+    blocks = ["FailedScheduling"]
 
     def matches(self, pod, events, context):
         # Fires if any event is FailedMount

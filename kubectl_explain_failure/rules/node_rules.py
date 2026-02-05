@@ -5,6 +5,9 @@ class NodeDiskPressureRule(FailureRule):
     name = "NodeDiskPressure"
     priority = 80
 
+    # Node health dominates scheduler errors
+    blocks = ["FailedScheduling"]
+
     def matches(self, pod, events, context):
         node_events = context.get("node")
         if not node_events:

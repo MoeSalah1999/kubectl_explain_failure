@@ -3,6 +3,7 @@ README.md
 pyproject.toml
 kubectl_explain_failure/__init__.py
 kubectl_explain_failure/__main__.py
+kubectl_explain_failure/causality.py
 kubectl_explain_failure/cli.py
 kubectl_explain_failure/context.py
 kubectl_explain_failure/engine.py
