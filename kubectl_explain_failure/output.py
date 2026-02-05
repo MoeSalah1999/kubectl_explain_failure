@@ -1,14 +1,20 @@
 import json
+import types
 from typing import Any
 
+yaml: types.ModuleType | None
+
 try:
-    import yaml
+    import yaml as _yaml
+
+    yaml = _yaml
 except ImportError:
     yaml = None
 
 # ----------------------------
 # Output formatting
 # ----------------------------
+
 
 def output_result(result: dict[str, Any], fmt: str = "text") -> None:
     """
