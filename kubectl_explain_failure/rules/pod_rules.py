@@ -5,6 +5,12 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 class FailedSchedulingRule(FailureRule):
     name = "FailedScheduling"
     priority = 90
+    category = "Scheduler"
+
+    # Pod-only rule; intentionally weak
+    requires = {
+        "objects": [],
+    }
 
     def matches(self, pod, events, context):
         cond = pod_condition(pod, "PodScheduled")
@@ -13,14 +19,11 @@ class FailedSchedulingRule(FailureRule):
         return has_event(events, "FailedScheduling")
 
     def explain(self, pod, events, context):
+        pod_name = pod["metadata"]["name"]
         return {
             "root_cause": "Pod could not be scheduled",
-            "evidence": ["Event: FailedScheduling"],
-            "object_evidence": {
-                f"pod:{pod.get('metadata', {}).get('name')}": [
-                    "Scheduler could not place pod"
-                ]
-            },
+            "evidence": ["Scheduler reported FailedScheduling"],
+            "object_evidence": {f"pod:{pod_name}": ["Scheduler could not place pod"]},
             "likely_causes": [
                 "No nodes satisfy resource requests",
                 "Node taints or affinity rules prevent scheduling",
@@ -38,6 +41,10 @@ class FailedSchedulingRule(FailureRule):
 class FailedMountRule(FailureRule):
     name = "FailedMount"
     priority = 20
+    category = "Volume"
+    requires = {
+        "objects": ["pvc"],
+    }
 
     def matches(self, pod, events, context):
         return has_event(events, "FailedMount")

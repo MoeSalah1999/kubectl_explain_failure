@@ -4,42 +4,35 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 class NodeDiskPressureRule(FailureRule):
     name = "NodeDiskPressure"
     priority = 80
+    category = "Node"
+    requires = {
+        "objects": ["node"],
+    }
 
     # Node health dominates scheduler errors
     blocks = ["FailedScheduling"]
 
     def matches(self, pod, events, context):
-        node_events = context.get("node")
-        if not node_events:
-            return False
-
-        if node_events.get("kind") == "List":
-            items = node_events.get("items", [])
-        else:
-            items = [node_events]
-
-        return any(e.get("reason") == "NodeHasDiskPressure" for e in items)
+        conditions = context.get("node_conditions", {})
+        return conditions.get("DiskPressure") == "True"
 
     def explain(self, pod, events, context):
-        node_events = context.get("node")
-        items = node_events.get("items", []) if node_events else []
-
-        messages = [
-            e.get("message", "")
-            for e in items
-            if e.get("reason") == "NodeHasDiskPressure"
-        ]
+        node = context["node"]
+        node_name = node["metadata"]["name"]
 
         return {
             "root_cause": "Node has disk pressure",
-            "evidence": messages or ["Node reported disk pressure"],
+            "confidence": 0.9,
+            "evidence": ["Node condition DiskPressure=True"],
+            "object_evidence": {
+                f"node:{node_name}": ["DiskPressure condition is True"]
+            },
             "likely_causes": [
                 "Node disk is full",
-                "Log or image garbage collection not keeping up",
+                "Image or log cleanup not keeping up",
             ],
             "suggested_checks": [
-                "kubectl describe node <node-name>",
+                "kubectl describe node <node>",
                 "Check node disk usage",
             ],
-            "confidence": 0.9,
         }

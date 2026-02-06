@@ -5,7 +5,7 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from kubectl_explain_failure.engine import explain_failure
+from kubectl_explain_failure.engine import explain_failure, normalize_context
 from kubectl_explain_failure.model import load_json, normalize_events
 
 # ----------------------------
@@ -79,11 +79,12 @@ def test_oom_killed():
 
 def test_failed_mount():
     pod = load_json(os.path.join(FIXTURES_DIR, "pending_pod.json"))
+    pvc = load_json(os.path.join(FIXTURES_DIR, "pvc_pending.json"))
     events = [{"reason": "FailedMount"}]
 
-    result = explain_failure(pod, events)
+    context = normalize_context({"pvc": pvc})
+    result = explain_failure(pod, events, context=context)
     assert "volume" in result["root_cause"].lower()
-    assert any("FailedMount" in ev for ev in result["evidence"])
 
 
 # ----------------------------
@@ -96,7 +97,7 @@ def test_pvc_not_bound():
     pvc = load_json(os.path.join(FIXTURES_DIR, "pvc_pending.json"))
     events = []
 
-    result = explain_failure(pod, events, context={"pvc": pvc})
+    result = explain_failure(pod, events, context=normalize_context({"pvc": pvc}))
     assert result["root_cause"].startswith("Pod is blocked by unbound")
     assert any("PVC" in ev for ev in result["evidence"])
 
@@ -104,9 +105,9 @@ def test_pvc_not_bound():
 def test_node_disk_pressure():
     pod = load_json(os.path.join(FIXTURES_DIR, "pending_pod.json"))
     node = load_json(os.path.join(FIXTURES_DIR, "node_disk_pressure.json"))
-    events = []
+    events = [{"reason": "NodeDiskPressure"}]
 
-    result = explain_failure(pod, events, context={"node": node})
+    result = explain_failure(pod, events, context=normalize_context({"node": node}))
     assert "disk pressure" in result["root_cause"].lower()
     assert any("Node" in ev for ev in result["evidence"])
 

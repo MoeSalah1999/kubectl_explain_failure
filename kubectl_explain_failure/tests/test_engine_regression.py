@@ -5,7 +5,7 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from kubectl_explain_failure.engine import explain_failure
+from kubectl_explain_failure.engine import explain_failure, normalize_context
 
 
 # Minimal fake rules for testing without real cluster
@@ -40,8 +40,12 @@ class FakeRulePVC:
     phases = ["Pending"]
 
     def matches(self, pod, events, context):
-        pvc = context.get("pvc")
-        return pvc and pvc.get("status") != "Bound"
+        # support new object-graph format
+        pvcs = context.get("objects", {}).get("pvc", {})
+        for pvc in pvcs.values():
+            if pvc.get("status") != "Bound":
+                return True
+        return False
 
     def explain(self, pod, events, context):
         return {
@@ -84,7 +88,9 @@ def test_regression_eventless_rules(rule_class, pod, context, expected_root):
     Ensure rules with no events requirement fire correctly when events=[].
     """
     rules = [rule_class()]
-    result = explain_failure(pod, events=[], context=context, rules=rules)
+    result = explain_failure(
+        pod, events=[], context=normalize_context(context), rules=rules
+    )
     assert expected_root.lower() in result["root_cause"].lower()
     assert result["confidence"] > 0
     assert isinstance(result["evidence"], list)

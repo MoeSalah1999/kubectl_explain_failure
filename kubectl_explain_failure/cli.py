@@ -30,9 +30,9 @@ def main():
     parser.add_argument("--endpoints")
     parser.add_argument("--replicaset")
     parser.add_argument("--deployment")
-    parser.add_argument("--statefulsets")
     parser.add_argument("--daemonsets")
-    parser.add_argument("--storageclasses")
+    parser.add_argument("--storageclass")
+    parser.add_argument("--statefulsets")
     parser.add_argument("--serviceaccount")
 
     parser.add_argument("--enable-categories", nargs="*", default=None)

@@ -27,6 +27,65 @@ def get_default_rules() -> list[FailureRule]:
     return _DEFAULT_RULES
 
 
+def normalize_context(context: dict[str, Any]) -> dict[str, Any]:
+    """
+    Normalize legacy top-level 'pvc', 'node', etc. into the new object-graph format.
+    Ensures every object has a name.
+    Also preserves top-level keys for backward compatibility.
+    """
+    objects = context.get("objects", {})
+
+    # PVC
+    if "pvc" in context:
+        pvc_data = context["pvc"]
+        if isinstance(pvc_data, dict):
+            name = pvc_data.get("metadata", {}).get("name", "pvc1")
+            objects.setdefault("pvc", {})[name] = pvc_data
+        elif isinstance(pvc_data, list):
+            objects.setdefault("pvc", {}).update(
+                {p.get("metadata", {}).get("name", f"pvc{i}"): p
+                 for i, p in enumerate(pvc_data)}
+            )
+
+    # Node
+    if "node" in context:
+        node_data = context["node"]
+        if isinstance(node_data, dict):
+            name = node_data.get("metadata", {}).get("name", "node1")
+            objects.setdefault("node", {})[name] = node_data
+        elif isinstance(node_data, list):
+            objects.setdefault("node", {}).update(
+                {n.get("metadata", {}).get("name", f"node{i}"): n
+                 for i, n in enumerate(node_data)}
+            )
+
+        # Populate node_conditions for NodeDiskPressureRule
+        context["node_conditions"] = {}
+        nodes = node_data if isinstance(node_data, list) else [node_data]
+        for n in nodes:
+            for c in n.get("status", {}).get("conditions", []):
+                cond_type = c.get("type")
+                status = c.get("status")
+                if cond_type and status:
+                    context["node_conditions"][cond_type] = status
+
+    # Preserve objects in context
+    context["objects"] = objects
+
+    # Preserve legacy top-level keys for backward compatibility
+    # IMPORTANT: legacy rules expect SINGLE objects, not name->object mappings
+    if "pvc" in context and isinstance(context["pvc"], dict):
+        # leave context["pvc"] as the original single PVC object
+        pass
+
+    if "node" in context and isinstance(context["node"], dict):
+        # leave context["node"] as the original single Node object
+        pass
+
+    return context
+
+
+
 def compose_confidence(
     *,
     rule_confidence: float,
@@ -100,7 +159,8 @@ def explain_failure(
     - Normalizes confidence using noisy-OR
     - Enforces strong causal precedence for PVC-related failures
     """
-    context = context or {}
+    context = normalize_context(context or {})
+    objects = context.get("objects", {})
     rules = rules or get_default_rules()
 
     pod_name = get_pod_name(pod)
@@ -175,14 +235,24 @@ def explain_failure(
         # ----------------------------
         requires = getattr(rule, "requires", {})
 
-        # Pod requirement
         if requires.get("pod") and not pod:
             continue
 
-        # Context key requirement (legacy)
-        missing_context = [
-            key for key in requires.get("context", []) if key not in context
-        ]
+        # Allow event-driven rules (e.g. FailedMount) to run without context
+        missing_context = []
+        for key in requires.get("context", []):
+            # check new object graph first
+            if key in context.get("objects", {}) and context["objects"][key]:
+                continue
+            # fallback: legacy top-level context
+            if key in context and context[key]:
+                continue
+            # fallback: allow event-driven rules to run if events exist
+            if events:
+                continue
+            # missing required context
+            missing_context.append(key)
+
         if missing_context:
             if verbose:
                 print(
@@ -193,19 +263,15 @@ def explain_failure(
 
         # Object dependency requirement (NEW)
         required_objects = requires.get("objects", [])
-        optional_objects = requires.get("optional", [])
-
         objects = context.get("objects", {})
 
         missing_objects = [
             obj for obj in required_objects if obj not in objects or not objects[obj]
         ]
-
         if missing_objects:
             if verbose:
                 print(
-                    f"[DEBUG] Skipping '{rule.name}': "
-                    f"missing required objects {missing_objects}"
+                    f"[DEBUG] Skipping '{rule.name}': missing required objects {missing_objects}"
                 )
             continue
 
@@ -258,6 +324,8 @@ def explain_failure(
         (exp, rule, chain)
         for exp, rule, chain in filtered_explanations
         if getattr(rule, "category", None) == "PersistentVolumeClaim"
+        or "pvc" in exp.get("root_cause", "").lower()
+        or "persistentvolumeclaim" in exp.get("root_cause", "").lower()
     ]
 
     if pvc_matches:
@@ -265,20 +333,17 @@ def explain_failure(
             pvc_matches, key=lambda pair: pair[0].get("confidence", 0.0)
         )
 
-        pvc = context.get("blocking_pvc", {})
-        pvc_name = pvc.get("metadata", {}).get("name", "<unknown>")
+        pvc_obj_dict = context["objects"].get("pvc", {})
+        if pvc_obj_dict:
+            pvc_name = (
+                next(iter(pvc_obj_dict.values()))
+                .get("metadata", {})
+                .get("name", "<unknown>")
+            )
+        else:
+            pvc_name = "<unknown>"
 
-        base_conf = best_exp.get("confidence", 0.0)
-        evidence_quality = 1.0 if context.get("pvc") else 0.7
-        data_completeness = min(1.0, len(context) / 5.0)
-        confidence = compose_confidence(
-            rule_confidence=base_conf,
-            evidence_quality=evidence_quality,
-            data_completeness=data_completeness,
-            conflict_penalty=1.0,
-        )
-
-        confidence = max(confidence, 0.95)
+        confidence = max(best_exp.get("confidence", 0.0), 0.95)
 
         resolution = Resolution(
             winner=best_rule.name,
@@ -299,7 +364,7 @@ def explain_failure(
                 if root_cause_node is not None
                 else best_exp.get("root_cause", "Unknown")
             ),
-            "confidence": min(1.0, max(confidence, 0.95)),
+            "confidence": confidence,
             "evidence": best_exp.get("evidence", []),
             "likely_causes": best_exp.get("likely_causes", []),
             "suggested_checks": best_exp.get("suggested_checks", []),
@@ -308,6 +373,7 @@ def explain_failure(
 
         if "object_evidence" in best_exp:
             result["object_evidence"] = best_exp["object_evidence"]
+
         return result
 
     # ----------------------------

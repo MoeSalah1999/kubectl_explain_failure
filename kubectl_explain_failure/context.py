@@ -56,6 +56,20 @@ def build_context(args) -> dict[str, Any]:
     context: dict[str, Any] = {"objects": {}}
 
     # ----------------------------
+    # Backward-compatibility shims
+    # ----------------------------
+    # Tests and legacy callers may pass raw objects directly in context
+    # Normalize them into context["objects"]
+
+    context.setdefault("objects", {})
+
+    for key in ("pvc", "node"):
+        if key in context and isinstance(context[key], dict):
+            context["objects"].setdefault(key, {})
+            name = context[key].get("metadata", {}).get("name", key)
+            context["objects"][key][name] = context[key]
+
+    # ----------------------------
     # PersistentVolumeClaim(s)
     # ----------------------------
     pvcs: list[dict[str, Any]] = []

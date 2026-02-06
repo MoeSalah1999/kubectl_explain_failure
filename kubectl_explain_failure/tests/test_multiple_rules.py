@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from kubectl_explain_failure.engine import explain_failure
+from kubectl_explain_failure.engine import explain_failure, normalize_context
 from kubectl_explain_failure.model import load_json, normalize_events
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -21,7 +21,7 @@ def test_pending_pvc_and_failed_scheduling():
     pvc = load_fixture("pvc_pending.json")
     events = normalize_events([{"reason": "FailedScheduling"}])
 
-    result = explain_failure(pod, events, {"pvc": pvc})
+    result = explain_failure(pod, events, context=normalize_context({"pvc": pvc}))
     assert "persistentvolumeclaim" in result["root_cause"].lower()
     assert 0 < result["confidence"] <= 1.0
     # Evidence should include both rules firing
@@ -80,7 +80,9 @@ def test_pvc_not_bound():
     events = load_fixture("events_pvc_not_bound.json")
     normalized_events = normalize_events(events["items"])
 
-    result = explain_failure(pod, normalized_events, {"pvc": pvc})
+    result = explain_failure(
+        pod, normalized_events, context=normalize_context({"pvc": pvc})
+    )
 
     # Root cause should reference PVC not being bound
     assert "persistentvolumeclaim" in result["root_cause"].lower()
