@@ -43,8 +43,10 @@ def normalize_context(context: dict[str, Any]) -> dict[str, Any]:
             objects.setdefault("pvc", {})[name] = pvc_data
         elif isinstance(pvc_data, list):
             objects.setdefault("pvc", {}).update(
-                {p.get("metadata", {}).get("name", f"pvc{i}"): p
-                 for i, p in enumerate(pvc_data)}
+                {
+                    p.get("metadata", {}).get("name", f"pvc{i}"): p
+                    for i, p in enumerate(pvc_data)
+                }
             )
 
     # Node
@@ -55,14 +57,17 @@ def normalize_context(context: dict[str, Any]) -> dict[str, Any]:
             objects.setdefault("node", {})[name] = node_data
         elif isinstance(node_data, list):
             objects.setdefault("node", {}).update(
-                {n.get("metadata", {}).get("name", f"node{i}"): n
-                 for i, n in enumerate(node_data)}
+                {
+                    n.get("metadata", {}).get("name", f"node{i}"): n
+                    for i, n in enumerate(node_data)
+                }
             )
 
         # Populate node_conditions for NodeDiskPressureRule
         context["node_conditions"] = {}
-        nodes = node_data if isinstance(node_data, list) else [node_data]
-        for n in nodes:
+
+        node_objects = objects.get("node", {}).values()
+        for n in node_objects:
             for c in n.get("status", {}).get("conditions", []):
                 cond_type = c.get("type")
                 status = c.get("status")
@@ -83,7 +88,6 @@ def normalize_context(context: dict[str, Any]) -> dict[str, Any]:
         pass
 
     return context
-
 
 
 def compose_confidence(
@@ -191,7 +195,9 @@ def explain_failure(
     filtered_rules = []
     for rule in rules:
         # Phase gating
-        phases = getattr(rule, "phases", None)
+        phases = getattr(rule, "phases", None) or getattr(
+            rule, "supported_phases", None
+        )
         if phases and pod_phase not in phases:
             continue
 
