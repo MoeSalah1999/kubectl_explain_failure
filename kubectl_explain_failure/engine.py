@@ -27,6 +27,23 @@ def get_default_rules() -> list[FailureRule]:
     return _DEFAULT_RULES
 
 
+def compose_confidence(
+    *,
+    rule_confidence: float,
+    evidence_quality: float = 1.0,
+    data_completeness: float = 1.0,
+    conflict_penalty: float = 1.0,
+) -> float:
+    """
+    Deterministically compose confidence from independent factors.
+    """
+    c = rule_confidence
+    c *= evidence_quality
+    c *= data_completeness
+    c *= conflict_penalty
+    return min(1.0, max(0.0, c))
+
+
 def apply_suppressions(
     explanations: list[tuple[dict[str, Any], FailureRule, CausalChain]],
 ) -> tuple[list[tuple[dict[str, Any], FailureRule, CausalChain]], dict[str, list[str]]]:
@@ -224,9 +241,17 @@ def explain_failure(
         pvc = context.get("blocking_pvc", {})
         pvc_name = pvc.get("metadata", {}).get("name", "<unknown>")
 
-        confidence = best_exp.get("confidence", 0.0)
-        if pod_phase == "Pending" and not events:
-            confidence = max(confidence, 0.5)
+        base_conf = best_exp.get("confidence", 0.0)
+        evidence_quality = 1.0 if context.get("pvc") else 0.7
+        data_completeness = min(1.0, len(context) / 5.0)
+        confidence = compose_confidence(
+            rule_confidence=base_conf,
+            evidence_quality=evidence_quality,
+            data_completeness=data_completeness,
+            conflict_penalty=1.0,
+        )
+
+        confidence = max(confidence, 0.95)
 
         resolution = Resolution(
             winner=best_rule.name,

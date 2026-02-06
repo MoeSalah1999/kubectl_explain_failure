@@ -17,6 +17,9 @@ class FailureRule:
     container_states: list[str] = []  # e.g. ["waiting", "terminated"]
     dependencies: list[str] = []  # names of other rules
 
+    # ---- Blocking / suppression semantics ----
+    blocks: list[str] = []  # names of rules this rule suppresses
+
     # ---- Contract requirements ----
     requires = {
         "pod": True,

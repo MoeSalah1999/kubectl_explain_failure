@@ -42,7 +42,11 @@ class Resolution:
 def build_chain(exp: dict[str, Any]) -> CausalChain:
     """
     Build a causal chain from a rule explanation.
+    Supports both legacy flat explanations and explicit causal chains.
     """
+    if "causes" in exp and isinstance(exp["causes"], CausalChain):
+        return exp["causes"]
+
     chain = CausalChain()
 
     root = exp.get("root_cause")
