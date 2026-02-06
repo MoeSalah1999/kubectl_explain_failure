@@ -15,8 +15,13 @@ class PVCNotBoundRule(FailureRule):
         pvc = context.get("pvc")
         if not pvc:
             return False
-        return pvc.get("status", {}).get("phase") != "Bound"
+        
+        conds = pvc.get("status", {}).get("conditions", [])
+        if conds:
+            return any(c.get("type") == "Bound" and c.get("status") == "False" for c in conds)
 
+        return pvc.get("status", {}).get("phase") != "Bound"
+    
     def explain(self, pod, events, context):
         pvc = context["pvc"]
         return {

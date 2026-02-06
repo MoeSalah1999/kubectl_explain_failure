@@ -20,6 +20,15 @@ def build_relations(
         relations.setdefault(pvc_id, [])
         relations[pvc_id].append(pod_id)
 
+    # Owner → Pod (ReplicaSet / StatefulSet / DaemonSet)
+    owner_refs = pod.get("metadata", {}).get("ownerReferences", [])
+    for ref in owner_refs:
+        owner_kind = ref.get("kind", "").lower()
+        owner_name = ref.get("name", "<unknown>")
+        owner_id = f"{owner_kind}:{owner_name}"
+        relations.setdefault(owner_id, [])
+        relations[owner_id].append(pod_id)
+
     # Node → Pod
     if "node" in context:
         node_name = context["node"].get("metadata", {}).get("name", "<unknown>")

@@ -30,3 +30,10 @@ def normalize_events(events: Any) -> list[dict[str, Any]]:
 
 def has_event(events: list[dict[str, Any]], reason: str) -> bool:
     return any(e.get("reason") == reason for e in events)
+
+
+def pod_condition(pod: dict[str, Any], cond_type: str) -> dict[str, Any] | None:
+    for c in pod.get("status", {}).get("conditions", []):
+        if c.get("type") == cond_type:
+            return c
+    return None

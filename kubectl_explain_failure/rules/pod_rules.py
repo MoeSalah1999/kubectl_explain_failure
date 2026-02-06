@@ -1,4 +1,4 @@
-from kubectl_explain_failure.model import get_pod_phase, has_event
+from kubectl_explain_failure.model import get_pod_phase, has_event, pod_condition
 from kubectl_explain_failure.rules.base_rule import FailureRule
 
 
@@ -7,7 +7,10 @@ class FailedSchedulingRule(FailureRule):
     priority = 90
 
     def matches(self, pod, events, context):
-        return get_pod_phase(pod) == "Pending" and has_event(events, "FailedScheduling")
+        cond = pod_condition(pod, "PodScheduled")
+        if cond and cond.get("status") == "False":
+            return True
+        return has_event(events, "FailedScheduling")
 
     def explain(self, pod, events, context):
         return {
