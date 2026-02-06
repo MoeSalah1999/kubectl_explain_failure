@@ -24,9 +24,34 @@ def repeated_reason(events: list[dict[str, Any]], reason: str, threshold: int) -
     return sum(1 for e in events if e.get("reason") == reason) >= threshold
 
 
+class NormalizedEvent:
+    def __init__(self, raw: dict[str, Any]):
+        self.raw = raw
+        self.kind = self._infer_kind()
+        self.phase = self._infer_phase()
+        self.source = raw.get("source", {}).get("component")
+
+    def _infer_kind(self) -> str:
+        reason = self.raw.get("reason", "").lower()
+        if "schedule" in reason:
+            return "Scheduling"
+        if "pull" in reason:
+            return "Image"
+        if "mount" in reason:
+            return "Volume"
+        return "Generic"
+
+    def _infer_phase(self) -> str:
+        reason = self.raw.get("reason", "").lower()
+        if "fail" in reason or "backoff" in reason:
+            return "Failure"
+        return "Info"
+
+
 class Timeline:
     def __init__(self, events: list[dict[str, Any]]):
         self.events = events
+        self.normalized = [NormalizedEvent(e) for e in events]
 
     def first(self, reason: str):
         for e in self.events:
@@ -34,8 +59,14 @@ class Timeline:
                 return e
         return None
 
-    def has(self, reason: str) -> bool:
-        return any(e.get("reason") == reason for e in self.events)
+    def has(self, *, kind: str | None = None, phase: str | None = None) -> bool:
+        for e in self.normalized:
+            if kind and e.kind != kind:
+                continue
+            if phase and e.phase != phase:
+                continue
+            return True
+        return False
 
 
 def build_timeline(events: list[dict[str, Any]]) -> Timeline:
