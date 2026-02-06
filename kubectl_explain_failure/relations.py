@@ -13,8 +13,8 @@ def build_relations(
     pod_id = f"pod:{pod_name}"
     relations[pod_id] = []
 
-    # PVC → Pod
-    for pvc in context.get("pvcs", []):
+    # PVC → Pod (object graph)
+    for pvc in context.get("objects", {}).get("pvc", {}).values():
         pvc_name = pvc.get("metadata", {}).get("name", "<unknown>")
         pvc_id = f"pvc:{pvc_name}"
         relations.setdefault(pvc_id, [])

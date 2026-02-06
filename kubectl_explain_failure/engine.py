@@ -6,6 +6,7 @@ from kubectl_explain_failure.causality import (
     Resolution,
     build_chain,
 )
+from kubectl_explain_failure.context import _extract_node_conditions
 from kubectl_explain_failure.loader import load_plugins, load_rules
 from kubectl_explain_failure.model import get_pod_name, get_pod_phase
 from kubectl_explain_failure.relations import build_relations
@@ -64,18 +65,15 @@ def normalize_context(context: dict[str, Any]) -> dict[str, Any]:
             )
 
         # Populate node_conditions for NodeDiskPressureRule
-        context["node_conditions"] = {}
-
-        node_objects = objects.get("node", {}).values()
-        for n in node_objects:
-            for c in n.get("status", {}).get("conditions", []):
-                cond_type = c.get("type")
-                status = c.get("status")
-                if cond_type and status:
-                    context["node_conditions"][cond_type] = status
-
-    # Preserve objects in context
-    context["objects"] = objects
+        node_objects = list(objects.get("node", {}).values())
+        if node_objects:
+            # Merge conditions across nodes (defensive)
+            merged = {}
+            for n in node_objects:
+                merged.update(_extract_node_conditions(n))
+            context["node_conditions"] = merged
+            # Preserve objects in context
+            context["objects"] = objects
 
     # Preserve legacy top-level keys for backward compatibility
     # IMPORTANT: legacy rules expect SINGLE objects, not name->object mappings
@@ -86,6 +84,40 @@ def normalize_context(context: dict[str, Any]) -> dict[str, Any]:
     if "node" in context and isinstance(context["node"], dict):
         # leave context["node"] as the original single Node object
         pass
+
+    # ----------------------------
+    # Canonical PVC state (object-graph based)
+    # ----------------------------
+    pvc_objects = objects.get("pvc", {})
+
+    unbound_pvcs = []
+    for pvc in pvc_objects.values():
+        status = pvc.get("status")
+
+        # Kubernetes-shaped PVC
+        if isinstance(status, dict):
+            phase = status.get("phase")
+        # Legacy / test stub PVC
+        elif isinstance(status, str):
+            phase = status
+        else:
+            phase = None
+
+        if phase != "Bound":
+            unbound_pvcs.append(pvc)
+
+    if unbound_pvcs:
+        blocking = unbound_pvcs[0]
+
+        # Canonical signals
+        context["blocking_pvc"] = blocking
+        context["pvc_unbound"] = True
+
+        # Legacy compatibility (many rules rely on this)
+        context["pvc"] = blocking
+
+    # Ensure objects are preserved
+    context["objects"] = objects
 
     return context
 
@@ -260,6 +292,9 @@ def explain_failure(
             missing_context.append(key)
 
         if missing_context:
+            # Allow purely event-driven rules
+            if events:
+                continue
             if verbose:
                 print(
                     f"[DEBUG] Skipping '{rule.name}': "
@@ -329,9 +364,12 @@ def explain_failure(
     pvc_matches = [
         (exp, rule, chain)
         for exp, rule, chain in filtered_explanations
-        if getattr(rule, "category", None) == "PersistentVolumeClaim"
-        or "pvc" in exp.get("root_cause", "").lower()
-        or "persistentvolumeclaim" in exp.get("root_cause", "").lower()
+        if (
+            getattr(rule, "category", None) == "PersistentVolumeClaim"
+            or "pvc" in exp.get("root_cause", "").lower()
+            or "persistentvolumeclaim" in exp.get("root_cause", "").lower()
+            or "pvc" in exp.get("object_evidence", {})
+        )
     ]
 
     if pvc_matches:
