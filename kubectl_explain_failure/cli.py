@@ -21,13 +21,19 @@ def main():
         help="Output format (text, json, yaml)",
     )
 
+    parser.add_argument("--pv")
     parser.add_argument("--pvc")
     parser.add_argument("--node")
     parser.add_argument("--pvcs")
+    parser.add_argument("--secret")
     parser.add_argument("--service")
     parser.add_argument("--endpoints")
+    parser.add_argument("--replicaset")
+    parser.add_argument("--deployment")
     parser.add_argument("--statefulsets")
     parser.add_argument("--daemonsets")
+    parser.add_argument("--storageclasses")
+    parser.add_argument("--serviceaccount")
 
     parser.add_argument("--enable-categories", nargs="*", default=None)
     parser.add_argument("--disable-categories", nargs="*", default=None)

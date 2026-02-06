@@ -25,6 +25,8 @@ class FailureRule:
         "pod": True,
         "events": True,
         "context": [],  # e.g. ["node", "pvcs"]
+        "objects": [],
+        "optional_objects": [],
     }
 
     def matches(

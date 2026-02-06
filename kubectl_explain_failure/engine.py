@@ -109,6 +109,10 @@ def explain_failure(
     context["relations"] = build_relations(pod, context)
     context["timeline"] = build_timeline(events)
 
+    owners = pod.get("metadata", {}).get("ownerReferences", [])
+    if owners:
+        context["owners"] = owners
+
     explanations: list[tuple[dict[str, Any], FailureRule, CausalChain]] = []
 
     # ----------------------------
@@ -166,11 +170,16 @@ def explain_failure(
         if not dependencies_met:
             continue
 
-        # Contract enforcement
+        # ----------------------------
+        # Contract enforcement (OBJECT-GRAPH AWARE)
+        # ----------------------------
         requires = getattr(rule, "requires", {})
+
+        # Pod requirement
         if requires.get("pod") and not pod:
             continue
 
+        # Context key requirement (legacy)
         missing_context = [
             key for key in requires.get("context", []) if key not in context
         ]
@@ -178,7 +187,25 @@ def explain_failure(
             if verbose:
                 print(
                     f"[DEBUG] Skipping '{rule.name}': "
-                    f"missing context {missing_context}"
+                    f"missing context keys {missing_context}"
+                )
+            continue
+
+        # Object dependency requirement (NEW)
+        required_objects = requires.get("objects", [])
+        optional_objects = requires.get("optional", [])
+
+        objects = context.get("objects", {})
+
+        missing_objects = [
+            obj for obj in required_objects if obj not in objects or not objects[obj]
+        ]
+
+        if missing_objects:
+            if verbose:
+                print(
+                    f"[DEBUG] Skipping '{rule.name}': "
+                    f"missing required objects {missing_objects}"
                 )
             continue
 

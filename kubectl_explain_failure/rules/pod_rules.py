@@ -1,4 +1,4 @@
-from kubectl_explain_failure.model import get_pod_phase, has_event, pod_condition
+from kubectl_explain_failure.model import has_event, pod_condition
 from kubectl_explain_failure.rules.base_rule import FailureRule
 
 

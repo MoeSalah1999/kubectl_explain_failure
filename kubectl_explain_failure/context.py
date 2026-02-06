@@ -4,6 +4,23 @@ from typing import Any
 from kubectl_explain_failure.model import load_json
 
 
+def _register_object(
+    context: dict[str, Any],
+    kind: str,
+    obj: dict[str, Any],
+) -> None:
+    if not obj:
+        return
+
+    name = obj.get("metadata", {}).get("name")
+    if not name:
+        return
+
+    context.setdefault("objects", {})
+    context["objects"].setdefault(kind, {})
+    context["objects"][kind][name] = obj
+
+
 def _is_pvc_unbound(pvc: dict[str, Any]) -> bool:
     """
     Return True if the PVC exists and is not Bound.
@@ -25,67 +42,107 @@ def _select_blocking_pvc(pvcs: list[dict[str, Any]]) -> dict[str, Any] | None:
     return None
 
 
+def _extract_node_conditions(node: dict[str, Any]) -> dict[str, str]:
+    conditions = {}
+    for c in node.get("status", {}).get("conditions", []):
+        cond_type = c.get("type")
+        status = c.get("status")
+        if cond_type and status:
+            conditions[cond_type] = status
+    return conditions
+
+
 def build_context(args) -> dict[str, Any]:
-    context: dict[str, Any] = {}
+    context: dict[str, Any] = {"objects": {}}
 
     # ----------------------------
     # PersistentVolumeClaim(s)
     # ----------------------------
-    single_pvc = None
     pvcs: list[dict[str, Any]] = []
 
     if args.pvc:
-        single_pvc = load_json(args.pvc)
-        pvcs.append(single_pvc)
+        pvc = load_json(args.pvc)
+        pvcs.append(pvc)
+        _register_object(context, "pvc", pvc)
 
     if args.pvcs:
-        pvcs.extend(
-            load_json(os.path.join(args.pvcs, f))
-            for f in os.listdir(args.pvcs)
-            if f.endswith(".json")
-        )
+        for f in os.listdir(args.pvcs):
+            if f.endswith(".json"):
+                pvc = load_json(os.path.join(args.pvcs, f))
+                pvcs.append(pvc)
+                _register_object(context, "pvc", pvc)
 
     if pvcs:
         context["pvcs"] = pvcs
-
         blocking = _select_blocking_pvc(pvcs)
         if blocking:
             context["pvc_unbound"] = True
             context["blocking_pvc"] = blocking
+            context["pvc"] = blocking  # legacy compatibility
 
-            # Promote single blocking PVC for rule compatibility
-            context["pvc"] = blocking
+    # ----------------------------
+    # PersistentVolume
+    # ----------------------------
+    if args.pv:
+        pv = load_json(args.pv)
+        _register_object(context, "pv", pv)
+        context["pv"] = pv
+
+    # ----------------------------
+    # StorageClass
+    # ----------------------------
+    if args.storageclass:
+        sc = load_json(args.storageclass)
+        _register_object(context, "storageclass", sc)
+        context["storageclass"] = sc
 
     # ----------------------------
     # Node
     # ----------------------------
     if args.node:
-        context["node"] = load_json(args.node)
+        node = load_json(args.node)
+        _register_object(context, "node", node)
+        context["node"] = node
+        context["node_conditions"] = _extract_node_conditions(node)
 
     # ----------------------------
-    # Service / Endpoints
+    # ServiceAccount / Secret
     # ----------------------------
-    if args.service:
-        context["svc"] = load_json(args.service)
+    if args.serviceaccount:
+        sa = load_json(args.serviceaccount)
+        _register_object(context, "serviceaccount", sa)
 
-    if args.endpoints:
-        context["ep"] = load_json(args.endpoints)
+    if args.secret:
+        secret = load_json(args.secret)
+        _register_object(context, "secret", secret)
 
     # ----------------------------
     # Controllers
     # ----------------------------
+    if args.replicaset:
+        rs = load_json(args.replicaset)
+        _register_object(context, "replicaset", rs)
+        context["owner"] = rs
+
+    if args.deployment:
+        deploy = load_json(args.deployment)
+        _register_object(context, "deployment", deploy)
+        context["owner"] = deploy
+
     if args.statefulsets:
-        context["sts"] = [
-            load_json(os.path.join(args.statefulsets, f))
-            for f in os.listdir(args.statefulsets)
-            if f.endswith(".json")
-        ]
+        context["statefulsets"] = []
+        for f in os.listdir(args.statefulsets):
+            if f.endswith(".json"):
+                sts = load_json(os.path.join(args.statefulsets, f))
+                context["statefulsets"].append(sts)
+                _register_object(context, "statefulset", sts)
 
     if args.daemonsets:
-        context["ds"] = [
-            load_json(os.path.join(args.daemonsets, f))
-            for f in os.listdir(args.daemonsets)
-            if f.endswith(".json")
-        ]
+        context["daemonsets"] = []
+        for f in os.listdir(args.daemonsets):
+            if f.endswith(".json"):
+                ds = load_json(os.path.join(args.daemonsets, f))
+                context["daemonsets"].append(ds)
+                _register_object(context, "daemonset", ds)
 
     return context
