@@ -1,10 +1,18 @@
 {
-  "kind": "List",
-  "items": [
-    {
-      "reason": "NodeHasDiskPressure",
-      "message": "Node test-node has disk pressure"
-    }
-  ]
+  "apiVersion": "v1",
+  "kind": "Node",
+  "metadata": {
+    "name": "test-node"
+  },
+  "status": {
+    "conditions": [
+      {
+        "type": "DiskPressure",
+        "status": "True",
+        "reason": "NodeHasDiskPressure",
+        "message": "Node test-node has disk pressure"
+      }
+    ]
+  }
 }
 
