@@ -14,21 +14,15 @@ class NodeDiskPressureRule(FailureRule):
     blocks = ["FailedScheduling"]
 
     def matches(self, pod, events, context):
-        # Primary signal: explicit events
-        if any(
-            e.get("reason") in ("NodeHasDiskPressure", "NodeDiskPressure")
-            for e in events
-        ):
-            return True
-
-        # Legacy compatibility: node context may actually be an event list
         node_objs = context.get("objects", {}).get("node", {})
-        for node in node_objs.values():
-            if node.get("kind") == "List":
-                for item in node.get("items", []):
-                    if item.get("reason") == "NodeHasDiskPressure":
-                        return True
+        if not node_objs:
+            return False
 
+        for node in node_objs.values():
+            conditions = node.get("status", {}).get("conditions", [])
+            for cond in conditions:
+                if cond.get("type") == "DiskPressure" and cond.get("status") == "True":
+                    return True
         return False
 
     def explain(self, pod, events, context):

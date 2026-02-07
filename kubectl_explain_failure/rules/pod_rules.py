@@ -6,6 +6,7 @@ class FailedSchedulingRule(FailureRule):
     name = "FailedScheduling"
     priority = 90
     category = "Scheduler"
+    severity = "Low"
 
     # Pod-only rule; intentionally weak
     requires = {

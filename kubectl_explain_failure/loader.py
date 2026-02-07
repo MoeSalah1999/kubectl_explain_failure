@@ -73,6 +73,14 @@ def validate_rule(rule):
     if not isinstance(rule.requires, dict):
         raise ValueError(f"Rule {rule.name}.requires must be a dict")
 
+    # Enforce allowed keys
+    allowed_keys = {"pod", "events", "context", "objects", "optional_objects"}
+    unknown = set(rule.requires) - allowed_keys
+    if unknown:
+        raise ValueError(
+            f"Rule {rule.name}.requires has invalid keys: {sorted(unknown)}"
+        )
+
     if "objects" in rule.requires and not isinstance(rule.requires["objects"], list):
         raise ValueError(f"Rule {rule.name}.requires.objects must be a list")
 
