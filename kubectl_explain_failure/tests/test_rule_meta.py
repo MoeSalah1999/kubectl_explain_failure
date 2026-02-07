@@ -1,11 +1,13 @@
 import pytest
-from kubectl_explain_failure.rules.base_rule import FailureRule
+
 from kubectl_explain_failure.loader import load_rules, validate_rule
+from kubectl_explain_failure.rules.base_rule import FailureRule
 
 
 class BadPriorityRule(FailureRule):
     name = "BadPriority"
     priority = -1
+
 
 def test_priority_range_enforced():
     with pytest.raises(ValueError):
@@ -34,7 +36,7 @@ def test_explain_contract_enforced():
             rules=[BadExplainRule()],
         )
 
-        
+
 def test_all_rules_have_metadata():
     rules = load_rules("kubectl_explain_failure/rules")
     for r in rules:

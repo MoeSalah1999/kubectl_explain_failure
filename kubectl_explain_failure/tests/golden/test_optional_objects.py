@@ -1,9 +1,11 @@
 import os
+
 from kubectl_explain_failure.engine import explain_failure
 from kubectl_explain_failure.model import load_json
 
 HERE = os.path.dirname(__file__)
 FIXTURES = os.path.abspath(os.path.join(HERE, "..", "fixtures"))
+
 
 def test_optional_objects_are_detected():
 

@@ -68,24 +68,18 @@ def validate_rule(rule):
         raise ValueError(f"Rule {rule.name}.priority must be an integer")
 
     if not (0 <= rule.priority <= 1000):
-        raise ValueError(
-            f"Rule {rule.name}.priority must be between 0 and 1000"
-        )
+        raise ValueError(f"Rule {rule.name}.priority must be between 0 and 1000")
 
     if not isinstance(rule.requires, dict):
         raise ValueError(f"Rule {rule.name}.requires must be a dict")
 
     if "objects" in rule.requires and not isinstance(rule.requires["objects"], list):
-        raise ValueError(
-            f"Rule {rule.name}.requires.objects must be a list"
-        )
+        raise ValueError(f"Rule {rule.name}.requires.objects must be a list")
 
     if "optional_objects" in rule.requires and not isinstance(
         rule.requires["optional_objects"], list
     ):
-        raise ValueError(
-            f"Rule {rule.name}.requires.optional_objects must be a list"
-        )
+        raise ValueError(f"Rule {rule.name}.requires.optional_objects must be a list")
 
 
 def load_rules(rule_folder=None) -> list[FailureRule]:

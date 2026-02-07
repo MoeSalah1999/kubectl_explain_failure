@@ -68,7 +68,7 @@ class Timeline:
                 continue
             return True
         return False
-    
+
     def count(self, *, reason: str | None = None) -> int:
         if not reason:
             return len(self.events)

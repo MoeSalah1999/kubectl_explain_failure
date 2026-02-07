@@ -327,8 +327,9 @@ def explain_failure(
                 for obj in optional_objects
                 if obj in context.get("objects", {}) and context["objects"][obj]
             ]
-            context.setdefault("optional_objects_present", {})[rule.name] = present_optional
-
+            context.setdefault("optional_objects_present", {})[
+                rule.name
+            ] = present_optional
 
         # Rule match
         if rule.matches(pod, events, context):
@@ -339,7 +340,9 @@ def explain_failure(
                 raise TypeError(f"{rule.name}.explain() must return a dict")
 
             if "root_cause" not in exp or not isinstance(exp["root_cause"], str):
-                raise ValueError(f"{rule.name}.explain() must include 'root_cause' (str)")
+                raise ValueError(
+                    f"{rule.name}.explain() must include 'root_cause' (str)"
+                )
 
             confidence = exp.get("confidence", 0.0)
             if not isinstance(confidence, (int, float)):
