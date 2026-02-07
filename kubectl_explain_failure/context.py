@@ -42,13 +42,18 @@ def _select_blocking_pvc(pvcs: list[dict[str, Any]]) -> dict[str, Any] | None:
     return None
 
 
-def _extract_node_conditions(node: dict[str, Any]) -> dict[str, str]:
+def _extract_node_conditions(node: dict[str, Any]) -> dict[str, dict[str, Any]]:
     conditions = {}
     for c in node.get("status", {}).get("conditions", []):
         cond_type = c.get("type")
-        status = c.get("status")
-        if cond_type and status:
-            conditions[cond_type] = status
+        if not cond_type:
+            continue
+        conditions[cond_type] = {
+            "status": c.get("status"),
+            "reason": c.get("reason"),
+            "message": c.get("message"),
+            "lastTransitionTime": c.get("lastTransitionTime"),
+        }
     return conditions
 
 

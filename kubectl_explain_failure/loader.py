@@ -18,6 +18,7 @@ class YamlFailureRule(FailureRule):
         self.category = spec.get("category", "Generic")
         self.severity = spec.get("severity", "Medium")
         self.priority = spec.get("priority", 100)
+        self.requires = spec.get("requires", {})  # 🔧 REQUIRED
         self.spec = spec
 
     def matches(self, pod, events, context) -> bool:
@@ -51,6 +52,42 @@ def build_yaml_rule(spec: dict[str, Any]) -> FailureRule:
     return YamlFailureRule(spec)
 
 
+def validate_rule(rule):
+    required_fields = ["name", "category", "priority", "requires"]
+    for field in required_fields:
+        if not hasattr(rule, field):
+            raise ValueError(f"Rule {rule} missing required field '{field}'")
+
+    if not isinstance(rule.name, str) or not rule.name:
+        raise ValueError("Rule.name must be a non-empty string")
+
+    if not isinstance(rule.category, str) or not rule.category:
+        raise ValueError(f"Rule {rule.name}.category must be a non-empty string")
+
+    if not isinstance(rule.priority, int):
+        raise ValueError(f"Rule {rule.name}.priority must be an integer")
+
+    if not (0 <= rule.priority <= 1000):
+        raise ValueError(
+            f"Rule {rule.name}.priority must be between 0 and 1000"
+        )
+
+    if not isinstance(rule.requires, dict):
+        raise ValueError(f"Rule {rule.name}.requires must be a dict")
+
+    if "objects" in rule.requires and not isinstance(rule.requires["objects"], list):
+        raise ValueError(
+            f"Rule {rule.name}.requires.objects must be a list"
+        )
+
+    if "optional_objects" in rule.requires and not isinstance(
+        rule.requires["optional_objects"], list
+    ):
+        raise ValueError(
+            f"Rule {rule.name}.requires.optional_objects must be a list"
+        )
+
+
 def load_rules(rule_folder=None) -> list[FailureRule]:
     if rule_folder is None:
         rule_folder = os.path.join(os.path.dirname(__file__), "rules")
@@ -66,6 +103,7 @@ def load_rules(rule_folder=None) -> list[FailureRule]:
         spec = importlib.util.spec_from_file_location(module_name, file)
         if spec is None or spec.loader is None:
             continue
+
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
 
@@ -83,6 +121,10 @@ def load_rules(rule_folder=None) -> list[FailureRule]:
         with open(yfile, encoding="utf-8") as f:
             spec = yaml.safe_load(f)
             rules.append(build_yaml_rule(spec))
+
+    # ---- CONTRACT VALIDATION (AFTER LOAD) ----
+    for rule in rules:
+        validate_rule(rule)
 
     return rules
 

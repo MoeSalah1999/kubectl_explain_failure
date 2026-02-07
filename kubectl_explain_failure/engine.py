@@ -203,7 +203,8 @@ def explain_failure(
     pod_phase = get_pod_phase(pod)
 
     context["relations"] = build_relations(pod, context)
-    context["timeline"] = build_timeline(events)
+    if events:
+        context["timeline"] = build_timeline(events)
 
     owners = pod.get("metadata", {}).get("ownerReferences", [])
     if owners:
@@ -316,10 +317,42 @@ def explain_failure(
                 )
             continue
 
+        # ----------------------------
+        # OPTIONAL object enrichment
+        # ----------------------------
+        optional_objects = requires.get("optional_objects", [])
+        if optional_objects:
+            present_optional = [
+                obj
+                for obj in optional_objects
+                if obj in context.get("objects", {}) and context["objects"][obj]
+            ]
+            context.setdefault("optional_objects_present", {})[rule.name] = present_optional
+
+
         # Rule match
         if rule.matches(pod, events, context):
             exp = rule.explain(pod, events, context)
+
+            # ---- Explain() contract enforcement ----
+            if not isinstance(exp, dict):
+                raise TypeError(f"{rule.name}.explain() must return a dict")
+
+            if "root_cause" not in exp or not isinstance(exp["root_cause"], str):
+                raise ValueError(f"{rule.name}.explain() must include 'root_cause' (str)")
+
+            confidence = exp.get("confidence", 0.0)
+            if not isinstance(confidence, (int, float)):
+                raise ValueError(f"{rule.name}.confidence must be numeric")
+
+            exp["confidence"] = float(confidence)
+
+            for key in ("evidence", "likely_causes", "suggested_checks"):
+                if key in exp and not isinstance(exp[key], list):
+                    raise ValueError(f"{rule.name}.{key} must be a list")
+
             chain = build_chain(exp)
+
             explanations.append((exp, rule, chain))
             if verbose:
                 print(
