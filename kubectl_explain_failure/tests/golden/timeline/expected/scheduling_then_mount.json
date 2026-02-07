@@ -1,6 +1,0 @@
-{
-  "dominant_kind": "Scheduling",
-  "dominant_phase": "Failure",
-  "kinds_present": ["Scheduling", "Volume"],
-  "phases_present": ["Failure"]
-}

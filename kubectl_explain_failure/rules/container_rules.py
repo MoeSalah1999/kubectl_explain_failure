@@ -52,3 +52,35 @@ class CrashLoopBackOffRule(FailureRule):
             ],
             "confidence": 0.9,
         }
+
+
+class RepeatedCrashLoopRule(FailureRule):
+    name = "RepeatedCrashLoop"
+    priority = 30
+    category = "Container"
+    phases = ["Running"]
+
+    requires = {
+        "objects": [],
+    }
+
+    def matches(self, pod, events, context):
+        timeline = context.get("timeline")
+        if not timeline:
+            return False
+        return timeline.repeated("BackOff", threshold=3)
+
+    def explain(self, pod, events, context):
+        return {
+            "root_cause": "Container is repeatedly crashing",
+            "confidence": 0.9,
+            "evidence": ["BackOff event occurred repeatedly"],
+            "likely_causes": [
+                "Application crash",
+                "Invalid container command",
+            ],
+            "suggested_checks": [
+                "kubectl logs <pod>",
+                "kubectl describe pod <pod>",
+            ],
+        }
