@@ -80,3 +80,25 @@ class Timeline:
 
 def build_timeline(events: list[dict[str, Any]]) -> Timeline:
     return Timeline(events)
+
+
+def timeline_has_pattern(timeline: list[dict[str, Any]], pattern: list[dict[str, str]]) -> bool:
+    """
+    Checks if a sequence of events in the timeline matches the given pattern.
+    Pattern is a list of dicts: [{"kind": "Scheduling", "phase": "Failure"}, ...]
+    """
+    if not timeline or not pattern:
+        return False
+
+    tl_idx = 0
+    for p in pattern:
+        matched = False
+        while tl_idx < len(timeline):
+            e = timeline[tl_idx]
+            tl_idx += 1
+            if all(e.get(k) == v for k, v in p.items()):
+                matched = True
+                break
+        if not matched:
+            return False
+    return True

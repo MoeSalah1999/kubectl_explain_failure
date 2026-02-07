@@ -1,0 +1,10 @@
+{
+  "pod": "mypod",
+  "phase": "Pending",
+  "root_cause": "Pod is blocked by unbound PersistentVolumeClaim",
+  "confidence": 0.95,
+  "evidence": ["PVC is Pending"],
+  "likely_causes": ["No matching PV", "StorageClass provisioner error"],
+  "suggested_checks": ["kubectl get pvc", "kubectl describe pvc"],
+  "pvc_name": "mypvc"
+}

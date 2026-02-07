@@ -1,0 +1,14 @@
+{
+  "pod": {
+    "metadata": {"name": "mypod"},
+    "status": {"phase": "Pending"},
+    "spec": {"containers": [{"name": "app"}]}
+  },
+  "events": [],
+  "pvcs": [
+    {
+      "metadata": {"name": "mypvc"},
+      "status": {"phase": "Pending"}
+    }
+  ]
+}

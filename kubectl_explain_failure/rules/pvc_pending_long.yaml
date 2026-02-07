@@ -1,0 +1,14 @@
+name: PVCPendingTooLong
+category: PersistentVolumeClaim
+priority: 200
+requires:
+  objects:
+    - pvc
+if: "context.get('timeline') and timeline_has_pattern(context['timeline'], [{'kind': 'PVC', 'phase': 'Pending'}])"
+then:
+  root_cause: "PVC has been Pending too long"
+  confidence: 0.9
+  evidence:
+    - "PVC Pending for > X minutes"
+  suggested_checks:
+    - "Check StorageClass provisioner logs"
