@@ -5,7 +5,7 @@ class ImagePullBackOffRule(FailureRule):
     name = "ImagePullBackOff"
     category = "Image"
     severity = "High"
-    priority = 20
+    priority = 12
     phases = ["Pending"]
 
     def matches(self, pod, events, context):

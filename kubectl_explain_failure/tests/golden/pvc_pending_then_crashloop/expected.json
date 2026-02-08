@@ -1,0 +1,17 @@
+{
+  "root_cause": "PVC Pending caused mount failures and CrashLoopBackOff",
+  "confidence": 0.98,
+  "blocking": true,
+  "causes": [
+    {"code": "PVC_PENDING", "message": "PersistentVolumeClaim is Pending", "blocking": true},
+    {"code": "FAILED_MOUNT", "message": "Pod failed to mount volume", "blocking": true},
+    {"code": "CRASHLOOP", "message": "Containers repeatedly restarted"}
+  ],
+  "evidence": [
+    "PVC mypvc is Pending",
+    "Repeated FailedMount / BackOff events observed"
+  ],
+  "object_evidence": {
+    "pvc:mypvc, phase:Pending": ["PVC not Bound"]
+  }
+}

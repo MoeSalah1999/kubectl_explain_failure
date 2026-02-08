@@ -3,7 +3,7 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class ConfigMapNotFoundRule(FailureRule):
     name = "ConfigMapNotFound"
-    priority = 30
+    priority = 7
 
     def matches(self, pod, events, context):
         return any(

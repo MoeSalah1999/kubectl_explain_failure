@@ -1,7 +1,7 @@
 name: PVCZoneMismatch
 category: Volume
 severity: High
-priority: 30
+priority: 8
 
 if: >
   context.get("node") and context.get("pvc") and

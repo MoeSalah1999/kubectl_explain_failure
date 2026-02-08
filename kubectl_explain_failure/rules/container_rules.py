@@ -5,7 +5,7 @@ from kubectl_explain_failure.timeline import timeline_has_pattern
 
 class OOMKilledRule(FailureRule):
     name = "OOMKilled"
-    priority = 70
+    priority = 16
 
     def matches(self, pod, events, context):
         for cs in pod.get("status", {}).get("containerStatuses", []):
@@ -30,7 +30,7 @@ class OOMKilledRule(FailureRule):
 
 class CrashLoopBackOffRule(FailureRule):
     name = "CrashLoopBackOff"
-    priority = 60
+    priority = 15
 
     def matches(self, pod, events, context):
         return any(e.get("reason") == "BackOff" for e in events)
@@ -57,7 +57,7 @@ class CrashLoopBackOffRule(FailureRule):
 
 class RepeatedCrashLoopRule(FailureRule):
     name = "RepeatedCrashLoop"
-    priority = 30
+    priority = 14
     category = "Container"
     phases = ["Running"]
 

@@ -22,3 +22,17 @@ def test_optional_objects_are_detected():
     result = explain_failure(pod, [], context)
 
     assert "PersistentVolumeClaim" in result["root_cause"]
+
+
+def test_optional_objects_without_pvc():
+    pod = {"metadata": {"name": "nopvc"}, "status": {"phase": "Pending"}}
+    context = {
+        "objects": {
+            "storageclass": {"fast": {"metadata": {"name": "fast"}}},
+        }
+    }
+    result = explain_failure(pod, [], context)
+    # Should still produce a root cause even if PVC not present
+    assert (
+        "unknown" in result["root_cause"].lower() or "Pending" in result["root_cause"]
+    )

@@ -4,8 +4,10 @@
   phases: ["Pending"]
   requires:
     objects: ["pvc"]
-  priority: 50
-  match: "context.pvc_unbound == True"
+  priority: 10
+  match: >
+    blocking_pvc
+    and blocking_pvc.status.phase == 'Pending'
   explain:
     root_cause: "PVC '{blocking_pvc.metadata.name}' not bound"
     confidence: 0.95
@@ -22,8 +24,13 @@
   category: CrashLoopBackOff
   phases: ["Pending", "Running"]
   container_states: ["waiting", "terminated"]
-  priority: 60
-  match: "container_state.reason in ['CrashLoopBackOff','ImagePullBackOff'] or timeline_has_pattern(timeline,'BackOff')"
+  priority: 50
+  match: >
+    container_state.reason in ['CrashLoopBackOff','ImagePullBackOff']
+    or (
+        timeline
+        and timeline_has_pattern(timeline, 'BackOff')
+      )
   explain:
     root_cause: "Container repeatedly failed to start (CrashLoopBackOff or ImagePullBackOff)"
     confidence: 0.9

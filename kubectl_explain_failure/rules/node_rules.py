@@ -3,7 +3,7 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class NodeDiskPressureRule(FailureRule):
     name = "NodeDiskPressure"
-    priority = 80
+    priority = 20
     category = "Node"
     requires = {
         "objects": ["node"],

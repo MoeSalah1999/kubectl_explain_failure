@@ -4,7 +4,7 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class FailedSchedulingRule(FailureRule):
     name = "FailedScheduling"
-    priority = 90
+    priority = 5
     category = "Scheduler"
     severity = "Low"
 
@@ -41,7 +41,7 @@ class FailedSchedulingRule(FailureRule):
 
 class FailedMountRule(FailureRule):
     name = "FailedMount"
-    priority = 20
+    priority = 6
     category = "Volume"
     requires = {
         "objects": ["pvc"],
@@ -68,7 +68,7 @@ class FailedMountRule(FailureRule):
 
 class UnschedulableTaintRule(FailureRule):
     name = "UnschedulableTaint"
-    priority = 100
+    priority = 7
 
     def matches(self, pod, events, context):
         return has_event(events, "FailedScheduling") and any(

@@ -1,0 +1,14 @@
+{
+  "pod": {
+    "metadata": {"name": "pvc-crashy"},
+    "status": {"phase": "Pending"}
+  },
+  "pvcs": [
+    {"metadata": {"name": "mypvc"}, "status": {"phase": "Pending"}}
+  ],
+  "events": [
+    {"reason": "FailedMount", "timestamp": "2026-02-08T18:00:00Z"},
+    {"reason": "BackOff", "timestamp": "2026-02-08T18:01:00Z"},
+    {"reason": "BackOff", "timestamp": "2026-02-08T18:02:00Z"}
+  ]
+}

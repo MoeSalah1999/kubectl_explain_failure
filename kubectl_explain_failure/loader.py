@@ -6,6 +6,7 @@ from typing import Any
 
 import yaml
 
+from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import timeline_has_pattern
 
@@ -44,12 +45,27 @@ class YamlFailureRule(FailureRule):
 
     def explain(self, pod, events, context):
         then = self.spec.get("then", {})
+
+        chain = None
+        if "causes" in then:
+            chain = CausalChain(
+                causes=[
+                    Cause(
+                        code=c.get("code", c["message"].upper().replace(" ", "_")),
+                        message=c["message"],
+                        blocking=c.get("blocking", False),
+                    )
+                    for c in then["causes"]
+                ]
+            )
+
         return {
             "root_cause": then.get("root_cause", "Unknown"),
             "confidence": float(then.get("confidence", 0.5)),
             "evidence": then.get("evidence", []),
             "likely_causes": then.get("likely_causes", []),
             "suggested_checks": then.get("suggested_checks", []),
+            **({"causes": chain} if chain else {}),
         }
 
 

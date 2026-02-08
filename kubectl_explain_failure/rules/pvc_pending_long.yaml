@@ -1,10 +1,15 @@
 name: PVCPendingTooLong
 category: PersistentVolumeClaim
-priority: 200
+priority: 15
 requires:
   objects:
     - pvc
-if: "context.get('timeline') and timeline_has_pattern(context['timeline'], [{'kind': 'PVC', 'phase': 'Pending'}])"
+if: >
+  context.get('timeline') is not None
+  and timeline_has_pattern(
+        context.get('timeline', []),
+        [{'kind': 'PersistentVolumeClaim', 'phase': 'Pending'}]
+      )
 then:
   root_cause: "PVC has been Pending too long"
   confidence: 0.9

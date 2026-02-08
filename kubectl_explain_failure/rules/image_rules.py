@@ -4,7 +4,7 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class ImagePullRule(FailureRule):
     name = "ImagePullError"
-    priority = 50
+    priority = 13
 
     def matches(self, pod, events, context):
         return has_event(events, "ImagePullBackOff") or has_event(
@@ -31,7 +31,7 @@ class ImagePullRule(FailureRule):
 
 class ImagePullSecretMissingRule(FailureRule):
     name = "ImagePullSecretMissing"
-    priority = 40
+    priority = 11
 
     def matches(self, pod, events, context):
         return any("pull access denied" in e.get("message", "").lower() for e in events)

@@ -24,9 +24,12 @@ def get_default_rules() -> list[FailureRule]:
         _DEFAULT_RULES = sorted(
             load_rules(rules_path) + load_plugins(plugin_path),
             key=lambda r: getattr(r, "priority", 100),
+            reverse=True,
         )
     return _DEFAULT_RULES
 
+def _norm_category(rule: FailureRule) -> str:
+    return (getattr(rule, "category", "") or "").strip().lower()
 
 def normalize_context(context: dict[str, Any]) -> dict[str, Any]:
     """
@@ -154,14 +157,31 @@ def apply_suppressions(
 
     # Track which rules are blocked
     blocked_rules: set[str] = set()
+    def suppression_rank(item):
+        _, rule, _ = item
+        # Compound rules always suppress first
+        if getattr(rule, "category", None) == "Compound":
+            return (0, -getattr(rule, "priority", 0))
+        return (1, -getattr(rule, "priority", 0))
+
     for exp, rule, chain in sorted(
-        explanations, key=lambda e: getattr(e[1], "priority", 100)
+        explanations,
+        key=suppression_rank,
     ):
         if rule.name in blocked_rules:
             continue
 
         # Determine which rules this winner blocks
-        blocks = getattr(rule, "blocks", [])
+        blocks = list(getattr(rule, "blocks", []))
+
+        # Compound rules subsume container-level crash signals
+        if getattr(rule, "category", None) == "Compound":
+            blocks += [
+                "CrashLoopBackOff",
+                "RepeatedCrashLoop",
+                "OOMKilled",
+            ]
+
         suppressed_map[rule.name] = []
         for rname in blocks:
             blocked_rules.add(rname)
@@ -394,6 +414,85 @@ def explain_failure(
     # ----------------------------
     filtered_explanations, suppression_map = apply_suppressions(explanations)
 
+    # ----------------------------
+    # HARD DOMINANCE: Compound rules define root cause
+    # ----------------------------
+    compound_matches = [
+        (exp, rule, chain)
+        for exp, rule, chain in filtered_explanations
+        if _norm_category(rule) == "compound"
+    ]
+
+    if compound_matches:
+        # Pick highest-priority compound rule
+        best_exp, best_rule, best_chain = max(
+            compound_matches,
+            key=lambda pair: getattr(pair[1], "priority", 0),
+        )
+
+        suppressed_rules = {
+            r.name for _, r, _ in explanations if r is not best_rule
+        }
+
+        resolution = Resolution(
+            winner=best_rule.name,
+            suppressed=sorted(suppressed_rules),
+            reason="Compound causal chain dominates component failures",
+        )
+
+        result = {
+            "pod": pod_name,
+            "phase": pod_phase,
+            "root_cause": best_exp["root_cause"],
+            "confidence": best_exp.get("confidence", 1.0),
+            "evidence": best_exp.get("evidence", []),
+            "likely_causes": best_exp.get("likely_causes", []),
+            "suggested_checks": best_exp.get("suggested_checks", []),
+            "resolution": resolution.__dict__,
+        }
+
+        # ----------------------------
+        # PVC semantics (LOCKED)
+        # ----------------------------
+        if context.get("blocking_pvc") is not None:
+            result["blocking"] = True
+        if "object_evidence" in best_exp:
+            result["object_evidence"] = best_exp["object_evidence"]
+
+        # ----------------------------
+        # Causal chain materialization (LOCKED)
+        # ----------------------------
+        result["causes"] = [
+            {
+                "code": cause.code,
+                "message": cause.message,
+                **({"blocking": True} if cause.blocking else {}),
+            }
+            for cause in best_chain.causes
+        ]
+
+        # ----------------------------
+        # Object evidence (RULE FIRST, ENGINE FALLBACK)
+        # ----------------------------
+        if "object_evidence" in best_exp:
+            # Trust rule-provided structure verbatim
+            result["object_evidence"] = best_exp["object_evidence"]
+        else:
+            # Engine-level fallback synthesis (only if rule omitted it)
+            pvc = context.get("blocking_pvc") or context.get("pvc")
+            if isinstance(pvc, dict):
+                name = pvc.get("metadata", {}).get("name")
+                phase = pvc.get("status", {}).get("phase")
+                if name and phase:
+                    result["object_evidence"] = {
+                        f"pvc:{name}, phase:{phase}": ["PVC not Bound"]
+                    }
+
+
+        return result
+
+
+
     if not filtered_explanations:
         return {
             "pod": pod_name,
@@ -408,20 +507,37 @@ def explain_failure(
     # ----------------------------
     # STRONG CAUSAL OVERRIDE: PVC blocks scheduling
     # ----------------------------
+    # only applies to *pure* PVC rules, not compound chains
     pvc_matches = [
         (exp, rule, chain)
         for exp, rule, chain in filtered_explanations
-        if (
-            getattr(rule, "category", None) == "PersistentVolumeClaim"
-            or "pvc" in exp.get("root_cause", "").lower()
-            or "persistentvolumeclaim" in exp.get("root_cause", "").lower()
-            or "pvc" in exp.get("object_evidence", {})
-        )
+        if getattr(rule, "category", None) in ("PersistentVolumeClaim", "Compound")
+        and "PVC" in rule.name
     ]
 
-    if pvc_matches:
+    # Only apply PVC override if NO higher-priority non-PVC rule exists
+    max_non_pvc_priority = max(
+        (
+            getattr(rule, "priority", 0)
+            for _, rule, _ in filtered_explanations
+            if getattr(rule, "category", None) != "PersistentVolumeClaim"
+        ),
+        default=0,
+    )
+
+    max_pvc_priority = max(
+        (
+            getattr(rule, "priority", 0)
+            for _, rule, _ in pvc_matches
+        ),
+        default=0,
+    )
+
+    if pvc_matches and max_pvc_priority >= max_non_pvc_priority:
+        # Pick the PVC rule with the highest combined priority * confidence
         best_exp, best_rule, best_chain = max(
-            pvc_matches, key=lambda pair: pair[0].get("confidence", 0.0)
+            pvc_matches,
+            key=lambda pair: pair[0].get("confidence", 0.0) * getattr(pair[1], "priority", 1)
         )
 
         # defensive + normalized PVC lookup
@@ -460,20 +576,17 @@ def explain_failure(
             "pod": pod_name,
             "phase": pod_phase,
             "pvc_name": pvc_name,
-            "root_cause": (
-                root_cause_node.message
-                if root_cause_node is not None
-                else best_exp.get("root_cause", "Unknown")
-            ),
+            "root_cause": best_exp.get("root_cause", "Unknown"),
             "confidence": confidence,
             "evidence": best_exp.get("evidence", []),
             "likely_causes": best_exp.get("likely_causes", []),
             "suggested_checks": best_exp.get("suggested_checks", []),
             "resolution": resolution.__dict__,
         }
-
         if "object_evidence" in best_exp:
             result["object_evidence"] = best_exp["object_evidence"]
+        # if root_cause_node is not None:
+            # result["object_evidence"] = root_cause_node.message
 
         return result
 

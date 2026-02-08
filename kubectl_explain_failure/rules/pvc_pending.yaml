@@ -1,6 +1,6 @@
 name: PVCNotBound
 category: PersistentVolumeClaim
-priority: 100
+priority: 10
 requires:
   objects:
     - pvc

@@ -15,3 +15,20 @@ def test_pvc_dominates_scheduler_noise():
 
     assert "persistentvolumeclaim" in result["root_cause"].lower()
     assert "FailedScheduling" in result["resolution"]["suppressed"]
+
+
+def test_pvc_suppresses_multiple_noise():
+    pod = load_json(os.path.join(FIXTURES, "pending_pod.json"))
+    pvc = load_json(os.path.join(FIXTURES, "pvc_pending.json"))
+    events = [
+        {"reason": "FailedScheduling"},
+        {"reason": "NodeNotReady"},
+        {"reason": "TaintBasedEviction"},
+    ]
+    result = explain_failure(pod, normalize_events(events), context={"pvc": pvc})
+
+    # Root cause comes from PVC
+    assert "persistentvolumeclaim" in result["root_cause"].lower()
+    # Only check that PVC suppressed *FailedScheduling* (scheduler noise)
+    suppressed = result.get("resolution", {}).get("suppressed", [])
+    assert "FailedScheduling" in suppressed

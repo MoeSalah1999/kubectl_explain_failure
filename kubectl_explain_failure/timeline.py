@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 
@@ -8,7 +8,7 @@ def parse_time(ts: str) -> datetime:
 
 
 def events_within(events: list[dict[str, Any]], minutes: int) -> list[dict[str, Any]]:
-    cutoff = datetime.utcnow() - timedelta(minutes=minutes)
+    cutoff = datetime.now(UTC) - timedelta(minutes=minutes)
     result = []
 
     for e in events:
@@ -77,6 +77,13 @@ class Timeline:
 
     def repeated(self, reason: str, threshold: int) -> bool:
         return self.count(reason=reason) >= threshold
+
+    @property
+    def raw_events(self):
+        """
+        Backwards-compatible view for rules that expect raw event dicts.
+        """
+        return self.events
 
 
 def build_timeline(events: list[dict[str, Any]]) -> Timeline:

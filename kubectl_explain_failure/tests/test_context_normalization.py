@@ -67,3 +67,21 @@ class TestPVCNormalization:
         assert norm["blocking_pvc"]["metadata"]["name"] == "pvc2"
         # Both PVCs should be present in object-graph
         assert set(norm["objects"]["pvc"].keys()) == {"pvc1", "pvc2"}
+
+    def test_multiple_pvcs_mixed_bound_pending(self):
+        """
+        Ensure normalization selects the first unbound PVC as blocking when multiple PVCs exist.
+        """
+        pvc_list = [
+            {"metadata": {"name": "pvc1"}, "status": {"phase": "Bound"}},
+            {"metadata": {"name": "pvc2"}, "status": {"phase": "Pending"}},
+            {"metadata": {"name": "pvc3"}, "status": {"phase": "Pending"}},
+        ]
+        context = {"pvc": pvc_list}
+        norm = normalize_context(context)
+
+        # blocking PVC is the first pending one
+        assert norm["blocking_pvc"]["metadata"]["name"] == "pvc2"
+        assert norm["pvc_unbound"] is True
+        # All PVCs present in object graph
+        assert set(norm["objects"]["pvc"].keys()) == {"pvc1", "pvc2", "pvc3"}
