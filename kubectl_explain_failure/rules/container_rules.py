@@ -1,5 +1,6 @@
 from kubectl_explain_failure.model import get_pod_name
 from kubectl_explain_failure.rules.base_rule import FailureRule
+from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class OOMKilledRule(FailureRule):
@@ -68,7 +69,7 @@ class RepeatedCrashLoopRule(FailureRule):
         timeline = context.get("timeline")
         if not timeline:
             return False
-        return timeline.repeated("BackOff", threshold=3)
+        return timeline_has_pattern(timeline, r"BackOff")
 
     def explain(self, pod, events, context):
         return {

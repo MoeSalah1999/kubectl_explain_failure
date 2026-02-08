@@ -9,6 +9,6 @@ then:
   root_cause: "PVC has been Pending too long"
   confidence: 0.9
   evidence:
-    - "PVC Pending for > X minutes"
+    - "PVC is Pending"
   suggested_checks:
     - "Check StorageClass provisioner logs"

@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -82,23 +83,45 @@ def build_timeline(events: list[dict[str, Any]]) -> Timeline:
     return Timeline(events)
 
 
-def timeline_has_pattern(timeline: list[dict[str, Any]], pattern: list[dict[str, str]]) -> bool:
+def timeline_has_pattern(
+    timeline: "Timeline | list[dict[str, Any]]",
+    pattern: Any,
+) -> bool:
     """
-    Checks if a sequence of events in the timeline matches the given pattern.
-    Pattern is a list of dicts: [{"kind": "Scheduling", "phase": "Failure"}, ...]
+    Supported patterns:
+    - string / regex: matches event['reason']
+    - list[dict]: structural matching (legacy)
     """
-    if not timeline or not pattern:
+
+    if isinstance(timeline, Timeline):
+        events = timeline.events
+    else:
+        events = timeline
+
+    if not isinstance(events, list) or not events:
         return False
 
-    tl_idx = 0
-    for p in pattern:
+    # --- SIMPLE STRING / REGEX ---
+    if isinstance(pattern, str):
+        regex = re.compile(pattern)
+        return any(regex.search(e.get("reason", "")) for e in events)
+
+    # --- STRUCTURED SEQUENCE ---
+    if not isinstance(pattern, list):
+        return False
+
+    idx = 0
+    for step in pattern:
+        if not isinstance(step, dict):
+            return False
         matched = False
-        while tl_idx < len(timeline):
-            e = timeline[tl_idx]
-            tl_idx += 1
-            if all(e.get(k) == v for k, v in p.items()):
+        while idx < len(events):
+            e = events[idx]
+            idx += 1
+            if all(e.get(k) == v for k, v in step.items()):
                 matched = True
                 break
         if not matched:
             return False
+
     return True

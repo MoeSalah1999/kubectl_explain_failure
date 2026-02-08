@@ -1,11 +1,11 @@
 import json
 import os
-import pytest
 
 from kubectl_explain_failure.context import build_context
 from kubectl_explain_failure.engine import explain_failure
 
-FIXTURES = os.path.join(os.path.dirname(__file__), "golden", "pvc_pending")
+FIXTURES = os.path.join(os.path.dirname(__file__), "pvc_pending")
+
 
 def test_pvc_pending_golden():
     with open(os.path.join(FIXTURES, "input.json")) as f:

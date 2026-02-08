@@ -1,11 +1,13 @@
 import glob
 import importlib.util
 import os
+from collections.abc import Iterable
 from typing import Any
 
 import yaml
 
 from kubectl_explain_failure.rules.base_rule import FailureRule
+from kubectl_explain_failure.timeline import timeline_has_pattern
 
 # ----------------------------
 # Dynamic Rule Loader
@@ -22,37 +24,56 @@ class YamlFailureRule(FailureRule):
         self.spec = spec
 
     def matches(self, pod, events, context) -> bool:
-        expr = self.spec["if"]
-        # VERY conservative evaluation
-        safe_context: dict[str, dict[str, Any]] = {
+        # convert events to list if possible
+        events_list = list(events) if isinstance(events, Iterable) else []
+        safe_context: dict[str, Any] = {
             "pod": pod or {},
-            "events": events or {},
+            "events": events_list,
             "context": context or {},
-            "node": context.get("node", {}) or {},
-            "pvc": context.get("pvc", {}) or {},
+            "node": getattr(context, "node", {}) or {},
+            "pvc": getattr(context, "pvc", {}) or {},
         }
-        # Ensure safe nesting
         for obj in ("pod", "node", "pvc"):
             safe_context[obj].setdefault("metadata", {})
             safe_context[obj].setdefault("status", {})
 
-        return eval(expr, {}, safe_context)
+        eval_globals = {
+            "timeline_has_pattern": timeline_has_pattern,
+        }
+        return eval(self.spec.get("if", "False"), eval_globals, safe_context)
 
     def explain(self, pod, events, context):
+        then = self.spec.get("then", {})
         return {
-            "root_cause": self.spec["then"]["root_cause"],
-            "confidence": float(self.spec["then"].get("confidence", 0.5)),
-            "evidence": self.spec["then"].get("evidence", []),
-            "likely_causes": self.spec["then"].get("likely_causes", []),
-            "suggested_checks": self.spec["then"].get("suggested_checks", []),
+            "root_cause": then.get("root_cause", "Unknown"),
+            "confidence": float(then.get("confidence", 0.5)),
+            "evidence": then.get("evidence", []),
+            "likely_causes": then.get("likely_causes", []),
+            "suggested_checks": then.get("suggested_checks", []),
         }
 
 
-def build_yaml_rule(spec: dict[str, Any]) -> FailureRule:
-    return YamlFailureRule(spec)
+def build_yaml_rules(spec: Any) -> list[FailureRule]:
+    """
+    Accepts either a single dict or a list of dicts from YAML file.
+    Returns a list of YamlFailureRule instances.
+    """
+    rules: list[FailureRule] = []
+    if not spec:
+        return rules
+    if isinstance(spec, dict):
+        rules.append(YamlFailureRule(spec))
+    elif isinstance(spec, list):
+        for item in spec:
+            if not isinstance(item, dict):
+                raise ValueError("Each YAML rule must be a dict")
+            rules.append(YamlFailureRule(item))
+    else:
+        raise ValueError("YAML content must be a dict or a list of dicts")
+    return rules
 
 
-def validate_rule(rule):
+def validate_rule(rule: FailureRule):
     required_fields = ["name", "category", "priority", "requires"]
     for field in required_fields:
         if not hasattr(rule, field):
@@ -60,20 +81,15 @@ def validate_rule(rule):
 
     if not isinstance(rule.name, str) or not rule.name:
         raise ValueError("Rule.name must be a non-empty string")
-
     if not isinstance(rule.category, str) or not rule.category:
         raise ValueError(f"Rule {rule.name}.category must be a non-empty string")
-
     if not isinstance(rule.priority, int):
         raise ValueError(f"Rule {rule.name}.priority must be an integer")
-
     if not (0 <= rule.priority <= 1000):
         raise ValueError(f"Rule {rule.name}.priority must be between 0 and 1000")
-
     if not isinstance(rule.requires, dict):
         raise ValueError(f"Rule {rule.name}.requires must be a dict")
 
-    # Enforce allowed keys
     allowed_keys = {"pod", "events", "context", "objects", "optional_objects"}
     unknown = set(rule.requires) - allowed_keys
     if unknown:
@@ -83,7 +99,6 @@ def validate_rule(rule):
 
     if "objects" in rule.requires and not isinstance(rule.requires["objects"], list):
         raise ValueError(f"Rule {rule.name}.requires.objects must be a list")
-
     if "optional_objects" in rule.requires and not isinstance(
         rule.requires["optional_objects"], list
     ):
@@ -100,15 +115,12 @@ def load_rules(rule_folder=None) -> list[FailureRule]:
     for file in glob.glob(os.path.join(rule_folder, "*.py")):
         if os.path.basename(file) == "base_rule.py":
             continue
-
         module_name = os.path.splitext(os.path.basename(file))[0]
         spec = importlib.util.spec_from_file_location(module_name, file)
         if spec is None or spec.loader is None:
             continue
-
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-
         for attr in dir(module):
             cls = getattr(module, attr)
             if (
@@ -122,9 +134,10 @@ def load_rules(rule_folder=None) -> list[FailureRule]:
     for yfile in glob.glob(os.path.join(rule_folder, "*.yaml")):
         with open(yfile, encoding="utf-8") as f:
             spec = yaml.safe_load(f)
-            rules.append(build_yaml_rule(spec))
+            if spec:  # skip empty YAML files
+                rules.extend(build_yaml_rules(spec))  # support multiple rules per file
 
-    # ---- CONTRACT VALIDATION (AFTER LOAD) ----
+    # ---- CONTRACT VALIDATION ----
     for rule in rules:
         validate_rule(rule)
 
@@ -132,7 +145,6 @@ def load_rules(rule_folder=None) -> list[FailureRule]:
 
 
 def load_plugins(plugin_folder=None) -> list[FailureRule]:
-    """Load additional rules from plugins folder (optional)"""
     if plugin_folder is None or not os.path.exists(plugin_folder):
         return []
     return load_rules(plugin_folder)

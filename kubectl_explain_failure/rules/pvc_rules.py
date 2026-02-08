@@ -31,8 +31,10 @@ class PVCNotBoundRule(FailureRule):
         return {
             "root_cause": "Pod is blocked by unbound PersistentVolumeClaim",
             "confidence": 0.95,
-            "evidence": [f"PVC '{pvc_name}' is in phase '{phase}'"],
-            "object_evidence": {f"pvc:{pvc_name}": ["PVC is not Bound"]},
+            "evidence": ["PVC is Pending"],
+            "object_evidence": {
+                f"pvc:{pvc_name}, pvc phase:{phase}": ["PVC is not Bound"]
+            },
             "likely_causes": [
                 "No PersistentVolume matches the PVC",
                 "StorageClass provisioning failed",

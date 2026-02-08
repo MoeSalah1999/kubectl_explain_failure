@@ -11,7 +11,7 @@ from kubectl_explain_failure.loader import load_plugins, load_rules
 from kubectl_explain_failure.model import get_pod_name, get_pod_phase
 from kubectl_explain_failure.relations import build_relations
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import build_timeline
+from kubectl_explain_failure.timeline import build_timeline, timeline_has_pattern
 
 _DEFAULT_RULES = None
 
@@ -206,6 +206,13 @@ def explain_failure(
     if events:
         context["timeline"] = build_timeline(events)
 
+    if context.get("timeline") and timeline_has_pattern(
+        context["timeline"], [{"reason": "BackOff"}]
+    ):
+        # optional debug log
+        if verbose:
+            print(f"[DEBUG] Timeline shows BackOff pattern for pod {pod_name}")
+
     owners = pod.get("metadata", {}).get("ownerReferences", [])
     if owners:
         context["owners"] = owners
@@ -303,7 +310,7 @@ def explain_failure(
                 )
             continue
 
-        # Object dependency requirement (NEW)
+        # Object dependency requirement
         required_objects = requires.get("objects", [])
         objects = context.get("objects", {})
 
@@ -330,6 +337,10 @@ def explain_failure(
             context.setdefault("optional_objects_present", {})[
                 rule.name
             ] = present_optional
+
+        if events:
+            context = context or {}
+            context.setdefault("timeline", build_timeline(events))
 
         # Rule match
         if rule.matches(pod, events, context):
@@ -413,24 +424,34 @@ def explain_failure(
             pvc_matches, key=lambda pair: pair[0].get("confidence", 0.0)
         )
 
-        pvc_obj_dict = context["objects"].get("pvc", {})
-        if pvc_obj_dict:
-            pvc_name = (
-                next(iter(pvc_obj_dict.values()))
-                .get("metadata", {})
-                .get("name", "<unknown>")
-            )
-        else:
-            pvc_name = "<unknown>"
+        # defensive + normalized PVC lookup
+        pvc_name = "<unknown>"
+
+        if context:
+            objects = context.get("objects")
+            if isinstance(objects, dict):
+                pvc_obj_dict = objects.get("pvc")
+                if isinstance(pvc_obj_dict, dict) and pvc_obj_dict:
+                    pvc_obj = next(iter(pvc_obj_dict.values()))
+                    if isinstance(pvc_obj, dict):
+                        pvc_name = pvc_obj.get("metadata", {}).get("name", "<unknown>")
 
         confidence = max(best_exp.get("confidence", 0.0), 0.95)
 
+        # ensure scheduler noise is explicitly suppressed
+        suppressed_rules = set()
+
+        # suppress all other matched rules (even if already blocked)
+        for _exp, r, _chain in explanations:
+            if r is not best_rule:
+                suppressed_rules.add(r.name)
+
+        # include automatic suppression map
+        suppressed_rules.update(suppression_map.get(best_rule.name, []))
+
         resolution = Resolution(
             winner=best_rule.name,
-            suppressed=[
-                r.name for _, r, _ in filtered_explanations if r is not best_rule
-            ]
-            + suppression_map.get(best_rule.name, []),
+            suppressed=sorted(suppressed_rules),
             reason="PersistentVolumeClaim is a hard scheduling blocker",
         )
 
@@ -498,7 +519,7 @@ def explain_failure(
 
     # Determine winner for suppression
     winner_rule_name = filtered_explanations[0][1].name
-    suppressed_rules = [
+    merged_suppressed_rules = [
         r.name for _, r, _ in filtered_explanations[1:]
     ] + suppression_map.get(winner_rule_name, [])
 
@@ -513,7 +534,7 @@ def explain_failure(
         "causal_chain": [],
         "resolution": {
             "winner": winner_rule_name,
-            "suppressed": suppressed_rules,
+            "suppressed": merged_suppressed_rules,
             "reason": "Automatic suppression applied based on rule.blocks",
         },
     }
