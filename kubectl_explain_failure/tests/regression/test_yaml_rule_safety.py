@@ -1,4 +1,3 @@
-
 from kubectl_explain_failure.loader import YamlFailureRule
 
 
