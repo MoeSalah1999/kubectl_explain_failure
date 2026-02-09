@@ -1,0 +1,18 @@
+{
+  "root_cause": "Pod blocked by PVC Pending then failed to pull image",
+  "confidence": 0.97,
+  "causes": [
+    {"code": "PVC_PENDING", "message": "PVC is Pending", "blocking": true},
+    {"code": "IMAGE_PULL_FAIL", "message": "Image could not be pulled"}
+  ],
+  "evidence": [
+    "PVC data-pvc is Pending",
+    "ImagePullBackOff or ErrImagePull observed"
+  ],
+  "object_evidence": {"pvc:data-pvc": ["PVC not Bound"]},
+  "suggested_checks": [
+    "kubectl describe pvc data-pvc",
+    "Check image name and imagePullSecrets"
+  ],
+  "blocking": true
+}

@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "name": "pod-with-pvc-imagefail"
+  },
+  "status": {
+    "phase": "Pending",
+    "containerStatuses": []
+  },
+  "spec": {
+    "volumes": [{"name": "data", "persistentVolumeClaim": {"claimName": "data-pvc"}}]
+  },
+  "events": [
+    {"reason": "ImagePullBackOff", "message": "Back-off pulling image"},
+    {"reason": "FailedMount", "message": "Mount volume failed"}
+  ],
+  "objects": {
+    "pvc": {
+      "data-pvc": {
+        "metadata": {"name": "data-pvc"},
+        "status": {"phase": "Pending"}
+      }
+    }
+  },
+  "blocking_pvc": {
+    "metadata": {"name": "data-pvc"},
+    "status": {"phase": "Pending"}
+  }
+}
