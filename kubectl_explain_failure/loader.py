@@ -24,23 +24,41 @@ class YamlFailureRule(FailureRule):
         self.requires = spec.get("requires", {})  # 🔧 REQUIRED
         self.spec = spec
 
+    @staticmethod
+    def _normalize_k8s_object(obj: Any) -> None:
+        if not isinstance(obj, dict):
+            return
+
+        obj.setdefault("metadata", {})
+        if isinstance(obj["metadata"], dict):
+            obj["metadata"].setdefault("labels", {})
+
+        obj.setdefault("status", {})
+
     def matches(self, pod, events, context) -> bool:
-        # convert events to list if possible
         events_list = list(events) if isinstance(events, Iterable) else []
+
         safe_context: dict[str, Any] = {
             "pod": pod or {},
             "events": events_list,
             "context": context or {},
-            "node": getattr(context, "node", {}) or {},
-            "pvc": getattr(context, "pvc", {}) or {},
+            "node": (context or {}).get("node", {}) or {},
+            "pvc": (context or {}).get("pvc", {}) or {},
         }
+
+        # Normalize top-level objects
         for obj in ("pod", "node", "pvc"):
-            safe_context[obj].setdefault("metadata", {})
-            safe_context[obj].setdefault("status", {})
+            YamlFailureRule._normalize_k8s_object(safe_context[obj])
+
+        # Normalize objects inside context as well
+        if isinstance(safe_context["context"], dict):
+            for v in safe_context["context"].values():
+                YamlFailureRule._normalize_k8s_object(v)
 
         eval_globals = {
             "timeline_has_pattern": timeline_has_pattern,
         }
+
         return eval(self.spec.get("if", "False"), eval_globals, safe_context)
 
     def explain(self, pod, events, context):

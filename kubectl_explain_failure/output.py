@@ -63,11 +63,20 @@ def output_result(result: dict[str, Any], fmt: str = "text") -> None:
             print(f"  Suppressed rules: {', '.join(suppressed)}")
         print(f"  Reason: {res.get('reason')}")
 
-    # ----------------------------
-    # Include object evidence if present
-    # ----------------------------
-    if "object_evidence" in result:
-        print("\nObject Evidence:")
-        for obj, items in result["object_evidence"].items():
-            for item in sorted(items):
-                print(f"  {obj}: {item}")
+        # ----------------------------
+        # Include object evidence if present
+        # ----------------------------
+        if "object_evidence" in result:
+            obj_ev = result["object_evidence"]
+
+            # Normalize legacy shapes to dict[str, list[str]]
+            if isinstance(obj_ev, str):
+                obj_ev = {"object": [obj_ev]}
+            elif isinstance(obj_ev, list):
+                obj_ev = {"object": obj_ev}
+
+            if isinstance(obj_ev, dict):
+                print("\nObject Evidence:")
+                for obj, items in obj_ev.items():
+                    for item in sorted(items):
+                        print(f"  {obj}: {item}")

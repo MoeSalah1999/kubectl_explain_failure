@@ -21,10 +21,9 @@ class PVCPendingThenCrashLoopRule(FailureRule):
 
         # PVC is pending and there is a repeating BackOff or FailedMount
         pvc_pending = pvc.get("status", {}).get("phase") == "Pending"
-        crash_events = (
-            timeline_has_pattern(timeline.raw_events, [{"reason": "FailedMount"}])
-            and timeline_has_pattern(timeline.raw_events, [{"reason": "BackOff"}])
-        )
+        crash_events = timeline_has_pattern(
+            timeline.raw_events, [{"reason": "FailedMount"}]
+        ) and timeline_has_pattern(timeline.raw_events, [{"reason": "BackOff"}])
 
         return pvc_pending and crash_events
 

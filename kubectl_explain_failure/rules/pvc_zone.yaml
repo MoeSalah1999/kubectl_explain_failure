@@ -2,12 +2,13 @@ name: PVCZoneMismatch
 category: Volume
 severity: High
 priority: 8
-
+requires:
+  objects:
+    - node
+    - pvc
 if: >
-  context.get("node") and context.get("pvc") and
-  context["node"]["metadata"]["labels"]["topology.kubernetes.io/zone"]
-  != context["pvc"]["metadata"]["annotations"]["volume.kubernetes.io/selected-node"]
-
+  context.get("node", {}).get("metadata", {}).get("labels", {}).get("topology.kubernetes.io/zone")
+  != context.get("pvc", {}).get("metadata", {}).get("annotations", {}).get("volume.kubernetes.io/selected-node")
 then:
   root_cause: PVC bound to a different availability zone
   confidence: 0.85

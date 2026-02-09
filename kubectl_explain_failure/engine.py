@@ -28,8 +28,10 @@ def get_default_rules() -> list[FailureRule]:
         )
     return _DEFAULT_RULES
 
+
 def _norm_category(rule: FailureRule) -> str:
     return (getattr(rule, "category", "") or "").strip().lower()
+
 
 def normalize_context(context: dict[str, Any]) -> dict[str, Any]:
     """
@@ -157,6 +159,7 @@ def apply_suppressions(
 
     # Track which rules are blocked
     blocked_rules: set[str] = set()
+
     def suppression_rank(item):
         _, rule, _ = item
         # Compound rules always suppress first
@@ -430,9 +433,7 @@ def explain_failure(
             key=lambda pair: getattr(pair[1], "priority", 0),
         )
 
-        suppressed_rules = {
-            r.name for _, r, _ in explanations if r is not best_rule
-        }
+        suppressed_rules = {r.name for _, r, _ in explanations if r is not best_rule}
 
         resolution = Resolution(
             winner=best_rule.name,
@@ -488,10 +489,7 @@ def explain_failure(
                         f"pvc:{name}, phase:{phase}": ["PVC not Bound"]
                     }
 
-
         return result
-
-
 
     if not filtered_explanations:
         return {
@@ -526,10 +524,7 @@ def explain_failure(
     )
 
     max_pvc_priority = max(
-        (
-            getattr(rule, "priority", 0)
-            for _, rule, _ in pvc_matches
-        ),
+        (getattr(rule, "priority", 0) for _, rule, _ in pvc_matches),
         default=0,
     )
 
@@ -537,7 +532,8 @@ def explain_failure(
         # Pick the PVC rule with the highest combined priority * confidence
         best_exp, best_rule, best_chain = max(
             pvc_matches,
-            key=lambda pair: pair[0].get("confidence", 0.0) * getattr(pair[1], "priority", 1)
+            key=lambda pair: pair[0].get("confidence", 0.0)
+            * getattr(pair[1], "priority", 1),
         )
 
         # defensive + normalized PVC lookup
@@ -585,8 +581,8 @@ def explain_failure(
         }
         if "object_evidence" in best_exp:
             result["object_evidence"] = best_exp["object_evidence"]
-        # if root_cause_node is not None:
-            # result["object_evidence"] = root_cause_node.message
+        if root_cause_node is not None:
+            result["object_evidence"] = root_cause_node.message
 
         return result
 

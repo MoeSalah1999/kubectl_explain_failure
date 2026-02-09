@@ -68,8 +68,7 @@ def test_compound_pvc_rule_beats_simple_pvc_rules():
 
     # 1. Compound rule root cause must win
     assert (
-        result["root_cause"]
-        == "PVC Pending caused mount failures and CrashLoopBackOff"
+        result["root_cause"] == "PVC Pending caused mount failures and CrashLoopBackOff"
     )
 
     # 2. Evidence must reflect timeline causality

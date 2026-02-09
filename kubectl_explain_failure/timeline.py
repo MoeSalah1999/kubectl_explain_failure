@@ -1,5 +1,5 @@
 import re
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 
@@ -8,7 +8,7 @@ def parse_time(ts: str) -> datetime:
 
 
 def events_within(events: list[dict[str, Any]], minutes: int) -> list[dict[str, Any]]:
-    cutoff = datetime.now(UTC) - timedelta(minutes=minutes)
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=minutes)
     result = []
 
     for e in events:
