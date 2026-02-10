@@ -480,11 +480,10 @@ def explain_failure(
         # Rule-level blocking intent (authoritative)
         if best_exp.get("blocking") is True:
             result["blocking"] = True
-
         # Engine-derived blocking (PVC scheduling is hard-blocking)
         elif context.get("blocking_pvc") is not None:
             result["blocking"] = True
-            
+
         if "object_evidence" in best_exp:
             result["object_evidence"] = best_exp["object_evidence"]
 
