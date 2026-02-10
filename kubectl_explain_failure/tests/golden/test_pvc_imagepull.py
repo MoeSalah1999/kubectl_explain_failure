@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 from kubectl_explain_failure.context import build_context
 from kubectl_explain_failure.engine import explain_failure, normalize_context

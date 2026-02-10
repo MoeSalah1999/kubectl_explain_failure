@@ -1,7 +1,7 @@
-
 from kubectl_explain_failure.causality import CausalChain, Cause
-from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.model import has_event
+from kubectl_explain_failure.rules.base_rule import FailureRule
+
 
 class PVCThenImagePullFailRule(FailureRule):
     name = "PVC Pending then ImagePullFail"
@@ -17,7 +17,9 @@ class PVCThenImagePullFailRule(FailureRule):
         if not pvc:
             return False
         pvc_pending = pvc.get("status", {}).get("phase") == "Pending"
-        return pvc_pending and any(has_event(events, r) for r in ["ImagePullBackOff", "ErrImagePull"])
+        return pvc_pending and any(
+            has_event(events, r) for r in ["ImagePullBackOff", "ErrImagePull"]
+        )
 
     def explain(self, pod, events, context):
         pvc = context["blocking_pvc"]
@@ -34,7 +36,7 @@ class PVCThenImagePullFailRule(FailureRule):
             "causes": chain,
             "evidence": [
                 f"PVC {pvc_name} is Pending",
-                "ImagePullBackOff or ErrImagePull observed"
+                "ImagePullBackOff or ErrImagePull observed",
             ],
             "object_evidence": {f"pvc:{pvc_name}": ["PVC not Bound"]},
             "suggested_checks": [

@@ -1,7 +1,7 @@
-
 from kubectl_explain_failure.causality import CausalChain, Cause
-from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.model import has_event
+from kubectl_explain_failure.rules.base_rule import FailureRule
+
 
 class CrashLoopWithConfigOrSecretRule(FailureRule):
     name = "CrashLoopWithConfigOrSecret"
@@ -12,7 +12,6 @@ class CrashLoopWithConfigOrSecretRule(FailureRule):
         "objects": ["configmap"],
         "optional_objects": ["secret"],
     }
-
 
     def matches(self, pod, events, context) -> bool:
         config_events = any(

@@ -1,4 +1,3 @@
-import json
 
 from kubectl_explain_failure.engine import explain_failure
 
@@ -45,8 +44,7 @@ def test_engine_preserves_pod_level_objects_for_compound_rules():
 
     # 2. Compound PVC → ImagePull rule MUST win
     assert (
-        "PVC" in result["root_cause"]
-        and "image" in result["root_cause"].lower()
+        "PVC" in result["root_cause"] and "image" in result["root_cause"].lower()
     ), result["root_cause"]
 
     # 3. Engine must treat this as a blocking failure
@@ -79,7 +77,7 @@ def test_engine_preserves_pod_level_objects_even_when_no_rule_matches():
         "events": [
             {
                 "reason": "Failed",
-                "message": "Failed to pull image \"private.registry/app\"",
+                "message": 'Failed to pull image "private.registry/app"',
                 "type": "Warning",
             }
         ],

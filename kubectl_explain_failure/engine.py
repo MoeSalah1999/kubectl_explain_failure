@@ -357,9 +357,7 @@ def explain_failure(
         # Presence-based object contract:
         # - object kind must exist in the graph
         # - contents MAY be empty (e.g. missing ConfigMap/Secret)
-        missing_objects = [
-            obj for obj in required_objects if obj not in objects
-        ]
+        missing_objects = [obj for obj in required_objects if obj not in objects]
 
         if missing_objects:
             if verbose:
@@ -367,7 +365,6 @@ def explain_failure(
                     f"[DEBUG] Skipping '{rule.name}': missing required objects {missing_objects}"
                 )
             continue
-
 
         # ----------------------------
         # OPTIONAL object enrichment
