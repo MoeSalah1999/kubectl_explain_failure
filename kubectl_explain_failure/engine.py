@@ -218,6 +218,23 @@ def explain_failure(
     - Normalizes confidence using noisy-OR
     - Enforces strong causal precedence for PVC-related failures
     """
+    # -------------------------------------------------
+    # MERGE pod-level object graph into context
+    # -------------------------------------------------
+    if context is None:
+        context = {}
+
+    pod_objects = pod.get("objects")
+    if isinstance(pod_objects, dict):
+        ctx_objects = context.setdefault("objects", {})
+        for kind, objs in pod_objects.items():
+            if isinstance(objs, dict):
+                ctx_objects.setdefault(kind, {}).update(objs)
+
+    # Preserve blocking_pvc if provided at pod level (fixtures, API users)
+    if "blocking_pvc" not in context and "blocking_pvc" in pod:
+        context["blocking_pvc"] = pod["blocking_pvc"]
+
     context = normalize_context(context or {})
     objects = context.get("objects", {})
     rules = rules or get_default_rules()
