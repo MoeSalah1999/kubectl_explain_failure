@@ -1,0 +1,23 @@
+{
+  "metadata": {"name": "pod-pvc-bound-node-pressure"},
+  "status": {"phase": "Pending"},
+  "spec": {
+    "volumes": [{"name": "data", "persistentVolumeClaim": {"claimName": "data-pvc"}}]
+  },
+  "objects": {
+    "pvc": {
+      "data-pvc": {
+        "metadata": {"name": "data-pvc"},
+        "status": {"phase": "Bound"}
+      }
+    },
+    "node": {
+      "node-1": {
+        "metadata": {"name": "node-1"},
+        "status": {
+          "conditions": [{"type": "DiskPressure", "status": "True"}]
+        }
+      }
+    }
+  }
+}
