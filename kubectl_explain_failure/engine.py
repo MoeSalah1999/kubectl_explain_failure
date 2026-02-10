@@ -429,6 +429,7 @@ def explain_failure(
             "likely_causes": [],
             "suggested_checks": [],
             "confidence": 0.0,
+            "blocking": False,
         }
 
     # ----------------------------
@@ -469,6 +470,7 @@ def explain_failure(
             "likely_causes": best_exp.get("likely_causes", []),
             "suggested_checks": best_exp.get("suggested_checks", []),
             "resolution": resolution.__dict__,
+            "blocking": False,
         }
 
         # ----------------------------
@@ -524,6 +526,7 @@ def explain_failure(
             "likely_causes": [],
             "suggested_checks": [],
             "confidence": 0.0,
+            "blocking": False,
         }
 
     # ----------------------------
@@ -602,6 +605,7 @@ def explain_failure(
             "likely_causes": best_exp.get("likely_causes", []),
             "suggested_checks": best_exp.get("suggested_checks", []),
             "resolution": resolution.__dict__,
+            "blocking": True,
         }
         if "object_evidence" in best_exp:
             result["object_evidence"] = best_exp["object_evidence"]
@@ -670,6 +674,7 @@ def explain_failure(
             "suppressed": merged_suppressed_rules,
             "reason": "Automatic suppression applied based on rule.blocks",
         },
+        "blocking": False,
     }
 
     for exp, _, chain in explanations:
