@@ -354,15 +354,20 @@ def explain_failure(
         required_objects = requires.get("objects", [])
         objects = context.get("objects", {})
 
+        # Presence-based object contract:
+        # - object kind must exist in the graph
+        # - contents MAY be empty (e.g. missing ConfigMap/Secret)
         missing_objects = [
-            obj for obj in required_objects if obj not in objects or not objects[obj]
+            obj for obj in required_objects if obj not in objects
         ]
+
         if missing_objects:
             if verbose:
                 print(
                     f"[DEBUG] Skipping '{rule.name}': missing required objects {missing_objects}"
                 )
             continue
+
 
         # ----------------------------
         # OPTIONAL object enrichment
@@ -472,8 +477,14 @@ def explain_failure(
         # ----------------------------
         # PVC semantics (LOCKED)
         # ----------------------------
-        if context.get("blocking_pvc") is not None:
+        # Rule-level blocking intent (authoritative)
+        if best_exp.get("blocking") is True:
             result["blocking"] = True
+
+        # Engine-derived blocking (PVC scheduling is hard-blocking)
+        elif context.get("blocking_pvc") is not None:
+            result["blocking"] = True
+            
         if "object_evidence" in best_exp:
             result["object_evidence"] = best_exp["object_evidence"]
 

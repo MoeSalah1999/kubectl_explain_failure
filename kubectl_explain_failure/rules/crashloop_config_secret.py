@@ -9,12 +9,17 @@ class CrashLoopWithConfigOrSecretRule(FailureRule):
     priority = 46
     blocks = ["CrashLoopBackOff"]
     requires = {
-        "objects": ["pvc", "configmap"],
+        "objects": ["configmap"],
+        "optional_objects": ["secret"],
     }
 
+
     def matches(self, pod, events, context) -> bool:
-        config_events = any(has_event(events, r) for r in ["CreateContainerConfigError", "ImagePullBackOff"])
-        crashloop = any(has_event(events, "BackOff"))
+        config_events = any(
+            has_event(events, r)
+            for r in ("CreateContainerConfigError", "ImagePullBackOff")
+        )
+        crashloop = has_event(events, "BackOff")
         return config_events and crashloop
 
     def explain(self, pod, events, context):
