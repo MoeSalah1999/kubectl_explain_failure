@@ -6,7 +6,7 @@ from kubectl_explain_failure.model import has_event
 class PVCThenImagePullFailRule(FailureRule):
     name = "PVC Pending then ImagePullFail"
     category = "Compound"
-    priority = 100
+    priority = 50
     blocks = ["ImagePullBackOff"]
     requires = {
         "objects": ["pvc"],

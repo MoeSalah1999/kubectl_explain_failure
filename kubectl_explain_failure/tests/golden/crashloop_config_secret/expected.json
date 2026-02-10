@@ -1,0 +1,15 @@
+{
+  "root_cause": "CrashLoopBackOff due to missing ConfigMap/Secret",
+  "confidence": 0.96,
+  "causes": [
+    {"code": "CONFIG_SECRET_FAIL", "message": "ConfigMap or Secret missing"},
+    {"code": "CRASHLOOP", "message": "Containers repeatedly restarted"}
+  ],
+  "evidence": ["BackOff event", "ConfigMap/Secret missing events"],
+  "suggested_checks": [
+    "kubectl get configmap",
+    "kubectl get secret",
+    "kubectl describe pod <name>"
+  ],
+  "blocking": true
+}
