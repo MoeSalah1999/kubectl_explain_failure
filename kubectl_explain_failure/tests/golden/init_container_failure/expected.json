@@ -1,0 +1,29 @@
+{
+  "root_cause": "Pod blocked due to failing init container",
+  "blocking": true,
+  "confidence": 0.99,
+  "evidence": [
+    "Init containers failed: init-db"
+  ],
+  "causes": [
+    {
+      "code": "INIT_CONTAINER_FAILED",
+      "message": "Init container exited with non-zero code",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:init-fail-pod": ["Init containers failed: init-db"]
+  },
+  "likely_causes": [
+    "Misconfigured init container command or image",
+    "Missing dependencies required by init container",
+    "Resource constraints preventing init container start"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod init-fail-pod",
+    "Inspect init container logs",
+    "Check resource limits for init container",
+    "Verify dependencies required by init container"
+  ]
+}

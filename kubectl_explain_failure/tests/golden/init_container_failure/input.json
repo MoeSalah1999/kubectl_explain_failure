@@ -1,0 +1,20 @@
+{
+  "pod": {
+    "metadata": {"name": "init-fail-pod"},
+    "status": {
+      "initContainerStatuses": [
+        {
+          "name": "init-db",
+          "state": {"terminated": {"exitCode": 1}}
+        },
+        {
+          "name": "init-cache",
+          "state": {"terminated": {"exitCode": 0}}
+        }
+      ]
+    }
+  },
+  "events": [
+    {"reason": "BackOff", "message": "Back-off restarting failed init container"}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "sa-missing-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "serviceAccountName": "missing-sa"
+    },
+    "status": {}
+  },
+  "events": [
+    {
+      "reason": "FailedCreate",
+      "message": "pods \"sa-missing-pod\" is forbidden: serviceaccount \"missing-sa\" not found"
+    }
+  ]
+}

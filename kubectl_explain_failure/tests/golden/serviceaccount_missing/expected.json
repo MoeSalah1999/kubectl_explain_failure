@@ -1,0 +1,28 @@
+{
+  "root_cause": "Pod cannot start due to missing ServiceAccount",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "FailedCreate events observed referencing missing ServiceAccount"
+  ],
+  "causes": [
+    {
+      "code": "SERVICE_ACCOUNT_MISSING",
+      "message": "Referenced ServiceAccount not found",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:sa-missing-pod": ["Pod references missing ServiceAccount"]
+  },
+  "likely_causes": [
+    "ServiceAccount deleted or misconfigured",
+    "Namespace mismatch for ServiceAccount",
+    "RBAC prevents pod from using ServiceAccount"
+  ],
+  "suggested_checks": [
+    "kubectl get serviceaccount -n default",
+    "kubectl describe pod sa-missing-pod",
+    "Verify namespace and RBAC permissions for ServiceAccount"
+  ]
+}
