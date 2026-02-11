@@ -14,6 +14,9 @@ class FailedSchedulingRule(FailureRule):
     }
 
     def matches(self, pod, events, context):
+        pod_phase = pod.get("status", {}).get("phase")
+        if pod_phase == "Pending":
+            return False
         cond = pod_condition(pod, "PodScheduled")
         if cond and cond.get("status") == "False":
             return True

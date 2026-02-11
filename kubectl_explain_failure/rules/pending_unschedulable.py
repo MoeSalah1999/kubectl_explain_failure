@@ -1,5 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
-from kubectl_explain_failure.model import has_event
+from kubectl_explain_failure.model import has_event, get_pod_phase
 from kubectl_explain_failure.rules.base_rule import FailureRule
 
 
@@ -13,7 +13,8 @@ class PendingUnschedulableRule(FailureRule):
 
     def matches(self, pod, events, context) -> bool:
         # Only match if pod is Pending and there is FailedScheduling
-        if has_event(events, "FailedScheduling") and not context.get("blocking_pvc"):
+        blocking_pvc = context.get("blocking_pvc")
+        if get_pod_phase(pod) == "Pending" and has_event(events, "FailedScheduling") and (blocking_pvc is None):
             return True
         return False
 
@@ -31,7 +32,7 @@ class PendingUnschedulableRule(FailureRule):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
 
         return {
-            "root_cause": "Pod could not be scheduled",
+            "root_cause": f"Pod Pending due to FailedScheduling (unschedulable)",
             "confidence": 0.9,
             "causes": chain,
             "evidence": [

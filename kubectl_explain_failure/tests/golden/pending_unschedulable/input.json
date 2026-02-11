@@ -1,0 +1,14 @@
+{
+  "metadata": {
+    "name": "mypod"
+  },
+  "status": {
+    "phase": "Pending"
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: insufficient cpu."
+    }
+  ]
+}

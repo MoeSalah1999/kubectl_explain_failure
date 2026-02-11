@@ -20,7 +20,7 @@ FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 
 
 def test_failed_scheduling():
-    pod = load_json(os.path.join(FIXTURES_DIR, "pending_pod.json"))
+    pod = load_json(os.path.join(FIXTURES_DIR, "pod_failed_scheduling.json"))
     events = normalize_events(
         load_json(os.path.join(FIXTURES_DIR, "failed_scheduling_events.json"))
     )

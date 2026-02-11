@@ -1,0 +1,11 @@
+{
+  "root_cause": "Pod Pending due to FailedScheduling (unschedulable)",
+  "blocking": true,
+  "evidence": [
+    "Pod mypod remains Pending",
+    "FailedScheduling event observed"
+  ],
+  "object_evidence": {
+    "pod:mypod, phase:Pending": ["Unschedulable"]
+  }
+}

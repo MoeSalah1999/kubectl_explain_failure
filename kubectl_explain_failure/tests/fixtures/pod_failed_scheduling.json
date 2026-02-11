@@ -1,0 +1,26 @@
+{
+  "metadata": { "name": "test-pod" },
+  "status": { "phase": "Running" },
+  "spec": {
+    "volumes": [
+      {
+        "name": "data",
+        "persistentVolumeClaim": {
+          "claimName": "test-pvc"
+        }
+      }
+    ],
+    "containers": [
+      {
+        "name": "app",
+        "image": "nginx:latest",
+        "volumeMounts": [
+          {
+            "name": "data",
+            "mountPath": "/data"
+          }
+        ]
+      }
+    ]
+  }
+}
