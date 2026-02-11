@@ -1,0 +1,17 @@
+{
+  "pod": {
+    "metadata": { "name": "test-pod" },
+    "status": { "phase": "Failed" }
+  },
+  "events": [
+    { "reason": "Evicted" }
+  ],
+  "node": {
+    "metadata": { "name": "node1" },
+    "status": {
+      "conditions": [
+        { "type": "Ready", "status": "False" }
+      ]
+    }
+  }
+}

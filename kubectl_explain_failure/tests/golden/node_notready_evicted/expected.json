@@ -1,0 +1,28 @@
+{
+  "root_cause": "Pod evicted due to NodeNotReady condition",
+  "blocking": true,
+  "confidence": 0.96,
+  "evidence": [
+    "Event: Evicted",
+    "Node Ready condition = False"
+  ],
+  "causes": [
+    {
+      "code": "NODE_NOT_READY",
+      "message": "Node Ready condition is False",
+      "blocking": true
+    },
+    {
+      "code": "POD_EVICTED",
+      "message": "Pod evicted from node"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "Ready=False condition detected"
+    ],
+    "pod:test-pod": [
+      "Evicted event observed"
+    ]
+  }
+}
