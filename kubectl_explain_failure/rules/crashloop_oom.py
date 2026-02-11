@@ -58,6 +58,7 @@ class CrashLoopOOMKilledRule(FailureRule):
         pod_name = pod.get("metadata", {}).get("name")
 
         return {
+            "rule": self.name,
             "root_cause": "CrashLoopBackOff caused by container OOMKilled (memory exhaustion)",
             "confidence": 0.98,
             "causes": chain,
