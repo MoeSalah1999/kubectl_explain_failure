@@ -1,0 +1,15 @@
+{
+  "root_cause": "ImagePullBackOff due to missing or invalid imagePullSecret",
+  "confidence_min": 0.95,
+  "blocking": true,
+  "causes": [
+    {
+      "code": "IMAGE_PULL_SECRET_MISSING",
+      "blocking": true
+    },
+    {
+      "code": "IMAGE_PULL_BACKOFF"
+    }
+  ]
+}
+

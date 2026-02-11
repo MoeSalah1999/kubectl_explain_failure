@@ -1,0 +1,21 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "image-secret-pod"
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": []
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedToRetrieveImagePullSecret",
+      "message": "Failed to retrieve image pull secret"
+    },
+    {
+      "reason": "ImagePullBackOff",
+      "message": "Back-off pulling image"
+    }
+  ]
+}
