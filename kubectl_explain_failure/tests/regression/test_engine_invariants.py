@@ -1,5 +1,5 @@
-from kubectl_explain_failure.engine import explain_failure, normalize_context
 from kubectl_explain_failure.context import build_context
+from kubectl_explain_failure.engine import explain_failure, normalize_context
 from kubectl_explain_failure.timeline import build_timeline
 
 
@@ -56,9 +56,9 @@ def test_engine_always_sets_blocking_boolean():
 
     assert isinstance(result, dict), "Engine must return a dict"
 
-    assert "blocking" in result, (
-        "Engine invariant violated: 'blocking' field missing from result"
-    )
+    assert (
+        "blocking" in result
+    ), "Engine invariant violated: 'blocking' field missing from result"
 
     assert isinstance(result["blocking"], bool), (
         f"Engine invariant violated: 'blocking' must be bool, "
