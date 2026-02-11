@@ -6,7 +6,7 @@ from kubectl_explain_failure.timeline import timeline_has_pattern
 class CrashLoopOOMKilledRule(FailureRule):
     name = "CrashLoopOOMKilled"
     category = "Compound"
-    priority = 60
+    priority = 55
 
     # This compound rule supersedes the simpler ones
     blocks = ["CrashLoopBackOff", "OOMKilled"]
@@ -20,11 +20,8 @@ class CrashLoopOOMKilledRule(FailureRule):
         if not timeline:
             return False
 
-        # Repeated BackOff events
-        crashloop = timeline_has_pattern(
-            timeline.raw_events,
-            [{"reason": "BackOff"}],
-        )
+        # Detect repeated BackOff via timeline (consistent with other rules)
+        crashloop = timeline_has_pattern(timeline, r"BackOff")
 
         # Container terminated due to OOMKilled
         oom_terminated = any(

@@ -1,0 +1,42 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "oom-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "restartCount": 4,
+          "lastState": {
+            "terminated": {
+              "reason": "OOMKilled",
+              "exitCode": 137
+            }
+          },
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container",
+      "type": "Warning",
+      "lastTimestamp": "2025-01-01T10:00:00Z"
+    },
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container",
+      "type": "Warning",
+      "lastTimestamp": "2025-01-01T10:01:00Z"
+    }
+  ]
+}
