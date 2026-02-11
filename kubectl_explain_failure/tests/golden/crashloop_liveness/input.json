@@ -1,0 +1,21 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "liveness-pod"
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": []
+    }
+  },
+  "events": [
+    {
+      "reason": "Unhealthy",
+      "message": "Liveness probe failed"
+    },
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container"
+    }
+  ]
+}

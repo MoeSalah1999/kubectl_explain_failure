@@ -1,0 +1,14 @@
+{
+  "root_cause": "CrashLoopBackOff caused by failing liveness probe",
+  "confidence_min": 0.95,
+  "blocking": true,
+  "causes": [
+    {
+      "code": "LIVENESS_PROBE_FAILED",
+      "blocking": true
+    },
+    {
+      "code": "CRASH_LOOP"
+    }
+  ]
+}
