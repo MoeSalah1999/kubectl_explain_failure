@@ -1,0 +1,18 @@
+{
+  "metadata": {"name": "pod-rapid-restart"},
+  "status": {
+    "phase": "Failed",
+    "containerStatuses": [
+      {
+        "name": "app",
+        "lastState": {"terminated": {"reason": "Error"}},
+        "state": {"waiting": {"reason": "CrashLoopBackOff"}}
+      }
+    ]
+  },
+  "events": [
+    {"reason": "BackOff", "message": "Back-off restarting failed container"},
+    {"reason": "BackOff", "message": "Back-off restarting failed container"},
+    {"reason": "BackOff", "message": "Back-off restarting failed container"}
+  ]
+}

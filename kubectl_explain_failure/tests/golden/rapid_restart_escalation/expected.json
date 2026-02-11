@@ -1,0 +1,19 @@
+{
+  "root_cause": "Rapid container restart escalation detected",
+  "blocking": true,
+  "resolution": {
+    "winner": "RapidRestartEscalation",
+    "suppressed": ["CrashLoopBackOff", "RepeatedCrashLoop"],
+    "reason": "Compound causal chain dominates component failures"
+  },
+  "object_evidence": {
+    "pod:pod-rapid-restart": ["Multiple BackOff events detected within timeline"]
+  },
+  "causes": [
+    {
+      "code": "RAPID_RESTARTS",
+      "message": "Repeated BackOff events detected",
+      "blocking": true
+    }
+  ]
+}

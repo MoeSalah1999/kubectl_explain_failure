@@ -1,7 +1,6 @@
 {
   "root_cause": "Pod evicted due to NodeNotReady condition",
   "blocking": true,
-  "confidence": 0.96,
   "evidence": [
     "Event: Evicted",
     "Node Ready condition = False"
