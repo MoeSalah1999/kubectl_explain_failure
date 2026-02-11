@@ -1,0 +1,29 @@
+{
+  "root_cause": "PVC is bound but volume mount failed",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "1 FailedMount or MountVolume events detected",
+    "Bound PVCs: test-pvc"
+  ],
+  "causes": [
+    {
+      "code": "PVC_BOUND",
+      "message": "PVCs bound: test-pvc"
+    },
+    {
+      "code": "MOUNT_FAILED",
+      "message": "Volume mount failed (1 events)",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pvc:test-pvc": ["PVC bound but mount failed"],
+    "pod:test-pod": ["Pod experienced volume mount failures"]
+  },
+  "likely_causes": [
+    "Node not ready / volume attach failure",
+    "Storage backend misconfiguration",
+    "Insufficient permissions for volume mount"
+  ]
+}

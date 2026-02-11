@@ -1,0 +1,31 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "test-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "state": {"waiting": {"reason": "ContainerCreating"}}
+        }
+      ]
+    },
+    "objects": {
+      "pvc": {
+        "test-pvc": {
+          "metadata": {"name": "test-pvc"},
+          "status": {"phase": "Bound"}
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedMount",
+      "message": "MountVolume.SetUp failed for volume 'data'"
+    }
+  ]
+}
