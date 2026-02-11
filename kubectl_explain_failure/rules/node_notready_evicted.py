@@ -72,22 +72,20 @@ class NodeNotReadyEvictedRule(FailureRule):
                 "Underlying node resource failure",
             ],
             "suggested_checks": [
-                f"kubectl describe node {not_ready_nodes[0]}"
-                if not_ready_nodes
-                else "kubectl describe node <node-name>",
+                (
+                    f"kubectl describe node {not_ready_nodes[0]}"
+                    if not_ready_nodes
+                    else "kubectl describe node <node-name>"
+                ),
                 "kubectl get nodes",
                 "Check kubelet service status on the node",
                 f"kubectl describe pod {pod_name}",
             ],
             "object_evidence": {
                 **{
-                    f"node:{name}": [
-                        "Ready=False condition detected"
-                    ]
+                    f"node:{name}": ["Ready=False condition detected"]
                     for name in not_ready_nodes
                 },
-                f"pod:{pod_name}": [
-                    "Evicted event observed"
-                ],
+                f"pod:{pod_name}": ["Evicted event observed"],
             },
         }

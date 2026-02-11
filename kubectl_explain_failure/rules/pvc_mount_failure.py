@@ -45,7 +45,9 @@ class PVCMountFailureRule(FailureRule):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
 
         pvc_objs = context.get("objects", {}).get("pvc", {})
-        pvc_names = [p.get("metadata", {}).get("name", "<unknown>") for p in pvc_objs.values()]
+        pvc_names = [
+            p.get("metadata", {}).get("name", "<unknown>") for p in pvc_objs.values()
+        ]
 
         # Defensive: fallback if timeline missing
         timeline = context.get("timeline")
@@ -53,20 +55,18 @@ class PVCMountFailureRule(FailureRule):
 
         # Evidence
         mount_fail_count = sum(
-            1 for e in timeline_events if e.get("reason") == "FailedMount"
-            or "MountVolume" in e.get("message", "")
+            1
+            for e in timeline_events
+            if e.get("reason") == "FailedMount" or "MountVolume" in e.get("message", "")
         )
 
         chain = CausalChain(
             causes=[
-                Cause(
-                    code="PVC_BOUND",
-                    message=f"PVCs bound: {', '.join(pvc_names)}"
-                ),
+                Cause(code="PVC_BOUND", message=f"PVCs bound: {', '.join(pvc_names)}"),
                 Cause(
                     code="MOUNT_FAILED",
                     message=f"Volume mount failed ({mount_fail_count} events)",
-                    blocking=True
+                    blocking=True,
                 ),
             ]
         )
@@ -79,21 +79,21 @@ class PVCMountFailureRule(FailureRule):
             "blocking": True,
             "evidence": [
                 f"{mount_fail_count} FailedMount or MountVolume events detected",
-                f"Bound PVCs: {', '.join(pvc_names)}"
+                f"Bound PVCs: {', '.join(pvc_names)}",
             ],
             "object_evidence": {
                 **{f"pvc:{name}": ["PVC bound but mount failed"] for name in pvc_names},
-                f"pod:{pod_name}": ["Pod experienced volume mount failures"]
+                f"pod:{pod_name}": ["Pod experienced volume mount failures"],
             },
             "likely_causes": [
                 "Node not ready / volume attach failure",
                 "Storage backend misconfiguration",
-                "Insufficient permissions for volume mount"
+                "Insufficient permissions for volume mount",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
                 "Check node and volume events",
                 "Inspect PVC and storage class configuration",
-                "Verify CSI driver logs and permissions"
-            ]
+                "Verify CSI driver logs and permissions",
+            ],
         }

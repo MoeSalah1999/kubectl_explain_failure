@@ -1,6 +1,6 @@
-from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.model import has_event
+from kubectl_explain_failure.rules.base_rule import FailureRule
 
 
 class EvictedRule(FailureRule):
@@ -36,9 +36,7 @@ class EvictedRule(FailureRule):
                 "Event: Evicted",
                 f"Pod {pod_name} entered Failed phase",
             ],
-            "object_evidence": {
-                f"pod:{pod_name}": [f"Evicted from node {node_name}"]
-            },
+            "object_evidence": {f"pod:{pod_name}": [f"Evicted from node {node_name}"]},
             "likely_causes": [
                 "Node memory pressure",
                 "Node disk pressure",

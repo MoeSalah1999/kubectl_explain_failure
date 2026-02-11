@@ -1,7 +1,6 @@
 from kubectl_explain_failure.engine import explain_failure
 
 
-
 def test_multiple_crashloop_containers():
     pod = {
         "metadata": {"name": "multi-crash"},

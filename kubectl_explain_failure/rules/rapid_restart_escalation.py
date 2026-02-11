@@ -40,7 +40,9 @@ class RapidRestartEscalationRule(FailureRule):
                 ),
             ]
         )
-        timeline_events = getattr(context.get("timeline", []), "events", context.get("timeline", []))
+        timeline_events = getattr(
+            context.get("timeline", []), "events", context.get("timeline", [])
+        )
         return {
             "rule": self.name,
             "root_cause": "Rapid container restart escalation detected",
@@ -61,8 +63,6 @@ class RapidRestartEscalationRule(FailureRule):
                 "Check container resource requests/limits",
             ],
             "object_evidence": {
-                f"pod:{pod_name}": [
-                    "Multiple BackOff events detected within timeline"
-                ]
+                f"pod:{pod_name}": ["Multiple BackOff events detected within timeline"]
             },
         }

@@ -19,8 +19,13 @@ class ServiceAccountMissingRule(FailureRule):
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
-        sa_failed_event = has_event(events, "FailedCreate") and "serviceaccount" in str(events).lower()
-        sa_backoff = timeline_has_pattern(timeline, r"FailedCreate") if timeline else False
+        sa_failed_event = (
+            has_event(events, "FailedCreate")
+            and "serviceaccount" in str(events).lower()
+        )
+        sa_backoff = (
+            timeline_has_pattern(timeline, r"FailedCreate") if timeline else False
+        )
         return sa_failed_event or sa_backoff
 
     def explain(self, pod, events, context):
@@ -51,11 +56,11 @@ class ServiceAccountMissingRule(FailureRule):
             "likely_causes": [
                 "ServiceAccount deleted or misconfigured",
                 "Namespace mismatch for ServiceAccount",
-                "RBAC prevents pod from using ServiceAccount"
+                "RBAC prevents pod from using ServiceAccount",
             ],
             "suggested_checks": [
                 f"kubectl get serviceaccount -n {pod.get('metadata', {}).get('namespace', 'default')}",
                 f"kubectl describe pod {pod_name}",
-                "Verify namespace and RBAC permissions for ServiceAccount"
-            ]
+                "Verify namespace and RBAC permissions for ServiceAccount",
+            ],
         }

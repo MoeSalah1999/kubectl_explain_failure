@@ -2,9 +2,11 @@ import json
 import os
 
 from kubectl_explain_failure.context import build_context
-from kubectl_explain_failure.engine import explain_failure, normalize_context, get_default_rules
+from kubectl_explain_failure.engine import (
+    explain_failure,
+    normalize_context,
+)
 from kubectl_explain_failure.timeline import build_timeline
-
 
 BASE_DIR = os.path.dirname(__file__)
 FIXTURE_DIR = os.path.join(BASE_DIR, "crashloop_oom")
@@ -58,5 +60,3 @@ def test_crashloop_oom_golden():
     assert causes[0]["code"] == "OOM_KILLED"
     assert causes[0]["blocking"] is True
     assert causes[1]["code"] == "CRASH_LOOP"
-
-    

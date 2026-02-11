@@ -1,16 +1,21 @@
-import os
 import json
+import os
 
 from kubectl_explain_failure.context import build_context
-from kubectl_explain_failure.engine import explain_failure, normalize_context, get_default_rules
+from kubectl_explain_failure.engine import (
+    explain_failure,
+    normalize_context,
+)
 from kubectl_explain_failure.timeline import build_timeline
 
 BASE_DIR = os.path.dirname(__file__)
 FIXTURE_DIR = os.path.join(BASE_DIR, "rapid_restart_escalation")
 
+
 def load_json(name: str):
     with open(os.path.join(FIXTURE_DIR, name)) as f:
         return json.load(f)
+
 
 def test_rapid_restart_escalation_golden():
     data = load_json("input.json")

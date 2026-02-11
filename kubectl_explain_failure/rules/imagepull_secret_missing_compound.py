@@ -2,10 +2,10 @@ from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import timeline_has_pattern
 
-
 # ---------------------------------------------------------
 # Compound: ImagePullBackOff caused by missing pull secret
 # ---------------------------------------------------------
+
 
 class ImagePullSecretMissingCompoundRule(FailureRule):
     name = "ImagePullSecretMissingCompound"
@@ -59,9 +59,7 @@ class ImagePullSecretMissingCompoundRule(FailureRule):
                 "FailedToRetrieveImagePullSecret events observed in timeline",
             ],
             "object_evidence": {
-                f"pod:{pod_name}": [
-                    "Image pull secret retrieval failed"
-                ]
+                f"pod:{pod_name}": ["Image pull secret retrieval failed"]
             },
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",

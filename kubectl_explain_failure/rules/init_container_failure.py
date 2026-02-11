@@ -18,7 +18,9 @@ class InitContainerFailureRule(FailureRule):
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         # Detect BackOff / repeated init container failures if timeline present
-        backoff_pattern = timeline_has_pattern(timeline, r"BackOff") if timeline else False
+        backoff_pattern = (
+            timeline_has_pattern(timeline, r"BackOff") if timeline else False
+        )
 
         for cs in pod.get("status", {}).get("initContainerStatuses", []):
             term = cs.get("state", {}).get("terminated")
@@ -52,21 +54,21 @@ class InitContainerFailureRule(FailureRule):
             "confidence": 0.99,
             "causes": chain,
             "blocking": True,
-            "evidence": [
-                f"Init containers failed: {', '.join(failed_containers)}"
-            ],
+            "evidence": [f"Init containers failed: {', '.join(failed_containers)}"],
             "object_evidence": {
-                f"pod:{pod_name}": [f"Init containers failed: {', '.join(failed_containers)}"]
+                f"pod:{pod_name}": [
+                    f"Init containers failed: {', '.join(failed_containers)}"
+                ]
             },
             "likely_causes": [
                 "Misconfigured init container command or image",
                 "Missing dependencies required by init container",
-                "Resource constraints preventing init container start"
+                "Resource constraints preventing init container start",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
                 "Inspect init container logs",
                 "Check resource limits for init container",
-                "Verify dependencies required by init container"
-            ]
+                "Verify dependencies required by init container",
+            ],
         }

@@ -2,10 +2,10 @@ from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import timeline_has_pattern
 
-
 # ---------------------------------------------------------
 # Compound: CrashLoopBackOff caused by failing liveness probe
 # ---------------------------------------------------------
+
 
 class CrashLoopLivenessProbeCompoundRule(FailureRule):
     name = "CrashLoopLivenessProbe"
@@ -57,9 +57,7 @@ class CrashLoopLivenessProbeCompoundRule(FailureRule):
                 "BackOff events observed in timeline",
             ],
             "object_evidence": {
-                f"pod:{pod_name}": [
-                    "Container repeatedly failing liveness probe"
-                ]
+                f"pod:{pod_name}": ["Container repeatedly failing liveness probe"]
             },
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
