@@ -98,9 +98,11 @@ This ensures tests run in a clean environment and type checks are enforced.
 - ImagePullBackOff 
 - ImagePullError
 - ImagePullSecretMissing
+- InsufficientResources
 - NodeMemoryPressure
 - NodePIDPressure
 - NodeDiskPressure 
+- NodeSelectorMismatch
 - OOMKilled containers
 - PVCMountFailed 
 - PVCNotBound 

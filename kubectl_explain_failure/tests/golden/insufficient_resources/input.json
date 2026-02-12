@@ -1,0 +1,29 @@
+{
+  "pod": {
+    "metadata": {"name": "test-pod"},
+    "spec": {"nodeName": "node1"},
+    "status": {}
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/1 nodes are available: 1 Insufficient cpu."
+    }
+  ],
+  "nodes": {
+    "node1": {
+      "metadata": {"name": "node1"},
+      "status": {
+        "allocatable": {
+          "cpu": "1000m",
+          "memory": "2Gi",
+          "ephemeral-storage": "5Gi"
+        },
+        "conditions": [
+          {"type": "Ready", "status": "True"}
+        ]
+      }
+    }
+  }
+}

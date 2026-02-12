@@ -1,0 +1,19 @@
+{
+  "root_cause": "Pod nodeSelector does not match any node labels",
+  "blocking": true,
+  "evidence": [
+    "Pod has nodeSelector {'gpu': 'true', 'zone': 'us-east-1a'}, but no nodes satisfy all labels"
+  ],
+  "causes": [
+    {
+      "code": "NODE_SELECTOR_MISMATCH",
+      "message": "No nodes match Pod.nodeSelector: {'gpu': 'true', 'zone': 'us-east-1a'}",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:test-pod": ["Pod nodeSelector {'gpu': 'true', 'zone': 'us-east-1a'} mismatch"],
+    "node:node1": ["Node labels do not satisfy Pod nodeSelector"],
+    "node:node2": ["Node labels do not satisfy Pod nodeSelector"]
+  }
+}

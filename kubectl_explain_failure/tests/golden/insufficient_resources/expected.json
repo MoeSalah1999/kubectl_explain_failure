@@ -1,0 +1,22 @@
+{
+  "root_cause": "Pod failed scheduling due to insufficient resources",
+  "blocking": true,
+  "evidence": [
+    "FailedScheduling events with Insufficient CPU/Memory/EphemeralStorage detected"
+  ],
+  "causes": [
+    {
+      "code": "INSUFFICIENT_RESOURCES",
+      "message": "Pod failed scheduling due to insufficient CPU/memory/ephemeral-storage on node(s): node1",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:test-pod": [
+      "Pod could not be scheduled due to resource insufficiency"
+    ],
+    "node:node1": [
+      "Node could not satisfy resource requests"
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "pod": {
+    "metadata": {"name": "test-pod"},
+    "spec": {
+      "nodeSelector": {
+        "gpu": "true",
+        "zone": "us-east-1a"
+      }
+    }
+  },
+  "events": [],
+  "nodes": {
+    "node1": {
+      "metadata": {"labels": {"gpu": "false", "zone": "us-east-1b"}}
+    },
+    "node2": {
+      "metadata": {"labels": {"gpu": "false", "zone": "us-east-1c"}}
+    }
+  }
+}

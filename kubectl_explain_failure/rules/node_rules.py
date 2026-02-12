@@ -293,11 +293,13 @@ class InsufficientResourcesRule(FailureRule):
             return False
 
         # Check FailedScheduling events with Insufficient resource reasons
-        insufficient_pattern = [
-            {"reason": "FailedScheduling", "message": "Insufficient"}
-        ]
-        return timeline_has_pattern(timeline, insufficient_pattern)
-
+        for ev in timeline.events:
+            reason = ev.get("reason", "")
+            message = ev.get("message", "")
+            if reason == "FailedScheduling" and "Insufficient" in message:
+                return True
+        return False
+    
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
         objects = context.get("objects", {})
