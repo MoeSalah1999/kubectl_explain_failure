@@ -89,20 +89,37 @@ PyYAML
 
 This ensures tests run in a clean environment and type checks are enforced.
 
-## Supported failure patterns: (some rules support suppression/resolution semantics):
+## Supported failure patterns: (all rules support suppression/resolution semantics):
 - CrashLoopBackoff (BackOff events)
 - ConfigMapNotFound
-- FailedScheduling ✅
-- FailedMount (volume mount failures) ✅
+- EvictedRule
+- FailedScheduling
+- FailedMount (volume mount failures) 
 - ImagePullBackOff 
 - ImagePullError
 - ImagePullSecretMissing
-- NodeDiskPressure ✅
+- NodeMemoryPressure
+- NodePIDPressure
+- NodeDiskPressure 
 - OOMKilled containers
-- PVCMountFailed ✅
-- PVCNotBound ✅
+- PVCMountFailed 
+- PVCNotBound 
 - PVCZoneMismatch
-- UnschedulableTaint ✅
+- UnschedulableTaint  
+- ImagePullSecretMissingCompound (Compound not single)
+- CrashloopWithConfigOrSecret (Compound)                                                 
+- CrashloopLivenessProbeRule (Compound)
+- CrashloopOOMKilledRule (Compound)
+- InitContainerFailureRule (Compound)
+- NodeNotReadyEvictedRule (Compound)                                                                               - PendingUnschedulableRule (Compound)
+- PVCBoundThenNodePressureRule (Compound)
+- PVCBoundNodeDiskPressureMountRule (Compound)
+- PVCThenCrashloopRule(Compound)
+- PVCThenImagePullFailRule (Compound)                                                                             - PVCMountFailureRule (Compound)
+- PVCPendingThenCrashloopRule (Compound)
+- PVCPendingTooLongRule (Compound)
+- RapidRestartEscalationRule (Compound)
+- ServiceAccountMissingRule (Compound)
 
 - Rules are evaluated in priority order.
 - High-priority rules can suppress lower-priority rules, preventing misleading explanations.

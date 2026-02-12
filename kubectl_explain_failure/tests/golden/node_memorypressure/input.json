@@ -1,0 +1,16 @@
+{
+  "pod": {
+    "metadata": { "name": "test-pod" },
+    "spec": { "nodeName": "node1" }
+  },
+  "node": {
+    "node1": {
+      "status": {
+        "conditions": [
+          { "type": "MemoryPressure", "status": "True" }
+        ]
+      }
+    }
+  },
+  "events": []
+}

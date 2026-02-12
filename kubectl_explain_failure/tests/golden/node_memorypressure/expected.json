@@ -1,0 +1,22 @@
+{
+  "root_cause": "Pod affected by Node MemoryPressure condition",
+  "blocking": true,
+  "evidence": [
+    "Node condition MemoryPressure=True detected"
+  ],
+  "causes": [
+    {
+        "code": "NODE_MEMORY_PRESSURE",
+        "message": "Node(s) under MemoryPressure",
+        "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "Node condition MemoryPressure=True"
+    ],
+    "pod:test-pod": [
+                    "Pod scheduled on node reporting MemoryPressure"
+    ]
+   }
+}

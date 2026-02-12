@@ -56,11 +56,20 @@ def normalize_context(context: dict[str, Any]) -> dict[str, Any]:
             )
 
     # Node
+    # Node
     if "node" in context:
         node_data = context["node"]
-        if isinstance(node_data, dict):
+
+        # Case 1: Object-graph format (name -> node_object)
+        if isinstance(node_data, dict) and "metadata" not in node_data:
+            objects.setdefault("node", {}).update(node_data)
+
+        # Case 2: Single Kubernetes-shaped node object
+        elif isinstance(node_data, dict):
             name = node_data.get("metadata", {}).get("name", "node1")
             objects.setdefault("node", {})[name] = node_data
+
+        # Case 3: List of node objects
         elif isinstance(node_data, list):
             objects.setdefault("node", {}).update(
                 {
@@ -68,6 +77,15 @@ def normalize_context(context: dict[str, Any]) -> dict[str, Any]:
                     for i, n in enumerate(node_data)
                 }
             )
+
+        # Populate node_conditions for legacy rules
+        node_objects = list(objects.get("node", {}).values())
+        if node_objects:
+            merged = {}
+            for n in node_objects:
+                merged.update(_extract_node_conditions(n))
+            context["node_conditions"] = merged
+
 
         # Populate node_conditions for NodeDiskPressureRule
         node_objects = list(objects.get("node", {}).values())
@@ -660,6 +678,12 @@ def explain_failure(
         r.name for _, r, _ in filtered_explanations[1:]
     ] + suppression_map.get(winner_rule_name, [])
 
+    # Determine winner rule object
+    winner_exp = next(
+        (exp for exp, r, _ in filtered_explanations if r.name == winner_rule_name),
+        {},
+    )
+
     merged: dict[str, Any] = {
         "pod": pod_name,
         "phase": pod_phase,
@@ -668,13 +692,13 @@ def explain_failure(
         "evidence": [],
         "likely_causes": [],
         "suggested_checks": [],
-        "causal_chain": [],
+        "causes": [],
         "resolution": {
             "winner": winner_rule_name,
             "suppressed": merged_suppressed_rules,
             "reason": "Automatic suppression applied based on rule.blocks",
         },
-        "blocking": False,
+        "blocking": bool(winner_exp.get("blocking", False)),
     }
 
     for exp, _, chain in explanations:
@@ -682,7 +706,13 @@ def explain_failure(
         merged["likely_causes"].extend(list(exp.get("likely_causes", [])))
         merged["suggested_checks"].extend(list(exp.get("suggested_checks", [])))
         for cause in chain.causes:
-            merged["causal_chain"].append(cause.message)
+            merged["causes"].append(
+                {
+                    "code": cause.code,
+                    "message": cause.message,
+                    **({"blocking": True} if cause.blocking else {}),
+                }
+            )
 
         object_evidence = exp.get("object_evidence", {})
         if object_evidence:
@@ -695,7 +725,16 @@ def explain_failure(
     merged["evidence"] = list(dict.fromkeys(merged["evidence"]))
     merged["likely_causes"] = list(dict.fromkeys(merged["likely_causes"]))
     merged["suggested_checks"] = list(dict.fromkeys(merged["suggested_checks"]))
-    merged["causal_chain"] = list(dict.fromkeys(merged["causal_chain"]))
+    # Deduplicate causes by (code, message)
+    seen = set()
+    unique_causes = []
+    for c in merged["causes"]:
+        key = (c["code"], c["message"])
+        if key not in seen:
+            seen.add(key)
+            unique_causes.append(c)
+    merged["causes"] = unique_causes
+
 
     if "object_evidence" in merged:
         for obj, items in merged["object_evidence"].items():

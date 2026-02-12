@@ -1,0 +1,22 @@
+{
+  "root_cause": "Pod affected by Node PIDPressure condition",
+  "blocking": true,
+  "evidence": [
+    "Node condition PIDPressure=True detected"
+  ],
+  "causes": [
+    {
+      "code": "NODE_PID_PRESSURE",
+      "message": "Node(s) under PIDPressure: node1",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "Node condition PIDPressure=True"
+    ],
+    "pod:test-pod": [
+      "Pod scheduled on node reporting PIDPressure"
+    ]
+  }
+}
