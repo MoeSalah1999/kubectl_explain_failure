@@ -1,0 +1,43 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "test-pod"
+    },
+    "spec": {
+      "topologySpreadConstraints": [
+        {
+          "maxSkew": 1,
+          "topologyKey": "zone",
+          "whenUnsatisfiable": "DoNotSchedule",
+          "labelSelector": {
+            "matchLabels": {
+              "app": "web"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/2 nodes are available: topology spread constraints cannot be satisfied."
+    }
+  ],
+  "nodes": {
+    "node1": {
+      "metadata": {
+        "labels": {
+          "zone": "us-east-1a"
+        }
+      }
+    },
+    "node2": {
+      "metadata": {
+        "labels": {
+          "zone": "us-east-1a"
+        }
+      }
+    }
+  }
+}

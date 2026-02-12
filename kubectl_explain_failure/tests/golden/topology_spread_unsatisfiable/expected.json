@@ -1,0 +1,26 @@
+{
+  "root_cause": "Pod scheduling blocked due to unsatisfiable topology spread constraints",
+  "blocking": true,
+  "evidence": [
+    "Pod.spec.topologySpreadConstraints detected",
+    "FailedScheduling events in timeline"
+  ],
+  "causes": [
+    {
+      "code": "TOPOLOGY_SPREAD_UNSATISFIABLE",
+      "message": "Pod topologySpreadConstraints cannot be satisfied on available nodes",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:test-pod": [
+      "TopologySpreadConstraints unsatisfiable"
+    ],
+    "node:node1": [
+      "Node cannot satisfy topology spread constraints"
+    ],
+    "node:node2": [
+      "Node cannot satisfy topology spread constraints"
+    ]
+  }
+}

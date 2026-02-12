@@ -1,0 +1,26 @@
+{
+  "root_cause": "Pod scheduling blocked due to unsatisfiable affinity/anti-affinity",
+  "blocking": true,
+  "evidence": [
+    "Pod.spec.affinity detected",
+    "FailedScheduling events in timeline"
+  ],
+  "causes": [
+    {
+      "code": "AFFINITY_UNSATISFIABLE",
+      "message": "Pod affinity/anti-affinity rules cannot be satisfied on available nodes",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:test-pod": [
+      "Affinity/anti-affinity constraints unsatisfiable"
+    ],
+    "node:node1": [
+      "Node cannot satisfy pod affinity rules"
+    ],
+    "node:node2": [
+      "Node cannot satisfy pod affinity rules"
+    ]
+  }
+}

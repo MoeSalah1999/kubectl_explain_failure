@@ -1,0 +1,48 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "test-pod"
+    },
+    "spec": {
+      "affinity": {
+        "nodeAffinity": {
+          "requiredDuringSchedulingIgnoredDuringExecution": {
+            "nodeSelectorTerms": [
+              {
+                "matchExpressions": [
+                  {
+                    "key": "gpu",
+                    "operator": "In",
+                    "values": ["true"]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/2 nodes are available: 2 node(s) didn't match node selector."
+    }
+  ],
+  "nodes": {
+    "node1": {
+      "metadata": {
+        "labels": {
+          "gpu": "false"
+        }
+      }
+    },
+    "node2": {
+      "metadata": {
+        "labels": {
+          "gpu": "false"
+        }
+      }
+    }
+  }
+}
