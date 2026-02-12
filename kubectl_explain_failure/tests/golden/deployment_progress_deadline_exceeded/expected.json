@@ -1,0 +1,30 @@
+{
+  "root_cause": "Deployment rollout failed due to ProgressDeadlineExceeded",
+  "blocking": true,
+  "confidence": 0.96,
+  "evidence": [
+    "Deployment.status.conditions[type=Progressing]=False",
+    "Reason=ProgressDeadlineExceeded",
+    "Deployment objects: deployment1"
+  ],
+  "causes": [
+    {
+      "code": "DEPLOYMENT_PROGRESS_DEADLINE_EXCEEDED",
+      "message": "Deployment(s) exceeded progress deadline: deployment1",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "deployment:deployment1": [
+      "ProgressDeadlineExceeded detected"
+    ]
+  },
+  "likely_causes": [
+    "Pods failed to become ready in time",
+    "Node capacity insufficient for rollout",
+    "Container image pull or crash failures"
+  ],
+  "suggested_checks": [
+    "kubectl describe deployment deployment1"
+  ]
+}

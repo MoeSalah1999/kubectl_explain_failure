@@ -1,0 +1,20 @@
+{
+  "root_cause": "ReplicaSet creation failed due to ReplicaFailure condition",
+  "blocking": true,
+  "evidence": [
+    "ReplicaSet.status.conditions[ReplicaFailure]=True",
+    "ReplicaSet objects: rs1"
+  ],
+  "causes": [
+    {
+      "code": "REPLICASET_CREATION_FAILED",
+      "message": "ReplicaSet(s) failed to create pods: rs1",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "replicaset:rs1": [
+      "ReplicaFailure=True detected"
+    ]
+  }
+}

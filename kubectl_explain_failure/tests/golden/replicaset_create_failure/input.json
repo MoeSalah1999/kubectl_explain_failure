@@ -1,0 +1,36 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "test-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    },
+    "objects": {}
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedCreate",
+      "message": "Failed to create pod for ReplicaSet"
+    }
+  ],
+  "replicaset": {
+    "rs1": {
+      "metadata": {
+        "name": "rs1",
+        "namespace": "default"
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "ReplicaFailure",
+            "status": true,
+            "reason": "FailedCreate"
+          }
+        ]
+      }
+    }
+  }
+}
