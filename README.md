@@ -90,6 +90,8 @@ PyYAML
 This ensures tests run in a clean environment and type checks are enforced.
 
 ## Supported failure patterns: (all rules support suppression/resolution semantics):
+
+- AffinityUnsatisfiable
 - CrashLoopBackoff (BackOff events)
 - ConfigMapNotFound
 - EvictedRule
@@ -107,17 +109,20 @@ This ensures tests run in a clean environment and type checks are enforced.
 - PVCMountFailed 
 - PVCNotBound 
 - PVCZoneMismatch
+- TopologySpreadUnsatisfiable
 - UnschedulableTaint  
 - ImagePullSecretMissingCompound (Compound not single)
 - CrashloopWithConfigOrSecret (Compound)                                                 
 - CrashloopLivenessProbeRule (Compound)
 - CrashloopOOMKilledRule (Compound)
 - InitContainerFailureRule (Compound)
-- NodeNotReadyEvictedRule (Compound)                                                                               - PendingUnschedulableRule (Compound)
+- NodeNotReadyEvictedRule (Compound)
+- PendingUnschedulableRule (Compound)
 - PVCBoundThenNodePressureRule (Compound)
 - PVCBoundNodeDiskPressureMountRule (Compound)
 - PVCThenCrashloopRule(Compound)
-- PVCThenImagePullFailRule (Compound)                                                                             - PVCMountFailureRule (Compound)
+- PVCThenImagePullFailRule (Compound)
+- PVCMountFailureRule (Compound)
 - PVCPendingThenCrashloopRule (Compound)
 - PVCPendingTooLongRule (Compound)
 - RapidRestartEscalationRule (Compound)
