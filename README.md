@@ -94,6 +94,7 @@ This ensures tests run in a clean environment and type checks are enforced.
 - AffinityUnsatisfiable
 - CrashLoopBackoff (BackOff events)
 - ConfigMapNotFound
+- DeploymentProgressDeadlineExceeded
 - EvictedRule
 - FailedScheduling
 - FailedMount (volume mount failures) 
@@ -109,6 +110,7 @@ This ensures tests run in a clean environment and type checks are enforced.
 - PVCMountFailed 
 - PVCNotBound 
 - PVCZoneMismatch
+- ReplicaSetCreateFailure
 - TopologySpreadUnsatisfiable
 - UnschedulableTaint  
 - ImagePullSecretMissingCompound (Compound not single)
