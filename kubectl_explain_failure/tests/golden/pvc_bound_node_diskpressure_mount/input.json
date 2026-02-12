@@ -1,0 +1,39 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "test-pod"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedMount",
+      "message": "Unable to mount volumes for pod"
+    }
+  ],
+  "context": {
+    "pvc": {
+      "metadata": {
+        "name": "data-pvc"
+      },
+      "status": {
+        "phase": "Bound"
+      }
+    },
+    "node": {
+      "metadata": {
+        "name": "node1"
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "DiskPressure",
+            "status": "True"
+          }
+        ]
+      }
+    }
+  }
+}

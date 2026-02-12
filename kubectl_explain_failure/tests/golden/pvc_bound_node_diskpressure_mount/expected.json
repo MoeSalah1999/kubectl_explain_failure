@@ -1,0 +1,35 @@
+{
+  "root_cause": "PVC bound but mount failed due to Node DiskPressure",
+  "blocking": true,
+  "evidence": [
+    "All PVCs are Bound",
+    "Node condition DiskPressure=True detected",
+    "FailedMount events observed in timeline"
+  ],
+  "causes": [
+    {
+      "code": "PVC_BOUND",
+      "message": "PVCs bound successfully: data-pvc"
+    },
+    {
+      "code": "NODE_DISK_PRESSURE",
+      "message": "Node(s) under DiskPressure: node1"
+    },
+    {
+      "code": "MOUNT_FAILED",
+      "message": "Volume mount failed due to node disk pressure",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pvc:data-pvc": [
+      "PVC status phase=Bound"
+    ],
+    "node:node1": [
+      "Node condition DiskPressure=True"
+    ],
+    "pod:test-pod": [
+      "Volume mount failures observed while node under DiskPressure"
+    ]
+  }
+}

@@ -1,4 +1,3 @@
-# pvc_bound_node_diskpressure_mount.py
 
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
@@ -27,7 +26,7 @@ class PVCBoundNodeDiskPressureMountRule(FailureRule):
         if not pvc_objs or not node_objs or not timeline:
             return False
 
-        # 1️⃣ All PVCs must be Bound
+        # All PVCs must be Bound
         all_bound = all(
             pvc.get("status", {}).get("phase") == "Bound"
             for pvc in pvc_objs.values()
@@ -36,7 +35,7 @@ class PVCBoundNodeDiskPressureMountRule(FailureRule):
         if not all_bound:
             return False
 
-        # 2️⃣ Node has DiskPressure=True
+        # Node has DiskPressure=True
         disk_pressure = any(
             any(
                 cond.get("type") == "DiskPressure"
@@ -49,7 +48,7 @@ class PVCBoundNodeDiskPressureMountRule(FailureRule):
         if not disk_pressure:
             return False
 
-        # 3️⃣ FailedMount signal via timeline (engine-native)
+        # FailedMount signal via timeline (engine-native)
         mount_failed = timeline_has_pattern(timeline, r"FailedMount")
 
         return mount_failed
