@@ -6,7 +6,7 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 class EvictedRule(FailureRule):
     name = "Evicted"
     category = "Node"
-    priority = 40  # Lower than compound rules like NodeNotReadyEvicted
+    priority = 30  # Lower than compound rules like NodeNotReadyEvicted
     phases = ["Failed"]
 
     def matches(self, pod, events, context) -> bool:
