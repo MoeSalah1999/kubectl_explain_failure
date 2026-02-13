@@ -1,0 +1,29 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "app-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+    "reason": "FailedMount",
+    "message": "Mount failed due to PV in Released state"
+  }
+  ],
+  "objects": {
+    "pv": {
+      "pv1": {
+        "metadata": {
+          "name": "pv1"
+        },
+        "status": {
+          "phase": "Released"
+        }
+      }
+    }
+  }
+}

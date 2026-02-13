@@ -9,8 +9,8 @@ class PVReleasedOrFailedRule(FailureRule):
     """
 
     name = "PVReleasedOrFailed"
-    category = "PersistentVolume"
-    priority = 24
+    category = "Compound"
+    priority = 60
 
     requires = {
         "objects": ["pv"],

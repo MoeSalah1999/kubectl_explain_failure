@@ -465,75 +465,93 @@ def explain_failure(
     ]
 
     if compound_matches:
-        # Pick highest-priority compound rule
-        best_exp, best_rule, best_chain = max(
-            compound_matches,
-            key=lambda pair: getattr(pair[1], "priority", 0),
+        # Determine highest non-compound priority
+        max_non_compound_priority = max(
+            (
+                getattr(rule, "priority", 0)
+                for _, rule, _ in filtered_explanations
+                if _norm_category(rule) != "compound"
+            ),
+            default=0,
         )
 
-        suppressed_rules = {r.name for _, r, _ in explanations if r is not best_rule}
-
-        resolution = Resolution(
-            winner=best_rule.name,
-            suppressed=sorted(suppressed_rules),
-            reason="Compound causal chain dominates component failures",
+        max_compound_priority = max(
+            getattr(rule, "priority", 0)
+            for _, rule, _ in compound_matches
         )
 
-        result = {
-            "pod": pod_name,
-            "phase": pod_phase,
-            "root_cause": best_exp["root_cause"],
-            "confidence": best_exp.get("confidence", 1.0),
-            "evidence": best_exp.get("evidence", []),
-            "likely_causes": best_exp.get("likely_causes", []),
-            "suggested_checks": best_exp.get("suggested_checks", []),
-            "resolution": resolution.__dict__,
-            "blocking": False,
-        }
+        # Compound dominance only applies if it truly outranks others
+        if max_compound_priority >= max_non_compound_priority:
+            best_exp, best_rule, best_chain = max(
+                compound_matches,
+                key=lambda pair: getattr(pair[1], "priority", 0),
+            )
+            suppressed_rules = {r.name for _, r, _ in explanations if r is not best_rule}
 
-        # ----------------------------
-        # PVC semantics (LOCKED)
-        # ----------------------------
-        # Rule-level blocking intent (authoritative)
-        if best_exp.get("blocking") is True:
-            result["blocking"] = True
-        # Engine-derived blocking (PVC scheduling is hard-blocking)
-        elif context.get("blocking_pvc") is not None:
-            result["blocking"] = True
+            resolution = Resolution(
+                winner=best_rule.name,
+                suppressed=sorted(suppressed_rules),
+                reason="Compound causal chain dominates component failures",
+            )
 
-        if "object_evidence" in best_exp:
-            result["object_evidence"] = best_exp["object_evidence"]
-
-        # ----------------------------
-        # Causal chain materialization (LOCKED)
-        # ----------------------------
-        result["causes"] = [
-            {
-                "code": cause.code,
-                "message": cause.message,
-                **({"blocking": True} if cause.blocking else {}),
+            result = {
+                "pod": pod_name,
+                "phase": pod_phase,
+                "root_cause": best_exp["root_cause"],
+                "confidence": best_exp.get("confidence", 1.0),
+                "evidence": best_exp.get("evidence", []),
+                "likely_causes": best_exp.get("likely_causes", []),
+                "suggested_checks": best_exp.get("suggested_checks", []),
+                "resolution": resolution.__dict__,
+                "blocking": False,
             }
-            for cause in best_chain.causes
-        ]
 
-        # ----------------------------
-        # Object evidence (RULE FIRST, ENGINE FALLBACK)
-        # ----------------------------
-        if "object_evidence" in best_exp:
-            # Trust rule-provided structure verbatim
-            result["object_evidence"] = best_exp["object_evidence"]
+            # ----------------------------
+            # PVC semantics (LOCKED)
+            # ----------------------------
+            # Rule-level blocking intent (authoritative)
+            if best_exp.get("blocking") is True:
+                result["blocking"] = True
+            # Engine-derived blocking (PVC scheduling is hard-blocking)
+            elif context.get("blocking_pvc") is not None:
+                result["blocking"] = True
+
+            if "object_evidence" in best_exp:
+                result["object_evidence"] = best_exp["object_evidence"]
+
+            # ----------------------------
+            # Causal chain materialization (LOCKED)
+            # ----------------------------
+            result["causes"] = [
+                {
+                    "code": cause.code,
+                    "message": cause.message,
+                    **({"blocking": True} if cause.blocking else {}),
+                }
+                for cause in best_chain.causes
+            ]
+
+            # ----------------------------
+            # Object evidence (RULE FIRST, ENGINE FALLBACK)
+            # ----------------------------
+            if "object_evidence" in best_exp:
+                # Trust rule-provided structure verbatim
+                result["object_evidence"] = best_exp["object_evidence"]
+            else:
+                # Engine-level fallback synthesis (only if rule omitted it)
+                pvc = context.get("blocking_pvc") or context.get("pvc")
+                if isinstance(pvc, dict):
+                    name = pvc.get("metadata", {}).get("name")
+                    phase = pvc.get("status", {}).get("phase")
+                    if name and phase:
+                        result["object_evidence"] = {
+                            f"pvc:{name}, phase:{phase}": ["PVC not Bound"]
+                        }
+            return result
+        
         else:
-            # Engine-level fallback synthesis (only if rule omitted it)
-            pvc = context.get("blocking_pvc") or context.get("pvc")
-            if isinstance(pvc, dict):
-                name = pvc.get("metadata", {}).get("name")
-                phase = pvc.get("status", {}).get("phase")
-                if name and phase:
-                    result["object_evidence"] = {
-                        f"pvc:{name}, phase:{phase}": ["PVC not Bound"]
-                    }
+            compound_matches = []  # fall through to weighted selection
 
-        return result
 
     if not filtered_explanations:
         return {

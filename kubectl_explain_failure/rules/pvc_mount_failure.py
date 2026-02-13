@@ -17,6 +17,11 @@ class PVCMountFailureRule(FailureRule):
     }
 
     def matches(self, pod, events, context) -> bool:
+        pv_objs = context.get("objects", {}).get("pv", {})
+        for pv in pv_objs.values():
+            if pv.get("status", {}).get("phase") in ("Released", "Failed"):
+                return False  # PV-level root cause takes precedence
+
         pvc_objs = context.get("objects", {}).get("pvc", {})
 
         if not pvc_objs:

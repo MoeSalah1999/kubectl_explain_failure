@@ -1,0 +1,20 @@
+{
+  "root_cause": "PersistentVolume backing claim is Released or Failed",
+  "blocking": true,
+  "evidence": [
+    "PV.status.phase in [Released, Failed]",
+    "PV objects: pv1"
+  ],
+  "causes": [
+    {
+      "code": "PV_RELEASED_OR_FAILED",
+      "message": "PersistentVolume(s) unusable: pv1",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pv:pv1": [
+      "PV in Released/Failed state"
+    ]
+  }
+}
