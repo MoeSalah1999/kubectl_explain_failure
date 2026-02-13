@@ -1,0 +1,18 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "quota-pod",
+      "namespace": "team-a"
+    },
+    "status": {
+      "phase": "Pending",
+      "reason": "FailedCreate"
+    }
+  },
+  "events": [
+    {
+      "reason": "ExceededQuota",
+      "message": "exceeded quota: compute-resources, requested: cpu=2, used: cpu=4, limited: cpu=4"
+    }
+  ]
+}

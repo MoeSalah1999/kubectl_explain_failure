@@ -1,0 +1,20 @@
+{
+  "root_cause": "Pod creation blocked by ResourceQuota limits",
+  "blocking": true,
+  "evidence": [
+    "Pod.status.reason=FailedCreate or ExceededQuota event detected",
+    "Namespace: team-a"
+  ],
+  "causes": [
+    {
+      "code": "RESOURCE_QUOTA_EXCEEDED",
+      "message": "Namespace 'team-a' exceeded its ResourceQuota",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:quota-pod": [
+      "Admission rejected due to ResourceQuota exhaustion"
+    ]
+  }
+}

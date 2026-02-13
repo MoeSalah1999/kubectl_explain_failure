@@ -3,13 +3,6 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 
 class ResourceQuotaExceededRule(FailureRule):
-    """
-    Detects Pod creation failure due to namespace ResourceQuota exhaustion.
-    Signals:
-      - Pod.status.reason == FailedCreate
-      - OR event.reason == ExceededQuota
-      - OR event.message contains 'exceeded quota'
-    """
 
     name = "ResourceQuotaExceeded"
     category = "Admission"
@@ -22,11 +15,9 @@ class ResourceQuotaExceededRule(FailureRule):
     phases = ["Pending"]
 
     def matches(self, pod, events, context) -> bool:
-        # Direct Pod-level signal
         if pod.get("status", {}).get("reason") == "FailedCreate":
             return True
 
-        # Event-level signal
         for e in events or []:
             reason = e.get("reason", "")
             message = (e.get("message") or "").lower()
@@ -40,6 +31,7 @@ class ResourceQuotaExceededRule(FailureRule):
 
     def explain(self, pod, events, context):
         namespace = pod.get("metadata", {}).get("namespace", "default")
+        pod_name = pod.get("metadata", {}).get("name")
 
         chain = CausalChain(
             causes=[
@@ -61,6 +53,11 @@ class ResourceQuotaExceededRule(FailureRule):
                 "Pod.status.reason=FailedCreate or ExceededQuota event detected",
                 f"Namespace: {namespace}",
             ],
+            "object_evidence": {
+                f"pod:{pod_name}": [
+                    "Admission rejected due to ResourceQuota exhaustion"
+                ]
+            },
             "likely_causes": [
                 "CPU requests exceed namespace quota",
                 "Memory requests exceed namespace quota",
@@ -69,7 +66,7 @@ class ResourceQuotaExceededRule(FailureRule):
             ],
             "suggested_checks": [
                 f"kubectl describe resourcequota -n {namespace}",
-                f"kubectl describe pod {pod.get('metadata', {}).get('name')} -n {namespace}",
+                f"kubectl describe pod {pod_name} -n {namespace}",
             ],
         }
 
