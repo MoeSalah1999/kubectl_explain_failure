@@ -302,10 +302,19 @@ def explain_failure(
         # Container-state gating
         required_states = getattr(rule, "container_states", None)
         if required_states:
-            if not any(
-                s.get("terminated") or s.get("waiting") for s in container_states
-            ):
+            state_match = False
+
+            for s in container_states:
+                for required in required_states:
+                    if required in s:
+                        state_match = True
+                        break
+                if state_match:
+                    break
+
+            if not state_match:
                 continue
+
 
         filtered_rules.append(rule)
 

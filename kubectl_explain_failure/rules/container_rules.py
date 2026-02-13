@@ -247,3 +247,175 @@ class StartupProbeFailureRule(FailureRule):
                 "Review startupProbe configuration in Pod spec",
             ],
         }
+
+
+class ReadinessProbeFailureRule(FailureRule):
+    """
+    Detects containers that are running but not ready due to failing readiness probes.
+    Triggered when:
+      - Pod phase=Running
+      - container ready=False
+      - events indicate readiness probe failure
+    """
+    name = "ReadinessProbeFailure"
+    category = "Container"
+    priority = 20
+    blocks = ["NotReady"]
+    phases = ["Running"]
+
+    container_states = ["running"]
+
+    def matches(self, pod, events, context) -> bool:
+        # Pod must have status.containerStatuses
+        for c in pod.get("status", {}).get("containerStatuses", []):
+            if not c.get("ready", True):
+                # Check for readiness probe failure events
+                for e in events or []:
+                    msg = (e.get("message") or "").lower()
+                    if "readiness probe" in msg and "fail" in msg:
+                        return True
+        return False
+
+    def explain(self, pod, events, context):
+        pod_name = pod.get("metadata", {}).get("name", "<unknown>")
+        chain = CausalChain(
+            causes=[
+                Cause(
+                    code="READINESS_PROBE_FAILED",
+                    message="Container readinessProbe failing",
+                    blocking=True
+                )
+            ]
+        )
+        return {
+            "rule": self.name,
+            "root_cause": "Container failing readinessProbe checks",
+            "confidence": 0.95,
+            "blocking": True,
+            "causes": chain,
+            "evidence": [
+                f"Pod {pod_name} is running but not ready",
+                "Event messages indicate readinessProbe failure"
+            ],
+            "object_evidence": {
+                f"pod:{pod_name}": ["readinessProbe failure detected"]
+            },
+            "likely_causes": [
+                "Application not ready during startup",
+                "Incorrect readinessProbe configuration",
+                "Slow initialization time"
+            ],
+            "suggested_checks": [
+                f"kubectl describe pod {pod_name}",
+                "Review readinessProbe configuration in Pod spec"
+            ]
+        }
+
+
+class ContainerCreateConfigErrorRule(FailureRule):
+    """
+    Detects containers failing due to CreateContainerConfigError.
+    Triggered when container state.waiting.reason=CreateContainerConfigError
+    """
+    name = "ContainerCreateConfigError"
+    category = "Container"
+    priority = 25
+    blocks = ["CrashLoopBackOff"]
+    container_states = ["waiting"]
+    phases = ["Pending", "Running"]
+
+    def matches(self, pod, events, context) -> bool:
+        for c in pod.get("status", {}).get("containerStatuses", []):
+            waiting = c.get("state", {}).get("waiting")
+            if waiting and waiting.get("reason") == "CreateContainerConfigError":
+                return True
+        return False
+
+    def explain(self, pod, events, context):
+        pod_name = pod.get("metadata", {}).get("name", "<unknown>")
+        chain = CausalChain(
+            causes=[
+                Cause(
+                    code="CREATE_CONTAINER_CONFIG_ERROR",
+                    message="Container cannot be created due to config error",
+                    blocking=True
+                )
+            ]
+        )
+        return {
+            "rule": self.name,
+            "root_cause": "Container failed due to CreateContainerConfigError",
+            "confidence": 0.95,
+            "blocking": True,
+            "causes": chain,
+            "evidence": [
+                f"Container state.waiting.reason=CreateContainerConfigError",
+                f"Pod: {pod_name}"
+            ],
+            "object_evidence": {
+                f"pod:{pod_name}": ["CreateContainerConfigError observed"]
+            },
+            "likely_causes": [
+                "Invalid container spec",
+                "Incorrect environment variables",
+                "Missing secrets or configmaps"
+            ],
+            "suggested_checks": [
+                f"kubectl describe pod {pod_name}",
+                "Review container spec for invalid config"
+            ]
+        }
+
+
+class InvalidEntrypointRule(FailureRule):
+    """
+    Detects containers failing due to invalid entrypoint.
+    Triggered when container state.waiting.reason=RunContainerError
+    """
+    name = "InvalidEntrypoint"
+    category = "Container"
+    priority = 22
+    blocks = ["CrashLoopBackOff"]
+    container_states = ["waiting"]
+    phases = ["Pending", "Running"]
+
+    def matches(self, pod, events, context) -> bool:
+        for c in pod.get("status", {}).get("containerStatuses", []):
+            waiting = c.get("state", {}).get("waiting")
+            if waiting and waiting.get("reason") == "RunContainerError":
+                return True
+        return False
+
+    def explain(self, pod, events, context):
+        pod_name = pod.get("metadata", {}).get("name", "<unknown>")
+        chain = CausalChain(
+            causes=[
+                Cause(
+                    code="INVALID_ENTRYPOINT",
+                    message="Container failed due to invalid entrypoint",
+                    blocking=True
+                )
+            ]
+        )
+        return {
+            "rule": self.name,
+            "root_cause": "Container failed due to invalid entrypoint",
+            "confidence": 0.93,
+            "blocking": True,
+            "causes": chain,
+            "evidence": [
+                f"Container state.waiting.reason=RunContainerError",
+                f"Pod: {pod_name}"
+            ],
+            "object_evidence": {
+                f"pod:{pod_name}": ["RunContainerError observed"]
+            },
+            "likely_causes": [
+                "Command or args in container spec are invalid",
+                "Entrypoint binary missing or incorrect"
+            ],
+            "suggested_checks": [
+                f"kubectl describe pod {pod_name}",
+                "Review container command and args"
+            ]
+        }

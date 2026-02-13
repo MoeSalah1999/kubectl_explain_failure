@@ -1,0 +1,26 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "test-pod"
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "ready": false,
+          "state": {
+            "running": {}
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: HTTP probe failed with statuscode: 500"
+    }
+  ]
+}

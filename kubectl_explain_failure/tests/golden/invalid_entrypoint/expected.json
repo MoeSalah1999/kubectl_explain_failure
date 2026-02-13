@@ -1,0 +1,20 @@
+{
+  "root_cause": "Container failed due to invalid entrypoint",
+  "blocking": true,
+  "evidence": [
+    "Container state.waiting.reason=RunContainerError",
+    "Pod: test-pod"
+  ],
+  "causes": [
+    {
+      "code": "INVALID_ENTRYPOINT",
+      "message": "Container failed due to invalid entrypoint",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:test-pod": [
+      "RunContainerError observed"
+    ]
+  }
+}

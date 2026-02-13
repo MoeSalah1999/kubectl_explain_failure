@@ -1,0 +1,39 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "config-error-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node1",
+      "containers": [
+        {
+          "name": "app",
+          "image": "nginx"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "ready": false,
+          "state": {
+            "waiting": {
+              "reason": "CreateContainerConfigError",
+              "message": "Error: configmap not found"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error creating container"
+  }
+  ]
+}

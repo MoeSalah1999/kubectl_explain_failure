@@ -1,0 +1,20 @@
+{
+  "root_cause": "Container failed due to CreateContainerConfigError",
+  "blocking": true,
+  "evidence": [
+    "Container state.waiting.reason=CreateContainerConfigError",
+    "Pod: config-error-pod"
+  ],
+  "causes": [
+    {
+      "code": "CREATE_CONTAINER_CONFIG_ERROR",
+      "message": "Container cannot be created due to config error",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:config-error-pod": [
+      "CreateContainerConfigError observed"
+    ]
+  }
+}

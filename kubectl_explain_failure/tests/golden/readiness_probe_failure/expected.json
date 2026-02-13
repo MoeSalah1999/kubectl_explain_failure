@@ -1,0 +1,20 @@
+{
+  "root_cause": "Container failing readinessProbe checks",
+  "blocking": true,
+  "evidence": [
+    "Pod test-pod is running but not ready",
+    "Event messages indicate readinessProbe failure"
+  ],
+  "causes": [
+    {
+      "code": "READINESS_PROBE_FAILED",
+      "message": "Container readinessProbe failing",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:test-pod": [
+      "readinessProbe failure detected"
+    ]
+  }
+}

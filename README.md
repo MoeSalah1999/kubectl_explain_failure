@@ -96,6 +96,7 @@ This ensures tests run in a clean environment and type checks are enforced.
 - CNIPluginFailure
 - CrashLoopBackoff (BackOff events)
 - ConfigMapNotFound
+- ContainerCreateConfigError
 - DeploymentProgressDeadlineExceeded
 - DNSResolutionFailure
 - EvictedRule
@@ -105,6 +106,7 @@ This ensures tests run in a clean environment and type checks are enforced.
 - ImagePullError
 - ImagePullSecretMissing
 - InsufficientResources
+- InvalidEntrypoint
 - LimitRangeViolation
 - NodeMemoryPressure
 - NodePIDPressure
@@ -116,6 +118,7 @@ This ensures tests run in a clean environment and type checks are enforced.
 - PVCNotBound 
 - PVCZoneMismatch
 - RBACForbidden
+- ReadinessProbeFailure
 - ResourceQuotaExceeded
 - ReplicaSetCreateFailure
 - StatefulSetUpdateBlocked
