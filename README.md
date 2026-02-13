@@ -91,10 +91,13 @@ This ensures tests run in a clean environment and type checks are enforced.
 
 ## Supported failure patterns: (all rules support suppression/resolution semantics):
 
+- AdmissionWebhookDenied
 - AffinityUnsatisfiable
+- CNIPluginFailure
 - CrashLoopBackoff (BackOff events)
 - ConfigMapNotFound
 - DeploymentProgressDeadlineExceeded
+- DNSResolutionFailure
 - EvictedRule
 - FailedScheduling
 - FailedMount (volume mount failures) 
@@ -108,6 +111,7 @@ This ensures tests run in a clean environment and type checks are enforced.
 - NodeDiskPressure 
 - NodeSelectorMismatch
 - OOMKilled containers
+- PVReleasedOrFailed
 - PVCMountFailed 
 - PVCNotBound 
 - PVCZoneMismatch
@@ -115,6 +119,8 @@ This ensures tests run in a clean environment and type checks are enforced.
 - ResourceQuotaExceeded
 - ReplicaSetCreateFailure
 - StatefulSetUpdateBlocked
+- StartupProbeFailure
+- StorageClassProvisionerMissing
 - TopologySpreadUnsatisfiable
 - UnschedulableTaint  
 - ImagePullSecretMissingCompound (Compound not single)
