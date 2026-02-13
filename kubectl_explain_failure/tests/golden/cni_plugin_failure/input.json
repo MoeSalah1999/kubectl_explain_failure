@@ -1,0 +1,17 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "cni-test-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedCreatePodSandBox",
+      "message": "CNI plugin error: failed to set up pod networking"
+    }
+  ]
+}

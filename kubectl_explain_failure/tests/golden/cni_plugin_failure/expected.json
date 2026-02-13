@@ -1,0 +1,21 @@
+{
+  "root_cause": "CNI plugin failure prevented Pod sandbox creation",
+  "blocking": true,
+  "evidence": [
+    "FailedCreatePodSandBox event containing 'CNI'",
+    "Pod: cni-test-pod",
+    "Namespace: default"
+  ],
+  "causes": [
+    {
+      "code": "CNI_PLUGIN_FAILURE",
+      "message": "Pod sandbox creation failed due to CNI plugin error",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:cni-test-pod": [
+      "CNI plugin error prevented Pod networking setup"
+    ]
+  }
+}
