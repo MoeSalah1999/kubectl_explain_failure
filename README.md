@@ -102,6 +102,7 @@ This ensures tests run in a clean environment and type checks are enforced.
 - ImagePullError
 - ImagePullSecretMissing
 - InsufficientResources
+- LimitRangeViolation
 - NodeMemoryPressure
 - NodePIDPressure
 - NodeDiskPressure 
@@ -110,6 +111,8 @@ This ensures tests run in a clean environment and type checks are enforced.
 - PVCMountFailed 
 - PVCNotBound 
 - PVCZoneMismatch
+- RBACForbidden
+- ResourceQuotaExceeded
 - ReplicaSetCreateFailure
 - StatefulSetUpdateBlocked
 - TopologySpreadUnsatisfiable
