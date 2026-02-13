@@ -3,6 +3,13 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 
 class ResourceQuotaExceededRule(FailureRule):
+    """
+    Detects Pod creation failure due to namespace ResourceQuota exhaustion.
+    Signals:
+      - Pod.status.reason == FailedCreate
+      - OR event.reason == ExceededQuota
+      - OR event.message contains 'exceeded quota'
+    """
 
     name = "ResourceQuotaExceeded"
     category = "Admission"
@@ -99,6 +106,7 @@ class LimitRangeViolationRule(FailureRule):
 
     def explain(self, pod, events, context):
         namespace = pod.get("metadata", {}).get("namespace", "default")
+        pod_name = pod.get("metadata", {}).get("name")
 
         chain = CausalChain(
             causes=[
@@ -120,6 +128,11 @@ class LimitRangeViolationRule(FailureRule):
                 "FailedCreate event referencing resource limits",
                 f"Namespace: {namespace}",
             ],
+            "object_evidence": {
+                f"pod:{pod_name}": [
+                    "Admission rejected due to LimitRange violation"
+                ]
+            },
             "likely_causes": [
                 "CPU request above maximum allowed",
                 "Memory request above maximum allowed",
@@ -128,9 +141,10 @@ class LimitRangeViolationRule(FailureRule):
             ],
             "suggested_checks": [
                 f"kubectl describe limitrange -n {namespace}",
-                f"kubectl get pod {pod.get('metadata', {}).get('name')} -o yaml -n {namespace}",
+                f"kubectl get pod {pod_name} -o yaml -n {namespace}",
             ],
         }
+
     
 
 class RBACForbiddenRule(FailureRule):
@@ -153,17 +167,23 @@ class RBACForbiddenRule(FailureRule):
     phases = ["Pending"]
 
     def matches(self, pod, events, context) -> bool:
-        # Event-based detection
         for e in events or []:
             if e.get("reason") == "FailedCreate":
                 msg = (e.get("message") or "").lower()
                 if "forbidden" in msg or "cannot" in msg:
-                    return True
+                    if "exceed" in msg or "limit" in msg:
+                        return False
+                    if "user" in msg or "cannot create" in msg:
+                        return True
 
-        # Pod-level status message fallback
+
+        # Check pod.status.message
         status_msg = (pod.get("status", {}).get("message") or "").lower()
         if "forbidden" in status_msg or "cannot" in status_msg:
-            return True
+            if "limit" in status_msg or "exceed" in status_msg:
+                return False
+            if "user" in status_msg or "cannot create" in status_msg:
+                return True
 
         return False
 
@@ -192,6 +212,11 @@ class RBACForbiddenRule(FailureRule):
                 f"Pod: {pod_name}",
                 f"Namespace: {namespace}",
             ],
+            "object_evidence": {
+                f"pod:{pod_name}": [
+                    "Admission rejected due to RBAC authorization failure"
+                ]
+            },
             "likely_causes": [
                 "ServiceAccount lacks required Role/ClusterRole binding",
                 "User lacks create permission for resource",
@@ -200,6 +225,6 @@ class RBACForbiddenRule(FailureRule):
             "suggested_checks": [
                 f"kubectl auth can-i create pods -n {namespace}",
                 f"kubectl describe rolebinding -n {namespace}",
-                f"kubectl describe clusterrolebinding",
+                "kubectl describe clusterrolebinding",
             ],
         }

@@ -1,0 +1,17 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "limit-pod",
+      "namespace": "team-a"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedCreate",
+      "message": "Error creating: pods \"limit-pod\" is forbidden: exceeds limit for cpu"
+    }
+  ]
+}

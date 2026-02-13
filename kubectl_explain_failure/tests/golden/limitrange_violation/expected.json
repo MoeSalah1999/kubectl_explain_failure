@@ -1,0 +1,20 @@
+{
+  "root_cause": "Pod rejected due to LimitRange violation",
+  "blocking": true,
+  "evidence": [
+    "FailedCreate event referencing resource limits",
+    "Namespace: team-a"
+  ],
+  "causes": [
+    {
+      "code": "LIMIT_RANGE_VIOLATION",
+      "message": "Pod resource requests violate LimitRange in namespace 'team-a'",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:limit-pod": [
+      "Admission rejected due to LimitRange violation"
+    ]
+  }
+}
