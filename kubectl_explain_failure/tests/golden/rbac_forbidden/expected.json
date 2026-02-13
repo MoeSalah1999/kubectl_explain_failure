@@ -1,0 +1,21 @@
+{
+  "root_cause": "RBAC authorization failure prevented Pod creation",
+  "blocking": true,
+  "evidence": [
+    "FailedCreate event containing 'forbidden'",
+    "Pod: test-pod",
+    "Namespace: default"
+  ],
+  "causes": [
+    {
+      "code": "RBAC_FORBIDDEN",
+      "message": "Kubernetes API denied action due to RBAC policy",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:test-pod": [
+      "Admission rejected due to RBAC authorization failure"
+    ]
+  }
+}

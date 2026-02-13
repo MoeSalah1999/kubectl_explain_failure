@@ -1,0 +1,18 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "test-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending",
+      "message": "User 'alice' cannot create pods in namespace 'default'"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedCreate",
+      "message": "forbidden: User 'alice' cannot create pods in namespace 'default'"
+    }
+  ]
+}
