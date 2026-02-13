@@ -1,0 +1,17 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "webhook-test-pod",
+      "namespace": "default"
+    },
+    "status": {
+        "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedCreate",
+      "message": "admission webhook \"validate-pod.example.com\" denied request"
+    }
+  ]
+}

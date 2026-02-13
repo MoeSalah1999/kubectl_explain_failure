@@ -1,0 +1,21 @@
+{
+  "root_cause": "Admission webhook denied pod creation",
+  "blocking": true,
+  "evidence": [
+    "FailedCreate event containing 'admission webhook'",
+    "Pod: webhook-test-pod",
+    "Namespace: default"
+  ],
+  "causes": [
+    {
+      "code": "ADMISSION_WEBHOOK_DENIED",
+      "message": "Admission webhook rejected pod creation",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:webhook-test-pod": [
+      "Admission webhook prevented pod creation"
+    ]
+  }
+}
