@@ -111,6 +111,7 @@ This ensures tests run in a clean environment and type checks are enforced.
 - PVCNotBound 
 - PVCZoneMismatch
 - ReplicaSetCreateFailure
+- StatefulSetUpdateBlocked
 - TopologySpreadUnsatisfiable
 - UnschedulableTaint  
 - ImagePullSecretMissingCompound (Compound not single)
