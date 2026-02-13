@@ -1,0 +1,28 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "startup-fail-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Startup probe failed: HTTP probe failed with statuscode: 500"
+    }
+  ]
+}

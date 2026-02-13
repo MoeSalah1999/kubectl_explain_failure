@@ -1,0 +1,20 @@
+{
+  "root_cause": "Container failed startupProbe checks",
+  "blocking": true,
+  "evidence": [
+    "Event message indicates startupProbe failure",
+    "Pod: startup-fail-pod"
+  ],
+  "causes": [
+    {
+      "code": "STARTUP_PROBE_FAILED",
+      "message": "Container startupProbe failed",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:startup-fail-pod": [
+      "startupProbe failure detected"
+    ]
+  }
+}
