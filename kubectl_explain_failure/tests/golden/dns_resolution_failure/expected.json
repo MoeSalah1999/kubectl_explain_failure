@@ -1,0 +1,21 @@
+{
+  "root_cause": "Pod cannot resolve DNS names",
+  "blocking": true,
+  "evidence": [
+    "Event message indicates DNS resolution failure",
+    "Pod: dns-test-pod",
+    "Namespace: default"
+  ],
+  "causes": [
+    {
+      "code": "DNS_RESOLUTION_FAILURE",
+      "message": "DNS resolution failed inside Pod container",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:dns-test-pod": [
+      "Pod failed to resolve DNS names"
+    ]
+  }
+}

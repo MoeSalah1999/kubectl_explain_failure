@@ -1,0 +1,28 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "dns-test-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff",
+              "message": "Back-off restarting failed container"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Failed",
+      "message": "Cannot resolve DNS for service backend.default.svc.cluster.local"
+    }
+  ]
+}
