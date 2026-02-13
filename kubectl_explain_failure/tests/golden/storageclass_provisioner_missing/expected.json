@@ -1,0 +1,20 @@
+{
+  "root_cause": "PVC cannot be provisioned due to missing StorageClass provisioner",
+  "blocking": true,
+  "evidence": [
+    "PVC.status.phase=Pending",
+    "StorageClass.provisioner missing or not installed"
+  ],
+  "causes": [
+    {
+      "code": "STORAGECLASS_PROVISIONER_MISSING",
+      "message": "StorageClass provisioner missing for PVC(s): pvc1",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pvc:pvc1": [
+      "Provisioner missing for referenced StorageClass"
+    ]
+  }
+}

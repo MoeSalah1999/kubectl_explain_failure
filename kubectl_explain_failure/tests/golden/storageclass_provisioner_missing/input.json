@@ -1,0 +1,22 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "test-pod",
+      "namespace": "default"
+    },
+    "status": { "phase": "Pending" }
+  },
+  "pvc": {
+    "pvc1": {
+      "metadata": { "name": "pvc1" },
+      "spec": { "storageClassName": "sc1" },
+      "status": { "phase": "Pending" }
+    }
+  },
+  "storageclass": {
+    "sc1": {
+      "metadata": { "name": "sc1" }
+    }
+  },
+  "events": []
+}

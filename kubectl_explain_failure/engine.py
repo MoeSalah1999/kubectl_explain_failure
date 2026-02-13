@@ -568,60 +568,37 @@ def explain_failure(
     # ----------------------------
     # STRONG CAUSAL OVERRIDE: PVC blocks scheduling
     # ----------------------------
-    # only applies to *pure* PVC rules, not compound chains
     pvc_matches = [
         (exp, rule, chain)
         for exp, rule, chain in filtered_explanations
-        if getattr(rule, "category", None) in ("PersistentVolumeClaim", "Compound")
-        and "PVC" in rule.name
+        if getattr(rule, "category", None) == "PersistentVolumeClaim"
     ]
 
-    # Only apply PVC override if NO higher-priority non-PVC rule exists
-    max_non_pvc_priority = max(
-        (
-            getattr(rule, "priority", 0)
-            for _, rule, _ in filtered_explanations
-            if getattr(rule, "category", None) != "PersistentVolumeClaim"
-        ),
-        default=0,
-    )
+    # Only consider PVCs that are unbound or have provisioning issues
+    pvc_matches = [
+        (exp, rule, chain)
+        for exp, rule, chain in pvc_matches
+        if context.get("pvc_unbound") or exp.get("root_cause", "").startswith("PVC cannot be provisioned")
+    ]
 
-    max_pvc_priority = max(
-        (getattr(rule, "priority", 0) for _, rule, _ in pvc_matches),
-        default=0,
-    )
-
-    if pvc_matches and max_pvc_priority >= max_non_pvc_priority:
-        # Pick the PVC rule with the highest combined priority * confidence
+    if pvc_matches:
+        # Pick the highest priority * confidence PVC rule
         best_exp, best_rule, best_chain = max(
             pvc_matches,
-            key=lambda pair: pair[0].get("confidence", 0.0)
-            * getattr(pair[1], "priority", 1),
+            key=lambda pair: pair[0].get("confidence", 0.0) * getattr(pair[1], "priority", 1),
         )
 
-        # defensive + normalized PVC lookup
+        # Defensive PVC name extraction
         pvc_name = "<unknown>"
-
-        if context:
-            objects = context.get("objects")
-            if isinstance(objects, dict):
-                pvc_obj_dict = objects.get("pvc")
-                if isinstance(pvc_obj_dict, dict) and pvc_obj_dict:
-                    pvc_obj = next(iter(pvc_obj_dict.values()))
-                    if isinstance(pvc_obj, dict):
-                        pvc_name = pvc_obj.get("metadata", {}).get("name", "<unknown>")
+        pvc_objs = context.get("objects", {}).get("pvc", {})
+        if pvc_objs:
+            pvc_obj = next(iter(pvc_objs.values()))
+            pvc_name = pvc_obj.get("metadata", {}).get("name", "<unknown>")
 
         confidence = max(best_exp.get("confidence", 0.0), 0.95)
 
-        # ensure scheduler noise is explicitly suppressed
-        suppressed_rules = set()
-
-        # suppress all other matched rules (even if already blocked)
-        for _exp, r, _chain in explanations:
-            if r is not best_rule:
-                suppressed_rules.add(r.name)
-
-        # include automatic suppression map
+        # Suppress other rules
+        suppressed_rules = {r.name for _, r, _ in explanations if r is not best_rule}
         suppressed_rules.update(suppression_map.get(best_rule.name, []))
 
         resolution = Resolution(
@@ -630,7 +607,6 @@ def explain_failure(
             reason="PersistentVolumeClaim is a hard scheduling blocker",
         )
 
-        root_cause_node = best_chain.root()
         result = {
             "pod": pod_name,
             "phase": pod_phase,
@@ -642,11 +618,17 @@ def explain_failure(
             "suggested_checks": best_exp.get("suggested_checks", []),
             "resolution": resolution.__dict__,
             "blocking": True,
+            # TRUST rule-provided object evidence
+            "object_evidence": best_exp.get("object_evidence", {}),
+            "causes": [
+                {
+                    "code": c.code,
+                    "message": c.message,
+                    **({"blocking": True} if c.blocking else {}),
+                }
+                for c in best_chain.causes
+            ],
         }
-        if "object_evidence" in best_exp:
-            result["object_evidence"] = best_exp["object_evidence"]
-        if root_cause_node is not None:
-            result["object_evidence"] = root_cause_node.message
 
         return result
 
