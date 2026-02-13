@@ -1,0 +1,21 @@
+{
+  "root_cause": "StatefulSet rollout blocked due to updateStrategy partition",
+  "blocking": true,
+  "evidence": [
+    "StatefulSet.status.updateRevision != updatedReplicas",
+    "UpdateStrategy has partition limiting rollout",
+    "StatefulSet objects: my-sts"
+  ],
+  "causes": [
+    {
+      "code": "STATEFULSET_UPDATE_BLOCKED",
+      "message": "StatefulSet rollout blocked by partitioned updateStrategy: my-sts",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "statefulset:my-sts": [
+      "Update blocked by partition"
+    ]
+  }
+}

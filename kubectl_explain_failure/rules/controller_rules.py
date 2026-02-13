@@ -146,8 +146,7 @@ class StatefulSetUpdateBlockedRule(FailureRule):
     priority = 40
 
     requires = {
-        "objects": ["statefulsets"],
-        "context": ["timeline"],
+        "objects": ["statefulset"],
     }
 
     def matches(self, pod, events, context) -> bool:
@@ -155,7 +154,7 @@ class StatefulSetUpdateBlockedRule(FailureRule):
         Returns True if any StatefulSet in the context has an updateStrategy partition
         that is currently blocking rollout progress.
         """
-        sts_objs = context.get("objects", {}).get("statefulsets", {})
+        sts_objs = context.get("objects", {}).get("statefulset", {})
         if not sts_objs:
             return False
 
@@ -180,7 +179,7 @@ class StatefulSetUpdateBlockedRule(FailureRule):
         Constructs a causal explanation for StatefulSet rollout being blocked
         by partitioned updates.
         """
-        sts_objs = context.get("objects", {}).get("statefulsets", {})
+        sts_objs = context.get("objects", {}).get("statefulset", {})
         sts_names = list(sts_objs.keys())
 
         chain = CausalChain(

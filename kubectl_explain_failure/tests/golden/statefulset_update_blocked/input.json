@@ -1,0 +1,26 @@
+{
+  "pod": {
+    "metadata": { "name": "test-pod" },
+    "status": { "phase": "Running" }
+  },
+  "statefulsets": {
+    "my-sts": {
+      "metadata": { "name": "my-sts" },
+      "spec": {
+        "replicas": 3,
+        "updateStrategy": {
+          "type": "RollingUpdate",
+          "rollingUpdate": {
+            "partition": 1
+          }
+        }
+      },
+      "status": {
+        "updateRevision": "rev2",
+        "updatedReplicas": 1,
+        "replicas": 3
+      }
+    }
+  },
+  "events": []
+}
