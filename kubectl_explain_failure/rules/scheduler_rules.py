@@ -26,7 +26,7 @@ class PreemptedByHigherPriorityRule(FailureRule):
             causes=[
                 Cause(
                     code="POD_PREEMPTED",
-                    message=f"Pod {pod_name} was preempted by a higher-priority Pod",
+                    message=f"Pod was preempted by a higher-priority Pod",
                     blocking=True,
                 )
             ]

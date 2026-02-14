@@ -1,0 +1,19 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "preempted-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending",
+      "reason": "Preempted"
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Preempted",
+      "message": "Pod preempted by higher-priority Pod"
+    }
+  ]
+}

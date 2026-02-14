@@ -1,0 +1,20 @@
+{
+  "root_cause": "Pod was preempted by a higher-priority workload",
+  "blocking": true,
+  "evidence": [
+    "Pod.status.reason=Preempted"
+  ],
+  "causes": [
+    {
+      "code": "POD_PREEMPTED",
+      "message": "Pod was preempted by a higher-priority Pod",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:preempted-pod": [
+      "Pod.status.reason=Preempted",
+      "Scheduler evicted Pod due to higher-priority workload"
+    ]
+  }
+}
