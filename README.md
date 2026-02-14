@@ -101,7 +101,8 @@ This ensures tests run in a clean environment and type checks are enforced.
 - DNSResolutionFailure
 - EvictedRule
 - FailedScheduling
-- FailedMount (volume mount failures) 
+- FailedMount (volume mount failures)
+- HostPortConflict 
 - ImagePullBackOff 
 - ImagePullError
 - ImagePullSecretMissing
@@ -113,6 +114,8 @@ This ensures tests run in a clean environment and type checks are enforced.
 - NodeDiskPressure 
 - NodeSelectorMismatch
 - OOMKilled containers
+- PreemptedByHigherPriority
+- PrivilegedNotAllowed
 - PVReleasedOrFailed
 - PVCMountFailed 
 - PVCNotBound 
@@ -121,6 +124,7 @@ This ensures tests run in a clean environment and type checks are enforced.
 - ReadinessProbeFailure
 - ResourceQuotaExceeded
 - ReplicaSetCreateFailure
+- SecurityContextViolation
 - StatefulSetUpdateBlocked
 - StartupProbeFailure
 - StorageClassProvisionerMissing
