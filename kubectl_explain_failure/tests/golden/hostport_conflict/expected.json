@@ -1,0 +1,21 @@
+{
+  "root_cause": "Scheduling failed due to hostPort conflict",
+  "blocking": true,
+  "evidence": [
+    "FailedScheduling event detected",
+    "Event message references hostPort conflict or allocated port"
+  ],
+  "causes": [
+    {
+      "code": "HOSTPORT_CONFLICT",
+      "message": "Requested hostPort already allocated on target node",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:default/hostport-pod": [
+      "FailedScheduling event",
+      "Message contains hostPort conflict indication"
+    ]
+  }
+}

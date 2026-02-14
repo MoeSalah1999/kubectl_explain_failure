@@ -1,0 +1,28 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "hostport-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "web",
+          "ports": [
+            {
+              "containerPort": 80,
+              "hostPort": 8080
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: 1 node(s) had port conflicts"
+    }
+  ]
+}

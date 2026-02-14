@@ -67,8 +67,8 @@ class HostPortConflictRule(FailureRule):
     """
 
     name = "HostPortConflict"
-    category = "Scheduling"
-    priority = 65
+    category = "Compound"
+    priority = 100
 
     requires = {
         "pod": True,
@@ -77,20 +77,22 @@ class HostPortConflictRule(FailureRule):
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
-
-        if not timeline or not hasattr(timeline, "entries"):
+        if not timeline:
             return False
 
-        for entry in timeline.entries:
+        entries = getattr(timeline, "events", []) 
+
+        for entry in entries:
             reason = str(entry.get("reason", "")).lower()
             message = str(entry.get("message", "")).lower()
 
-            if reason == "failedscheduling" and "hostport" in message:
+            if reason == "failedscheduling" and (
+                "hostport" in message or
+                "port conflict" in message or
+                "port conflicts" in message or
+                "port is already allocated" in message
+            ):
                 return True
-
-            if "port is already allocated" in message:
-                return True
-
         return False
 
     def explain(self, pod, events, context):
