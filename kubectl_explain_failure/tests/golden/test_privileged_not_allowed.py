@@ -6,15 +6,14 @@ from kubectl_explain_failure.engine import explain_failure, normalize_context
 from kubectl_explain_failure.timeline import build_timeline
 
 BASE_DIR = os.path.dirname(__file__)
-FIXTURE_DIR = os.path.join(BASE_DIR, "security_context_violation")
-
+FIXTURE_DIR = os.path.join(BASE_DIR, "privileged_not_allowed")
 
 def load_json(name: str):
     with open(os.path.join(FIXTURE_DIR, name)) as f:
         return json.load(f)
 
 
-def test_security_context_violation_golden():
+def test_privileged_not_allowed_golden():
     data = load_json("input.json")
     expected = load_json("expected.json")
 
@@ -30,7 +29,7 @@ def test_security_context_violation_golden():
                 "pvcs": None,
                 "pv": None,
                 "storageclass": None,
-                "node": None,
+                "node": None,  # IMPORTANT: must be None (not dict)
                 "serviceaccount": None,
                 "secret": None,
                 "replicaset": None,
@@ -40,16 +39,13 @@ def test_security_context_violation_golden():
             },
         )()
     )
-
-    # Noise objects for completeness
-    context["pvc"] = {"metadata": {"name": "pvc1"}, "status": {"phase": "Bound"}}
     context["node"] = {"node1": {"metadata": {"name": "node1"}}}
-    context["serviceaccount"] = {"default": {"metadata": {"name": "default"}}}
-    context["secret"] = {"mysecret": {"metadata": {"name": "mysecret"}}}
+    context["pvc"] = {"metadata": {"name": "pvc1"}, "status": {"phase": "Bound"}}
     context = normalize_context(context)
-
     if events:
         context["timeline"] = build_timeline(events)
+
+    context = normalize_context(context)
 
     result = explain_failure(pod, events, context=context)
 
@@ -60,7 +56,7 @@ def test_security_context_violation_golden():
     assert result["blocking"] is True
 
     # Confidence
-    assert result["confidence"] >= 0.898
+    assert result["confidence"] >= 0.85
 
     # Evidence
     for ev in expected["evidence"]:

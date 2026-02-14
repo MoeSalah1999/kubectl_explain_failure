@@ -305,7 +305,7 @@ class SecurityContextViolationRule(FailureRule):
 
     name = "SecurityContextViolation"
     category = "Admission"
-    priority = 30
+    priority = 31
 
     requires = {
         "pod": True,
@@ -404,7 +404,7 @@ class PrivilegedNotAllowedRule(FailureRule):
 
     name = "PrivilegedNotAllowed"
     category = "Admission"
-    priority = 31
+    priority = 30
 
     requires = {
         "pod": True,
@@ -413,11 +413,12 @@ class PrivilegedNotAllowedRule(FailureRule):
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
-
-        if not timeline or not hasattr(timeline, "entries"):
+        if not timeline:
             return False
 
-        for entry in timeline.entries:
+        entries = getattr(timeline, "events", []) 
+
+        for entry in entries:
             message = str(entry.get("message", "")).lower()
             reason = str(entry.get("reason", "")).lower()
 

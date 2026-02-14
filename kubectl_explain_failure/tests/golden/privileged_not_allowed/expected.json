@@ -1,0 +1,21 @@
+{
+  "root_cause": "Pod rejected because privileged containers are not allowed",
+  "blocking": true,
+  "evidence": [
+    "Admission event detected",
+    "Event message references privileged container denial"
+  ],
+  "causes": [
+    {
+      "code": "PRIVILEGED_CONTAINER_DENIED",
+      "message": "Privileged container not permitted by admission policy",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:default/privileged-pod": [
+      "Admission rejection detected",
+      "Message contains privileged container denial"
+    ]
+  }
+}

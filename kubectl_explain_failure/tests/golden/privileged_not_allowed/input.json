@@ -1,0 +1,14 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "privileged-pod",
+      "namespace": "default"
+    }
+  },
+  "events": [
+    {
+      "message": "Privileged containers are not allowed by policy",
+      "reason": "FailedCreate"
+    }
+  ]
+}
