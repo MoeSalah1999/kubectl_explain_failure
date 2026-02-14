@@ -1,0 +1,20 @@
+{
+  "root_cause": "Pod rejected due to security policy violation",
+  "blocking": true,
+  "evidence": [
+    "Admission event indicates PodSecurity or PSP violation",
+    "Namespace: default"
+  ],
+  "causes": [
+    {
+      "code": "SECURITY_CONTEXT_VIOLATION",
+      "message": "Pod rejected by PodSecurity / PSP admission controller",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:restricted-pod": [
+      "pods \"restricted-pod\" is forbidden: violates PodSecurity \"restricted:latest\": privileged containers are not allowed"
+    ]
+  }
+}

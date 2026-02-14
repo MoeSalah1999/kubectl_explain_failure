@@ -316,11 +316,12 @@ class SecurityContextViolationRule(FailureRule):
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
-
-        if not timeline or not hasattr(timeline, "entries"):
+        if not timeline:
             return False
 
-        for entry in timeline.entries:
+        entries = getattr(timeline, "events", []) 
+
+        for entry in entries:
             message = str(entry.get("message", "")).lower()
             reason = str(entry.get("reason", "")).lower()
 
@@ -339,10 +340,12 @@ class SecurityContextViolationRule(FailureRule):
         pod_name = pod.get("metadata", {}).get("name")
         namespace = pod.get("metadata", {}).get("namespace", "default")
 
-        timeline = context.get("timeline", [])
+        timeline = context.get("timeline")
+        entries = getattr(timeline, "events", []) if timeline else []
 
         violation_messages = []
-        for entry in timeline:
+
+        for entry in entries:
             message = str(entry.get("message", "")).lower()
             reason = str(entry.get("reason", "")).lower()
 

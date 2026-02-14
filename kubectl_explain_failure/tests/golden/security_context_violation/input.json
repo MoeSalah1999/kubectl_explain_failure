@@ -1,0 +1,18 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "restricted-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedCreate",
+      "message": "pods \"restricted-pod\" is forbidden: violates PodSecurity \"restricted:latest\": privileged containers are not allowed"
+    }
+  ]
+}
