@@ -536,6 +536,7 @@ def explain_failure(
                     "code": cause.code,
                     "message": cause.message,
                     **({"blocking": True} if cause.blocking else {}),
+                    **({"role": cause.role} if getattr(cause, "role", None) else {}),
                 }
                 for cause in best_chain.causes
             ]
@@ -634,6 +635,7 @@ def explain_failure(
                     "code": c.code,
                     "message": c.message,
                     **({"blocking": True} if c.blocking else {}),
+                    **({"role": c.role} if getattr(c, "role", None) else {}),
                 }
                 for c in best_chain.causes
             ],
@@ -720,6 +722,7 @@ def explain_failure(
                     "code": cause.code,
                     "message": cause.message,
                     **({"blocking": True} if cause.blocking else {}),
+                    **({"role": cause.role} if getattr(cause, "role", None) else {}),
                 }
             )
 

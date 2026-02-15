@@ -11,6 +11,7 @@ class Cause:
     code: str
     message: str
     blocking: bool = False
+    role: str | None=None
 
 
 @dataclass
@@ -56,6 +57,7 @@ def build_chain(exp: dict[str, Any]) -> CausalChain:
                 code=exp.get("code", root.upper().replace(" ", "_")),
                 message=root,
                 blocking=exp.get("blocking", False),
+                role=exp.get("role"),
             )
         )
 
@@ -65,6 +67,7 @@ def build_chain(exp: dict[str, Any]) -> CausalChain:
                 code=cause.upper().replace(" ", "_"),
                 message=cause,
                 blocking=False,
+                role="contributing",
             )
         )
 

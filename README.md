@@ -124,6 +124,7 @@ This ensures tests run in a clean environment and type checks are enforced.
 - ReadinessProbeFailure
 - ResourceQuotaExceeded
 - ReplicaSetCreateFailure
+- ReplicaSetUnavailable
 - SecurityContextViolation
 - StatefulSetUpdateBlocked
 - StartupProbeFailure
