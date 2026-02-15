@@ -50,7 +50,7 @@ def test_pvc_mount_failure_golden():
 
     assert result["root_cause"] == expected["root_cause"]
     assert result["blocking"] is True
-    assert result["confidence"] >= 0.95
+    assert result["confidence"] >= expected["confidence"]
 
     # Verify causal chain materialization
     causes = result["causes"]

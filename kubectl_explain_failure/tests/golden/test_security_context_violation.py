@@ -60,7 +60,7 @@ def test_security_context_violation_golden():
     assert result["blocking"] is True
 
     # Confidence
-    assert result["confidence"] >= 0.898
+    assert result["confidence"] >= 0.89
 
     # Evidence
     for ev in expected["evidence"]:

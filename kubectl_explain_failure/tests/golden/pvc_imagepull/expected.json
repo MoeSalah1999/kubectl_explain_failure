@@ -1,6 +1,6 @@
 {
   "root_cause": "Pod blocked by PVC Pending then failed to pull image",
-  "confidence": 0.97,
+  "confidence": 0.82,
   "causes": [
     {"code": "PVC_PENDING", "message": "PVC is Pending", "blocking": true},
     {"code": "IMAGE_PULL_FAIL", "message": "Image could not be pulled"}

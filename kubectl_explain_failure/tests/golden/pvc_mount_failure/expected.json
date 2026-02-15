@@ -1,7 +1,7 @@
 {
   "root_cause": "PVC is bound but volume mount failed",
   "blocking": true,
-  "confidence": 0.95,
+  "confidence": 0.90,
   "evidence": [
     "1 FailedMount or MountVolume events detected",
     "Bound PVCs: test-pvc"

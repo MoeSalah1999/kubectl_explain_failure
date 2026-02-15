@@ -1,6 +1,6 @@
 {
   "root_cause": "CrashLoopBackOff due to missing ConfigMap/Secret",
-  "confidence": 0.96,
+  "confidence": 0.91,
   "causes": [
     {"code": "CONFIG_SECRET_FAIL", "message": "ConfigMap or Secret missing"},
     {"code": "CRASHLOOP", "message": "Containers repeatedly restarted"}

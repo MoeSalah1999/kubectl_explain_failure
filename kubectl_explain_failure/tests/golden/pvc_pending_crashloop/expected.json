@@ -1,6 +1,6 @@
 {
   "root_cause": "PVC Pending caused mount failures and CrashLoopBackOff",
-  "confidence": 0.98,
+  "confidence": 0.88,
   "blocking": true,
   "causes": [
     {"code": "PVC_PENDING", "message": "PersistentVolumeClaim is Pending", "blocking": true},

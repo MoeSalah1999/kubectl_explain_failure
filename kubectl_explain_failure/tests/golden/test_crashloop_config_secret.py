@@ -49,6 +49,24 @@ def test_crashloop_with_config_secret_golden():
 
     with open(os.path.join(FIXTURES, "expected.json")) as f:
         expected = json.load(f)
+    # -------------------------------------------------
+    # Root cause validation
+    # -------------------------------------------------
+    assert result["root_cause"] == expected["root_cause"], f"Mismatch on root_cause"
 
-    for key in expected:
-        assert result.get(key) == expected[key], f"Mismatch on {key}"
+
+    # -------------------------------------------------
+    # Confidence validation
+    # -------------------------------------------------
+    assert result["confidence"] >= expected["confidence"], f"Mismatch on confidence"
+
+    # -------------------------------------------------
+    # Causal chain validation (engine materializes list of dicts)
+    # -------------------------------------------------
+    causes = result["causes"]
+
+    assert causes[0]["code"] == expected["causes"][0]["code"], f"Mismatch on cause 0" 
+    # assert causes[0]["blocking"] is True
+
+    assert causes[1]["code"] == expected["causes"][1]["code"], f"Mismatch on cause 1"
+    

@@ -61,7 +61,7 @@ def test_image_pull_secret_missing_compound_golden():
     # -------------------------------------------------
     # Confidence validation
     # -------------------------------------------------
-    assert result["confidence"] >= expected["confidence_min"]
+    assert result["confidence"] >= expected["confidence"]
 
     # -------------------------------------------------
     # Causal chain validation (engine materializes list of dicts)

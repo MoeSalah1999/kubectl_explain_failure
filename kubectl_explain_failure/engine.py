@@ -464,6 +464,21 @@ def explain_failure(
     # ----------------------------
     filtered_explanations, suppression_map = apply_suppressions(explanations)
 
+    # ----------------------------------------
+    # Conflict penalty injection (deterministic)
+    # ----------------------------------------
+    total_matches = len(filtered_explanations)
+    if total_matches > 1:
+        # Penalize non-dominant rules slightly to reflect ambiguity
+        penalty = 1.0 - (0.05 * (total_matches - 1))
+        penalty = max(0.75, penalty)  # never degrade below 0.75
+
+        for exp, rule, _ in filtered_explanations:
+            exp["confidence"] = compose_confidence(
+                rule_confidence=exp.get("confidence", 0.0),
+                conflict_penalty=penalty,
+            )
+
     # ----------------------------
     # HARD DOMINANCE: Compound rules define root cause
     # ----------------------------
