@@ -1,0 +1,33 @@
+{
+  "root_cause": "Deployment rollout stalled causing ReplicaSet degradation and Pod Pending",
+  "blocking": true,
+  "evidence": [
+    "Deployment test-deployment reports ProgressDeadlineExceeded",
+    "ReplicaSet test-replicaset has fewer ready replicas than desired",
+    "Pod phase is Pending"
+  ],
+  "causes": [
+    {
+      "code": "DEPLOYMENT_PROGRESS_DEADLINE_EXCEEDED",
+      "message": "Deployment exceeded its progress deadline",
+      "blocking": true
+    },
+    {
+      "code": "REPLICASET_DEGRADED",
+      "message": "ReplicaSet has unavailable replicas",
+      "blocking": true
+    },
+    {
+      "code": "POD_PENDING",
+      "message": "Pod remains Pending due to controller failure"
+    }
+  ],
+  "object_evidence": {
+    "deployment:test-deployment": [
+      "ProgressDeadlineExceeded"
+    ],
+    "replicaset:test-replicaset": [
+      "Unavailable replicas"
+    ]
+  }
+}

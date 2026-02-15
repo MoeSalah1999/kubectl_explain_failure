@@ -1,0 +1,28 @@
+{
+  "root_cause": "ServiceAccount RBAC restrictions prevent Pod from accessing required resources",
+  "blocking": true,
+  "evidence": [
+    "ServiceAccount default is configured",
+    "Events contain 'forbidden' authorization errors"
+  ],
+  "causes": [
+    {
+      "code": "SERVICEACCOUNT_PRESENT",
+      "message": "ServiceAccount is attached to the Pod"
+    },
+    {
+      "code": "RBAC_DENIED",
+      "message": "RBAC policy denies required permissions",
+      "blocking": true
+    },
+    {
+      "code": "API_ACCESS_FAILURE",
+      "message": "Pod cannot access Kubernetes API or mount token"
+    }
+  ],
+  "object_evidence": {
+    "serviceaccount:default": [
+      "RBAC denial observed"
+    ]
+  }
+}

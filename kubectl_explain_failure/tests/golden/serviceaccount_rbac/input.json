@@ -1,0 +1,24 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "test-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "serviceAccountName": "default"
+    }
+  },
+  "events": [
+    {
+      "message": "Error: pods \"test-pod\" is forbidden: User \"system:serviceaccount:default:default\" cannot get resource \"pods\""
+    }
+  ],
+  "serviceaccount": {
+    "default": {
+      "metadata": {
+        "name": "default",
+        "namespace": "default"
+      }
+    }
+  }
+}
