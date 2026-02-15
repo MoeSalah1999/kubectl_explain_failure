@@ -131,12 +131,15 @@ This ensures tests run in a clean environment and type checks are enforced.
 - StorageClassProvisionerMissing
 - TopologySpreadUnsatisfiable
 - UnschedulableTaint  
-- ImagePullSecretMissingCompound (Compound not single)
+---------------------------------------------------------------------------------------------------------------------------------------
+- ImagePullSecretMissingCompound (Compound)
 - CrashloopWithConfigOrSecret (Compound)                                                 
 - CrashloopLivenessProbeRule (Compound)
 - CrashloopOOMKilledRule (Compound)
 - InitContainerFailureRule (Compound)
 - NodeNotReadyEvictedRule (Compound)
+- ServiceAccountRBAC (Compound)
+- OwnerBlockedPod (Compound)
 - PendingUnschedulableRule (Compound)
 - PVCBoundThenNodePressureRule (Compound)
 - PVCBoundNodeDiskPressureMountRule (Compound)
