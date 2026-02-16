@@ -132,11 +132,13 @@ This ensures tests run in a clean environment and type checks are enforced.
 - TopologySpreadUnsatisfiable
 - UnschedulableTaint  
 ---------------------------------------------------------------------------------------------------------------------------------------
+- CrashLoopAfterConfigChange (Compound)
 - CrashloopWithConfigOrSecret (Compound)                                                 
 - CrashloopLivenessProbeRule (Compound)
 - CrashloopOOMKilledRule (Compound)
 - DynamicProvisioningTimeout (Compound)
 - ImagePullSecretMissingCompound (Compound)
+- ImageUpdatedThenCrashLoop (Compound)
 - InitContainerFailureRule (Compound)
 - NetworkPolicyBlocked (Compound)
 - NodeNotReadyEvictedRule (Compound)
