@@ -1,0 +1,33 @@
+{
+  "root_cause": "CrashLoop triggered by recent image update",
+  "blocking": true,
+  "evidence": [
+    "Image pull event detected",
+    "CrashLoopBackOff followed image update",
+    "Time delta <= 300 seconds"
+  ],
+  "causes": [
+    {
+      "code": "IMAGE_UPDATED",
+      "message": "New container image was deployed",
+      "blocking": true
+    },
+    {
+      "code": "CONTAINER_RUNTIME_FAILURE",
+      "message": "Container runtime failure after image update",
+      "blocking": true
+    },
+    {
+      "code": "POD_CRASHLOOP",
+      "message": "Pod entered CrashLoopBackOff state"
+    }
+  ],
+  "object_evidence": {
+    "pod:test-pod": [
+      "CrashLoop began after new image deployment"
+    ],
+    "container:app": [
+      "Container failed after image update"
+    ]
+  }
+}
