@@ -1,4 +1,4 @@
-from kubectl_explain_failure.timeline import parse_time
+
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 
@@ -38,30 +38,12 @@ class DynamicProvisioningTimeoutRule(FailureRule):
             return False
 
         # Detect repeated provisioning attempts
-        provisioning_events = [
-            e for e in timeline.raw_events
-            if "provisioning" in e.get("message", "").lower()
-        ]
+        duration = timeline.duration_between(
+            lambda e: "provisioning" in (e.get("message") or "").lower()
+        )
 
-        if len(provisioning_events) < 2:
-            return False
+        return duration >= self.TIMEOUT_SECONDS
 
-        # Time threshold check
-        try:
-            first_ts = provisioning_events[0].get("firstTimestamp")
-            last_ts = provisioning_events[-1].get("lastTimestamp")
-
-            if not first_ts or not last_ts:
-                return False
-
-            duration = (
-                parse_time(last_ts) - parse_time(first_ts)
-            ).total_seconds()
-
-            return duration >= self.TIMEOUT_SECONDS
-
-        except Exception:
-            return False
 
     def explain(self, pod, events, context):
         objects = context.get("objects", {})

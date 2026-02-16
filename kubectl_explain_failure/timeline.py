@@ -1,6 +1,6 @@
 import re
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Callable
 
 
 def parse_time(ts: str) -> datetime:
@@ -77,6 +77,39 @@ class Timeline:
 
     def repeated(self, reason: str, threshold: int) -> bool:
         return self.count(reason=reason) >= threshold
+
+    def duration_between(self, reason_filter: Callable[[dict], bool]) -> float:
+        """
+        Returns the duration in seconds between the first and last
+        event matching the provided filter.
+
+        If fewer than two matching events exist, returns 0.
+        """
+        matching = [e for e in self.events if reason_filter(e)]
+
+        if len(matching) < 2:
+            return 0.0
+
+        # Use eventTime → lastTimestamp → firstTimestamp (consistent with events_within)
+        def extract_ts(event: dict[str, Any]) -> str | None:
+            return (
+                event.get("eventTime")
+                or event.get("lastTimestamp")
+                or event.get("firstTimestamp")
+            )
+
+        first_ts = extract_ts(matching[0])
+        last_ts = extract_ts(matching[-1])
+
+        if not first_ts or not last_ts:
+            return 0.0
+
+        try:
+            start = parse_time(first_ts)
+            end = parse_time(last_ts)
+            return (end - start).total_seconds()
+        except Exception:
+            return 0.0
 
     @property
     def raw_events(self):
