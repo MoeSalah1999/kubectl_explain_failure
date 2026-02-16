@@ -1,0 +1,26 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "test-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "ready": false
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: Get http://10.0.0.5:8080/health: dial tcp 10.0.0.5:8080: connection refused",
+      "firstTimestamp": "2024-01-01T10:00:00Z",
+      "lastTimestamp": "2024-01-01T10:00:10Z"
+    }
+  ]
+}

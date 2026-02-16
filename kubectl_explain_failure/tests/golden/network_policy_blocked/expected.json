@@ -1,0 +1,33 @@
+{
+  "root_cause": "NetworkPolicy blocks required traffic causing readiness failure",
+  "blocking": true,
+  "evidence": [
+    "NetworkPolicy deny-all present",
+    "Connection timeout/refused events detected",
+    "Container readiness = False"
+  ],
+  "causes": [
+    {
+      "code": "NETWORK_POLICY_PRESENT",
+      "message": "NetworkPolicy applies to this Pod",
+      "blocking": true
+    },
+    {
+      "code": "TRAFFIC_DENIED",
+      "message": "Ingress/Egress traffic denied by policy",
+      "blocking": true
+    },
+    {
+      "code": "READINESS_FAILURE",
+      "message": "Container readiness failing due to connectivity issues"
+    }
+  ],
+  "object_evidence": {
+    "networkpolicy:deny-all": [
+      "Policy may deny traffic"
+    ],
+    "pod:test-pod": [
+      "Readiness probe failing"
+    ]
+  }
+}
