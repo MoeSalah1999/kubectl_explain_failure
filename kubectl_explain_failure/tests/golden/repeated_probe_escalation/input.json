@@ -1,0 +1,23 @@
+{
+  "pod": {
+    "metadata": {"name": "test-pod"},
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "app-container",
+          "state": {"waiting": {"reason": "CrashLoopBackOff"}},
+          "lastState": {"terminated": {"reason": "Unhealthy"}}
+        }
+      ]
+    }
+  },
+  "events": [
+    {"reason": "Unhealthy", "message": "Liveness probe failed", "timestamp": "2026-02-16T10:00:00Z"},
+    {"reason": "Unhealthy", "message": "Liveness probe failed", "timestamp": "2026-02-16T10:01:00Z"},
+    {"reason": "Unhealthy", "message": "Liveness probe failed", "timestamp": "2026-02-16T10:02:00Z"},
+    {"reason": "Unhealthy", "message": "Liveness probe failed", "timestamp": "2026-02-16T10:03:00Z"},
+    {"reason": "Unhealthy", "message": "Liveness probe failed", "timestamp": "2026-02-16T10:04:00Z"},
+    {"reason": "Failed", "message": "Container restarted", "timestamp": "2026-02-16T10:05:00Z"}
+  ]
+}

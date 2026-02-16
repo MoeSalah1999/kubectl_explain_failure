@@ -1,0 +1,33 @@
+{
+  "root_cause": "Repeated probe failures caused container restart escalation",
+  "blocking": true,
+  "evidence": [
+    "Multiple probe failure events detected",
+    "Failures sustained >= 180 seconds",
+    "Container restart behavior observed"
+  ],
+  "causes": [
+    {
+      "code": "PROBE_REPEATED_FAILURE",
+      "message": "Container probe repeatedly failed over sustained duration",
+      "blocking": true
+    },
+    {
+      "code": "CONTAINER_RESTART_ESCALATION",
+      "message": "Kubelet restarted container due to probe failures",
+      "blocking": true
+    },
+    {
+      "code": "POD_UNSTABLE",
+      "message": "Pod remains unstable due to repeated probe failures"
+    }
+  ],
+  "object_evidence": {
+    "pod:test-pod": [
+      "Probe failure pattern exceeded restart threshold"
+    ],
+    "container:app-container": [
+      "Repeated probe failures triggered restart escalation"
+    ]
+  }
+}

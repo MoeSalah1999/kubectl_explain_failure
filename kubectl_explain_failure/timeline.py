@@ -96,6 +96,7 @@ class Timeline:
                 event.get("eventTime")
                 or event.get("lastTimestamp")
                 or event.get("firstTimestamp")
+                or event.get("timestamp")
             )
 
         first_ts = extract_ts(matching[0])

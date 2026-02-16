@@ -97,7 +97,7 @@ class RepeatedProbeFailureEscalationRule(FailureRule):
             "causes": chain,
             "evidence": [
                 "Multiple probe failure events detected",
-                f"Failures sustained ≥ {self.MIN_DURATION_SECONDS} seconds",
+                f"Failures sustained >= {self.MIN_DURATION_SECONDS} seconds",
                 "Container restart behavior observed",
             ],
             "object_evidence": {
