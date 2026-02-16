@@ -1,0 +1,32 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "test-pod"
+    },
+    "status": {
+      "phase": "CrashLoopBackOff",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "ConfigMapUpdated",
+      "message": "ConfigMap updated",
+      "lastTimestamp": "2024-01-01T10:00:00Z"
+    },
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container",
+      "lastTimestamp": "2024-01-01T10:02:00Z"
+    }
+  ]
+}
