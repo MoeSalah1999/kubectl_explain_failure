@@ -1,0 +1,36 @@
+{
+  "root_cause": "Pod was evicted due to higher-priority workload preemption",
+  "blocking": true,
+  "evidence": [
+    "Preemption event detected",
+    "Scheduling activity for higher priority pod",
+    "Pod phase is Failed"
+  ],
+  "causes": [
+    {
+      "code": "HIGH_PRIORITY_POD_SCHEDULED",
+      "message": "Higher priority pod scheduled on node",
+      "blocking": true,
+      "role": "scheduler_root"
+    },
+    {
+      "code": "LOW_PRIORITY_POD_PREEMPTED",
+      "message": "Lower priority pod was preempted",
+      "blocking": true,
+      "role": "scheduler_intermediate"
+    },
+    {
+      "code": "POD_EVICTED",
+      "message": "Pod evicted due to priority preemption",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:preempted-pod": [
+      "Pod was preempted by higher priority workload"
+    ],
+    "node:node1": [
+      "Node scheduled higher priority pod triggering preemption"
+    ]
+  }
+}

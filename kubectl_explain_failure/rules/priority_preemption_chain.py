@@ -33,9 +33,9 @@ class PriorityPreemptionChainRule(FailureRule):
             return False
 
         # Must contain scheduling activity
-        if not timeline.has(kind="Scheduling"):
+        # Accept any event with reason "Scheduled"
+        if not any(e.get("reason") == "Scheduled" for e in timeline.raw_events):
             return False
-
         return True
 
     def explain(self, pod, events, context):
