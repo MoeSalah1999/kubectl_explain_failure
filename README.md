@@ -132,13 +132,14 @@ This ensures tests run in a clean environment and type checks are enforced.
 - TopologySpreadUnsatisfiable
 - UnschedulableTaint  
 ---------------------------------------------------------------------------------------------------------------------------------------
-- ImagePullSecretMissingCompound (Compound)
 - CrashloopWithConfigOrSecret (Compound)                                                 
 - CrashloopLivenessProbeRule (Compound)
 - CrashloopOOMKilledRule (Compound)
+- DynamicProvisioningTimeout (Compound)
+- ImagePullSecretMissingCompound (Compound)
 - InitContainerFailureRule (Compound)
+- NetworkPolicyBlocked (Compound)
 - NodeNotReadyEvictedRule (Compound)
-- ServiceAccountRBAC (Compound)
 - OwnerBlockedPod (Compound)
 - PendingUnschedulableRule (Compound)
 - PVCBoundThenNodePressureRule (Compound)
@@ -150,6 +151,7 @@ This ensures tests run in a clean environment and type checks are enforced.
 - PVCPendingTooLongRule (Compound)
 - RapidRestartEscalationRule (Compound)
 - ServiceAccountMissingRule (Compound)
+- ServiceAccountRBAC (Compound)
 
 - Rules are evaluated in priority order.
 - High-priority rules can suppress lower-priority rules, preventing misleading explanations.

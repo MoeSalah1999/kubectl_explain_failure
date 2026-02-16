@@ -11,7 +11,7 @@ class OwnerBlockedPodRule(FailureRule):
 
     name = "OwnerBlockedPod"
     category = "Compound"
-    priority = 56  # Must outrank controller leaf rules
+    priority = 56 
     blocks = ["ReplicaSetUnavailable", "ReplicaSetCreateFailure"]
     requires = {
         "objects": ["deployment", "replicaset"],
