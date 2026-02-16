@@ -142,6 +142,7 @@ This ensures tests run in a clean environment and type checks are enforced.
 - NodeNotReadyEvictedRule (Compound)
 - OwnerBlockedPod (Compound)
 - PendingUnschedulableRule (Compound)
+- PriorityPreemptionChain (Compound)
 - PVCBoundThenNodePressureRule (Compound)
 - PVCBoundNodeDiskPressureMountRule (Compound)
 - PVCThenCrashloopRule(Compound)
@@ -150,6 +151,7 @@ This ensures tests run in a clean environment and type checks are enforced.
 - PVCPendingThenCrashloopRule (Compound)
 - PVCPendingTooLongRule (Compound)
 - RapidRestartEscalationRule (Compound)
+- RepeatedProbeFailureEscalation (Compound)
 - ServiceAccountMissingRule (Compound)
 - ServiceAccountRBAC (Compound)
 
