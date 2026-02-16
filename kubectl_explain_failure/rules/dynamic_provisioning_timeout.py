@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from kubectl_explain_failure.timeline import parse_time
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 
@@ -26,14 +26,11 @@ class DynamicProvisioningTimeoutRule(FailureRule):
     def matches(self, pod, events, context) -> bool:
         objects = context.get("objects", {})
         pvcs = objects.get("pvc", {})
-
         if not pvcs:
             return False
 
         pvc = next(iter(pvcs.values()))
-        phase = pvc.get("status", {}).get("phase")
-
-        if phase != "Pending":
+        if pvc.get("status", {}).get("phase") != "Pending":
             return False
 
         timeline = context.get("timeline")
@@ -57,18 +54,14 @@ class DynamicProvisioningTimeoutRule(FailureRule):
             if not first_ts or not last_ts:
                 return False
 
-            start = datetime.fromisoformat(first_ts.replace("Z", "+00:00"))
-            end = datetime.fromisoformat(last_ts.replace("Z", "+00:00"))
+            duration = (
+                parse_time(last_ts) - parse_time(first_ts)
+            ).total_seconds()
 
-            duration = (end - start).total_seconds()
-
-            if duration < self.TIMEOUT_SECONDS:
-                return False
+            return duration >= self.TIMEOUT_SECONDS
 
         except Exception:
             return False
-
-        return True
 
     def explain(self, pod, events, context):
         objects = context.get("objects", {})

@@ -1,0 +1,30 @@
+{
+  "root_cause": "PVC cannot be provisioned due to dynamic provisioning timeout",
+  "blocking": true,
+  "evidence": [
+    "PVC pvc-timeout phase = Pending",
+    "Repeated provisioning events detected",
+    "Provisioning duration exceeded timeout threshold"
+  ],
+  "causes": [
+    {
+      "code": "PVC_PENDING",
+      "message": "PersistentVolumeClaim remains Pending",
+      "blocking": true
+    },
+    {
+      "code": "PROVISIONING_RETRY_LOOP",
+      "message": "Provisioner repeatedly attempts volume creation",
+      "blocking": true
+    },
+    {
+      "code": "PROVISIONING_TIMEOUT",
+      "message": "Provisioning exceeded acceptable time threshold"
+    }
+  ],
+  "object_evidence": {
+    "pvc:pvc-timeout": [
+      "Dynamic provisioning timeout observed"
+    ]
+  }
+}

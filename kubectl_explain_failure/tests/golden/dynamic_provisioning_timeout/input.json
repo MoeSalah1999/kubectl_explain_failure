@@ -1,0 +1,27 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "test-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "Provisioning",
+      "message": "External provisioner is provisioning volume for claim \"pvc-timeout\"",
+      "firstTimestamp": "2024-01-01T00:00:00Z",
+      "lastTimestamp": "2024-01-01T00:00:00Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Provisioning",
+      "message": "External provisioner is provisioning volume for claim \"pvc-timeout\"",
+      "firstTimestamp": "2024-01-01T00:15:00Z",
+      "lastTimestamp": "2024-01-01T00:15:00Z"
+    }
+  ]
+}
