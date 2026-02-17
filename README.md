@@ -69,10 +69,10 @@ Supported first-class objects include:
 - StatefulSet
 - ServiceAccount
 - Secrets
--NodeConditions (structured)
+- NodeConditions (structured)
 
 
-#### Rules can declare:
+### Rules can declare:
 
 requires = {
     "objects": ["pvc", "pv"],
@@ -93,27 +93,27 @@ This significantly improves determinism and confidence accuracy.
 
 Raw Kubernetes events are normalized into structured semantic signals:
 
-NormalizedEvent:
-    kind   (Scheduling / Image / Volume / Generic)
-    phase  (Failure / Info)
-    reason
-    source
+- NormalizedEvent:
+    - kind   (Scheduling / Image / Volume / Generic)
+    - phase  (Failure / Info)
+    - reason
+    - source
 
 
-Timeline features include:
+### Timeline features include:
 
-Semantic matching (timeline.has(kind="Scheduling", phase="Failure"))
-Repeated reason detection
-Pattern matching
-Duration measurement between related events
-Repeated-event escalation detection
-Temporal compound rules are supported:
-Rapid restart escalation
-Repeated probe failure escalation
-Scheduling flapping
-PVC pending too long
-Image updated → crash loop
-CrashLoop after config change
+- Semantic matching (timeline.has(kind="Scheduling", phase="Failure"))
+- Repeated reason detection
+- Pattern matching
+- Duration measurement between related events
+- Repeated-event escalation detection
+- Temporal compound rules are supported:
+- Rapid restart escalation
+- Repeated probe failure escalation
+- Scheduling flapping
+- PVC pending too long
+- Image updated → crash loop
+- CrashLoop after config change
 
 This moves diagnosis from snapshot inspection to incident reasoning.
 
