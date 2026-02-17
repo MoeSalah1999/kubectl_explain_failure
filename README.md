@@ -121,11 +121,11 @@ This moves diagnosis from snapshot inspection to incident reasoning.
 
 Rules do not return flat explanations they return structured causal chains:
 
-> "CausalChain(
+> CausalChain(
     causes=[...],
     symptoms=[...],
     contributing=[...],
-)"
+)
 
 
 The engine then:
