@@ -1,0 +1,36 @@
+{
+  "root_cause": "PVC pending dominates image pull errors (deterministic precedence)",
+  "blocking": true,
+  "evidence": [
+    "Unbound PersistentVolumeClaim detected",
+    "Image pull failure events observed",
+    "Storage gate precedes container runtime stage"
+  ],
+  "causes": [
+    {
+      "code": "PVC_PENDING",
+      "message": "PersistentVolumeClaim is not yet bound",
+      "blocking": true
+    },
+    {
+      "code": "SCHEDULING_BLOCKED_BY_STORAGE",
+      "message": "Pod scheduling is gated by unresolved volume binding",
+      "blocking": true
+    },
+    {
+      "code": "IMAGE_PULL_SIGNAL_SUPPRESSED",
+      "message": "Image pull errors observed but dominated by upstream PVC blockage"
+    }
+  ],
+  "object_evidence": {
+    "pod:test-pod": [
+      "Pod remains Pending due to unresolved PVC binding"
+    ],
+    "pvc:data-pvc": [
+      "PVC phase is not Bound"
+    ],
+    "container:app-container": [
+      "Image pull errors present but not root cause"
+    ]
+  }
+}

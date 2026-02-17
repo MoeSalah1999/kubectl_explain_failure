@@ -1,0 +1,37 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "test-pod"
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "app-container",
+          "state": {
+            "waiting": {
+              "reason": "ImagePullBackOff"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/1 nodes are available: persistentvolumeclaim is not bound",
+      "lastTimestamp": "2026-02-17T10:00:00Z"
+    },
+    {
+      "reason": "ErrImagePull",
+      "message": "Failed to pull image",
+      "lastTimestamp": "2026-02-17T10:01:00Z"
+    },
+    {
+      "reason": "ImagePullBackOff",
+      "message": "Back-off pulling image",
+      "lastTimestamp": "2026-02-17T10:02:00Z"
+    }
+  ]
+}
