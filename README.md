@@ -74,17 +74,17 @@ Supported first-class objects include:
 
 ### Rules can declare:
 
-requires = {
+> “requires = {
     "objects": ["pvc", "pv"],
     "optional": ["storageclass"]
-}
+}”
 
 The engine normalizes legacy flat context into this object-graph model automatically.
 Object state always has precedence over raw Events.
 
 ### Precedence model:
 
-Object state > Conditions > Timeline > Raw events
+> Object state > Conditions > Timeline > Raw events
 
 This significantly improves determinism and confidence accuracy.
 
