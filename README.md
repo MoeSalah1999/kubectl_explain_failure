@@ -44,17 +44,17 @@ All behavior is deterministic and fully test-covered.
 
 The engine operates on a normalized object graph:
 
-context = {
-    "pod": pod,
-    "events": events,
-    "objects": {
-        "pvc": {...},
-        "pv": {...},
-        "node": {...},
-        "storageclass": {...},
-        "owner": {...},
-    }
-}
+> context = {
+      "pod": pod,
+      "events": events,
+      "objects": {
+          "pvc": {...},
+          "pv": {...},
+          "node": {...},
+          "storageclass": {...},
+          "owner": {...},
+      }
+  }
 
 
 Supported first-class objects include:
@@ -183,64 +183,8 @@ This makes confidence:
 
 Confidence is always bounded to [0,1].
 
-## What this tool does NOT do
-- No live cluster access
-- No Kubernetes API client
-- No controllers, CRDs, or admission hooks
-- No automatic remediation
-- No machine learning or prediction
 
-This is a **diagnostic explainer**, not a fixer.
-
-## Installation (Development Mode)
-
-To install the package locally in development mode, allowing editable imports:
-
-- git clone https://github.com/MoeSalah1999/kubectl_explain_failure
-- cd kubectl_explain_failure
-- python -m pip install -e .
-
-This ensures you can import the package as:
-
-from kubectl_explain_failure.engine import explain_failure
-
-and run tests or scripts directly.
-
-## Usage
-Basic usage:
-python -m kubectl_explain_failure \
-  --pod /kubectl_explain_failure/tests/fixtures/pod.json \
-  --events /kubectl_explain_failure/tests/fixtures/events.json
-
-
-With optional PVC or Node context:
-python -m kubectl_explain_failure \
-  --pod /kubectl_explain_failure/tests/fixtures/pending_pod.json \
-  --events /kubectl_explain_failure/tests/fixtures/empty_events.json \
-  --pvc /kubectl_explain_failure/tests/fixtures/pvc_pending.json \
-  --node /kubectl_explain_failure/tests/fixtures/node_disk_pressure.json
-
-
-## Testing
-
-This project uses pytest and tox. Tests are **not included in the installed package** and must be run from the source tree.
-To run tests in the development environment:
-
-- tox
-- tox -e format   # code formatting
-- tox -e lint     # static linting
-- tox -e typing   # mypy type checks
-- tox -e test     # pytest suite, including golden tests
-
-Tox automatically installs required dependencies, including:
-
-pytest
-mypy
-PyYAML
-
-This ensures tests run in a clean environment and type checks are enforced.
-
-## Supported failure patterns: (all rules support suppression/resolution semantics):
+# Supported failure patterns: (all rules support suppression/resolution semantics):
 
 - AdmissionWebhookDenied
 - AffinityUnsatisfiable
@@ -318,6 +262,63 @@ This ensures tests run in a clean environment and type checks are enforced.
 - First matching, unsuppressed rule produces the explanation.
 - Golden tests assert that suppression works correctly.
 
+
+# Installation (Development Mode)
+
+To install the package locally in development mode, allowing editable imports:
+
+- git clone https://github.com/MoeSalah1999/kubectl_explain_failure
+- cd kubectl_explain_failure
+- python -m pip install -e .
+
+This ensures you can import the package as:
+
+from kubectl_explain_failure.engine import explain_failure
+
+and run tests or scripts directly.
+
+# Usage
+Basic usage:
+python -m kubectl_explain_failure \
+  --pod /kubectl_explain_failure/tests/fixtures/pod.json \
+  --events /kubectl_explain_failure/tests/fixtures/events.json
+
+
+With optional PVC or Node context:
+python -m kubectl_explain_failure \
+  --pod /kubectl_explain_failure/tests/fixtures/pending_pod.json \
+  --events /kubectl_explain_failure/tests/fixtures/empty_events.json \
+  --pvc /kubectl_explain_failure/tests/fixtures/pvc_pending.json \
+  --node /kubectl_explain_failure/tests/fixtures/node_disk_pressure.json
+
+
+# Testing
+
+This project uses pytest and tox. Tests are **not included in the installed package** and must be run from the source tree.
+To run tests in the development environment:
+
+- tox
+- tox -e format   # code formatting
+- tox -e lint     # static linting
+- tox -e typing   # mypy type checks
+- tox -e test     # pytest suite, including golden tests
+
+Tox automatically installs required dependencies, including:
+
+pytest
+mypy
+PyYAML
+
+This ensures tests run in a clean environment and type checks are enforced.
+
+# What this tool does NOT do
+- No live cluster access
+- No Kubernetes API client
+- No controllers, CRDs, or admission hooks
+- No automatic remediation
+- No machine learning or prediction
+
+This is a **diagnostic explainer**, not a fixer.
 
 ## Design notes
 - Rule-based, not implicit
