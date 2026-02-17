@@ -72,7 +72,7 @@ Supported first-class objects include:
 - NodeConditions (structured)
 
 
-# Rules can declare:
+### Rules can declare:
 
 requires = {
     "objects": ["pvc", "pv"],
