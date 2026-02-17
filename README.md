@@ -59,17 +59,17 @@ context = {
 
 Supported first-class objects include:
 
-Pod
-PersistentVolumeClaim
-PersistentVolume
-StorageClass
-Node
-ReplicaSet
-Deployment
-StatefulSet
-ServiceAccount
-Secrets
-NodeConditions (structured)
+- Pod
+- PersistentVolumeClaim
+- PersistentVolume
+- StorageClass
+- Node
+- ReplicaSet
+- Deployment
+- StatefulSet
+- ServiceAccount
+- Secrets
+- NodeConditions (structured)
 
 
 Rules can declare:
