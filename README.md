@@ -401,14 +401,14 @@ This ensures tests run in a clean environment and type checks are enforced.
 
 ### Rule contract (base_rule.py):
 
-> class FailureRule:
+> "class FailureRule:
 >     name: str
 >     category: str
 >     priority: int
 >     requires: dict
 > 
 >     def matches(...)
->     def explain(...)
+>     def explain(...)"
 
 
 All rules must be deterministic and side-effect free.
