@@ -346,7 +346,7 @@ Output is fully deterministic for identical inputs.
 
 # Testing
 
-The project uses:
+### The project uses:
 
 - pytest
 - tox
@@ -371,20 +371,20 @@ Tox automatically installs required dependencies, including:
 
 This ensures tests run in a clean environment and type checks are enforced.
 
-Golden tests validate:
+### Golden tests validate:
 
-Exact explanation structure
-Confidence stability
-Suppression correctness
-Temporal reasoning behavior
+- Exact explanation structure
+- Confidence stability
+- Suppression correctness
+- Temporal reasoning behavior
 
-Regression tests validate:
+### Regression tests validate:
 
-Engine invariants
-YAML rule safety
-Object-graph compatibility
-Rule contract enforcement
-PVC dominance semantics
+- Engine invariants
+- YAML rule safety
+- Object-graph compatibility
+- Rule contract enforcement
+- PVC dominance semantics
 
 # What this tool does NOT do
 - No live cluster access
