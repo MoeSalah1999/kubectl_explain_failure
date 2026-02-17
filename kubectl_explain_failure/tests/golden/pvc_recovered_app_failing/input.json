@@ -1,0 +1,44 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "test-app-pod"
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "pvc": {
+    "test-pvc": {
+      "metadata": {
+        "name": "test-pvc"
+      },
+      "status": {
+        "phase": "Bound"
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "Pending",
+      "message": "PVC is pending"
+    },
+    {
+      "reason": "Scheduled",
+      "message": "Successfully assigned test-app-pod to node1"
+    },
+    {
+      "reason": "CrashLoopBackOff",
+      "message": "Back-off restarting failed container"
+    }
+  ]
+}

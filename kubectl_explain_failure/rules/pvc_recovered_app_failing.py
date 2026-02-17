@@ -45,21 +45,21 @@ class PVCRecoveredButAppStillFailingRule(FailureRule):
         if not timeline or not pvc_objects:
             return False
 
-        # 1️⃣ PVC currently Bound
+        # PVC currently Bound
         pvc = next(iter(pvc_objects.values()))
         pvc_phase = pvc.get("status", {}).get("phase")
         if pvc_phase != "Bound":
             return False
 
-        # 2️⃣ Historical Pending event must exist
+        # Historical Pending event must exist
         if not timeline_has_pattern(timeline, "Pending"):
             return False
 
-        # 3️⃣ Pod scheduled successfully
+        # Pod scheduled successfully
         if not timeline_has_pattern(timeline, "Scheduled"):
             return False
 
-        # 4️⃣ Failure continues after scheduling
+        # Failure continues after scheduling
         failure_detected = any(
             timeline_has_pattern(timeline, pattern)
             for pattern in self.FAILURE_PATTERNS

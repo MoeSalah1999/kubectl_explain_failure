@@ -1,0 +1,32 @@
+{
+  "root_cause": "Application failure persists after PVC recovery",
+  "blocking": true,
+  "evidence": [
+    "PVC previously Pending but now Bound",
+    "Pod successfully scheduled",
+    "CrashLoop or failure events continue post-recovery"
+  ],
+  "causes": [
+    {
+      "code": "PVC_RECOVERED",
+      "message": "PersistentVolumeClaim was successfully bound"
+    },
+    {
+      "code": "POD_RUNNING_AFTER_PVC",
+      "message": "Pod transitioned to Running after PVC binding"
+    },
+    {
+      "code": "APPLICATION_CRASHLOOP",
+      "message": "Application continues failing despite storage recovery",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:test-app-pod": [
+      "Pod running but container unstable"
+    ],
+    "pvc:test-pvc": [
+      "PVC Bound successfully before application failures"
+    ]
+  }
+}
