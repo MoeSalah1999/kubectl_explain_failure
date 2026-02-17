@@ -119,7 +119,7 @@ This moves diagnosis from snapshot inspection to incident reasoning.
 
 ## 3. Explicit Causal Chains
 
-Rules do not return flat explanations, they return structured causal chains:
+Rules do not return flat explanations they return structured causal chains:
 
 CausalChain(
     causes=[...],
@@ -130,11 +130,11 @@ CausalChain(
 
 The engine then:
 
-1- Aggregates matches
-2- Selects the highest-confidence root cause
-3- Preserves supporting causes
-4- Applies suppression semantics
-5- Emits a structured result
+1. Aggregates matches
+2. Selects the highest-confidence root cause
+3. Preserves supporting causes
+4. Applies suppression semantics
+5. Emits a structured result
 
 This enables explainability and deterministic reasoning.
 
