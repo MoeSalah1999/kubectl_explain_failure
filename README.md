@@ -132,6 +132,7 @@ This ensures tests run in a clean environment and type checks are enforced.
 - TopologySpreadUnsatisfiable
 - UnschedulableTaint  
 ---------------------------------------------------------------------------------------------------------------------------------------
+- ConflictingSignalsResolution (Compound)
 - CrashLoopAfterConfigChange (Compound)
 - CrashloopWithConfigOrSecret (Compound)                                                 
 - CrashloopLivenessProbeRule (Compound)
@@ -139,7 +140,9 @@ This ensures tests run in a clean environment and type checks are enforced.
 - DynamicProvisioningTimeout (Compound)
 - ImagePullSecretMissingCompound (Compound)
 - ImageUpdatedThenCrashLoop (Compound)
+- InitContainerBlocksMain (Compound)
 - InitContainerFailureRule (Compound)
+- MultiContainerPartialFailure (Compound)
 - NetworkPolicyBlocked (Compound)
 - NodeNotReadyEvictedRule (Compound)
 - OwnerBlockedPod (Compound)
