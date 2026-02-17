@@ -207,10 +207,11 @@ Confidence is always bounded to [0,1].
 - UnschedulableTaint
 - HostPortConflict
 - PreemptedByHigherPriority
+
 - Compound:
-- SchedulingFlapping
-- PendingUnschedulableRule
-- PriorityPreemptionChain
+    - SchedulingFlapping
+    - PendingUnschedulableRule
+    - PriorityPreemptionChain
 
 ## Node & Eviction
 
