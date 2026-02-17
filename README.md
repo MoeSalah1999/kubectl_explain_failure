@@ -69,10 +69,10 @@ Supported first-class objects include:
 - StatefulSet
 - ServiceAccount
 - Secrets
-- NodeConditions (structured)
+-NodeConditions (structured)
 
 
-### Rules can declare:
+#### Rules can declare:
 
 requires = {
     "objects": ["pvc", "pv"],
@@ -82,7 +82,7 @@ requires = {
 The engine normalizes legacy flat context into this object-graph model automatically.
 Object state always has precedence over raw Events.
 
-Precedence model:
+### Precedence model:
 
 Object state > Conditions > Timeline > Raw events
 
