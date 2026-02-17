@@ -416,41 +416,27 @@ This ensures tests run in a clean environment and type checks are enforced.
 All rules must be deterministic and side-effect free.
 
 # What this tool does NOT do
-- No live cluster access
-- No Kubernetes API client
-- No controllers, CRDs, or admission hooks
-- No automatic remediation
-- No machine learning or prediction
+- No live Kubernetes API integration
+- No cluster mutation
+- No remediation
+- No automatic fixes
+- No ML-based inference or prediction
+- No probabilistic ranking beyond deterministic confidence composition
 
 This is a **diagnostic explainer**, not a fixer.
 
-# Design notes
-- Rule-based, not implicit
-Each diagnostic is an explicit rule that can be reviewed, tested, and extended.
+# Design Principles
 
-- Read-only by design
-All inputs are files; no cluster mutation or API access is required.
-
-- Deterministic output
-The same inputs always produce the same explanation.
-
-- Reviewable architecture
-Heuristics are isolated from parsing and output logic.
-
-# Why this exists (despite kubectl describe)
-
-kubectl describe exposes raw data.
-This tool answers a different question:
-
-“Given these signals, what is the most likely reason this Pod is failing?”
-
-It complements existing tooling rather than replacing it.
-
+- Deterministic over heuristic guessing
+- Explicit over implicit
+- Structured causality over flat strings
+- Object state over event heuristics
+- Suppression over ambiguity
+- Fully testable behavior
 
 # Future work
 
 - Additional failure heuristics
-- Structured output for automation
 - Optional kubectl plugin wrapper
 
 Live cluster access is intentionally out of scope for the initial design.
