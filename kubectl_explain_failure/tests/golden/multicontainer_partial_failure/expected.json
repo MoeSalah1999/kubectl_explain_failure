@@ -1,0 +1,36 @@
+{
+  "root_cause": "Partial container failure within multi-container pod",
+  "blocking": true,
+  "evidence": [
+    "At least one container is Ready",
+    "At least one container is failing",
+    "Failure limited to subset of containers"
+  ],
+  "causes": [
+    {
+      "code": "PARTIAL_CONTAINER_FAILURE",
+      "message": "One container is failing while others remain healthy",
+      "blocking": true
+    },
+    {
+      "code": "SERVICE_DEGRADATION",
+      "message": "Pod functionality degraded due to partial container failure",
+      "blocking": true
+    },
+    {
+      "code": "POD_PARTIALLY_UNAVAILABLE",
+      "message": "Pod is not fully operational due to failing container"
+    }
+  ],
+  "object_evidence": {
+    "pod:test-pod": [
+      "Pod contains both healthy and failing containers"
+    ],
+    "container:failing-container": [
+      "Container in CrashLoop or failure state"
+    ],
+    "container:healthy-container": [
+      "Container remains Ready"
+    ]
+  }
+}
