@@ -1,0 +1,29 @@
+{
+  "root_cause": "Cluster scheduling instability causing flapping",
+  "blocking": true,
+  "evidence": [
+    "Alternating Scheduled and FailedScheduling events detected",
+    "Multiple scheduling transitions within short duration",
+    "Cluster resource state appears unstable"
+  ],
+  "causes": [
+    {
+      "code": "SCHEDULER_INSTABILITY",
+      "message": "Scheduler repeatedly alternated between success and failure"
+    },
+    {
+      "code": "RESOURCE_CONTENTION",
+      "message": "Cluster resource availability fluctuated"
+    },
+    {
+      "code": "POD_PENDING_UNSTABLE",
+      "message": "Pod scheduling state is unstable due to cluster conditions",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:flapping-pod": [
+      "Repeated scheduling attempts observed"
+    ]
+  }
+}

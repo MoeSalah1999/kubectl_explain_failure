@@ -1,0 +1,27 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "flapping-pod"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes available: insufficient cpu",
+      "firstTimestamp": "2026-02-17T10:00:00Z"
+    },
+    {
+      "reason": "Scheduled",
+      "message": "Successfully assigned flapping-pod to node1",
+      "firstTimestamp": "2026-02-17T10:01:00Z"
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes available: insufficient memory",
+      "firstTimestamp": "2026-02-17T10:02:00Z"
+    }
+  ]
+}
