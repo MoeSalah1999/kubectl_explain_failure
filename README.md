@@ -1,36 +1,188 @@
 """
 # kubectl-explain-failure
 
-This project explores a gap in Kubernetes diagnostics: the system exposes raw signals but not causal explanations. The tool reads Pod and Event data and applies explicit heuristics to explain why a workload failed.
+kubectl-explain-failure is a deterministic diagnostic engine that explains **why a Kubernetes Pod is failing** by constructing structured causal explanations from Kubernetes object state and event timelines.
 
-A small, diagnostic tool that explains **why a Kubernetes Pod is failing** by
-correlating Pod status and Events into a human-readable explanation.
+Kubernetes exposes signals (Pod status, Events, PVC state, Node conditions), but it does not synthesize them into root causes.  
+This project builds an explicit reasoning layer on top of those signals.
 
-## Problem
-Kubernetes exposes raw signals (Pod status, Events), but operators still have to manually
-interpret *why* something failed. This tool demonstrates how causal explanations can be
-constructed from existing Kubernetes data without modifying the cluster.
+It is a **read-only explanation engine**, not a controller, not a fixer, and not an ML system.
 
-For example:
-- A Pod is `Pending`, but the underlying scheduling constraint is not obvious
-- A container is restarting, but the root cause is buried in Events or status fields
-- Volume or image failures require manual correlation across multiple objects
+---
 
-This tool explores how **causal explanations** can be constructed from existing Kubernetes data alone.
+# Core Idea
 
-## What this tool does
-- Reads Kubernetes objects from JSON files (Pod, Events; optional PVC / Node)
-  - Required: Pod, Events
-  - Optional: PVC, Node, or folder of multiple PVCs
-- Applies explicit, rule-based heuristics for common failure patterns
-- Produces a structured explanation containing:
-  - Root cause
-  - Evidence
-  - Likely causes
-  - Suggested next checks
-  - Confidence score
+Kubernetes gives you:
 
-The output is deterministic and fully testable.
+- Pod.status
+- Container states
+- Events
+- PVC / PV / StorageClass
+- Node conditions
+- Owner references (ReplicaSet / Deployment / StatefulSet)
+
+You still have to manually answer:
+
+> “What is the most likely reason this Pod is failing?”
+
+This tool answers that question using:
+
+- Explicit rule contracts
+- Structured object-graph reasoning
+- Timeline normalization
+- Causal chains
+- Conflict resolution
+- Compositional confidence scoring
+
+All behavior is deterministic and fully test-covered.
+
+---
+
+# What This Tool Does
+
+## 1. Object Graph Reasoning (Not Flat Inputs)
+
+The engine operates on a normalized object graph:
+
+context = {
+    "pod": pod,
+    "events": events,
+    "objects": {
+        "pvc": {...},
+        "pv": {...},
+        "node": {...},
+        "storageclass": {...},
+        "owner": {...},
+    }
+}
+
+
+Supported first-class objects include:
+
+Pod
+PersistentVolumeClaim
+PersistentVolume
+StorageClass
+Node
+ReplicaSet
+Deployment
+StatefulSet
+ServiceAccount
+Secrets
+NodeConditions (structured)
+
+
+Rules can declare:
+
+requires = {
+    "objects": ["pvc", "pv"],
+    "optional": ["storageclass"]
+}
+
+The engine normalizes legacy flat context into this object-graph model automatically.
+Object state always has precedence over raw Events.
+
+Precedence model:
+
+Object state > Conditions > Timeline > Raw events
+
+This significantly improves determinism and confidence accuracy.
+
+
+## 2. Timeline Normalization & Temporal Reasoning
+
+Raw Kubernetes events are normalized into structured semantic signals:
+
+NormalizedEvent:
+    kind   (Scheduling / Image / Volume / Generic)
+    phase  (Failure / Info)
+    reason
+    source
+
+
+Timeline features include:
+
+Semantic matching (timeline.has(kind="Scheduling", phase="Failure"))
+Repeated reason detection
+Pattern matching
+Duration measurement between related events
+Repeated-event escalation detection
+Temporal compound rules are supported:
+Rapid restart escalation
+Repeated probe failure escalation
+Scheduling flapping
+PVC pending too long
+Image updated → crash loop
+CrashLoop after config change
+
+This moves diagnosis from snapshot inspection to incident reasoning.
+
+## 3. Explicit Causal Chains
+
+Rules do not return flat explanations.
+
+They return structured causal chains:
+
+CausalChain(
+    causes=[...],
+    symptoms=[...],
+    contributing=[...],
+)
+
+
+The engine then:
+
+Aggregates matches
+Selects the highest-confidence root cause
+Preserves supporting causes
+Applies suppression semantics
+Emits a structured result
+This enables explainability and deterministic reasoning.
+
+## 4. Conflict Resolution & Suppression
+
+Rules can explicitly block other rules:
+
+blocks = ["FailedScheduling", "UnschedulableTaint"]
+
+Compound rules automatically subsume lower-level crash signals.
+
+
+Resolution logic:
+
+Rules are evaluated in priority order
+Compound rules suppress container-level signals
+Suppression map is preserved in output
+Only unsuppressed winners are returned
+
+Regression tests verify:
+
+PVC dominance over scheduling errors
+Compound rule precedence
+YAML rule safety
+Engine invariants
+
+## 5. Compositional Confidence Model
+
+Confidence is not static.
+
+Final confidence is computed as:
+
+confidence =
+    rule_confidence
+    × evidence_quality
+    × data_completeness
+    × conflict_penalty
+
+
+This makes confidence:
+
+Deterministic
+Explainable
+Predictable under partial input
+Stable under rule reordering
+
+Confidence is always bounded to [0,1].
 
 ## What this tool does NOT do
 - No live cluster access
