@@ -386,6 +386,33 @@ This ensures tests run in a clean environment and type checks are enforced.
 - Rule contract enforcement
 - PVC dominance semantics
 
+# Architecture Overview
+
+### Core modules:
+
+- engine.py – rule evaluation, resolution, confidence composition
+- causality.py – CausalChain and Resolution structures
+- context.py – context normalization
+- timeline.py – normalized timeline abstraction
+- relations.py – object dependency graph logic
+- loader.py – rule and plugin discovery
+- rules/ – rule corpus (Python + YAML)
+- tests/ – golden + regression + contract tests
+
+### Rule contract (base_rule.py):
+
+> class FailureRule:
+>     name: str
+>     category: str
+>     priority: int
+>     requires: dict
+> 
+>     def matches(...)
+>     def explain(...)
+
+
+All rules must be deterministic and side-effect free.
+
 # What this tool does NOT do
 - No live cluster access
 - No Kubernetes API client
@@ -417,16 +444,6 @@ This tool answers a different question:
 
 It complements existing tooling rather than replacing it.
 
-# Architecture overview
-
-- FailureRule defines a diagnostic contract:
-  - matches(...)
-  - explain(...)
-- Rules are evaluated in order
-- The first matching rule produces the explanation
-- If no rule matches, a safe default explanation is returned
-
-This structure allows incremental expansion without increasing complexity.
 
 # Future work
 
