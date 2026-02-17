@@ -142,24 +142,24 @@ This enables explainability and deterministic reasoning.
 
 Rules can explicitly block other rules:
 
-blocks = ["FailedScheduling", "UnschedulableTaint"]
+> blocks = ["FailedScheduling", "UnschedulableTaint"]
 
 Compound rules automatically subsume lower-level crash signals.
 
 
-Resolution logic:
+### Resolution logic:
 
-Rules are evaluated in priority order
-Compound rules suppress container-level signals
-Suppression map is preserved in output
-Only unsuppressed winners are returned
+1. Rules are evaluated in priority order
+2. Compound rules suppress container-level signals
+3. Suppression map is preserved in output
+4. Only unsuppressed winners are returned
 
-Regression tests verify:
+### Regression tests verify:
 
-PVC dominance over scheduling errors
-Compound rule precedence
-YAML rule safety
-Engine invariants
+- PVC dominance over scheduling errors
+- Compound rule precedence
+- YAML rule safety
+- Engine invariants
 
 ## 5. Compositional Confidence Model
 
@@ -167,19 +167,19 @@ Confidence is not static.
 
 Final confidence is computed as:
 
-confidence =
-    rule_confidence
-    × evidence_quality
-    × data_completeness
-    × conflict_penalty
+> confidence =
+      rule_confidence
+      × evidence_quality
+      × data_completeness
+      × conflict_penalty
 
 
 This makes confidence:
 
-Deterministic
-Explainable
-Predictable under partial input
-Stable under rule reordering
+- Deterministic
+- Explainable
+- Predictable under partial input
+- Stable under rule reordering
 
 Confidence is always bounded to [0,1].
 
