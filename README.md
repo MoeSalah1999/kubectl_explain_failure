@@ -320,7 +320,7 @@ This ensures tests run in a clean environment and type checks are enforced.
 
 This is a **diagnostic explainer**, not a fixer.
 
-## Design notes
+# Design notes
 - Rule-based, not implicit
 Each diagnostic is an explicit rule that can be reviewed, tested, and extended.
 
@@ -333,7 +333,7 @@ The same inputs always produce the same explanation.
 - Reviewable architecture
 Heuristics are isolated from parsing and output logic.
 
-## Why this exists (despite kubectl describe)
+# Why this exists (despite kubectl describe)
 
 kubectl describe exposes raw data.
 This tool answers a different question:
@@ -342,7 +342,7 @@ This tool answers a different question:
 
 It complements existing tooling rather than replacing it.
 
-## Architecture overview
+# Architecture overview
 
 - FailureRule defines a diagnostic contract:
   - matches(...)
@@ -353,7 +353,7 @@ It complements existing tooling rather than replacing it.
 
 This structure allows incremental expansion without increasing complexity.
 
-## Future work
+# Future work
 
 - Additional failure heuristics
 - Structured output for automation
