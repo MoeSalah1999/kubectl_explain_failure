@@ -6,8 +6,9 @@ from kubectl_explain_failure.timeline import timeline_has_pattern
 
 class ServiceAccountMissingRule(FailureRule):
     name = "ServiceAccountMissing"
-    category = "Compound"
+    category = "Admission"
     priority = 56
+    deterministic = True
 
     # Supersedes simpler Pod creation failure signals
     blocks = ["FailedCreatePod"]

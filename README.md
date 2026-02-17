@@ -207,7 +207,6 @@ Confidence is always bounded to [0,1].
 - UnschedulableTaint
 - HostPortConflict
 - PreemptedByHigherPriority
-
 - Compound:
     - SchedulingFlapping
     - PendingUnschedulableRule
@@ -234,13 +233,13 @@ Confidence is always bounded to [0,1].
 - StorageClassProvisionerMissing
 - ConfigMapNotFound
 - Compound:
-- PVCMountFailureRule
-- PVCPendingTooLongRule
-- DynamicProvisioningTimeout
-- PVCPendingThenCrashloopRule
-- PVCThenCrashloopRule
-- PVCThenImagePullFailRule
-- PVCRecoveredButAppStillFailing
+    - PVCMountFailureRule
+    - PVCPendingTooLongRule
+    - DynamicProvisioningTimeout
+    - PVCPendingThenCrashloopRule
+    - PVCThenCrashloopRule
+    - PVCThenImagePullFailRule
+    - PVCRecoveredButAppStillFailing
 
 ## Image & Container Lifecycle
 
@@ -252,27 +251,27 @@ Confidence is always bounded to [0,1].
 - CrashLoopBackoff
 - OOMKilled containers
 - Compound:
-- CrashLoopOOMKilledRule
-- CrashLoopLivenessProbeRule
-- CrashLoopAfterConfigChange
-- CrashloopWithConfigOrSecret
-- ImagePullSecretMissingCompound
-- ImageUpdatedThenCrashLoop
-- RapidRestartEscalationRule
+    - CrashLoopOOMKilledRule
+    - CrashLoopLivenessProbeRule
+    - CrashLoopAfterConfigChange
+    - CrashloopWithConfigOrSecret
+    - ImagePullSecretMissingCompound
+    - ImageUpdatedThenCrashLoop
+    - RapidRestartEscalationRule
 
 ## Probes
 
 - ReadinessProbeFailure
 - StartupProbeFailure
 - Compound:
-- RepeatedProbeFailureEscalation
+    - RepeatedProbeFailureEscalation
 
-##Networking
+## Networking
 
 - DNSResolutionFailure
 - CNIPluginFailure
 - Compound:
-- NetworkPolicyBlocked
+    - NetworkPolicyBlocked
 
 ## Controllers / Owners
 
@@ -281,92 +280,92 @@ Confidence is always bounded to [0,1].
 - DeploymentProgressDeadlineExceeded
 - StatefulSetUpdateBlocked
 - Compound:
-- OwnerBlockedPod
+    - OwnerBlockedPod
 
 ## Multi-Container / Init
 
 - InitContainerFailureRule
 - Compound:
-- InitContainerBlocksMain
-- MultiContainerPartialFailure
+    - InitContainerBlocksMain
+    - MultiContainerPartialFailure
 
 ## Engine-Level / Resolution
 
 - Compound:
-- ConflictingSignalsResolution
+    - ConflictingSignalsResolution
 
 
 
-- AdmissionWebhookDenied
-- AffinityUnsatisfiable
-- CNIPluginFailure
-- CrashLoopBackoff (BackOff events)
-- ConfigMapNotFound
-- ContainerCreateConfigError
-- DeploymentProgressDeadlineExceeded
-- DNSResolutionFailure
-- EvictedRule
-- FailedScheduling
-- FailedMount (volume mount failures)
-- HostPortConflict 
-- ImagePullBackOff 
-- ImagePullError
-- ImagePullSecretMissing
-- InsufficientResources
-- InvalidEntrypoint
-- LimitRangeViolation
-- NodeMemoryPressure
-- NodePIDPressure
-- NodeDiskPressure 
-- NodeSelectorMismatch
-- OOMKilled containers
-- PreemptedByHigherPriority
-- PrivilegedNotAllowed
-- PVReleasedOrFailed
-- PVCMountFailed 
-- PVCNotBound 
-- PVCZoneMismatch
-- RBACForbidden
-- ReadinessProbeFailure
-- ResourceQuotaExceeded
-- ReplicaSetCreateFailure
-- ReplicaSetUnavailable
-- SecurityContextViolation
-- StatefulSetUpdateBlocked
-- StartupProbeFailure
-- StorageClassProvisionerMissing
-- TopologySpreadUnsatisfiable
-- UnschedulableTaint  
+- AdmissionWebhookDenied X
+- AffinityUnsatisfiable X
+- CNIPluginFailure X
+- CrashLoopBackoff (BackOff events) X
+- ConfigMapNotFound X
+- ContainerCreateConfigError X
+- DeploymentProgressDeadlineExceeded X
+- DNSResolutionFailure X
+- EvictedRule X
+- FailedScheduling X
+- FailedMount (volume mount failures) X
+- HostPortConflict X  
+- ImagePullBackOff X
+- ImagePullError X
+- ImagePullSecretMissing X
+- InsufficientResources X
+- InvalidEntrypoint X
+- LimitRangeViolation X
+- NodeMemoryPressure X
+- NodePIDPressure X
+- NodeDiskPressure X
+- NodeSelectorMismatch X
+- OOMKilled containers X
+- PreemptedByHigherPriority X
+- PrivilegedNotAllowed X
+- PVReleasedOrFailed X
+- PVCMountFailed X
+- PVCNotBound X
+- PVCZoneMismatch X
+- RBACForbidden X
+- ReadinessProbeFailure X
+- ResourceQuotaExceeded X
+- ReplicaSetCreateFailure X
+- ReplicaSetUnavailable X
+- SecurityContextViolation X
+- StatefulSetUpdateBlocked X
+- StartupProbeFailure X
+- StorageClassProvisionerMissing X
+- TopologySpreadUnsatisfiable X
+- UnschedulableTaint X  
 ---------------------------------------------------------------------------------------------------------------------------------------
-- ConflictingSignalsResolution (Compound)
-- CrashLoopAfterConfigChange (Compound)
-- CrashloopWithConfigOrSecret (Compound)                                                 
-- CrashloopLivenessProbeRule (Compound)
-- CrashloopOOMKilledRule (Compound)
-- DynamicProvisioningTimeout (Compound)
-- ImagePullSecretMissingCompound (Compound)
-- ImageUpdatedThenCrashLoop (Compound)
-- InitContainerBlocksMain (Compound)
-- InitContainerFailureRule (Compound)
-- MultiContainerPartialFailure (Compound)
-- NetworkPolicyBlocked (Compound)
-- NodeNotReadyEvictedRule (Compound)
-- OwnerBlockedPod (Compound)
-- PendingUnschedulableRule (Compound)
-- PriorityPreemptionChain (Compound)
-- PVCBoundThenNodePressureRule (Compound)
-- PVCBoundNodeDiskPressureMountRule (Compound)
-- PVCMountFailureRule (Compound)
-- PVCPendingThenCrashloopRule (Compound)
-- PVCPendingTooLongRule (Compound)
-- PVCRecoveredButAppStillFailing (Compound)
-- PVCThenCrashloopRule(Compound)
-- PVCThenImagePullFailRule (Compound)
-- RapidRestartEscalationRule (Compound)
-- RepeatedProbeFailureEscalation (Compound)
-- SchedulingFlapping (Compound)
-- ServiceAccountMissingRule (Compound)
-- ServiceAccountRBAC (Compound)
+- ConflictingSignalsResolution (Compound) X
+- CrashLoopAfterConfigChange (Compound) X
+- CrashloopWithConfigOrSecret (Compound) X                                                 
+- CrashloopLivenessProbeRule (Compound) X
+- CrashloopOOMKilledRule (Compound) X
+- DynamicProvisioningTimeout (Compound) X
+- ImagePullSecretMissingCompound (Compound) X
+- ImageUpdatedThenCrashLoop (Compound) X
+- InitContainerBlocksMain (Compound) X
+- InitContainerFailureRule (Compound) X
+- MultiContainerPartialFailure (Compound) X
+- NetworkPolicyBlocked (Compound) X
+- NodeNotReadyEvictedRule (Compound) X
+- OwnerBlockedPod (Compound) X
+- PendingUnschedulableRule (Compound) X
+- PriorityPreemptionChain (Compound) X
+- PVCBoundThenNodePressureRule (Compound) X
+- PVCBoundNodeDiskPressureMountRule (Compound) X
+- PVCMountFailureRule (Compound) X
+- PVCPendingThenCrashloopRule (Compound) X
+- PVCPendingTooLongRule (Compound) X
+- PVCRecoveredButAppStillFailing (Compound) X
+- PVCThenCrashloopRule(Compound) X
+- PVCThenImagePullFailRule (Compound) X
+- RapidRestartEscalationRule (Compound) X
+- RepeatedProbeFailureEscalation (Compound) X
+- SchedulingFlapping (Compound) X
+- ServiceAccountMissingRule (Compound) X
+- ServiceAccountRBAC (Compound) X
 
 - Rules are evaluated in priority order.
 - High-priority rules can suppress lower-priority rules, preventing misleading explanations.

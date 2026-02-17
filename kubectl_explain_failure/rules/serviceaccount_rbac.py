@@ -10,13 +10,14 @@ class ServiceAccountRBACCompoundRule(FailureRule):
     """
 
     name = "ServiceAccountRBACCompound"
-    category = "Compound"
+    category = "Admission"
     priority = 55
     blocks = ["RBACForbidden", "ServiceAccountMissing"]
     requires = {
         "objects": ["serviceaccount"],
         "context": ["timeline"],
     }
+    deterministic = True
 
     def matches(self, pod, events, context) -> bool:
         objects = context.get("objects", {})

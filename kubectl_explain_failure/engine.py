@@ -657,6 +657,45 @@ def explain_failure(
         }
 
         return result
+    
+    # -------------------------------------------------
+    # DETERMINISTIC RULE SHORT-CIRCUIT
+    # If exactly one rule remains and it is deterministic,
+    # preserve its confidence and bypass noisy-OR aggregation.
+    # -------------------------------------------------
+    if len(filtered_explanations) == 1:
+        exp, rule, chain = filtered_explanations[0]
+
+        if getattr(rule, "deterministic", False):
+            result = {
+                "pod": pod_name,
+                "phase": pod_phase,
+                "root_cause": exp.get("root_cause", "Unknown"),
+                "confidence": float(exp.get("confidence", 1.0)),
+                "evidence": exp.get("evidence", []),
+                "likely_causes": exp.get("likely_causes", []),
+                "suggested_checks": exp.get("suggested_checks", []),
+                "blocking": bool(exp.get("blocking", False)),
+                "causes": [
+                    {
+                        "code": c.code,
+                        "message": c.message,
+                        **({"blocking": True} if c.blocking else {}),
+                        **({"role": c.role} if getattr(c, "role", None) else {}),
+                    }
+                    for c in chain.causes
+                ],
+                "resolution": {
+                    "winner": rule.name,
+                    "suppressed": suppression_map.get(rule.name, []),
+                    "reason": "Deterministic rule matched with high confidence",
+                },
+            }
+
+            if "object_evidence" in exp:
+                result["object_evidence"] = exp["object_evidence"]
+
+            return result
 
     # ----------------------------
     # Weighted root-cause selection for remaining rules

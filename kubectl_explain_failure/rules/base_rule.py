@@ -28,6 +28,7 @@ class FailureRule:
         "objects": [],
         "optional_objects": [],
     }
+    deterministic: bool = False
 
     def matches(
         self, pod: dict[str, Any], events: list[dict[str, Any]], context: dict[str, Any]
