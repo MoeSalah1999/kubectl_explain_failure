@@ -186,6 +186,116 @@ Confidence is always bounded to [0,1].
 
 # Supported failure patterns: (all rules support suppression/resolution semantics):
 
+## Admission & Policy
+
+- AdmissionWebhookDenied
+- PrivilegedNotAllowed
+- SecurityContextViolation
+- LimitRangeViolation
+- ResourceQuotaExceeded
+- RBACForbidden
+- ServiceAccountMissingRule
+- ServiceAccountRBAC
+
+## Scheduling & Placement
+
+- FailedScheduling
+- AffinityUnsatisfiable
+- TopologySpreadUnsatisfiable
+- NodeSelectorMismatch
+- InsufficientResources
+- UnschedulableTaint
+- HostPortConflict
+- PreemptedByHigherPriority
+- Compound:
+- SchedulingFlapping
+- PendingUnschedulableRule
+- PriorityPreemptionChain
+
+## Node & Eviction
+
+- NodeMemoryPressure
+- NodePIDPressure
+- NodeDiskPressure
+- EvictedRule
+- Compound:
+    - NodeNotReadyEvictedRule
+    - PVCBoundThenNodePressureRule
+    - PVCBoundNodeDiskPressureMountRule
+
+## Storage & Volume
+
+- PVCNotBound
+- PVReleasedOrFailed
+- PVCMountFailed
+- FailedMount
+- PVCZoneMismatch
+- StorageClassProvisionerMissing
+- ConfigMapNotFound
+- Compound:
+- PVCMountFailureRule
+- PVCPendingTooLongRule
+- DynamicProvisioningTimeout
+- PVCPendingThenCrashloopRule
+- PVCThenCrashloopRule
+- PVCThenImagePullFailRule
+- PVCRecoveredButAppStillFailing
+
+## Image & Container Lifecycle
+
+- ImagePullError
+- ImagePullBackOff
+- ImagePullSecretMissing
+- InvalidEntrypoint
+- ContainerCreateConfigError
+- CrashLoopBackoff
+- OOMKilled containers
+- Compound:
+- CrashLoopOOMKilledRule
+- CrashLoopLivenessProbeRule
+- CrashLoopAfterConfigChange
+- CrashloopWithConfigOrSecret
+- ImagePullSecretMissingCompound
+- ImageUpdatedThenCrashLoop
+- RapidRestartEscalationRule
+
+## Probes
+
+- ReadinessProbeFailure
+- StartupProbeFailure
+- Compound:
+- RepeatedProbeFailureEscalation
+
+##Networking
+
+- DNSResolutionFailure
+- CNIPluginFailure
+- Compound:
+- NetworkPolicyBlocked
+
+## Controllers / Owners
+
+- ReplicaSetCreateFailure
+- ReplicaSetUnavailable
+- DeploymentProgressDeadlineExceeded
+- StatefulSetUpdateBlocked
+- Compound:
+- OwnerBlockedPod
+
+## Multi-Container / Init
+
+- InitContainerFailureRule
+- Compound:
+- InitContainerBlocksMain
+- MultiContainerPartialFailure
+
+## Engine-Level / Resolution
+
+- Compound:
+- ConflictingSignalsResolution
+
+
+
 - AdmissionWebhookDenied
 - AffinityUnsatisfiable
 - CNIPluginFailure
