@@ -312,28 +312,49 @@ To install the package locally in development mode, allowing editable imports:
 
 This ensures you can import the package as:
 
-from kubectl_explain_failure.engine import explain_failure
+> from kubectl_explain_failure.engine import explain_failure
 
 and run tests or scripts directly.
 
 # Usage
-Basic usage:
+## Basic usage:
 python -m kubectl_explain_failure \
   --pod /kubectl_explain_failure/tests/fixtures/pod.json \
   --events /kubectl_explain_failure/tests/fixtures/events.json
 
 
-With optional PVC or Node context:
+## With optional PVC or Node context:
 python -m kubectl_explain_failure \
   --pod /kubectl_explain_failure/tests/fixtures/pending_pod.json \
   --events /kubectl_explain_failure/tests/fixtures/empty_events.json \
   --pvc /kubectl_explain_failure/tests/fixtures/pvc_pending.json \
   --node /kubectl_explain_failure/tests/fixtures/node_disk_pressure.json
 
+# Output Structure
+
+**The output includes:**
+
+- root_cause
+- confidence
+- causal_chain
+- suppressed_rules
+- evidence
+- suggested_next_checks
+- metadata
+
+Output is fully deterministic for identical inputs.
 
 # Testing
 
-This project uses pytest and tox. Tests are **not included in the installed package** and must be run from the source tree.
+The project uses:
+
+- pytest
+- tox
+- mypy
+- Golden snapshot testing
+- Regression invariants
+
+Tests are **not included in the installed package** and must be run from the source tree.
 To run tests in the development environment:
 
 - tox
@@ -344,11 +365,26 @@ To run tests in the development environment:
 
 Tox automatically installs required dependencies, including:
 
-pytest
-mypy
-PyYAML
+- pytest
+- mypy
+- PyYAML
 
 This ensures tests run in a clean environment and type checks are enforced.
+
+Golden tests validate:
+
+Exact explanation structure
+Confidence stability
+Suppression correctness
+Temporal reasoning behavior
+
+Regression tests validate:
+
+Engine invariants
+YAML rule safety
+Object-graph compatibility
+Rule contract enforcement
+PVC dominance semantics
 
 # What this tool does NOT do
 - No live cluster access
