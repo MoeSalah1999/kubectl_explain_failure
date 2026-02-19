@@ -43,12 +43,7 @@ def test_networkpolicy_blocked_golden():
 
     # Inject NetworkPolicy object into object graph
     context["objects"] = {
-        "networkpolicy": {
-            "deny-all": {
-                "metadata": {"name": "deny-all"},
-                "spec": {}
-            }
-        }
+        "networkpolicy": {"deny-all": {"metadata": {"name": "deny-all"}, "spec": {}}}
     }
 
     if events:

@@ -1,4 +1,3 @@
-
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 
@@ -8,6 +7,7 @@ class InvalidEntrypointRule(FailureRule):
     Detects containers failing due to invalid entrypoint.
     Triggered when container state.waiting.reason=RunContainerError
     """
+
     name = "InvalidEntrypoint"
     category = "Container"
     priority = 22
@@ -29,7 +29,7 @@ class InvalidEntrypointRule(FailureRule):
                 Cause(
                     code="INVALID_ENTRYPOINT",
                     message="Container failed due to invalid entrypoint",
-                    blocking=True
+                    blocking=True,
                 )
             ]
         )
@@ -40,18 +40,16 @@ class InvalidEntrypointRule(FailureRule):
             "blocking": True,
             "causes": chain,
             "evidence": [
-                f"Container state.waiting.reason=RunContainerError",
-                f"Pod: {pod_name}"
+                "Container state.waiting.reason=RunContainerError",
+                f"Pod: {pod_name}",
             ],
-            "object_evidence": {
-                f"pod:{pod_name}": ["RunContainerError observed"]
-            },
+            "object_evidence": {f"pod:{pod_name}": ["RunContainerError observed"]},
             "likely_causes": [
                 "Command or args in container spec are invalid",
-                "Entrypoint binary missing or incorrect"
+                "Entrypoint binary missing or incorrect",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
-                "Review container command and args"
-            ]
+                "Review container command and args",
+            ],
         }

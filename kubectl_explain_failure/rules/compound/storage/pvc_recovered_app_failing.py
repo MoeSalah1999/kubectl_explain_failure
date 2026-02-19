@@ -61,8 +61,7 @@ class PVCRecoveredButAppStillFailingRule(FailureRule):
 
         # Failure continues after scheduling
         failure_detected = any(
-            timeline_has_pattern(timeline, pattern)
-            for pattern in self.FAILURE_PATTERNS
+            timeline_has_pattern(timeline, pattern) for pattern in self.FAILURE_PATTERNS
         )
 
         if not failure_detected:
@@ -107,9 +106,7 @@ class PVCRecoveredButAppStillFailingRule(FailureRule):
                 "CrashLoop or failure events continue post-recovery",
             ],
             "object_evidence": {
-                f"pod:{pod_name}": [
-                    "Pod running but container unstable"
-                ],
+                f"pod:{pod_name}": ["Pod running but container unstable"],
                 f"pvc:{pvc_name}": [
                     "PVC Bound successfully before application failures"
                 ],

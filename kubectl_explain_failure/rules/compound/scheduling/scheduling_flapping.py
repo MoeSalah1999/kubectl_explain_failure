@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class SchedulingFlappingRule(FailureRule):
@@ -87,9 +86,7 @@ class SchedulingFlappingRule(FailureRule):
                 "Cluster resource state appears unstable",
             ],
             "object_evidence": {
-                f"pod:{pod_name}": [
-                    "Repeated scheduling attempts observed"
-                ]
+                f"pod:{pod_name}": ["Repeated scheduling attempts observed"]
             },
             "suggested_checks": [
                 "kubectl describe nodes",

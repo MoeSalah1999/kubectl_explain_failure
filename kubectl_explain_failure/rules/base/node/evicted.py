@@ -1,7 +1,6 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.model import has_event
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class EvictedRule(FailureRule):

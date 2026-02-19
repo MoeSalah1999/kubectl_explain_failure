@@ -85,13 +85,13 @@ class PriorityPreemptionChainRule(FailureRule):
                 "Pod phase is Failed",
             ],
             "object_evidence": {
-                f"pod:{pod_name}": [
-                    "Pod was preempted by higher priority workload"
-                ],
+                f"pod:{pod_name}": ["Pod was preempted by higher priority workload"],
                 **(
-                    {f"node:{scheduled_node}": [
-                        "Node scheduled higher priority pod triggering preemption"
-                    ]}
+                    {
+                        f"node:{scheduled_node}": [
+                            "Node scheduled higher priority pod triggering preemption"
+                        ]
+                    }
                     if scheduled_node != "<unknown>"
                     else {}
                 ),

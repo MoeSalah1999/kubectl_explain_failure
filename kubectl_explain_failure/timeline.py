@@ -1,6 +1,7 @@
 import re
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
-from typing import Any, Callable
+from typing import Any
 
 
 def parse_time(ts: str) -> datetime:

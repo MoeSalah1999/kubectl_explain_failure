@@ -11,7 +11,7 @@ class Cause:
     code: str
     message: str
     blocking: bool = False
-    role: str | None=None
+    role: str | None = None
 
 
 @dataclass

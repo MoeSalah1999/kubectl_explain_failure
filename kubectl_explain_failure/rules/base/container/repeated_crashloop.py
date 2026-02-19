@@ -40,9 +40,7 @@ class RepeatedCrashLoopRule(FailureRule):
             "blocking": True,
             "causes": chain,
             "evidence": ["BackOff pattern detected in event timeline"],
-            "object_evidence": {
-                f"pod:{pod_name}": ["Repeated crash pattern detected"]
-            },
+            "object_evidence": {f"pod:{pod_name}": ["Repeated crash pattern detected"]},
             "likely_causes": [
                 "Application instability",
                 "Invalid container configuration",
@@ -53,8 +51,3 @@ class RepeatedCrashLoopRule(FailureRule):
                 f"kubectl describe pod {pod_name} -n {namespace}",
             ],
         }
-
-
-
-
-

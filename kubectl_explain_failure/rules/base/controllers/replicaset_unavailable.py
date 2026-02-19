@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class ReplicaSetUnavailableRule(FailureRule):
@@ -60,19 +59,14 @@ class ReplicaSetUnavailableRule(FailureRule):
             "confidence": 0.92,
             "blocking": True,
             "causes": chain,
-            "evidence": [
-                "ReplicaSet.status.availableReplicas == 0"
-            ],
+            "evidence": ["ReplicaSet.status.availableReplicas == 0"],
             "object_evidence": {
-                f"replicaset:{name}": ["availableReplicas=0"]
-                for name in failing
+                f"replicaset:{name}": ["availableReplicas=0"] for name in failing
             },
             "likely_causes": [
                 "Containers crashing",
                 "Readiness probes failing",
                 "Image pull errors",
             ],
-            "suggested_checks": [
-                f"kubectl describe rs {name}" for name in failing
-            ],
+            "suggested_checks": [f"kubectl describe rs {name}" for name in failing],
         }

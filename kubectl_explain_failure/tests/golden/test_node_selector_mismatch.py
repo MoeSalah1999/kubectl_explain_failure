@@ -1,6 +1,5 @@
 import json
 import os
-import pytest
 
 from kubectl_explain_failure.context import build_context
 from kubectl_explain_failure.engine import explain_failure, normalize_context
@@ -53,5 +52,7 @@ def test_node_selector_mismatch_golden():
     assert result["root_cause"] == expected["root_cause"]
     assert result["blocking"] == expected["blocking"]
     assert set(result["evidence"]) == set(expected["evidence"])
-    assert [c["code"] for c in result["causes"]] == [c["code"] for c in expected["causes"]]
+    assert [c["code"] for c in result["causes"]] == [
+        c["code"] for c in expected["causes"]
+    ]
     assert result["object_evidence"] == expected["object_evidence"]

@@ -19,8 +19,6 @@ FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 # ----------------------------
 
 
-
-
 def test_failed_scheduling_taint():
     pod = load_json(os.path.join(FIXTURES_DIR, "pending_pod.json"))
     events = normalize_events(
@@ -29,7 +27,6 @@ def test_failed_scheduling_taint():
 
     result = explain_failure(pod, events)
     assert any("taint" in cause.lower() for cause in result["likely_causes"])
-
 
 
 def test_crash_loop_backoff():
@@ -90,8 +87,6 @@ def test_node_disk_pressure():
     result = explain_failure(pod, events, context=normalize_context({"node": node}))
     assert "disk pressure" in result["root_cause"].lower()
     assert any("Node" in ev for ev in result["evidence"])
-
-
 
 
 # ----------------------------

@@ -1,5 +1,4 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
-from kubectl_explain_failure.model import has_event
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import timeline_has_pattern
 
@@ -9,6 +8,7 @@ class TopologySpreadUnsatisfiableRule(FailureRule):
     Detects pod scheduling failures due to unsatisfiable topologySpreadConstraints.
     Triggered when Pod.spec.topologySpreadConstraints exist and scheduling failed.
     """
+
     name = "TopologySpreadUnsatisfiable"
     category = "Scheduling"
     priority = 21
@@ -51,11 +51,14 @@ class TopologySpreadUnsatisfiableRule(FailureRule):
             "blocking": True,
             "evidence": [
                 "Pod.spec.topologySpreadConstraints detected",
-                "FailedScheduling events in timeline"
+                "FailedScheduling events in timeline",
             ],
             "object_evidence": {
                 f"pod:{pod_name}": ["TopologySpreadConstraints unsatisfiable"],
-                **{f"node:{n}": ["Node cannot satisfy topology spread constraints"] for n in node_names},
+                **{
+                    f"node:{n}": ["Node cannot satisfy topology spread constraints"]
+                    for n in node_names
+                },
             },
             "likely_causes": [
                 "Insufficient nodes to satisfy maxSkew and topology keys",

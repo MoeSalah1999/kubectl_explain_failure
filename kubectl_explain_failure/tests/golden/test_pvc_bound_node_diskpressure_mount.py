@@ -9,9 +9,7 @@ from kubectl_explain_failure.engine import (
 from kubectl_explain_failure.timeline import build_timeline
 
 BASE_DIR = os.path.dirname(__file__)
-FIXTURE_DIR = os.path.join(
-    BASE_DIR, "pvc_bound_node_diskpressure_mount"
-)
+FIXTURE_DIR = os.path.join(BASE_DIR, "pvc_bound_node_diskpressure_mount")
 
 
 def load_json(name: str):
@@ -54,7 +52,6 @@ def test_pvc_bound_node_diskpressure_mount_golden():
 
     if "node" in raw_context:
         context["node"] = raw_context["node"]
-
 
     # Attach timeline (required by rule)
     context["timeline"] = build_timeline(events)

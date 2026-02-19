@@ -6,7 +6,9 @@ from kubectl_explain_failure.engine import explain_failure, normalize_context
 from kubectl_explain_failure.timeline import build_timeline
 
 BASE_DIR = os.path.dirname(__file__)
-FIXTURE_DIR = os.path.join(BASE_DIR, "topology_spread_unsatisfiable")  # fixtures are in the same folder
+FIXTURE_DIR = os.path.join(
+    BASE_DIR, "topology_spread_unsatisfiable"
+)  # fixtures are in the same folder
 
 
 def load_json(name: str):
@@ -56,7 +58,7 @@ def test_topology_spread_unsatisfiable_golden():
 
     for cause in expected["causes"]:
         assert any(c.get("code") == cause["code"] for c in result["causes"])
-    
+
     for ev in expected["evidence"]:
         assert ev in result["evidence"]
 

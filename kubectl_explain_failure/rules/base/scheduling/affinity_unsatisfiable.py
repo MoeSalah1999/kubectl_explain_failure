@@ -8,6 +8,7 @@ class AffinityUnsatisfiableRule(FailureRule):
     Detects pod scheduling failures caused by affinity/anti-affinity constraints.
     Triggered when Pod.spec.affinity exists and scheduling failed.
     """
+
     name = "AffinityUnsatisfiable"
     category = "Scheduling"
     priority = 17
@@ -50,11 +51,14 @@ class AffinityUnsatisfiableRule(FailureRule):
             "blocking": True,
             "evidence": [
                 "Pod.spec.affinity detected",
-                "FailedScheduling events in timeline"
+                "FailedScheduling events in timeline",
             ],
             "object_evidence": {
                 f"pod:{pod_name}": ["Affinity/anti-affinity constraints unsatisfiable"],
-                **{f"node:{n}": ["Node cannot satisfy pod affinity rules"] for n in node_names},
+                **{
+                    f"node:{n}": ["Node cannot satisfy pod affinity rules"]
+                    for n in node_names
+                },
             },
             "likely_causes": [
                 "Affinity labels do not match any node",
@@ -67,4 +71,3 @@ class AffinityUnsatisfiableRule(FailureRule):
                 "Check other pods that might block anti-affinity rules",
             ],
         }
-    

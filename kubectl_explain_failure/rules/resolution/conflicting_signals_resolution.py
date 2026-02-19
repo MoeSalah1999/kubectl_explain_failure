@@ -63,7 +63,8 @@ class ConflictingSignalsResolutionRule(FailureRule):
 
         # Detect image-related failure events
         image_events = [
-            e for e in timeline.raw_events
+            e
+            for e in timeline.raw_events
             if e.get("reason") in self.IMAGE_FAILURE_REASONS
         ]
 
@@ -73,9 +74,11 @@ class ConflictingSignalsResolutionRule(FailureRule):
         # Ensure image failure occurred AFTER or DURING PVC pending state
         # (defensive ordering — PVC must be unresolved)
         pvc = context.get("blocking_pvc")
-        phase = pvc.get("status", {}).get("phase") if isinstance(
-            pvc.get("status"), dict
-        ) else pvc.get("status")
+        phase = (
+            pvc.get("status", {}).get("phase")
+            if isinstance(pvc.get("status"), dict)
+            else pvc.get("status")
+        )
 
         if phase == "Bound":
             return False  # No longer conflicting
@@ -130,9 +133,7 @@ class ConflictingSignalsResolutionRule(FailureRule):
                 f"pod:{pod_name}": [
                     "Pod remains Pending due to unresolved PVC binding"
                 ],
-                f"pvc:{pvc_name}": [
-                    "PVC phase is not Bound"
-                ],
+                f"pvc:{pvc_name}": ["PVC phase is not Bound"],
                 f"container:{container_name}": [
                     "Image pull errors present but not root cause"
                 ],

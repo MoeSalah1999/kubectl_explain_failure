@@ -22,17 +22,17 @@ class HostPortConflictRule(FailureRule):
         if not timeline:
             return False
 
-        entries = getattr(timeline, "events", []) 
+        entries = getattr(timeline, "events", [])
 
         for entry in entries:
             reason = str(entry.get("reason", "")).lower()
             message = str(entry.get("message", "")).lower()
 
             if reason == "failedscheduling" and (
-                "hostport" in message or
-                "port conflict" in message or
-                "port conflicts" in message or
-                "port is already allocated" in message
+                "hostport" in message
+                or "port conflict" in message
+                or "port conflicts" in message
+                or "port is already allocated" in message
             ):
                 return True
         return False
@@ -59,22 +59,22 @@ class HostPortConflictRule(FailureRule):
             "blocking": True,
             "evidence": [
                 "FailedScheduling event detected",
-                "Event message references hostPort conflict or allocated port"
+                "Event message references hostPort conflict or allocated port",
             ],
             "object_evidence": {
                 f"pod:{namespace}/{pod_name}": [
                     "FailedScheduling event",
-                    "Message contains hostPort conflict indication"
+                    "Message contains hostPort conflict indication",
                 ]
             },
             "likely_causes": [
                 "Another Pod is using the same hostPort",
                 "DaemonSet binding fixed hostPort across nodes",
-                "Insufficient available nodes with free port"
+                "Insufficient available nodes with free port",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name} -n {namespace}",
                 "Check other Pods using the same hostPort",
-                "Inspect node port allocations"
+                "Inspect node port allocations",
             ],
         }

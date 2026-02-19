@@ -86,7 +86,6 @@ def normalize_context(context: dict[str, Any]) -> dict[str, Any]:
                 merged.update(_extract_node_conditions(n))
             context["node_conditions"] = merged
 
-
         # Populate node_conditions for NodeDiskPressureRule
         node_objects = list(objects.get("node", {}).values())
         if node_objects:
@@ -315,7 +314,6 @@ def explain_failure(
             if not state_match:
                 continue
 
-
         filtered_rules.append(rule)
 
     # ----------------------------
@@ -500,8 +498,7 @@ def explain_failure(
         )
 
         max_compound_priority = max(
-            getattr(rule, "priority", 0)
-            for _, rule, _ in compound_matches
+            getattr(rule, "priority", 0) for _, rule, _ in compound_matches
         )
 
         # Compound dominance only applies if it truly outranks others
@@ -510,7 +507,9 @@ def explain_failure(
                 compound_matches,
                 key=lambda pair: getattr(pair[1], "priority", 0),
             )
-            suppressed_rules = {r.name for _, r, _ in explanations if r is not best_rule}
+            suppressed_rules = {
+                r.name for _, r, _ in explanations if r is not best_rule
+            }
 
             resolution = Resolution(
                 winner=best_rule.name,
@@ -573,10 +572,9 @@ def explain_failure(
                             f"pvc:{name}, phase:{phase}": ["PVC not Bound"]
                         }
             return result
-        
+
         else:
             compound_matches = []  # fall through to weighted selection
-
 
     if not filtered_explanations:
         return {
@@ -603,14 +601,16 @@ def explain_failure(
     pvc_matches = [
         (exp, rule, chain)
         for exp, rule, chain in pvc_matches
-        if context.get("pvc_unbound") or exp.get("root_cause", "").startswith("PVC cannot be provisioned")
+        if context.get("pvc_unbound")
+        or exp.get("root_cause", "").startswith("PVC cannot be provisioned")
     ]
 
     if pvc_matches:
         # Pick the highest priority * confidence PVC rule
         best_exp, best_rule, best_chain = max(
             pvc_matches,
-            key=lambda pair: pair[0].get("confidence", 0.0) * getattr(pair[1], "priority", 1),
+            key=lambda pair: pair[0].get("confidence", 0.0)
+            * getattr(pair[1], "priority", 1),
         )
 
         # Defensive PVC name extraction
@@ -657,7 +657,7 @@ def explain_failure(
         }
 
         return result
-    
+
     # -------------------------------------------------
     # DETERMINISTIC RULE SHORT-CIRCUIT
     # If exactly one rule remains and it is deterministic,
@@ -800,7 +800,6 @@ def explain_failure(
             seen.add(key)
             unique_causes.append(c)
     merged["causes"] = unique_causes
-
 
     if "object_evidence" in merged:
         for obj, items in merged["object_evidence"].items():

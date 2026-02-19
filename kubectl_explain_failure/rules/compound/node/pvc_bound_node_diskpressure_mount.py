@@ -1,4 +1,3 @@
-
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import timeline_has_pattern
@@ -28,8 +27,7 @@ class PVCBoundNodeDiskPressureMountRule(FailureRule):
 
         # All PVCs must be Bound
         all_bound = all(
-            pvc.get("status", {}).get("phase") == "Bound"
-            for pvc in pvc_objs.values()
+            pvc.get("status", {}).get("phase") == "Bound" for pvc in pvc_objs.values()
         )
 
         if not all_bound:
@@ -38,8 +36,7 @@ class PVCBoundNodeDiskPressureMountRule(FailureRule):
         # Node has DiskPressure=True
         disk_pressure = any(
             any(
-                cond.get("type") == "DiskPressure"
-                and cond.get("status") == "True"
+                cond.get("type") == "DiskPressure" and cond.get("status") == "True"
                 for cond in node.get("status", {}).get("conditions", [])
             )
             for node in node_objs.values()
@@ -90,10 +87,7 @@ class PVCBoundNodeDiskPressureMountRule(FailureRule):
                 "FailedMount events observed in timeline",
             ],
             "object_evidence": {
-                **{
-                    f"pvc:{name}": ["PVC status phase=Bound"]
-                    for name in pvc_names
-                },
+                **{f"pvc:{name}": ["PVC status phase=Bound"] for name in pvc_names},
                 **{
                     f"node:{name}": ["Node condition DiskPressure=True"]
                     for name in node_names
@@ -109,7 +103,11 @@ class PVCBoundNodeDiskPressureMountRule(FailureRule):
                 "CSI mount retries failing due to disk constraints",
             ],
             "suggested_checks": [
-                f"kubectl describe node {node_names[0]}" if node_names else "kubectl describe node <node>",
+                (
+                    f"kubectl describe node {node_names[0]}"
+                    if node_names
+                    else "kubectl describe node <node>"
+                ),
                 f"kubectl describe pod {pod_name}",
                 "Check node disk usage (df -h)",
                 "Inspect kubelet logs for mount errors",

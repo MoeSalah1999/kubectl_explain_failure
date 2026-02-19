@@ -42,9 +42,7 @@ def test_pvc_recovered_but_app_still_failing_golden():
     )
 
     # Inject PVC object (critical for rule match)
-    context["objects"] = {
-        "pvc": data["pvc"]
-    }
+    context["objects"] = {"pvc": data["pvc"]}
 
     # Noise objects (engine completeness boost)
     context["node"] = {"node1": {"metadata": {"name": "node1"}}}

@@ -1,7 +1,5 @@
-
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-
 
 
 class StartupProbeFailureRule(FailureRule):
@@ -55,9 +53,7 @@ class StartupProbeFailureRule(FailureRule):
                 "Event message indicates startupProbe failure",
                 f"Pod: {pod_name}",
             ],
-            "object_evidence": {
-                f"pod:{pod_name}": ["startupProbe failure detected"]
-            },
+            "object_evidence": {f"pod:{pod_name}": ["startupProbe failure detected"]},
             "likely_causes": [
                 "Application not ready during startup",
                 "Incorrect probe configuration",

@@ -2,6 +2,7 @@ from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import timeline_has_pattern
 
+
 class FailedMountRule(FailureRule):
     """
     Pod fails to mount a volume
@@ -37,7 +38,9 @@ class FailedMountRule(FailureRule):
             root_cause_code = "PVC_NOT_BOUND"
             blocking = True
         else:
-            root_cause_msg = "Volume could not be provisioned or storage backend unavailable"
+            root_cause_msg = (
+                "Volume could not be provisioned or storage backend unavailable"
+            )
             root_cause_code = "VOLUME_PROVISION_FAILED"
             blocking = True
 
@@ -70,9 +73,7 @@ class FailedMountRule(FailureRule):
                 f"PVC {pvc_name} attached",
                 "Event: FailedMount",
             ],
-            "object_evidence": {
-                f"pvc:{pvc_name}": [root_cause_msg]
-            },
+            "object_evidence": {f"pvc:{pvc_name}": [root_cause_msg]},
             "likely_causes": [
                 "PersistentVolumeClaim not bound",
                 "Storage backend unavailable",

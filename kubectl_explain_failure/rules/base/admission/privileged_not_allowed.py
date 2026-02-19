@@ -22,7 +22,7 @@ class PrivilegedNotAllowedRule(FailureRule):
         if not timeline:
             return False
 
-        entries = getattr(timeline, "events", []) 
+        entries = getattr(timeline, "events", [])
 
         for entry in entries:
             message = str(entry.get("message", "")).lower()
@@ -63,24 +63,24 @@ class PrivilegedNotAllowedRule(FailureRule):
             "blocking": True,
             "evidence": [
                 "Admission event detected",
-                "Event message references privileged container denial"
+                "Event message references privileged container denial",
             ],
             "object_evidence": {
                 f"pod:{namespace}/{pod_name}": [
                     "Admission rejection detected",
-                    "Message contains privileged container denial"
+                    "Message contains privileged container denial",
                 ]
             },
             "likely_causes": [
                 "Namespace enforces restricted PodSecurity profile",
                 "PodSecurity Admission blocks privileged=true",
                 "Cluster-wide policy denies privileged containers",
-                "Legacy PodSecurityPolicy disallows privileged containers"
+                "Legacy PodSecurityPolicy disallows privileged containers",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name} -n {namespace}",
                 "Remove privileged=true from container securityContext",
                 "Review namespace PodSecurity level (restricted/baseline/privileged)",
-                "Inspect validating admission policies"
+                "Inspect validating admission policies",
             ],
         }

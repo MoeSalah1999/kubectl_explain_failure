@@ -29,30 +29,21 @@ class ServiceAccountRBACCompoundRule(FailureRule):
         timeline = context.get("timeline")
         if not timeline:
             return False
-        
+
         # If we have FailedCreate events referencing missing SA,
         # let ServiceAccountMissingRule handle it.
         missing_pattern = any(
             "failedcreate" in msg and "serviceaccount" in msg
-            for msg in (
-                e.get("message", "").lower()
-                for e in timeline.raw_events
-            )
+            for msg in (e.get("message", "").lower() for e in timeline.raw_events)
         )
 
         if missing_pattern:
             return False
 
-
         # Detect RBAC forbidden patterns in events
         forbidden_detected = any(
-            "forbidden" in msg
-            and "serviceaccount" in msg
-            and "cannot" in msg
-            for msg in (
-                e.get("message", "").lower()
-                for e in timeline.raw_events
-            )
+            "forbidden" in msg and "serviceaccount" in msg and "cannot" in msg
+            for msg in (e.get("message", "").lower() for e in timeline.raw_events)
         )
 
         return forbidden_detected

@@ -1,7 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
-from kubectl_explain_failure.model import has_event
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class InsufficientResourcesRule(FailureRule):
@@ -9,6 +7,7 @@ class InsufficientResourcesRule(FailureRule):
     Detects pod scheduling failures due to insufficient CPU, memory, or ephemeral storage.
     Object-first: checks structured scheduler status.
     """
+
     name = "InsufficientResources"
     category = "Scheduling"
     priority = 8
@@ -33,7 +32,7 @@ class InsufficientResourcesRule(FailureRule):
             if reason == "FailedScheduling" and "Insufficient" in message:
                 return True
         return False
-    
+
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
         objects = context.get("objects", {})
@@ -63,7 +62,10 @@ class InsufficientResourcesRule(FailureRule):
                 f"pod:{pod_name}": [
                     "Pod could not be scheduled due to resource insufficiency"
                 ],
-                **{f"node:{name}": ["Node could not satisfy resource requests"] for name in node_names},
+                **{
+                    f"node:{name}": ["Node could not satisfy resource requests"]
+                    for name in node_names
+                },
             },
             "likely_causes": [
                 "Cluster nodes lack sufficient CPU cores or memory",
@@ -76,4 +78,3 @@ class InsufficientResourcesRule(FailureRule):
                 "Consider scaling the cluster or reducing pod resource requests",
             ],
         }
-    

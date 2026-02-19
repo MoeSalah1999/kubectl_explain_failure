@@ -8,6 +8,7 @@ from kubectl_explain_failure.timeline import build_timeline
 BASE_DIR = os.path.dirname(__file__)
 FIXTURE_DIR = os.path.join(BASE_DIR, "repeated_probe_escalation")
 
+
 def load_json(name: str):
     with open(os.path.join(FIXTURE_DIR, name)) as f:
         return json.load(f)

@@ -1,7 +1,5 @@
-from kubectl_explain_failure.model import get_pod_name
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class ReadinessProbeFailureRule(FailureRule):
@@ -12,6 +10,7 @@ class ReadinessProbeFailureRule(FailureRule):
       - container ready=False
       - events indicate readiness probe failure
     """
+
     name = "ReadinessProbeFailure"
     category = "Container"
     priority = 20
@@ -38,7 +37,7 @@ class ReadinessProbeFailureRule(FailureRule):
                 Cause(
                     code="READINESS_PROBE_FAILED",
                     message="Container readinessProbe failing",
-                    blocking=True
+                    blocking=True,
                 )
             ]
         )
@@ -50,21 +49,16 @@ class ReadinessProbeFailureRule(FailureRule):
             "causes": chain,
             "evidence": [
                 f"Pod {pod_name} is running but not ready",
-                "Event messages indicate readinessProbe failure"
+                "Event messages indicate readinessProbe failure",
             ],
-            "object_evidence": {
-                f"pod:{pod_name}": ["readinessProbe failure detected"]
-            },
+            "object_evidence": {f"pod:{pod_name}": ["readinessProbe failure detected"]},
             "likely_causes": [
                 "Application not ready during startup",
                 "Incorrect readinessProbe configuration",
-                "Slow initialization time"
+                "Slow initialization time",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
-                "Review readinessProbe configuration in Pod spec"
-            ]
+                "Review readinessProbe configuration in Pod spec",
+            ],
         }
-
-
-

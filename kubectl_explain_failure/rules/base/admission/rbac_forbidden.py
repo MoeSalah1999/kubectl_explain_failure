@@ -31,7 +31,6 @@ class RBACForbiddenRule(FailureRule):
                     if "user" in msg or "cannot create" in msg:
                         return True
 
-
         # Check pod.status.message
         status_msg = (pod.get("status", {}).get("message") or "").lower()
         if "forbidden" in status_msg or "cannot" in status_msg:
@@ -83,6 +82,3 @@ class RBACForbiddenRule(FailureRule):
                 "kubectl describe clusterrolebinding",
             ],
         }
-
-
-

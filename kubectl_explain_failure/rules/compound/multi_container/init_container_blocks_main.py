@@ -48,10 +48,7 @@ class InitContainerBlocksMainRule(FailureRule):
             waiting = state.get("waiting", {})
             terminated = state.get("terminated", {})
 
-            reason = (
-                waiting.get("reason")
-                or terminated.get("reason")
-            )
+            reason = waiting.get("reason") or terminated.get("reason")
 
             if reason in self.FAILURE_REASONS:
                 return True

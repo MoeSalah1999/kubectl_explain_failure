@@ -40,8 +40,7 @@ class RepeatedProbeFailureEscalationRule(FailureRule):
             return False
 
         probe_events = [
-            e for e in timeline.raw_events
-            if e.get("reason") in self.FAILURE_REASONS
+            e for e in timeline.raw_events if e.get("reason") in self.FAILURE_REASONS
         ]
 
         if len(probe_events) < self.MIN_FAILURE_COUNT:
@@ -64,8 +63,9 @@ class RepeatedProbeFailureEscalationRule(FailureRule):
         for cs in pod.get("status", {}).get("containerStatuses", []):
             state = cs.get("state", {})
             last_state = cs.get("lastState", {})
-            if any(k in state for k in ["waiting", "terminated"]) or \
-               any(k in last_state for k in ["waiting", "terminated"]):
+            if any(k in state for k in ["waiting", "terminated"]) or any(
+                k in last_state for k in ["waiting", "terminated"]
+            ):
                 container_name = cs.get("name", "<unknown>")
                 break
 
@@ -101,9 +101,7 @@ class RepeatedProbeFailureEscalationRule(FailureRule):
                 "Container restart behavior observed",
             ],
             "object_evidence": {
-                f"pod:{pod_name}": [
-                    "Probe failure pattern exceeded restart threshold"
-                ],
+                f"pod:{pod_name}": ["Probe failure pattern exceeded restart threshold"],
                 f"container:{container_name}": [
                     "Repeated probe failures triggered restart escalation"
                 ],

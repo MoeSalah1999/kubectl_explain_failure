@@ -65,11 +65,7 @@ class PVCMountFailedRule(FailureRule):
                 "Event: FailedMount",
                 f"PVC {pvc_name} attached",
             ],
-            "object_evidence": {
-                f"pvc:{pvc_name}": [
-                    "Mount operation failed"
-                ]
-            },
+            "object_evidence": {f"pvc:{pvc_name}": ["Mount operation failed"]},
             "likely_causes": [
                 "Node cannot access storage backend",
                 "Storage backend unavailable",

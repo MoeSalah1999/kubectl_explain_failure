@@ -1,4 +1,3 @@
-
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 
@@ -43,9 +42,7 @@ class OOMKilledRule(FailureRule):
             "confidence": 0.94,
             "blocking": True,
             "causes": chain,
-            "evidence": [
-                "Container lastState.terminated.reason = OOMKilled"
-            ],
+            "evidence": ["Container lastState.terminated.reason = OOMKilled"],
             "object_evidence": {
                 f"pod:{pod_name}": ["Container terminated with OOMKilled"]
             },

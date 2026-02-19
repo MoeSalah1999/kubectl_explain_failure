@@ -2,7 +2,6 @@ from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 
 
-
 class ResourceQuotaExceededRule(FailureRule):
     """
     Detects Pod creation failure due to namespace ResourceQuota exhaustion.

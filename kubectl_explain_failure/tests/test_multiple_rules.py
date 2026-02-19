@@ -30,7 +30,6 @@ def test_pending_pvc_and_failed_scheduling():
     )
 
 
-
 def test_oom_and_failed_mount():
     pod = {
         "metadata": {"name": "oom-pod"},

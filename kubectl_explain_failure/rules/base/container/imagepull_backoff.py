@@ -52,9 +52,7 @@ class ImagePullBackOffRule(FailureRule):
             "confidence": confidence,
             "blocking": True,
             "causes": chain,
-            "evidence": [
-                "Repeated ImagePullBackOff events"
-            ],
+            "evidence": ["Repeated ImagePullBackOff events"],
             "likely_causes": [
                 "Image does not exist",
                 "Registry unreachable",

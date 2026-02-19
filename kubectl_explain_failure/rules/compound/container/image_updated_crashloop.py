@@ -44,7 +44,8 @@ class ImageUpdatedThenCrashLoopRule(FailureRule):
             return False
 
         image_events = [
-            e for e in timeline.raw_events
+            e
+            for e in timeline.raw_events
             if e.get("reason") in self.IMAGE_UPDATE_REASONS
         ]
 
@@ -52,8 +53,7 @@ class ImageUpdatedThenCrashLoopRule(FailureRule):
             return False
 
         crash_events = [
-            e for e in timeline.raw_events
-            if e.get("reason") in self.CRASH_REASONS
+            e for e in timeline.raw_events if e.get("reason") in self.CRASH_REASONS
         ]
 
         if not crash_events:
@@ -111,12 +111,8 @@ class ImageUpdatedThenCrashLoopRule(FailureRule):
                 f"Time delta <= {self.MAX_TIME_DELTA_SECONDS} seconds",
             ],
             "object_evidence": {
-                f"pod:{pod_name}": [
-                    "CrashLoop began after new image deployment"
-                ],
-                f"container:{container_name}": [
-                    "Container failed after image update"
-                ],
+                f"pod:{pod_name}": ["CrashLoop began after new image deployment"],
+                f"container:{container_name}": ["Container failed after image update"],
             },
             "suggested_checks": [
                 "Verify image tag and digest",

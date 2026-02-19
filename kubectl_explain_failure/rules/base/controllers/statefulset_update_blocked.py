@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class StatefulSetUpdateBlockedRule(FailureRule):
@@ -9,6 +8,7 @@ class StatefulSetUpdateBlockedRule(FailureRule):
     Triggered when StatefulSet.status.updateRevision != updateStatus.updatedReplicas
     indicating the rollout is paused or blocked by partitioning.
     """
+
     name = "StatefulSetUpdateBlocked"
     category = "Controller"
     priority = 40
@@ -55,7 +55,7 @@ class StatefulSetUpdateBlockedRule(FailureRule):
                 Cause(
                     code="STATEFULSET_UPDATE_BLOCKED",
                     message=f"StatefulSet rollout blocked by partitioned updateStrategy: {', '.join(sts_names)}",
-                    blocking=True
+                    blocking=True,
                 )
             ]
         )
@@ -69,15 +69,16 @@ class StatefulSetUpdateBlockedRule(FailureRule):
             "evidence": [
                 "StatefulSet.status.updateRevision != updatedReplicas",
                 "UpdateStrategy has partition limiting rollout",
-                f"StatefulSet objects: {', '.join(sts_names)}"
+                f"StatefulSet objects: {', '.join(sts_names)}",
             ],
             "object_evidence": {
-                f"statefulset:{name}": ["Update blocked by partition"] for name in sts_names
+                f"statefulset:{name}": ["Update blocked by partition"]
+                for name in sts_names
             },
             "likely_causes": [
                 "Manual partition set to avoid updating all replicas at once",
                 "Pod failures or readiness gates delaying rollout",
-                "Controller cannot update replicas due to resource constraints"
+                "Controller cannot update replicas due to resource constraints",
             ],
             "suggested_checks": [
                 f"kubectl describe statefulset {name}" for name in sts_names

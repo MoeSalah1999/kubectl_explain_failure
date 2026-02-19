@@ -1,4 +1,5 @@
 import re
+
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import timeline_has_pattern
@@ -62,18 +63,14 @@ class ImagePullRule(FailureRule):
             msg = e.get("message", "")
             if reason:
                 evidence_list.append(f"{reason} - {msg}")
-                
+
         return {
             "root_cause": "Container image could not be pulled",
             "confidence": 0.85,
             "blocking": True,
             "causes": chain,
-            "evidence": [
-                "Event: ErrImagePull"
-            ],
-            "object_evidence": {
-                f"pod:{pod['metadata']['name']}": container_evidence
-            },
+            "evidence": ["Event: ErrImagePull"],
+            "object_evidence": {f"pod:{pod['metadata']['name']}": container_evidence},
             "likely_causes": [
                 "Image name or tag does not exist",
                 "Registry authentication failure",

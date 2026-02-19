@@ -26,7 +26,7 @@ class PreemptedByHigherPriorityRule(FailureRule):
             causes=[
                 Cause(
                     code="POD_PREEMPTED",
-                    message=f"Pod was preempted by a higher-priority Pod",
+                    message="Pod was preempted by a higher-priority Pod",
                     blocking=True,
                 )
             ]
@@ -44,17 +44,17 @@ class PreemptedByHigherPriorityRule(FailureRule):
             "object_evidence": {
                 f"pod:{pod_name}": [
                     "Pod.status.reason=Preempted",
-                    "Scheduler evicted Pod due to higher-priority workload"
+                    "Scheduler evicted Pod due to higher-priority workload",
                 ]
             },
             "likely_causes": [
                 "Cluster resource pressure",
                 "Higher-priority Pod scheduled onto the same node",
-                "PreemptionPolicy allows eviction"
+                "PreemptionPolicy allows eviction",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
                 "Check PriorityClass configuration",
-                "Review node capacity and resource pressure"
+                "Review node capacity and resource pressure",
             ],
         }

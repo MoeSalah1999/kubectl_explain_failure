@@ -58,8 +58,7 @@ class NetworkPolicyBlockedRule(FailureRule):
 
         # Ensure no DNS resolution failure pattern (let DNS rule handle that)
         dns_pattern = any(
-            "no such host" in e.get("message", "").lower()
-            for e in timeline.raw_events
+            "no such host" in e.get("message", "").lower() for e in timeline.raw_events
         )
 
         if dns_pattern:

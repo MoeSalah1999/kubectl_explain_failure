@@ -53,9 +53,7 @@ class LimitRangeViolationRule(FailureRule):
                 f"Namespace: {namespace}",
             ],
             "object_evidence": {
-                f"pod:{pod_name}": [
-                    "Admission rejected due to LimitRange violation"
-                ]
+                f"pod:{pod_name}": ["Admission rejected due to LimitRange violation"]
             },
             "likely_causes": [
                 "CPU request above maximum allowed",

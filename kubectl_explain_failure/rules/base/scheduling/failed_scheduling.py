@@ -20,7 +20,7 @@ class FailedSchedulingRule(FailureRule):
         timeline = context.get("timeline")
         if not timeline:
             return False
-        
+
         # If specific scheduling causes detected, do NOT match
         specific_patterns = [
             "insufficient",
@@ -29,13 +29,10 @@ class FailedSchedulingRule(FailureRule):
             "hostport",
             "taint",
         ]
-        messages = [
-            e.get("message", "").lower()
-            for e in timeline.raw_events
-        ]
+        messages = [e.get("message", "").lower() for e in timeline.raw_events]
         if any(any(p in msg for p in specific_patterns) for msg in messages):
             return False
-        
+
         return any(
             "failedscheduling" in e.get("reason", "").lower()
             for e in timeline.raw_events
@@ -69,9 +66,7 @@ class FailedSchedulingRule(FailureRule):
                 "Events contain FailedScheduling from default-scheduler",
             ],
             "object_evidence": {
-                f"pod:{pod_name}": [
-                    "Scheduler emitted FailedScheduling event"
-                ]
+                f"pod:{pod_name}": ["Scheduler emitted FailedScheduling event"]
             },
             "suggested_checks": [
                 "kubectl describe pod <name>",

@@ -29,10 +29,10 @@ class UnschedulableTaintRule(FailureRule):
             message = str(entry.get("message", "")).lower()
 
             if reason == "failedscheduling" and (
-                "taint" in message or
-                "didn't tolerate" in message or
-                "had taint" in message or
-                "node(s) had taint" in message
+                "taint" in message
+                or "didn't tolerate" in message
+                or "had taint" in message
+                or "node(s) had taint" in message
             ):
                 return True
 

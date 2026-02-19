@@ -42,9 +42,7 @@ def test_serviceaccount_rbac_golden():
     )
 
     # Inject serviceaccount object
-    context["objects"] = {
-        "serviceaccount": data.get("serviceaccount", {})
-    }
+    context["objects"] = {"serviceaccount": data.get("serviceaccount", {})}
 
     if events:
         context["timeline"] = build_timeline(events)

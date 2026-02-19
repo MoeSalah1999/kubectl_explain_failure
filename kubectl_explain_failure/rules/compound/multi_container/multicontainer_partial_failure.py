@@ -48,10 +48,7 @@ class MultiContainerPartialFailureRule(FailureRule):
             waiting = state.get("waiting", {})
             terminated = state.get("terminated", {})
 
-            reason = (
-                waiting.get("reason")
-                or terminated.get("reason")
-            )
+            reason = waiting.get("reason") or terminated.get("reason")
 
             if reason in self.FAILURE_STATES:
                 failing_count += 1
@@ -109,15 +106,11 @@ class MultiContainerPartialFailureRule(FailureRule):
                 "Failure limited to subset of containers",
             ],
             "object_evidence": {
-                f"pod:{pod_name}": [
-                    "Pod contains both healthy and failing containers"
-                ],
+                f"pod:{pod_name}": ["Pod contains both healthy and failing containers"],
                 f"container:{failing_container}": [
                     "Container in CrashLoop or failure state"
                 ],
-                f"container:{healthy_container}": [
-                    "Container remains Ready"
-                ],
+                f"container:{healthy_container}": ["Container remains Ready"],
             },
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",

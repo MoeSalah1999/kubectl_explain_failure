@@ -57,15 +57,12 @@ class PVReleasedOrFailedRule(FailureRule):
                 f"PV objects: {', '.join(affected)}",
             ],
             "object_evidence": {
-                f"pv:{name}": ["PV in Released/Failed state"]
-                for name in affected
+                f"pv:{name}": ["PV in Released/Failed state"] for name in affected
             },
             "likely_causes": [
                 "PVC was deleted before PV reclaim",
                 "Storage backend failure",
                 "Manual PV lifecycle intervention",
             ],
-            "suggested_checks": [
-                f"kubectl describe pv {name}" for name in affected
-            ],
+            "suggested_checks": [f"kubectl describe pv {name}" for name in affected],
         }

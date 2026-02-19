@@ -76,7 +76,7 @@ class ImagePullSecretMissingRule(FailureRule):
                 object_evidence[key] = [
                     "Secret referenced by pod exists but may be invalid"
                 ]
-                
+
         return {
             "root_cause": "Image pull secret missing or invalid",
             "confidence": 0.97,

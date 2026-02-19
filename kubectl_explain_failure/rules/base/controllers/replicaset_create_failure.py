@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class ReplicaSetCreateFailureRule(FailureRule):
@@ -8,6 +7,7 @@ class ReplicaSetCreateFailureRule(FailureRule):
     Detects ReplicaSet creation failures.
     Triggered when ReplicaSet.status.conditions[ReplicaFailure] = True.
     """
+
     name = "ReplicaSetCreateFailure"
     category = "Controller"
     priority = 45
@@ -25,7 +25,10 @@ class ReplicaSetCreateFailureRule(FailureRule):
         # Any ReplicaSet with failure condition?
         for rs in rs_objs.values():
             conditions = rs.get("status", {}).get("conditions", [])
-            if any(cond.get("type") == "ReplicaFailure" and cond.get("status") is True for cond in conditions):
+            if any(
+                cond.get("type") == "ReplicaFailure" and cond.get("status") is True
+                for cond in conditions
+            ):
                 return True
 
         return False
@@ -39,7 +42,7 @@ class ReplicaSetCreateFailureRule(FailureRule):
                 Cause(
                     code="REPLICASET_CREATION_FAILED",
                     message=f"ReplicaSet(s) failed to create pods: {', '.join(rs_names)}",
-                    blocking=True
+                    blocking=True,
                 )
             ]
         )
@@ -52,17 +55,16 @@ class ReplicaSetCreateFailureRule(FailureRule):
             "blocking": True,
             "evidence": [
                 "ReplicaSet.status.conditions[ReplicaFailure]=True",
-                f"ReplicaSet objects: {', '.join(rs_names)}"
+                f"ReplicaSet objects: {', '.join(rs_names)}",
             ],
             "object_evidence": {
-                f"replicaset:{name}": ["ReplicaFailure=True detected"] for name in rs_names
+                f"replicaset:{name}": ["ReplicaFailure=True detected"]
+                for name in rs_names
             },
             "likely_causes": [
                 "Insufficient nodes to schedule pods",
                 "Pod template misconfiguration",
-                "Image pull errors"
+                "Image pull errors",
             ],
-            "suggested_checks": [
-                f"kubectl describe rs {name}" for name in rs_names
-            ],
+            "suggested_checks": [f"kubectl describe rs {name}" for name in rs_names],
         }

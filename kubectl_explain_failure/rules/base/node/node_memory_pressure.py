@@ -1,7 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
-from kubectl_explain_failure.model import has_event
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class NodeMemoryPressureRule(FailureRule):
@@ -22,8 +20,7 @@ class NodeMemoryPressureRule(FailureRule):
 
         return any(
             any(
-                cond.get("type") == "MemoryPressure"
-                and cond.get("status") == "True"
+                cond.get("type") == "MemoryPressure" and cond.get("status") == "True"
                 for cond in node.get("status", {}).get("conditions", [])
             )
             for node in node_objs.values()
@@ -38,8 +35,7 @@ class NodeMemoryPressureRule(FailureRule):
             name
             for name, node in node_objs.items()
             if any(
-                cond.get("type") == "MemoryPressure"
-                and cond.get("status") == "True"
+                cond.get("type") == "MemoryPressure" and cond.get("status") == "True"
                 for cond in node.get("status", {}).get("conditions", [])
             )
         ]
@@ -68,9 +64,7 @@ class NodeMemoryPressureRule(FailureRule):
                     f"node:{name}": ["Node condition MemoryPressure=True"]
                     for name in pressured_nodes
                 },
-                f"pod:{pod_name}": [
-                    "Pod scheduled on node reporting MemoryPressure"
-                ],
+                f"pod:{pod_name}": ["Pod scheduled on node reporting MemoryPressure"],
             },
             "likely_causes": [
                 "Node memory exhaustion",
@@ -79,9 +73,11 @@ class NodeMemoryPressureRule(FailureRule):
                 "Memory leak in co-located workload",
             ],
             "suggested_checks": [
-                f"kubectl describe node {pressured_nodes[0]}"
-                if pressured_nodes
-                else "kubectl describe node <node>",
+                (
+                    f"kubectl describe node {pressured_nodes[0]}"
+                    if pressured_nodes
+                    else "kubectl describe node <node>"
+                ),
                 f"kubectl describe pod {pod_name}",
                 "Check node memory usage (free -m)",
                 "Inspect container memory limits and requests",

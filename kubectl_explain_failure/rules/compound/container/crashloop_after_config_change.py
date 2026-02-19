@@ -45,7 +45,8 @@ class CrashLoopAfterConfigChangeRule(FailureRule):
 
         # Detect ConfigMap update event
         config_events = [
-            e for e in timeline.raw_events
+            e
+            for e in timeline.raw_events
             if e.get("reason") in self.CONFIG_UPDATE_REASONS
         ]
 
@@ -54,8 +55,7 @@ class CrashLoopAfterConfigChangeRule(FailureRule):
 
         # Detect crashloop events
         crash_events = [
-            e for e in timeline.raw_events
-            if e.get("reason") in self.CRASH_REASONS
+            e for e in timeline.raw_events if e.get("reason") in self.CRASH_REASONS
         ]
 
         if not crash_events:
@@ -122,8 +122,8 @@ class CrashLoopAfterConfigChangeRule(FailureRule):
                 ],
             },
             "suggested_checks": [
-                f"kubectl describe configmap",
-                f"kubectl rollout history deployment",
+                "kubectl describe configmap",
+                "kubectl rollout history deployment",
                 "Compare previous ConfigMap values",
                 "Validate application configuration parsing",
             ],

@@ -10,6 +10,7 @@ class CNIPluginFailureRule(FailureRule):
       - event.message contains 'CNI'
     Critical networking-level failure.
     """
+
     name = "CNIPluginFailure"
     category = "Networking"
     priority = 30
@@ -52,9 +53,7 @@ class CNIPluginFailureRule(FailureRule):
                 f"Namespace: {namespace}",
             ],
             "object_evidence": {
-                f"pod:{pod_name}": [
-                    "CNI plugin error prevented Pod networking setup"
-                ]
+                f"pod:{pod_name}": ["CNI plugin error prevented Pod networking setup"]
             },
             "likely_causes": [
                 "CNI plugin misconfiguration",

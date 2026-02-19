@@ -10,6 +10,7 @@ class DNSResolutionFailureRule(FailureRule):
       - Event message (or logs, if adapter present) shows DNS resolution failure
     For now event-based detection.
     """
+
     name = "DNSResolutionFailure"
     category = "Networking"
     priority = 31
@@ -63,11 +64,7 @@ class DNSResolutionFailureRule(FailureRule):
                 f"Pod: {pod_name}",
                 f"Namespace: {namespace}",
             ],
-            "object_evidence": {
-                f"pod:{pod_name}": [
-                    "Pod failed to resolve DNS names"
-                ]
-            },
+            "object_evidence": {f"pod:{pod_name}": ["Pod failed to resolve DNS names"]},
             "likely_causes": [
                 "CoreDNS unavailable or misconfigured",
                 "Network policy blocks DNS traffic",

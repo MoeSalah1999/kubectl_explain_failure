@@ -54,7 +54,6 @@ def test_statefulset_update_blocked_golden():
     # Add minimal node / PVC objects to satisfy engine normalization
     context["node"] = {"node1": {"metadata": {"name": "node1"}}}
     context["pvc"] = {"metadata": {"name": "pvc1"}, "status": {"phase": "Bound"}}
-    
 
     # Normalize context
     context = normalize_context(context)

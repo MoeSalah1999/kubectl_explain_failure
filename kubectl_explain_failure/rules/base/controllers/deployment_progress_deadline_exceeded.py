@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class DeploymentProgressDeadlineExceededRule(FailureRule):
@@ -9,6 +8,7 @@ class DeploymentProgressDeadlineExceededRule(FailureRule):
     Triggered when Deployment.status.conditions[type=Progressing]=False
     with reason=ProgressDeadlineExceeded.
     """
+
     name = "DeploymentProgressDeadlineExceeded"
     category = "Controller"
     priority = 50
@@ -26,7 +26,11 @@ class DeploymentProgressDeadlineExceededRule(FailureRule):
         for deploy in deploy_objs.values():
             conditions = deploy.get("status", {}).get("conditions", [])
             for cond in conditions:
-                if cond.get("type") == "Progressing" and cond.get("status") is False and cond.get("reason") == "ProgressDeadlineExceeded":
+                if (
+                    cond.get("type") == "Progressing"
+                    and cond.get("status") is False
+                    and cond.get("reason") == "ProgressDeadlineExceeded"
+                ):
                     return True
 
         return False
@@ -40,7 +44,7 @@ class DeploymentProgressDeadlineExceededRule(FailureRule):
                 Cause(
                     code="DEPLOYMENT_PROGRESS_DEADLINE_EXCEEDED",
                     message=f"Deployment(s) exceeded progress deadline: {', '.join(deploy_names)}",
-                    blocking=True
+                    blocking=True,
                 )
             ]
         )
@@ -54,15 +58,16 @@ class DeploymentProgressDeadlineExceededRule(FailureRule):
             "evidence": [
                 "Deployment.status.conditions[type=Progressing]=False",
                 "Reason=ProgressDeadlineExceeded",
-                f"Deployment objects: {', '.join(deploy_names)}"
+                f"Deployment objects: {', '.join(deploy_names)}",
             ],
             "object_evidence": {
-                f"deployment:{name}": ["ProgressDeadlineExceeded detected"] for name in deploy_names
+                f"deployment:{name}": ["ProgressDeadlineExceeded detected"]
+                for name in deploy_names
             },
             "likely_causes": [
                 "Pods failed to become ready in time",
                 "Node capacity insufficient for rollout",
-                "Container image pull or crash failures"
+                "Container image pull or crash failures",
             ],
             "suggested_checks": [
                 f"kubectl describe deployment {name}" for name in deploy_names

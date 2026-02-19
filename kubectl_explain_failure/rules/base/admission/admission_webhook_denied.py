@@ -2,7 +2,6 @@ from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 
 
-
 class AdmissionWebhookDeniedRule(FailureRule):
     """
     Detects failures caused by admission webhooks rejecting Pod creation.
@@ -11,6 +10,7 @@ class AdmissionWebhookDeniedRule(FailureRule):
       - event.message contains 'admission webhook'
     High enterprise relevance.
     """
+
     name = "AdmissionWebhookDenied"
     category = "Admission"
     priority = 29
@@ -53,9 +53,7 @@ class AdmissionWebhookDeniedRule(FailureRule):
                 f"Namespace: {namespace}",
             ],
             "object_evidence": {
-                f"pod:{pod_name}": [
-                    "Admission webhook prevented pod creation"
-                ]
+                f"pod:{pod_name}": ["Admission webhook prevented pod creation"]
             },
             "likely_causes": [
                 "Webhook policy rejecting pod spec",
@@ -67,4 +65,3 @@ class AdmissionWebhookDeniedRule(FailureRule):
                 "kubectl get mutatingwebhookconfigurations",
             ],
         }
-    

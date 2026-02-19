@@ -1,7 +1,5 @@
-
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-
 
 
 class DynamicProvisioningTimeoutRule(FailureRule):
@@ -43,7 +41,6 @@ class DynamicProvisioningTimeoutRule(FailureRule):
         )
 
         return duration >= self.TIMEOUT_SECONDS
-
 
     def explain(self, pod, events, context):
         objects = context.get("objects", {})

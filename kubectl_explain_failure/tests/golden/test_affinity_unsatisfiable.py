@@ -56,7 +56,7 @@ def test_affinity_unsatisfiable_golden():
 
     for cause in expected["causes"]:
         assert any(c.get("code") == cause["code"] for c in result["causes"])
-    
+
     for ev in expected["evidence"]:
         assert ev in result["evidence"]
 

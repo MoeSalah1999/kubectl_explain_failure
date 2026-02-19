@@ -7,6 +7,7 @@ class ContainerCreateConfigErrorRule(FailureRule):
     Detects containers failing due to CreateContainerConfigError.
     Triggered when container state.waiting.reason=CreateContainerConfigError
     """
+
     name = "ContainerCreateConfigError"
     category = "Container"
     priority = 25
@@ -28,7 +29,7 @@ class ContainerCreateConfigErrorRule(FailureRule):
                 Cause(
                     code="CREATE_CONTAINER_CONFIG_ERROR",
                     message="Container cannot be created due to config error",
-                    blocking=True
+                    blocking=True,
                 )
             ]
         )
@@ -39,8 +40,8 @@ class ContainerCreateConfigErrorRule(FailureRule):
             "blocking": True,
             "causes": chain,
             "evidence": [
-                f"Container state.waiting.reason=CreateContainerConfigError",
-                f"Pod: {pod_name}"
+                "Container state.waiting.reason=CreateContainerConfigError",
+                f"Pod: {pod_name}",
             ],
             "object_evidence": {
                 f"pod:{pod_name}": ["CreateContainerConfigError observed"]
@@ -48,10 +49,10 @@ class ContainerCreateConfigErrorRule(FailureRule):
             "likely_causes": [
                 "Invalid container spec",
                 "Incorrect environment variables",
-                "Missing secrets or configmaps"
+                "Missing secrets or configmaps",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
-                "Review container spec for invalid config"
-            ]
+                "Review container spec for invalid config",
+            ],
         }

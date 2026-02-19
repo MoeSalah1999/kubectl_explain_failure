@@ -1,7 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
-from kubectl_explain_failure.model import has_event
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class NodeSelectorMismatchRule(FailureRule):
@@ -9,6 +7,7 @@ class NodeSelectorMismatchRule(FailureRule):
     Detects scheduling failures when Pod.spec.nodeSelector cannot match any node labels.
     High-signal object-first scheduling failure.
     """
+
     name = "NodeSelectorMismatch"
     category = "Scheduling"
     priority = 16
@@ -61,7 +60,10 @@ class NodeSelectorMismatchRule(FailureRule):
             ],
             "object_evidence": {
                 f"pod:{pod_name}": [f"Pod nodeSelector {node_selector} mismatch"],
-                **{f"node:{name}": ["Node labels do not satisfy Pod nodeSelector"] for name in node_names},
+                **{
+                    f"node:{name}": ["Node labels do not satisfy Pod nodeSelector"]
+                    for name in node_names
+                },
             },
             "likely_causes": [
                 "NodeSelector specifies labels not present on any node",
@@ -74,4 +76,3 @@ class NodeSelectorMismatchRule(FailureRule):
                 "Adjust pod nodeSelector or add matching labels to nodes",
             ],
         }
-    

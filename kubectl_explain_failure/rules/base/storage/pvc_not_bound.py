@@ -80,11 +80,7 @@ class PVCNotBoundRule(FailureRule):
                 f"PVC {pvc_name} phase: {phase}",
                 "PVC not in Bound state",
             ],
-            "object_evidence": {
-                f"pvc:{pvc_name}, phase:{phase}": [
-                    "PVC not Bound"
-                ]
-            },
+            "object_evidence": {f"pvc:{pvc_name}, phase:{phase}": ["PVC not Bound"]},
             "likely_causes": [
                 "No PersistentVolume matches the PVC",
                 "StorageClass provisioning failed",

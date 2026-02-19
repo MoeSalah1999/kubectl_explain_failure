@@ -42,9 +42,7 @@ def test_configmap_not_found_golden():
     )
 
     # Inject object-graph: ConfigMap kind exists but empty
-    context["objects"] = {
-        "configmap": {}
-    }
+    context["objects"] = {"configmap": {}}
 
     # Noise objects (stability guard)
     context["node"] = {"node1": {"metadata": {"name": "node1"}}}

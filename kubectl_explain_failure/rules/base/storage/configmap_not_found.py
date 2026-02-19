@@ -97,9 +97,7 @@ class ConfigMapNotFoundRule(FailureRule):
                 f"ConfigMap '{missing_name}' not found",
             ],
             "object_evidence": {
-                f"configmap:{missing_name}": [
-                    "ConfigMap not found in namespace"
-                ]
+                f"configmap:{missing_name}": ["ConfigMap not found in namespace"]
             },
             "likely_causes": [
                 "ConfigMap name typo",

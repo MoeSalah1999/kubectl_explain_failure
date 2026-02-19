@@ -52,7 +52,6 @@ def test_pvc_then_imagepull_fail_golden():
     # -------------------------------------------------
     assert result["root_cause"] == expected["root_cause"]
 
-
     # -------------------------------------------------
     # Confidence validation
     # -------------------------------------------------
@@ -63,7 +62,7 @@ def test_pvc_then_imagepull_fail_golden():
     # -------------------------------------------------
     causes = result["causes"]
 
-    assert causes[0]["code"] == expected["causes"][0]["code"] 
+    assert causes[0]["code"] == expected["causes"][0]["code"]
     # assert causes[0]["blocking"] is True
 
     assert causes[1]["code"] == expected["causes"][1]["code"]

@@ -24,7 +24,7 @@ class SecurityContextViolationRule(FailureRule):
         if not timeline:
             return False
 
-        entries = getattr(timeline, "events", []) 
+        entries = getattr(timeline, "events", [])
 
         for entry in entries:
             message = str(entry.get("message", "")).lower()
@@ -83,9 +83,11 @@ class SecurityContextViolationRule(FailureRule):
                 f"Namespace: {namespace}",
             ],
             "object_evidence": {
-                f"pod:{pod_name}": violation_messages
-                if violation_messages
-                else ["PodSecurity / PSP admission rejection detected"]
+                f"pod:{pod_name}": (
+                    violation_messages
+                    if violation_messages
+                    else ["PodSecurity / PSP admission rejection detected"]
+                )
             },
             "likely_causes": [
                 "Disallowed Linux capabilities",
@@ -99,5 +101,3 @@ class SecurityContextViolationRule(FailureRule):
                 "Review PodSecurity admission level (baseline/restricted)",
             ],
         }
-
-
