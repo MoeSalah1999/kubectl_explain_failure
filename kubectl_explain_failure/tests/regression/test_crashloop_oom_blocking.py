@@ -7,6 +7,8 @@ FIXTURE_PATH = os.path.join(
     os.path.dirname(__file__),
     "..",
     "golden",
+    "compound",
+    "container",
     "crashloop_oom",
     "input.json",
 )

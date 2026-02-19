@@ -1,8 +1,0 @@
-{
-  "pod": { "metadata": { "name": "crashy" }, "status": { "phase": "Running" } },
-  "events": [
-    { "reason": "BackOff" },
-    { "reason": "BackOff" },
-    { "reason": "BackOff" }
-  ]
-}

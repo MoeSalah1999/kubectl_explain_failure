@@ -9,6 +9,8 @@ FIXTURES = os.path.join(
     os.path.dirname(__file__),
     "..",
     "golden",
+    "compound",
+    "storage",
     "pvc_pending_crashloop",
 )
 
