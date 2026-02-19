@@ -1,0 +1,42 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "webapp-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "webapp",
+          "image": "myregistry/webapp:latest"
+        }
+      ],
+      "imagePullSecrets": [
+        {"name": "myregistrysecret"}
+      ]
+    },
+    "status": {
+      "containerStatuses": [
+        {
+          "name": "webapp",
+          "state": {
+            "waiting": {
+              "reason": "ErrImagePull",
+              "message": "rpc error: code = Unknown desc = pull access denied for myregistry/webapp, repository does not exist or may require 'docker login'"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "ErrImagePull",
+      "message": "pull access denied for myregistry/webapp, repository does not exist or may require 'docker login'"
+    },
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container"
+    }
+  ]
+}

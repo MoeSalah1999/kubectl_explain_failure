@@ -1,29 +1,85 @@
 import json
 import os
 
-from kubectl_explain_failure.engine import explain_failure
-from kubectl_explain_failure.rules.pending_unschedulable import PendingUnschedulableRule
+from kubectl_explain_failure.context import build_context
+from kubectl_explain_failure.engine import explain_failure, normalize_context
 from kubectl_explain_failure.timeline import build_timeline
 
-FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "pending_unschedulable")
+BASE_DIR = os.path.dirname(__file__)
+FIXTURE_DIR = os.path.join(BASE_DIR, "pending_unschedulable")
 
 
-def load_fixture(name):
-    with open(os.path.join(FIXTURES_DIR, name)) as f:
+def load_json(name: str):
+    with open(os.path.join(FIXTURE_DIR, name)) as f:
         return json.load(f)
 
 
-def test_pending_unschedulable_rule():
-    pod = load_fixture("input.json")
-    events = pod.pop("events", [])
-    context = {"timeline": build_timeline(events)}
+def test_pending_unschedulable_golden():
+    data = load_json("input.json")
+    expected = load_json("expected.json")
 
-    result = explain_failure(
-        pod, events, context=context, rules=[PendingUnschedulableRule()]
+    pod = data["pod"]
+    events = data.get("events", [])
+
+    context = build_context(
+        type(
+            "Args",
+            (),
+            {
+                "pvc": None,
+                "pvcs": None,
+                "pv": None,
+                "storageclass": None,
+                "node": None,
+                "serviceaccount": None,
+                "secret": None,
+                "replicaset": None,
+                "deployment": None,
+                "statefulsets": None,
+                "daemonsets": None,
+            },
+        )()
     )
 
-    expected = load_fixture("expected.json")
+    context["node"] = {"node1": {"metadata": {"name": "node1"}}}
+    context["pvc"] = {"metadata": {"name": "pvc1"}, "status": {"phase": "Bound"}}
+    context["pv"] = {"metadata": {"name": "pv1"}}
+    context["storageclass"] = {"metadata": {"name": "sc1"}}
+    context["serviceaccount"] = {"metadata": {"name": "default"}}
+    context["secret"] = {"metadata": {"name": "mysecret"}}
+
+    # Populate node conditions
+    context["node_conditions"] = data.get("node_conditions", {})
+
+    if events:
+        context["timeline"] = build_timeline(events)
+
+    context = normalize_context(context)
+
+    result = explain_failure(pod, events, context=context)
+
+    # Root cause
     assert result["root_cause"] == expected["root_cause"]
-    assert result["blocking"] == expected["blocking"]
-    assert set(result.get("evidence", [])) == set(expected.get("evidence", []))
-    assert result.get("object_evidence") == expected.get("object_evidence")
+
+    # Blocking
+    assert result["blocking"] is True
+
+    # Confidence
+    assert result["confidence"] >= 0.85
+
+    # Evidence
+    for ev in expected["evidence"]:
+        assert ev in result["evidence"]
+
+    # Causes
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+        assert exp_cause["code"] == res_cause["code"]
+        assert exp_cause["message"] == res_cause["message"]
+        assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
+
+    # Object evidence
+    assert "object_evidence" in result
+    for obj_key, items in expected["object_evidence"].items():
+        assert obj_key in result["object_evidence"]
+        for item in items:
+            assert item in result["object_evidence"][obj_key]

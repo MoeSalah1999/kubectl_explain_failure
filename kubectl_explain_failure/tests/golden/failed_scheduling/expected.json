@@ -1,0 +1,25 @@
+{
+  "root_cause": "Scheduler could not place Pod on any node",
+  "blocking": true,
+  "evidence": [
+    "Events contain FailedScheduling from default-scheduler"
+  ],
+  "causes": [
+    {
+      "code": "SCHEDULER_REJECTION",
+      "message": "Scheduler could not place Pod on any node",
+      "blocking": true,
+      "role": "scheduling_root"
+    },
+    {
+      "code": "POD_PENDING",
+      "message": "Pod remains in Pending phase",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:test-pod": [
+      "Scheduler emitted FailedScheduling event"
+    ]
+  }
+}

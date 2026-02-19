@@ -254,7 +254,6 @@ Confidence is always bounded to [0,1].
     - CrashLoopOOMKilledRule
     - CrashLoopLivenessProbeRule
     - CrashLoopAfterConfigChange
-    - CrashloopWithConfigOrSecret
     - ImagePullSecretMissingCompound
     - ImageUpdatedThenCrashLoop
     - RapidRestartEscalationRule

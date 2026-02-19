@@ -146,7 +146,7 @@ def load_rules(rule_folder=None) -> list[FailureRule]:
     rules: list[FailureRule] = []
 
     # ---- Python rules ----
-    for file in glob.glob(os.path.join(rule_folder, "*.py")):
+    for file in glob.glob(os.path.join(rule_folder, "**", "*.py"), recursive=True):
         if os.path.basename(file) == "base_rule.py":
             continue
         module_name = os.path.splitext(os.path.basename(file))[0]

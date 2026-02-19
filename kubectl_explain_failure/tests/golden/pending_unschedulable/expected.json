@@ -1,11 +1,41 @@
 {
-  "root_cause": "Pod Pending due to FailedScheduling (unschedulable)",
+  "root_cause": "Pod Pending due to unschedulable conditions (FAILED_SCHEDULING)",
   "blocking": true,
+  "confidence": 0.9,
   "evidence": [
-    "Pod mypod remains Pending",
-    "FailedScheduling event observed"
+    "Pod test-pod remains Pending",
+    "FailedScheduling or node pressure events observed"
+  ],
+  "causes": [
+    {
+      "code": "FAILED_SCHEDULING",
+      "message": "Scheduler failed to place pod",
+      "blocking": true
+    },
+    {
+      "code": "NODE_DISK_PRESSURE",
+      "message": "One or more nodes under DiskPressure",
+      "blocking": true
+    },
+    {
+      "code": "NODE_MEMORY_PRESSURE",
+      "message": "One or more nodes under MemoryPressure",
+      "blocking": true
+    }
   ],
   "object_evidence": {
-    "pod:mypod, phase:Pending": ["Unschedulable"]
-  }
+    "pod:test-pod, phase:Pending": [
+      "Unschedulable"
+    ]
+  },
+  "likely_causes": [
+    "Node taints",
+    "Insufficient resources",
+    "Disk or Memory pressure on nodes"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod test-pod",
+    "kubectl describe nodes",
+    "Check resource requests, taints, and node pressure"
+  ]
 }

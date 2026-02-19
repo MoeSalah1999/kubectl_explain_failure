@@ -37,7 +37,7 @@ def test_pvc_override_wins_and_evidence_is_object_based():
 
     # --- Root cause must come from PVC, not scheduling ---
     assert "persistentvolumeclaim" in result["root_cause"].lower()
-    assert "unbound" in result["root_cause"].lower()
+    assert "persistentvolumeclaim not bound" in result["root_cause"].lower()
 
     # --- Confidence should be high and not diluted by event noise ---
     assert result["confidence"] >= 0.9

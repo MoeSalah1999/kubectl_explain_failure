@@ -1,0 +1,30 @@
+{
+  "root_cause": "Container image could not be pulled",
+  "blocking": true,
+  "evidence": [
+    "Event: ErrImagePull"
+  ],
+  "causes": [
+    {
+      "code": "IMAGE_PULL_FAILURE",
+      "message": "Container image could not be pulled",
+      "blocking": true,
+      "role": "runtime_root"
+    }
+  ],
+  "object_evidence": {
+    "pod:test-pod": [
+      "Container 'app' failed to pull image 'nginx:latest'"
+    ]
+  },
+  "likely_causes": [
+    "Image name or tag does not exist",
+    "Registry authentication failure",
+    "Network connectivity issues"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod <name>",
+    "Check image name and tag",
+    "Verify imagePullSecrets"
+  ]
+}

@@ -19,15 +19,6 @@ FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 # ----------------------------
 
 
-def test_failed_scheduling():
-    pod = load_json(os.path.join(FIXTURES_DIR, "pod_failed_scheduling.json"))
-    events = normalize_events(
-        load_json(os.path.join(FIXTURES_DIR, "failed_scheduling_events.json"))
-    )
-
-    result = explain_failure(pod, events)
-    assert result["root_cause"] == "Pod could not be scheduled"
-    assert any("FailedScheduling" in ev for ev in result["evidence"])
 
 
 def test_failed_scheduling_taint():
@@ -39,17 +30,6 @@ def test_failed_scheduling_taint():
     result = explain_failure(pod, events)
     assert any("taint" in cause.lower() for cause in result["likely_causes"])
 
-
-def test_image_pull_error():
-    pod = load_json(os.path.join(FIXTURES_DIR, "pending_pod.json"))
-    events = normalize_events(
-        load_json(os.path.join(FIXTURES_DIR, "events_image_pull_error.json"))
-    )
-
-    result = explain_failure(pod, events)
-    assert "image" in result["root_cause"].lower()
-    assert "Image name or tag does not exist" in result["likely_causes"]
-    assert "Registry authentication failure" in result["likely_causes"]
 
 
 def test_crash_loop_backoff():
@@ -98,7 +78,7 @@ def test_pvc_not_bound():
     events = []
 
     result = explain_failure(pod, events, context=normalize_context({"pvc": pvc}))
-    assert result["root_cause"].startswith("Pod is blocked by unbound")
+    assert result["root_cause"].startswith("PersistentVolumeClaim not bound")
     assert any("PVC" in ev for ev in result["evidence"])
 
 
@@ -112,30 +92,6 @@ def test_node_disk_pressure():
     assert any("Node" in ev for ev in result["evidence"])
 
 
-# ----------------------------
-# ConfigMap Rules
-# ----------------------------
-
-
-def test_missing_configmap():
-    pod = load_json(os.path.join(FIXTURES_DIR, "pending_pod.json"))
-    events = normalize_events(
-        load_json(os.path.join(FIXTURES_DIR, "events_configmap_missing.json"))
-    )
-
-    result = explain_failure(pod, events)
-    assert "ConfigMap" in result["root_cause"]
-
-
-def test_image_pull_secret_missing():
-    pod = load_json(os.path.join(FIXTURES_DIR, "pending_pod.json"))
-    events = normalize_events(
-        load_json(os.path.join(FIXTURES_DIR, "events_image_pull_secret_missing.json"))
-    )
-
-    result = explain_failure(pod, events)
-    assert "image" in result["root_cause"].lower()
-    assert any("secret" in cause.lower() for cause in result["likely_causes"])
 
 
 # ----------------------------

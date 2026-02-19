@@ -1,0 +1,28 @@
+{
+  "root_cause": "Image pull secret missing or invalid",
+  "blocking": true,
+  "evidence": [
+    "Event: ErrImagePull",
+    "Registry authentication error in event message"
+  ],
+  "causes": [
+    {
+      "code": "IMAGE_PULL_SECRET_REFERENCE",
+      "message": "Pod references imagePullSecret"
+    },
+    {
+      "code": "IMAGE_PULL_SECRET_INVALID",
+      "message": "Registry authentication failed",
+      "blocking": true
+    },
+    {
+      "code": "IMAGE_PULL_FAILURE",
+      "message": "Container image could not be pulled"
+    }
+  ],
+  "object_evidence": {
+    "secret:myregistrysecret": [
+      "Secret referenced by pod exists but may be invalid"
+    ]
+  }
+}

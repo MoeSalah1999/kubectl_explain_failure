@@ -724,12 +724,12 @@ def explain_failure(
     # Noisy-OR confidence aggregation
     # ----------------------------
     signal_strength = 1.0
-    for exp, _, _ in explanations:
+    for exp, _, _ in filtered_explanations:
         signal_strength *= 1.0 - exp.get("confidence", 0.0)
     signal_strength = 1.0 - signal_strength
 
     data_completeness = min(1.0, len(context) / 5.0)
-    conflict_penalty = 1.0 - (0.1 * max(0, len(explanations) - 1))
+    conflict_penalty = 1.0 - (0.1 * max(0, len(filtered_explanations) - 1))
 
     combined_confidence = signal_strength * data_completeness * conflict_penalty
 

@@ -1,0 +1,20 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "test-pod"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "Scheduler could not schedule pod for unknown reason",
+      "source": "default-scheduler",
+      "firstTimestamp": "2026-02-18T10:00:00Z",
+      "lastTimestamp": "2026-02-18T10:01:00Z",
+      "count": 2
+    }
+  ]
+}

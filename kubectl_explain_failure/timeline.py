@@ -31,7 +31,13 @@ class NormalizedEvent:
         self.kind = self._kind()
         self.phase = self._phase()
         self.reason = raw.get("reason")
-        self.source = raw.get("source", {}).get("component")
+
+        # handle string or dict
+        src = raw.get("source")
+        if isinstance(src, dict):
+            self.source = src.get("component")
+        else:
+            self.source = src  # fallback to string or None
 
     def _kind(self) -> str:
         reason = (self.raw.get("reason") or "").lower()

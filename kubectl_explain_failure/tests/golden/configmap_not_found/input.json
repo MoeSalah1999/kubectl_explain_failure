@@ -1,0 +1,27 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "cm-missing-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "state": {
+            "waiting": {
+              "reason": "CreateContainerConfigError"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "CreateContainerConfigError",
+      "message": "configmap \"app-config\" not found"
+    }
+  ]
+}

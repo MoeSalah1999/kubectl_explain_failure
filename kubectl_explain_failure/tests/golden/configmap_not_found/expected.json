@@ -1,0 +1,28 @@
+{
+  "root_cause": "Referenced ConfigMap does not exist",
+  "blocking": true,
+  "evidence": [
+    "Event: CreateContainerConfigError",
+    "ConfigMap 'app-config' not found"
+  ],
+  "causes": [
+    {
+      "code": "CONFIGMAP_REFERENCE",
+      "message": "Pod references a ConfigMap"
+    },
+    {
+      "code": "CONFIGMAP_NOT_FOUND",
+      "message": "ConfigMap 'app-config' not found",
+      "blocking": true
+    },
+    {
+      "code": "CONTAINER_CONFIG_ERROR",
+      "message": "Container configuration cannot be constructed"
+    }
+  ],
+  "object_evidence": {
+    "configmap:app-config": [
+      "ConfigMap not found in namespace"
+    ]
+  }
+}

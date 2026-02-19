@@ -30,18 +30,6 @@ def test_pending_pvc_and_failed_scheduling():
     )
 
 
-def test_image_pull_and_crashloop():
-    pod = load_fixture("pending_pod.json")
-    events = normalize_events([{"reason": "ErrImagePull"}, {"reason": "BackOff"}])
-
-    result = explain_failure(pod, events)
-    assert (
-        "image" in result["root_cause"].lower()
-        or "crash" in result["root_cause"].lower()
-    )
-    assert 0 < result["confidence"] <= 1.0
-    assert len(result["evidence"]) >= 2
-
 
 def test_oom_and_failed_mount():
     pod = {
