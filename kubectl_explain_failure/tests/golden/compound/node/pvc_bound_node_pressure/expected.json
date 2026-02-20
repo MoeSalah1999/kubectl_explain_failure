@@ -1,14 +1,18 @@
 {
   "root_cause": "Pod scheduling blocked by Node disk pressure despite PVC being bound",
-  "confidence": 0.90,
+  "confidence": 0.92,
+  "blocking": true,
   "causes": [
     {"code": "PVC_BOUND", "message": "PVC successfully bound"},
     {"code": "NODE_PRESSURE", "message": "Node has DiskPressure", "blocking": true}
   ],
+  "object_evidence": {
+    "pvc:pvc1": ["PVC bound successfully"],
+    "node:node1": ["Node has DiskPressure=True"]
+  },
   "suggested_checks": [
     "kubectl describe node <node>",
     "kubectl get pvc",
-    "kubectl describe pod <name>"
-  ],
-  "blocking": true
+    "kubectl describe pod <pod>"
+  ]
 }

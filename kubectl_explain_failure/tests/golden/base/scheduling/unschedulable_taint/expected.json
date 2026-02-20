@@ -1,0 +1,32 @@
+{
+  "root_cause": "Scheduling failed due to untolerated node taints",
+  "blocking": true,
+  "confidence": 0.94,
+  "evidence": [
+    "FailedScheduling event detected",
+    "Event message references node taints or missing tolerations"
+  ],
+  "causes": [
+    {
+      "code": "UNSCHEDULABLE_TAINT",
+      "message": "Pod does not tolerate required node taints",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:default/taint-blocked-pod": [
+      "FailedScheduling event",
+      "Message contains taint intolerance indication"
+    ]
+  },
+  "likely_causes": [
+    "Pod missing required tolerations",
+    "Node taints restrict scheduling",
+    "Cluster-wide taints prevent placement"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod taint-blocked-pod -n default",
+    "kubectl describe nodes",
+    "Verify pod tolerations match node taints"
+  ]
+}

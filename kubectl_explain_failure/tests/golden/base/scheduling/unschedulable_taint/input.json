@@ -1,0 +1,19 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "taint-blocked-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: 3 node(s) had taint {node-role.kubernetes.io/master: }, that the pod didn't tolerate.",
+      "firstTimestamp": "2026-02-19T10:00:00Z",
+      "lastTimestamp": "2026-02-19T10:00:05Z"
+    }
+  ]
+}

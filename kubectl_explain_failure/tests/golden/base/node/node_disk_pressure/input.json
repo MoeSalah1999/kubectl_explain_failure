@@ -1,0 +1,33 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "disk-pressure-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/1 nodes are available: 1 node(s) had disk pressure."
+    }
+  ],
+  "nodes": {
+    "node1": {
+      "metadata": {
+        "name": "node1"
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "DiskPressure",
+            "status": "True"
+          }
+        ]
+      }
+    }
+  }
+}

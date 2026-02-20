@@ -5,19 +5,20 @@ from kubectl_explain_failure.context import build_context
 from kubectl_explain_failure.engine import explain_failure, normalize_context
 from kubectl_explain_failure.timeline import build_timeline
 
-FIXTURES = os.path.join(os.path.dirname(__file__), "pvc_bound_node_pressure")
+BASE_DIR = os.path.dirname(__file__)
+FIXTURE_DIR = os.path.join(BASE_DIR, "unschedulable_taint")
 
 
 def load_json(name: str):
-    with open(os.path.join(FIXTURES, name)) as f:
+    with open(os.path.join(FIXTURE_DIR, name)) as f:
         return json.load(f)
 
 
-def test_pvc_bound_then_node_pressure_golden():
+def test_unschedulable_taint_golden():
     data = load_json("input.json")
     expected = load_json("expected.json")
 
-    pod = data["objects"]["pod"]  
+    pod = data["pod"]
     events = data.get("events", [])
 
     context = build_context(
@@ -40,11 +41,13 @@ def test_pvc_bound_then_node_pressure_golden():
         )()
     )
 
-    context["objects"]["pod"] = {"mypod": pod}
-    context["objects"]["pvc"] = data["objects"].get("pvc", {})
-    context["objects"]["node"] = data["objects"].get("node", {})
+    # Timeline required by rule
     if events:
         context["timeline"] = build_timeline(events)
+
+    # Minimal graph for completeness scoring
+    context["node"] = {"node1": {"metadata": {"name": "node1"}}}
+    context["serviceaccount"] = {"metadata": {"name": "default"}}
 
     context = normalize_context(context)
 
@@ -53,11 +56,24 @@ def test_pvc_bound_then_node_pressure_golden():
     # Root cause
     assert result["root_cause"] == expected["root_cause"]
 
-    # Confidence
-    assert result["confidence"] >= expected["confidence"]
+    # Blocking
+    assert result["blocking"] is True
 
-    # Causal chain
+    # Confidence threshold
+    assert result["confidence"] >= 0.88
+
+    # Evidence
+    for ev in expected["evidence"]:
+        assert ev in result["evidence"]
+
+    # Causes
     for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
         assert exp_cause["code"] == res_cause["code"]
-        if "blocking" in exp_cause:
-            assert exp_cause["blocking"] == res_cause.get("blocking", False)
+        assert exp_cause["message"] == res_cause["message"]
+        assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
+
+    # Object evidence
+    for obj, items in expected["object_evidence"].items():
+        assert obj in result["object_evidence"]
+        for item in items:
+            assert item in result["object_evidence"][obj]

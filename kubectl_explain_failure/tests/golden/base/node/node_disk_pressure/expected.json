@@ -1,0 +1,41 @@
+{
+  "root_cause": "Node disk pressure",
+  "blocking": true,
+  "confidence": 0.92,
+  "evidence": [
+    "Node condition DiskPressure=True",
+    "Scheduler unable to place pod"
+  ],
+  "causes": [
+    {
+      "code": "NODE_DISK_PRESSURE",
+      "message": "Node reports DiskPressure=True",
+      "blocking": true
+    },
+    {
+      "code": "SCHEDULER_BLOCKED",
+      "message": "Scheduler cannot place pod on node"
+    },
+    {
+      "code": "POD_PENDING",
+      "message": "Pod remains unscheduled or Pending"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "Node condition DiskPressure=True"
+    ]
+  },
+  "likely_causes": [
+    "Node filesystem is full",
+    "Image garbage collection not reclaiming space",
+    "Container logs consuming excessive disk",
+    "Ephemeral storage exhaustion"
+  ],
+  "suggested_checks": [
+    "kubectl describe node <node>",
+    "Check node disk usage (df -h)",
+    "Review kubelet eviction thresholds",
+    "Inspect image and log cleanup policies"
+  ]
+}

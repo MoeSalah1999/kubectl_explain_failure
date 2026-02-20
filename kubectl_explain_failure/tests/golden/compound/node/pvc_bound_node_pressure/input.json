@@ -5,6 +5,16 @@
     "volumes": [{"name": "data", "persistentVolumeClaim": {"claimName": "data-pvc"}}]
   },
   "objects": {
+    "pod": {
+      "metadata": {"name": "mypod"},
+      "spec": {}
+    },
+    "pvcs": {
+      "pvc1": {
+        "metadata": {"name": "pvc1"},
+        "status": {"phase": "Bound"}
+      }
+    },
     "pvc": {
       "data-pvc": {
         "metadata": {"name": "data-pvc"},
