@@ -1,0 +1,30 @@
+{
+  "root_cause": "Container was terminated due to out-of-memory",
+  "blocking": true,
+  "confidence": 0.94,
+  "evidence": [
+    "Container lastState.terminated.reason = OOMKilled"
+  ],
+  "causes": [
+    {
+      "code": "OOM_KILLED",
+      "message": "Container terminated due to out-of-memory",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:oom-pod": [
+      "Container terminated with OOMKilled"
+    ]
+  },
+  "likely_causes": [
+    "Memory limit too low",
+    "Memory spike during workload",
+    "Memory leak in application"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod oom-pod -n default",
+    "kubectl logs oom-pod -n default",
+    "Review container memory limits and usage"
+  ]
+}

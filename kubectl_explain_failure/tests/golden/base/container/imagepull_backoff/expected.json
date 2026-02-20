@@ -1,0 +1,30 @@
+{
+  "root_cause": "Image pull repeatedly failing (ImagePullBackOff)",
+  "blocking": true,
+  "confidence": 0.85,
+  "evidence": [
+    "Repeated ImagePullBackOff events"
+  ],
+  "causes": [
+    {
+      "code": "IMAGE_PULL_RETRY",
+      "message": "Container(s) failing image pull with backoff: app",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:image-pull-pod": [
+      "ImagePullBackOff detected in container(s): app"
+    ]
+  },
+  "likely_causes": [
+    "Image does not exist",
+    "Registry unreachable",
+    "Authentication failure"
+  ],
+  "suggested_checks": [
+    "Verify image name and tag",
+    "Check registry connectivity",
+    "Inspect imagePullSecrets"
+  ]
+}

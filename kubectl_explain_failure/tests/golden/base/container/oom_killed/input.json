@@ -1,0 +1,29 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "oom-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "app-container",
+          "lastState": {
+            "terminated": {
+              "exitCode": 137,
+              "reason": "OOMKilled",
+              "finishedAt": "2026-02-19T10:05:00Z"
+            }
+          },
+          "state": {
+            "running": {
+              "startedAt": "2026-02-19T10:06:00Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": []
+}
