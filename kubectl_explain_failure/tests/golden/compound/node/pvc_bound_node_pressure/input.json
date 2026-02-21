@@ -7,6 +7,7 @@
   "objects": {
     "pod": {
       "metadata": {"name": "mypod"},
+      "status": {"phase": "Pending"},
       "spec": {}
     },
     "pvcs": {
