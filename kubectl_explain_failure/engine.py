@@ -11,7 +11,7 @@ from kubectl_explain_failure.loader import load_plugins, load_rules
 from kubectl_explain_failure.model import get_pod_name, get_pod_phase
 from kubectl_explain_failure.relations import build_relations
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import build_timeline, timeline_has_pattern
+from kubectl_explain_failure.timeline import build_timeline, timeline_has_pattern, timeline_has_event
 
 _DEFAULT_RULES = None
 
@@ -212,10 +212,74 @@ def apply_suppressions(
     return winners, suppressed_map
 
 
+def dominance_key(item: tuple[dict[str, Any], FailureRule, CausalChain]) -> tuple:
+    exp, rule, _ = item
+
+    return (
+        # 1. Deterministic rules dominate non-deterministic
+        0 if getattr(rule, "deterministic", False) else 1,
+
+        # 2. Compound dominates non-compound
+        0 if _norm_category(rule) == "compound" else 1,
+
+        # 3. Blocking dominates non-blocking
+        0 if exp.get("blocking") else 1,
+
+        # 4. Higher priority wins
+        -getattr(rule, "priority", 0),
+
+        # 5. Higher confidence wins
+        -exp.get("confidence", 0.0),
+
+        # 6. Stable tie-breaker
+        rule.name,
+    )
+
+
+def score_explanations(
+    explanations: list[tuple[dict[str, Any], FailureRule, CausalChain]],
+    context: dict[str, Any],
+) -> tuple[str, float]:
+    """
+    Returns (best_root_cause, combined_confidence)
+    """
+
+    root_score_map: dict[str, float] = {}
+
+    for exp, rule, _ in explanations:
+        root = exp.get("root_cause")
+        if not root:
+            continue
+
+        score = exp.get("confidence", 0.0) * getattr(rule, "priority", 100)
+
+        required_context = getattr(rule, "requires", {}).get("context", [])
+        present_context = sum(1 for c in required_context if c in context)
+
+        if present_context:
+            score *= 1.0 + 0.5 * present_context
+
+        root_score_map[root] = max(root_score_map.get(root, 0.0), score)
+
+    best_root_cause = max(root_score_map.items(), key=lambda i: i[1])[0]
+
+    # Noisy OR
+    signal_strength = 1.0
+    for exp, _, _ in explanations:
+        signal_strength *= 1.0 - exp.get("confidence", 0.0)
+
+    signal_strength = 1.0 - signal_strength
+
+    data_completeness = min(1.0, len(context) / 5.0)
+    conflict_penalty = 1.0 - (0.1 * max(0, len(explanations) - 1))
+
+    combined_confidence = signal_strength * data_completeness * conflict_penalty
+
+    return best_root_cause, combined_confidence
+
 # ----------------------------
 # Heuristic engine
 # ----------------------------
-
 
 def explain_failure(
     pod: dict[str, Any],
@@ -263,13 +327,15 @@ def explain_failure(
     if events:
         context["timeline"] = build_timeline(events)
 
-    if context.get("timeline") and timeline_has_pattern(
-        context["timeline"], [{"reason": "BackOff"}]
+    if context.get("timeline") and timeline_has_event(
+        context["timeline"],
+        kind="Generic",
+        phase="Failure",
     ):
-        # optional debug log
         if verbose:
+            print(f"[DEBUG] Structured timeline failure signal detected for pod {pod_name}")
             print(f"[DEBUG] Timeline shows BackOff pattern for pod {pod_name}")
-
+            
     owners = pod.get("metadata", {}).get("ownerReferences", [])
     if owners:
         context["owners"] = owners
@@ -407,11 +473,27 @@ def explain_failure(
 
         if events:
             context = context or {}
-            context.setdefault("timeline", build_timeline(events))
 
         # Rule match
         if rule.matches(pod, events, context):
             exp = rule.explain(pod, events, context)
+            required_fields = {"root_cause", "confidence"}
+
+            missing = required_fields - set(exp.keys())
+            if missing:
+                raise ValueError(
+                    f"{rule.name}.explain() missing required fields: {missing}"
+                )
+
+            if not isinstance(exp.get("confidence"), (float, int)):
+                raise ValueError(
+                    f"{rule.name}.confidence must be numeric"
+                )
+
+            if exp.get("confidence") < 0.0 or exp.get("confidence") > 1.0:
+                raise ValueError(
+                    f"{rule.name}.confidence must be within [0,1]"
+                )
 
             # ---- Explain() contract enforcement ----
             if not isinstance(exp, dict):
@@ -461,6 +543,45 @@ def explain_failure(
     # Apply automatic suppression
     # ----------------------------
     filtered_explanations, suppression_map = apply_suppressions(explanations)
+    # ------------------------------------
+    # Absolute suppression enforcement
+    # ------------------------------------
+    # IMPORTANT:
+    # From this point forward in the engine,
+    # ONLY use `filtered_explanations` for:
+    #   - scoring
+    #   - aggregation
+    #   - winner selection
+    #
+    # DO NOT mutate `explanations`.
+    # `suppression_map` must remain intact for
+    # resolution metadata reporting.
+    # ----------------------------
+    # Engine Invariants
+    # ----------------------------
+
+    # Invariant 1: Only unsuppressed rules may remain active
+    active_names = {rule.name for _, rule, _ in filtered_explanations}
+    for winner, suppressed in suppression_map.items():
+        for s in suppressed:
+            if s in active_names:
+                raise RuntimeError(
+                    f"Invariant violation: '{s}' suppressed by '{winner}' "
+                    f"but still active in filtered_explanations"
+                )
+
+    # Invariant 2: Deterministic rules must not conflict
+    deterministic_matches = [
+        rule.name
+        for _, rule, _ in filtered_explanations
+        if getattr(rule, "deterministic", False)
+    ]
+
+    if len(deterministic_matches) > 1:
+        raise RuntimeError(
+            f"Multiple deterministic rules matched simultaneously: "
+            f"{deterministic_matches}"
+        )
 
     # ----------------------------------------
     # Conflict penalty injection (deterministic)
@@ -697,48 +818,18 @@ def explain_failure(
 
             return result
 
-    # ----------------------------
-    # Weighted root-cause selection for remaining rules
-    # ----------------------------
-    root_score_map: dict[str, float] = {}
-    for exp, rule, _chain in filtered_explanations:
-        root = exp.get("root_cause")
-        if not root:
-            continue
-
-        score = exp.get("confidence", 0.0) * getattr(rule, "priority", 100)
-
-        required_context = getattr(rule, "requires", {}).get("context", [])
-        present_context = sum(1 for c in required_context if c in context)
-        if present_context:
-            score *= 1.0 + 0.5 * present_context
-
-        root_score_map[root] = max(root_score_map.get(root, 0.0), score)
-
-    best_root_cause = max(root_score_map.items(), key=lambda item: item[1])[0]
-
-    if verbose:
-        print("[DEBUG] Root cause scores:", root_score_map)
-
-    # ----------------------------
-    # Noisy-OR confidence aggregation
-    # ----------------------------
-    signal_strength = 1.0
-    for exp, _, _ in filtered_explanations:
-        signal_strength *= 1.0 - exp.get("confidence", 0.0)
-    signal_strength = 1.0 - signal_strength
-
-    data_completeness = min(1.0, len(context) / 5.0)
-    conflict_penalty = 1.0 - (0.1 * max(0, len(filtered_explanations) - 1))
-
-    combined_confidence = signal_strength * data_completeness * conflict_penalty
-
+    best_root_cause, combined_confidence = score_explanations(
+        filtered_explanations,
+        context,
+    )
     # ----------------------------
     # Merge explanations
     # ----------------------------
 
     # Determine winner for suppression
-    winner_rule_name = filtered_explanations[0][1].name
+    sorted_explanations = sorted(filtered_explanations, key=dominance_key)
+    winner_exp, winner_rule, winner_chain = sorted_explanations[0]
+    winner_rule_name = winner_rule.name
     merged_suppressed_rules = [
         r.name for _, r, _ in filtered_explanations[1:]
     ] + suppression_map.get(winner_rule_name, [])

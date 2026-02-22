@@ -19,7 +19,7 @@ class CrashLoopOOMKilledRule(FailureRule):
         timeline = context.get("timeline")
         if not timeline:
             return False
-
+            
         # Detect repeated BackOff via timeline (consistent with other rules)
         crashloop = timeline_has_pattern(timeline, r"BackOff")
 

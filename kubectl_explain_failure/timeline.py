@@ -84,6 +84,26 @@ class Timeline:
 
     def repeated(self, reason: str, threshold: int) -> bool:
         return self.count(reason=reason) >= threshold
+    
+    def events_within_window(self, minutes: int, *, reason: str | None = None) -> list[dict[str, Any]]:
+        """
+        Returns events that occurred within the last `minutes` minutes.
+        Optionally filter by reason.
+
+        Usage:
+            recent_events = timeline.events_within_window(15, reason="DiskPressure")
+        """
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=minutes)
+        result = []
+
+        for e in self.events:
+            ts = e.get("eventTime") or e.get("lastTimestamp") or e.get("firstTimestamp")
+            if not ts:
+                continue
+            dt = parse_time(ts)
+            if dt >= cutoff and (reason is None or e.get("reason") == reason):
+                result.append(e)
+        return result
 
     def duration_between(self, reason_filter: Callable[[dict], bool]) -> float:
         """
@@ -173,3 +193,55 @@ def timeline_has_pattern(
             return False
 
     return True
+
+
+# Structured timeline helpers
+
+def timeline_has_event(
+    timeline: "Timeline | list[dict[str, Any]]",
+    *,
+    kind: str | None = None,
+    phase: str | None = None,
+    source: str | None = None,
+) -> bool:
+    """
+    Structured event matcher.
+    Works with Timeline object or raw event list.
+    Avoids fragile string/regex matching.
+    """
+
+    if isinstance(timeline, Timeline):
+        normalized = timeline.normalized
+    else:
+        normalized = [NormalizedEvent(e) for e in timeline or []]
+
+    for e in normalized:
+        if kind and e.kind != kind:
+            continue
+        if phase and e.phase != phase:
+            continue
+        if source and e.source != source:
+            continue
+        return True
+
+    return False
+
+# ----------------------------
+# Temporal stability helper
+# ----------------------------
+
+def event_frequency(
+    timeline: "Timeline | list[dict[str, Any]]",
+    reason: str,
+) -> int:
+    """
+    Count occurrences of a raw event reason.
+    Works with Timeline or raw list.
+    """
+
+    if isinstance(timeline, Timeline):
+        events = timeline.events
+    else:
+        events = timeline or []
+
+    return sum(1 for e in events if e.get("reason") == reason)
