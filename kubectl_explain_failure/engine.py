@@ -556,6 +556,7 @@ def explain_failure(
     # DO NOT mutate `explanations`.
     # `suppression_map` must remain intact for
     # resolution metadata reporting.
+    
     # ----------------------------
     # Engine Invariants
     # ----------------------------
