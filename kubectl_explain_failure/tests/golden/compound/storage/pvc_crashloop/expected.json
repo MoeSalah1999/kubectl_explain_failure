@@ -1,0 +1,27 @@
+{
+  "root_cause": "CrashLoopBackOff caused by missing or delayed volume",
+  "blocking": true,
+  "evidence": [
+    "Pod app-pod running with PVC(s) that transitioned from Pending → Bound and failing containers"
+  ],
+  "causes": [
+    {
+      "code": "PVC_BLOCKING",
+      "message": "PersistentVolumeClaim(s) Bound after Pending: app-pvc",
+      "blocking": true
+    },
+    {
+      "code": "CONTAINER_RESTARTS",
+      "message": "Containers repeatedly restarted while waiting for volume",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pvc:app-pvc": [
+      "Bound PVC after Pending"
+    ],
+    "pod:app-pod": [
+      "Container in CrashLoopBackOff or not ready after PVC Bound"
+    ]
+  }
+}

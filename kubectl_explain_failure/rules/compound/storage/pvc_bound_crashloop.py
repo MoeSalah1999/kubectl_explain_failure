@@ -12,8 +12,8 @@ class PVCBoundThenCrashLoopRule(FailureRule):
 
     name = "PVCBoundThenCrashLoop"
     category = "Compound"
-    priority = 70
-    blocks = ["PVCNotBound", "CrashLoopBackOff"]
+    priority = 59
+    blocks = ["PVCNotBound"]
     phases = ["Running"]
     requires = {"objects": ["pvc"], "context": ["timeline"]}
 
@@ -43,14 +43,24 @@ class PVCBoundThenCrashLoopRule(FailureRule):
         if not pvc_transitions:
             return False
 
-        for c in pod.get("status", {}).get("containerStatuses", []):
-            state = c.get("state", {})
-            waiting = state.get("waiting", {})
-            if waiting.get("reason") == "CrashLoopBackOff" or not c.get("ready", True):
+        # Find first PVC Bound event and first container crash event
+        container_crash_event = next(
+            (e for e in timeline_obj.events if e.get("reason") == "CrashLoopBackOff"), None
+        )
+
+        for pvc_name, pvc in pvc_objs.items():
+            pvc_events = [
+                e for e in timeline_obj.events
+                if (getattr(e, "involvedObject", {}).get("name")
+                    if hasattr(e, "involvedObject") else e.get("involvedObject", {}).get("name")) == pvc_name
+            ]
+            pvc_bound_event = next((e for e in pvc_events if e.get("reason") == "PersistentVolumeClaimBound"), None)
+
+            # Only match if CrashLoopBackOff happened AFTER PVC Bound → app still failing post-recovery
+            if container_crash_event and pvc_bound_event and container_crash_event["timestamp"] > pvc_bound_event["timestamp"]:
                 return True
 
         return False
-
     def explain(self, pod, events, context):
         pvc_objs = context.get("objects", {}).get("pvc", {})
         pvc_names = [p["metadata"]["name"] for p in pvc_objs.values()]

@@ -12,7 +12,7 @@ class PVCThenCrashLoopRule(FailureRule):
 
     name = "PVCThenCrashLoop"
     category = "Compound"
-    priority = 45
+    priority = 61
     dependencies = ["PVCNotBound", "CrashLoopBackOff"]
     blocks = ["CrashLoopBackOff"]
 
@@ -52,11 +52,21 @@ class PVCThenCrashLoopRule(FailureRule):
         if not pvc_transitions:
             return False
 
-        # Check if any container is in CrashLoopBackOff or not ready
-        for c in pod.get("status", {}).get("containerStatuses", []):
-            state = c.get("state", {})
-            waiting = state.get("waiting", {})
-            if waiting.get("reason") == "CrashLoopBackOff" or not c.get("ready", True):
+        # Find first PVC Pending and Bound events
+        container_crash_event = next(
+            (e for e in timeline.events if e.get("reason") == "CrashLoopBackOff"), None
+        )
+
+        # Only match if CrashLoopBackOff happened BEFORE PVC Bound → missing/delayed volume
+        for pvc_name, pvc in pvcs.items():
+            pvc_events = [
+                e for e in timeline.events
+                if (getattr(e, "involvedObject", {}).get("name")
+                    if hasattr(e, "involvedObject") else e.get("involvedObject", {}).get("name")) == pvc_name
+            ]
+            pvc_bound_event = next((e for e in pvc_events if e.get("reason") == "PersistentVolumeClaimBound"), None)
+
+            if container_crash_event and pvc_bound_event and container_crash_event["timestamp"] <= pvc_bound_event["timestamp"]:
                 return True
 
         return False
