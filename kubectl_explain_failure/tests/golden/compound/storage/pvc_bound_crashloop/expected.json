@@ -1,0 +1,26 @@
+{
+  "root_cause": "Application failing after storage recovery",
+  "blocking": true,
+  "evidence": [
+    "Pod app-pod running with PVC(s) that transitioned to Bound and failing containers"
+  ],
+  "causes": [
+    {
+      "code": "PVC_BOUND",
+      "message": "PersistentVolumeClaim(s) Bound after Pending: app-pvc"
+    },
+    {
+      "code": "CRASH_LOOP",
+      "message": "Container repeatedly crashing",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pvc:app-pvc": [
+      "Bound PVC after Pending"
+    ],
+    "pod:app-pod": [
+      "Container in CrashLoopBackOff or not ready after PVC Bound"
+    ]
+  }
+}

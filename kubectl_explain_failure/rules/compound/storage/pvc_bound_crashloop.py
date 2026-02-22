@@ -24,32 +24,28 @@ class PVCBoundThenCrashLoopRule(FailureRule):
         if not pvc_objs or not timeline_obj:
             return False
 
-        # --- Check PVCs have transitioned from Pending → Bound ---
         pvc_transitions = []
         for pvc_name, pvc in pvc_objs.items():
-            # Get events for this PVC within last N minutes
-            recent_events = timeline_obj.events_within_window(
-                minutes=60,  # for example
-                reason="PersistentVolumeClaimBound"
-            )
-            # Only consider PVCs that actually transitioned from Pending -> Bound
+            # Support dict events for testing
+            pvc_events = [
+                e for e in timeline_obj.events
+                if (getattr(e, "involvedObject", {}).get("name") 
+                    if hasattr(e, "involvedObject") else e.get("involvedObject", {}).get("name")) == pvc_name
+            ]
+
             pattern = [
                 {"reason": "PersistentVolumeClaimPending"},
                 {"reason": "PersistentVolumeClaimBound"}
             ]
-            if timeline_has_pattern(recent_events, pattern):
+            if timeline_has_pattern(pvc_events, pattern):
                 pvc_transitions.append(pvc_name)
 
         if not pvc_transitions:
             return False
 
-        # --- Check if any container is still failing ---
         for c in pod.get("status", {}).get("containerStatuses", []):
             state = c.get("state", {})
             waiting = state.get("waiting", {})
-            running = state.get("running", None)
-
-            # Pod is failing if in CrashLoopBackOff or not ready
             if waiting.get("reason") == "CrashLoopBackOff" or not c.get("ready", True):
                 return True
 

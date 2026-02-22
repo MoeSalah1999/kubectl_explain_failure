@@ -1,0 +1,58 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "app-pod"
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "app-container",
+          "ready": false,
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "pvc": {
+    "metadata": {
+      "name": "app-pvc"
+    },
+    "status": {
+      "phase": "Bound"
+    }
+  },
+  "events": [
+    {
+      "involvedObject": {
+        "kind": "PersistentVolumeClaim",
+        "name": "app-pvc"
+      },
+      "reason": "PersistentVolumeClaimPending",
+      "message": "PVC is pending",
+      "timestamp": "2026-02-22T16:00:00Z"
+    },
+    {
+      "involvedObject": {
+        "kind": "PersistentVolumeClaim",
+        "name": "app-pvc"
+      },
+      "reason": "PersistentVolumeClaimBound",
+      "message": "PVC successfully bound",
+      "timestamp": "2026-02-22T16:05:00Z"
+    },
+    {
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "app-pod"
+      },
+      "reason": "CrashLoopBackOff",
+      "message": "Container repeatedly crashed",
+      "timestamp": "2026-02-22T16:10:00Z"
+    }
+  ]
+}
