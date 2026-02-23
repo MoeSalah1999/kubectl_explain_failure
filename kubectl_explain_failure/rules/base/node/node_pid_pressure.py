@@ -1,12 +1,13 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
+from kubectl_explain_failure.timeline import timeline_has_event
 
 
 class NodePIDPressureRule(FailureRule):
     name = "NodePIDPressure"
     category = "Node"
     priority = 19  # Same tier as other node resource pressure signals
-
+    deterministic = True
     requires = {
         "objects": ["node"],
     }
@@ -18,13 +19,45 @@ class NodePIDPressureRule(FailureRule):
         if not node_objs:
             return False
 
-        return any(
-            any(
-                cond.get("type") == "PIDPressure" and cond.get("status") == "True"
+        # --- Hard infrastructure condition ---
+        pressured_nodes = [
+            node
+            for node in node_objs.values()
+            if any(
+                cond.get("type") == "PIDPressure"
+                and cond.get("status") == "True"
                 for cond in node.get("status", {}).get("conditions", [])
             )
-            for node in node_objs.values()
-        )
+        ]
+
+        if not pressured_nodes:
+            return False
+
+        # --- Optional temporal corroboration ---
+        timeline = context.get("timeline")
+
+        if timeline:
+            # Recent scheduling failures (10 min window)
+            if timeline.events_within_window(10, reason="FailedScheduling"):
+                return True
+
+            # Any structured scheduling failure
+            if timeline_has_event(
+                timeline,
+                kind="Scheduling",
+                phase="Failure",
+            ):
+                return True
+
+            # Recent container instability signals
+            recent = timeline.events_within_window(10)
+            for e in recent:
+                reason = (e.get("reason") or "").lower()
+                if "backoff" in reason or "oom" in reason:
+                    return True
+
+        # --- PIDPressure alone is sufficient ---
+        return True
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")

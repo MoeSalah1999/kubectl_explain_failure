@@ -1,5 +1,6 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
+from kubectl_explain_failure.timeline import timeline_has_event
 
 
 class NodeMemoryPressureRule(FailureRule):
@@ -18,13 +19,52 @@ class NodeMemoryPressureRule(FailureRule):
         if not node_objs:
             return False
 
-        return any(
-            any(
-                cond.get("type") == "MemoryPressure" and cond.get("status") == "True"
+        # --- Check MemoryPressure condition ---
+        pressured_nodes = [
+            node
+            for node in node_objs.values()
+            if any(
+                cond.get("type") == "MemoryPressure"
+                and cond.get("status") == "True"
                 for cond in node.get("status", {}).get("conditions", [])
             )
-            for node in node_objs.values()
-        )
+        ]
+
+        if not pressured_nodes:
+            return False
+
+        # --- Correlate with recent failure signals ---
+        timeline = context.get("timeline")
+
+        if timeline:
+            # Recent scheduling failures (10 minute window)
+            recent_sched = timeline.events_within_window(
+                10,
+                reason="FailedScheduling",
+            )
+
+            if recent_sched:
+                return True
+
+            # Any structured scheduling failure
+            if timeline_has_event(
+                timeline,
+                kind="Scheduling",
+                phase="Failure",
+            ):
+                return True
+
+            # Recent OOM or BackOff events (container pressure spillover)
+            recent_failures = timeline.events_within_window(10)
+            if any(
+                "oom" in (e.get("reason", "").lower())
+                or "backoff" in (e.get("reason", "").lower())
+                for e in recent_failures
+            ):
+                return True
+
+        # --- MemoryPressure alone is sufficient ---
+        return True
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")

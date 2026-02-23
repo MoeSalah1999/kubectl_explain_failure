@@ -1,6 +1,6 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
+from kubectl_explain_failure.timeline import timeline_has_event
 
 
 class NodeDiskPressureRule(FailureRule):
@@ -31,7 +31,7 @@ class NodeDiskPressureRule(FailureRule):
         if not node_objs:
             return False
 
-        # Check actual node condition
+        # --- Check actual node condition ---
         disk_pressure_nodes = []
         for node in node_objs.values():
             conditions = node.get("status", {}).get("conditions", [])
@@ -46,15 +46,28 @@ class NodeDiskPressureRule(FailureRule):
         if not disk_pressure_nodes:
             return False
 
-        # Optional: strengthen signal with scheduling event correlation
+        # --- Structured scheduling correlation ---
         timeline = context.get("timeline")
-        if timeline and timeline_has_pattern(
-            timeline,
-            [{"reason": "FailedScheduling"}],
-        ):
-            return True
 
-        # Even without explicit scheduler event, DiskPressure=True is sufficient
+        if timeline:
+            # Recent scheduling failure strengthens signal
+            recent_sched = timeline.events_within_window(
+                10,
+                reason="FailedScheduling",
+            )
+
+            if recent_sched:
+                return True
+
+            # Fallback: any scheduler failure in timeline
+            if timeline_has_event(
+                timeline,
+                kind="Scheduling",
+                phase="Failure",
+            ):
+                return True
+
+        # --- DiskPressure alone is sufficient ---
         return True
 
     def explain(self, pod, events, context):
