@@ -2,7 +2,7 @@
   "root_cause": "CrashLoopBackOff caused by missing or delayed volume",
   "blocking": true,
   "evidence": [
-    "Pod app-pod running with PVC(s) that transitioned from Pending → Bound and failing containers"
+    "Pod app-pod running with PVC(s) that transitioned from Pending to Bound and failing containers"
   ],
   "causes": [
     {

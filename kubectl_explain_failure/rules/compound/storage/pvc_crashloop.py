@@ -13,7 +13,6 @@ class PVCThenCrashLoopRule(FailureRule):
     name = "PVCThenCrashLoop"
     category = "Compound"
     priority = 61
-    dependencies = ["PVCNotBound", "CrashLoopBackOff"]
     blocks = ["CrashLoopBackOff"]
 
     requires = {
@@ -99,7 +98,7 @@ class PVCThenCrashLoopRule(FailureRule):
             "confidence": 0.95,
             "causes": chain,
             "evidence": [
-                f"Pod {pod_name} running with PVC(s) that transitioned from Pending → Bound and failing containers"
+                f"Pod {pod_name} running with PVC(s) that transitioned from Pending to Bound and failing containers"
             ],
             "object_evidence": {
                 **{f"pvc:{name}": ["Bound PVC after Pending"] for name in pvc_names},

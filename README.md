@@ -238,6 +238,7 @@ Confidence is always bounded to [0,1].
     - DynamicProvisioningTimeout
     - PVCPendingThenCrashloopRule
     - PVCThenCrashloopRule
+    - PVCBoundThenCrashLoop
     - PVCThenImagePullFailRule
     - PVCRecoveredButAppStillFailing
 

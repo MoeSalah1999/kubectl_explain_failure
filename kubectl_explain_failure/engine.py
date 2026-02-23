@@ -56,7 +56,6 @@ def normalize_context(context: dict[str, Any]) -> dict[str, Any]:
             )
 
     # Node
-    # Node
     if "node" in context:
         node_data = context["node"]
 
@@ -107,6 +106,7 @@ def normalize_context(context: dict[str, Any]) -> dict[str, Any]:
         # leave context["node"] as the original single Node object
         pass
 
+    
     # ----------------------------
     # Canonical PVC state (object-graph based)
     # ----------------------------
@@ -556,7 +556,7 @@ def explain_failure(
     # DO NOT mutate `explanations`.
     # `suppression_map` must remain intact for
     # resolution metadata reporting.
-    
+
     # ----------------------------
     # Engine Invariants
     # ----------------------------
