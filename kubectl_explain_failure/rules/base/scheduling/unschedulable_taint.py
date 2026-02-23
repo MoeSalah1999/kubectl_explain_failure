@@ -1,5 +1,6 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
+from kubectl_explain_failure.timeline import timeline_has_event, event_frequency
 
 
 class UnschedulableTaintRule(FailureRule):
@@ -22,13 +23,26 @@ class UnschedulableTaintRule(FailureRule):
         if not timeline:
             return False
 
-        entries = getattr(timeline, "events", [])
+        # --- Structured scheduling failure must exist ---
+        if not timeline_has_event(
+            timeline,
+            kind="Scheduling",
+            phase="Failure",
+        ):
+            return False
 
-        for entry in entries:
-            reason = str(entry.get("reason", "")).lower()
-            message = str(entry.get("message", "")).lower()
+        # --- Ensure this is truly a FailedScheduling signal ---
+        if event_frequency(timeline, "FailedScheduling") == 0:
+            return False
 
-            if reason == "failedscheduling" and (
+        # --- Detect taint-specific message patterns ---
+        for entry in timeline.raw_events:
+            if entry.get("reason") != "FailedScheduling":
+                continue
+
+            message = (entry.get("message") or "").lower()
+
+            if (
                 "taint" in message
                 or "didn't tolerate" in message
                 or "had taint" in message

@@ -1,5 +1,6 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
+from kubectl_explain_failure.timeline import timeline_has_event
 
 
 class FailedSchedulingRule(FailureRule):
@@ -21,7 +22,16 @@ class FailedSchedulingRule(FailureRule):
         if not timeline:
             return False
 
-        # If specific scheduling causes detected, do NOT match
+        # --- Must have structured Scheduling Failure ---
+        if not timeline_has_event(
+            timeline,
+            kind="Scheduling",
+            phase="Failure",
+        ):
+            return False
+
+        # --- Exclude more specific scheduling causes ---
+        # We inspect all FailedScheduling events in the timeline.
         specific_patterns = [
             "insufficient",
             "affinity",
@@ -29,14 +39,16 @@ class FailedSchedulingRule(FailureRule):
             "hostport",
             "taint",
         ]
-        messages = [e.get("message", "").lower() for e in timeline.raw_events]
-        if any(any(p in msg for p in specific_patterns) for msg in messages):
-            return False
 
-        return any(
-            "failedscheduling" in e.get("reason", "").lower()
-            for e in timeline.raw_events
-        )
+        for e in events:
+            if e.get("reason") != "FailedScheduling":
+                continue
+
+            msg = (e.get("message") or "").lower()
+            if any(p in msg for p in specific_patterns):
+                return False
+
+        return True
 
     def explain(self, pod, events, context):
         pod_name = pod["metadata"]["name"]
