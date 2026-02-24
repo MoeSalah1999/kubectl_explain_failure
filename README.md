@@ -1,4 +1,4 @@
-"""
+
 # kubectl-explain-failure
 
 kubectl-explain-failure is a deterministic diagnostic engine that explains **why a Kubernetes Pod is failing** by constructing structured causal explanations from Kubernetes object state and event timelines.
@@ -107,13 +107,7 @@ Raw Kubernetes events are normalized into structured semantic signals:
 - Pattern matching
 - Duration measurement between related events
 - Repeated-event escalation detection
-- Temporal compound rules are supported:
-- Rapid restart escalation
-- Repeated probe failure escalation
-- Scheduling flapping
-- PVC pending too long
-- Image updated → crash loop
-- CrashLoop after config change
+
 
 This moves diagnosis from snapshot inspection to incident reasoning.
 
@@ -194,7 +188,7 @@ Confidence is always bounded to [0,1].
 - LimitRangeViolation
 - ResourceQuotaExceeded
 - RBACForbidden
-- ServiceAccountMissingRule
+- ServiceAccountMissing
 - ServiceAccountRBAC
 
 ## Scheduling & Placement
@@ -209,7 +203,7 @@ Confidence is always bounded to [0,1].
 - PreemptedByHigherPriority
 - Compound:
     - SchedulingFlapping
-    - PendingUnschedulableRule
+    - PendingUnschedulable
     - PriorityPreemptionChain
 
 ## Node & Eviction
@@ -219,9 +213,9 @@ Confidence is always bounded to [0,1].
 - NodeDiskPressure
 - EvictedRule
 - Compound:
-    - NodeNotReadyEvictedRule
-    - PVCBoundThenNodePressureRule
-    - PVCBoundNodeDiskPressureMountRule
+    - NodeNotReadyEvicted
+    - PVCBoundThenNodePressure
+    - PVCBoundNodeDiskPressureMount
 
 ## Storage & Volume
 
@@ -233,10 +227,10 @@ Confidence is always bounded to [0,1].
 - StorageClassProvisionerMissing
 - ConfigMapNotFound
 - Compound:
-    - PVCMountFailureRule
-    - PVCPendingTooLongRule
+    - PVCMountFailure
+    - PVCPendingTooLong
     - DynamicProvisioningTimeout
-    - PVCPendingThenCrashloopRule
+    - PVCPendingThenCrashloop
     - PVCThenCrashloopRule
     - PVCBoundThenCrashLoop
     - PVCThenImagePullFailRule
@@ -252,12 +246,12 @@ Confidence is always bounded to [0,1].
 - CrashLoopBackoff
 - OOMKilled containers
 - Compound:
-    - CrashLoopOOMKilledRule
-    - CrashLoopLivenessProbeRule
+    - CrashLoopOOMKilled
+    - CrashLoopLivenessProbe
     - CrashLoopAfterConfigChange
     - ImagePullSecretMissingCompound
     - ImageUpdatedThenCrashLoop
-    - RapidRestartEscalationRule
+    - RapidRestartEscalation
 
 ## Probes
 
@@ -442,4 +436,4 @@ This is a **diagnostic explainer**, not a fixer.
 Live cluster access is intentionally out of scope for the initial design.
 
 License: MIT
-"""
+
