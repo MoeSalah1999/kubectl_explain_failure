@@ -32,29 +32,31 @@ class RepeatedProbeFailureEscalationRule(FailureRule):
     }
 
     MIN_FAILURE_COUNT = 5
-    MIN_DURATION_SECONDS = 180  # 3 minutes sustained
+    MIN_DURATION_SECONDS = 300  # 5 minutes sustained
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
             return False
 
-        probe_events = [
-            e for e in timeline.raw_events if e.get("reason") in self.FAILURE_REASONS
-        ]
+        # Convert seconds → minutes for events_within_window
+        minutes_window = self.MIN_DURATION_SECONDS / 60
 
-        if len(probe_events) < self.MIN_FAILURE_COUNT:
-            return False
+        window_events = []
+        for reason in self.FAILURE_REASONS:
+            window_events.extend(
+                timeline.events_within_window(
+                    minutes=minutes_window,
+                    reason=reason,
+                )
+            )
 
-        duration = timeline.duration_between(
-            lambda e: e.get("reason") in self.FAILURE_REASONS
-        )
-
-        if duration < self.MIN_DURATION_SECONDS:
+        # Only match if sustained failures exceed threshold
+        if len(window_events) < self.MIN_FAILURE_COUNT:
             return False
 
         return True
-
+    
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
 

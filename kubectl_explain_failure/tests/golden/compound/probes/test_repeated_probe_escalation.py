@@ -42,8 +42,7 @@ def test_repeated_probe_failure_escalation_golden():
     )
 
     # Add timeline for the rule
-    if events:
-        context["timeline"] = build_timeline(events)
+    context["timeline"] = build_timeline(events, relative_to="last_event")
 
     context = normalize_context(context)
 

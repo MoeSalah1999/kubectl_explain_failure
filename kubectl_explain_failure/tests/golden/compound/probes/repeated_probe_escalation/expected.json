@@ -3,7 +3,7 @@
   "blocking": true,
   "evidence": [
     "Multiple probe failure events detected",
-    "Failures sustained >= 180 seconds",
+    "Failures sustained >= 300 seconds",
     "Container restart behavior observed"
   ],
   "causes": [
