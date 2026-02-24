@@ -1,6 +1,6 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
+from kubectl_explain_failure.timeline import build_timeline
 
 
 class RapidRestartEscalationRule(FailureRule):
@@ -9,40 +9,46 @@ class RapidRestartEscalationRule(FailureRule):
     priority = 52
 
     # This compound rule supersedes simpler crash signals
-    blocks = ["CrashLoopBackOff", "RepeatedCrashLoop"]
+    blocks = ["CrashLoopBackOff"]
 
     requires = {"context": ["timeline"]}
+
+    # Configurable window and threshold
+    BACKOFF_WINDOW_MINUTES = 30
+    BACKOFF_THRESHOLD = 3
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
             return False
 
-        # Defensive: use timeline.events to iterate
-        timeline_events = getattr(timeline, "events", timeline)
+        # Use events_within_window to find recent BackOff events
+        recent_backoffs = timeline.events_within_window(
+            self.BACKOFF_WINDOW_MINUTES, reason="BackOff"
+        )
 
-        # Detect repeated BackOff events
-        repeated_backoff = timeline_has_pattern(timeline, r"BackOff")
-
-        backoff_events = [e for e in timeline_events if e.get("reason") == "BackOff"]
-
-        return repeated_backoff and len(backoff_events) >= 3
+        return len(recent_backoffs) >= self.BACKOFF_THRESHOLD
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
+
+        timeline = context.get("timeline")
+        recent_backoffs = (
+            timeline.events_within_window(self.BACKOFF_WINDOW_MINUTES, reason="BackOff")
+            if timeline
+            else []
+        )
 
         chain = CausalChain(
             causes=[
                 Cause(
                     code="RAPID_RESTARTS",
-                    message="Repeated BackOff events detected",
+                    message="Repeated BackOff events detected within time window",
                     blocking=True,
-                ),
+                )
             ]
         )
-        timeline_events = getattr(
-            context.get("timeline", []), "events", context.get("timeline", [])
-        )
+
         return {
             "rule": self.name,
             "root_cause": "Rapid container restart escalation detected",
@@ -50,7 +56,7 @@ class RapidRestartEscalationRule(FailureRule):
             "causes": chain,
             "blocking": True,
             "evidence": [
-                f"{len([e for e in timeline_events if e.get('reason')=='BackOff'])} BackOff events observed",
+                f"{len(recent_backoffs)} BackOff events observed in the last {self.BACKOFF_WINDOW_MINUTES} minutes"
             ],
             "likely_causes": [
                 "Application crash loop",
@@ -63,6 +69,6 @@ class RapidRestartEscalationRule(FailureRule):
                 "Check container resource requests/limits",
             ],
             "object_evidence": {
-                f"pod:{pod_name}": ["Multiple BackOff events detected within timeline"]
+                f"pod:{pod_name}": ["Multiple BackOff events detected within recent timeline"]
             },
         }

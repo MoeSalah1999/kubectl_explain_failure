@@ -46,7 +46,7 @@ def test_rapid_restart_escalation_golden():
     )
 
     # Attach timeline explicitly (required by compound rule)
-    context["timeline"] = build_timeline(events)
+    context["timeline"] = build_timeline(events, relative_to="last_event")
     context = normalize_context(context)
 
     result = explain_failure(pod, events, context=context)

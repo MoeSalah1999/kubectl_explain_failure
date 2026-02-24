@@ -11,8 +11,8 @@
     ]
   },
   "events": [
-    {"reason": "BackOff", "message": "Back-off restarting failed container"},
-    {"reason": "BackOff", "message": "Back-off restarting failed container"},
-    {"reason": "BackOff", "message": "Back-off restarting failed container"}
+    {"reason": "BackOff", "message": "Back-off restarting failed container", "lastTimestamp": "2026-02-08T18:00:00Z"},
+    {"reason": "BackOff", "message": "Back-off restarting failed container", "lastTimestamp": "2026-02-08T18:01:00Z"},
+    {"reason": "BackOff", "message": "Back-off restarting failed container", "lastTimestamp": "2026-02-08T18:02:00Z"}
   ]
 }
