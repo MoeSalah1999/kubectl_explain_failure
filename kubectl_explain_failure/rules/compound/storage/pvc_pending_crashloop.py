@@ -1,13 +1,12 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
-
 
 class PVCPendingThenCrashLoopRule(FailureRule):
     name = "PVCPendingThenCrashLoop"
     category = "Compound"
     priority = 50
     blocks = ["CrashLoopBackOff", "FailedMount"]
+
     requires = {
         "objects": ["pvc"],
         "context": ["timeline"],
@@ -19,13 +18,16 @@ class PVCPendingThenCrashLoopRule(FailureRule):
         if not pvc or not timeline:
             return False
 
-        # PVC is pending and there is a repeating BackOff or FailedMount
+        # PVC is pending
         pvc_pending = pvc.get("status", {}).get("phase") == "Pending"
-        crash_events = timeline_has_pattern(
-            timeline.raw_events, [{"reason": "FailedMount"}]
-        ) and timeline_has_pattern(timeline.raw_events, [{"reason": "BackOff"}])
 
-        return pvc_pending and crash_events
+        # Use events_within_window for CrashLoop/FailedMount detection
+        failed_mount_events = timeline.events_within_window(minutes=30, reason="FailedMount")
+        backoff_events = timeline.events_within_window(minutes=30, reason="BackOff")
+
+        crash_events_present = bool(failed_mount_events) and bool(backoff_events)
+
+        return pvc_pending and crash_events_present
 
     def explain(self, pod, events, context):
         chain = CausalChain(
@@ -47,8 +49,8 @@ class PVCPendingThenCrashLoopRule(FailureRule):
             ]
         )
 
-        pvc = context["blocking_pvc"]
-        pvc_name = pvc["metadata"]["name"]
+        pvc = context.get("blocking_pvc")
+        pvc_name = pvc["metadata"]["name"] if pvc else "unknown"
 
         return {
             "root_cause": "PVC Pending caused mount failures and CrashLoopBackOff",

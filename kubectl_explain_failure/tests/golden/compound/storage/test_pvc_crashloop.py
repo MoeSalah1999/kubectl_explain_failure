@@ -53,8 +53,8 @@ def test_pvc_then_crashloop_golden():
     context["objects"] = context.get("objects", {})
     context["objects"]["pvc"] = {pvc_obj["metadata"]["name"]: pvc_obj}
 
-    if events:
-        context["timeline"] = build_timeline(events)
+    
+    context["timeline"] = build_timeline(events, relative_to="last_event")
 
     context = normalize_context(context)
 

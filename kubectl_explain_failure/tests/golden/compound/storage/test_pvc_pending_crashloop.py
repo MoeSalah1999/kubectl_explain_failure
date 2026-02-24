@@ -33,7 +33,7 @@ def test_pvc_pending_then_crashloop_golden():
             },
         )()
     )
-    context["timeline"] = build_timeline(events)
+    context["timeline"] = build_timeline(events, relative_to="last_event")
     context["pvcs"] = data.get("pvcs", [])
     if context["pvcs"]:
         context["blocking_pvc"] = context["pvcs"][0]

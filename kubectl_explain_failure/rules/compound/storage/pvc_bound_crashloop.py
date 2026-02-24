@@ -1,6 +1,6 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern, Timeline
+from kubectl_explain_failure.timeline import timeline_has_pattern, parse_time, Timeline
 
 
 class PVCBoundThenCrashLoopRule(FailureRule):
@@ -57,8 +57,19 @@ class PVCBoundThenCrashLoopRule(FailureRule):
             pvc_bound_event = next((e for e in pvc_events if e.get("reason") == "PersistentVolumeClaimBound"), None)
 
             # Only match if CrashLoopBackOff happened AFTER PVC Bound → app still failing post-recovery
-            if container_crash_event and pvc_bound_event and container_crash_event["timestamp"] > pvc_bound_event["timestamp"]:
-                return True
+            if container_crash_event and pvc_bound_event:
+                crash_ts = parse_time(
+                    container_crash_event.get("eventTime")
+                    or container_crash_event.get("lastTimestamp")
+                    or container_crash_event.get("firstTimestamp")
+                )
+                bound_ts = parse_time(
+                    pvc_bound_event.get("eventTime")
+                    or pvc_bound_event.get("lastTimestamp")
+                    or pvc_bound_event.get("firstTimestamp")
+                )
+                if crash_ts > bound_ts:
+                    return True
 
         return False
     def explain(self, pod, events, context):

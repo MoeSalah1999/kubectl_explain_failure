@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import events_within
 
 
 class PVCPendingTooLongRule(FailureRule):
@@ -16,19 +15,22 @@ class PVCPendingTooLongRule(FailureRule):
 
     def matches(self, pod, events, context) -> bool:
         pvc = context.get("blocking_pvc")
-        if not pvc:
+        timeline = context.get("timeline")
+        if not pvc or not timeline:
             return False
 
         phase = pvc.get("status", {}).get("phase")
         if phase != "Pending":
             return False
 
-        recent = events_within(context["timeline"].raw_events, minutes=30)
-        return len(recent) > 10  # sustained failure
+        # --- Use new timeline helper ---
+        recent_events = timeline.events_within_window(minutes=30)
+        return len(recent_events) > 10  # sustained failure
 
     def explain(self, pod, events, context):
         pvc = context.get("blocking_pvc")
         pvc_name = pvc["metadata"]["name"] if pvc else "unknown"
+
         chain = CausalChain(
             causes=[
                 Cause(
@@ -46,6 +48,7 @@ class PVCPendingTooLongRule(FailureRule):
                 ),
             ]
         )
+
         return {
             "root_cause": "PersistentVolumeClaim provisioning is stalled",
             "confidence": 0.97,

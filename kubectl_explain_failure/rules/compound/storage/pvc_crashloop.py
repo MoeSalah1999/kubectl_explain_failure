@@ -1,6 +1,6 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern, Timeline
+from kubectl_explain_failure.timeline import Timeline, parse_time
 
 
 class PVCThenCrashLoopRule(FailureRule):
@@ -32,43 +32,32 @@ class PVCThenCrashLoopRule(FailureRule):
         if not timeline:
             return False
 
-        # Check for any PVC that transitioned Pending → Bound
         pvc_transitions = []
         for pvc_name, pvc in pvcs.items():
-            pvc_events = [
-                e for e in timeline.events
-                if (getattr(e, "involvedObject", {}).get("name")
-                    if hasattr(e, "involvedObject") else e.get("involvedObject", {}).get("name")) == pvc_name
+            pending_events = [
+                e for e in timeline.events_within_window(60, reason="PersistentVolumeClaimPending")
+                if e.get("involvedObject", {}).get("name") == pvc_name
+            ]
+            bound_events = [
+                e for e in timeline.events_within_window(60, reason="PersistentVolumeClaimBound")
+                if e.get("involvedObject", {}).get("name") == pvc_name
             ]
 
-            pattern = [
-                {"reason": "PersistentVolumeClaimPending"},
-                {"reason": "PersistentVolumeClaimBound"}
-            ]
-            if timeline_has_pattern(pvc_events, pattern):
-                pvc_transitions.append(pvc_name)
+            if pending_events and bound_events:
+                # Use parse_time() to compare timestamps safely
+                bound_ts = min(
+                    parse_time(e.get("eventTime") or e.get("lastTimestamp") or e.get("firstTimestamp"))
+                    for e in bound_events
+                )
 
-        if not pvc_transitions:
-            return False
+                crash_events = timeline.events_within_window(60, reason="CrashLoopBackOff")
+                for e in crash_events:
+                    crash_ts = parse_time(e.get("eventTime") or e.get("lastTimestamp") or e.get("firstTimestamp"))
+                    if crash_ts <= bound_ts:
+                        pvc_transitions.append(pvc_name)
+                        break
 
-        # Find first PVC Pending and Bound events
-        container_crash_event = next(
-            (e for e in timeline.events if e.get("reason") == "CrashLoopBackOff"), None
-        )
-
-        # Only match if CrashLoopBackOff happened BEFORE PVC Bound → missing/delayed volume
-        for pvc_name, pvc in pvcs.items():
-            pvc_events = [
-                e for e in timeline.events
-                if (getattr(e, "involvedObject", {}).get("name")
-                    if hasattr(e, "involvedObject") else e.get("involvedObject", {}).get("name")) == pvc_name
-            ]
-            pvc_bound_event = next((e for e in pvc_events if e.get("reason") == "PersistentVolumeClaimBound"), None)
-
-            if container_crash_event and pvc_bound_event and container_crash_event["timestamp"] <= pvc_bound_event["timestamp"]:
-                return True
-
-        return False
+        return bool(pvc_transitions)
 
     def explain(self, pod, events, context):
         objects = context.get("objects", {})

@@ -34,7 +34,7 @@
       },
       "reason": "PersistentVolumeClaimPending",
       "message": "PVC is pending",
-      "timestamp": "2026-02-22T16:00:00Z"
+      "lastTimestamp": "2026-02-22T16:00:00Z"
     },
     {
       "involvedObject": {
@@ -43,7 +43,7 @@
       },
       "reason": "PersistentVolumeClaimBound",
       "message": "PVC successfully bound",
-      "timestamp": "2026-02-22T16:05:00Z"
+      "lastTimestamp": "2026-02-22T16:05:00Z"
     },
     {
       "involvedObject": {
@@ -52,7 +52,7 @@
       },
       "reason": "CrashLoopBackOff",
       "message": "Container repeatedly crashed",
-      "timestamp": "2026-02-22T16:10:00Z"
+      "lastTimestamp": "2026-02-22T16:10:00Z"
     }
   ]
 }

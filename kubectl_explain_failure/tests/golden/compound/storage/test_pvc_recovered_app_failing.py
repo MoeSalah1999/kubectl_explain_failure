@@ -51,8 +51,7 @@ def test_pvc_recovered_but_app_still_failing_golden():
     context["serviceaccount"] = {"metadata": {"name": "default"}}
     context["secret"] = {"metadata": {"name": "mysecret"}}
 
-    if events:
-        context["timeline"] = build_timeline(events)
+    context["timeline"] = build_timeline(events, relative_to="last_event")
 
     context = normalize_context(context)
 

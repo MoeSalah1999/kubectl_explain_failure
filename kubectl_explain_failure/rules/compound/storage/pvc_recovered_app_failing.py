@@ -7,8 +7,7 @@ class PVCRecoveredButAppStillFailingRule(FailureRule):
     """
     PVC was Pending → becomes Bound
     Pod transitions to Running
-    But CrashLoop / container failures continue.
-
+    But CrashLoop / container failures continue within a recent window.
     Root cause shifts from infrastructure to application layer.
     """
 
@@ -38,6 +37,9 @@ class PVCRecoveredButAppStillFailingRule(FailureRule):
         "Failed",
     ]
 
+    # Consider events in last N minutes only
+    LOOKBACK_MINUTES = 60
+
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         pvc_objects = context.get("objects", {}).get("pvc", {})
@@ -59,15 +61,23 @@ class PVCRecoveredButAppStillFailingRule(FailureRule):
         if not timeline_has_pattern(timeline, "Scheduled"):
             return False
 
-        # Failure continues after scheduling
-        failure_detected = any(
-            timeline_has_pattern(timeline, pattern) for pattern in self.FAILURE_PATTERNS
-        )
+        # Failure continues either in recent window OR at all if no timestamps
+        failure_detected = False
+        for pattern in self.FAILURE_PATTERNS:
+            if hasattr(timeline, "events_within_window"):
+                recent_failures = timeline.events_within_window(
+                    minutes=self.LOOKBACK_MINUTES,
+                    reason=pattern,
+                )
+                if recent_failures:
+                    failure_detected = True
+                    break
+            # fallback for legacy events with no timestamp
+            if timeline_has_pattern(timeline, pattern):
+                failure_detected = True
+                break
 
-        if not failure_detected:
-            return False
-
-        return True
+        return failure_detected
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
@@ -103,13 +113,11 @@ class PVCRecoveredButAppStillFailingRule(FailureRule):
             "evidence": [
                 "PVC previously Pending but now Bound",
                 "Pod successfully scheduled",
-                "CrashLoop or failure events continue post-recovery",
+                f"CrashLoop or failure events detected within last {self.LOOKBACK_MINUTES} minutes",
             ],
             "object_evidence": {
                 f"pod:{pod_name}": ["Pod running but container unstable"],
-                f"pvc:{pvc_name}": [
-                    "PVC Bound successfully before application failures"
-                ],
+                f"pvc:{pvc_name}": ["PVC Bound successfully before application failures"],
             },
             "suggested_checks": [
                 f"kubectl logs {pod_name}",

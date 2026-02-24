@@ -30,15 +30,18 @@
   "events": [
     {
       "reason": "Pending",
-      "message": "PVC is pending"
+      "message": "PVC is pending",
+      "eventTime": "2026-02-24T12:00:00Z"
     },
     {
       "reason": "Scheduled",
-      "message": "Successfully assigned test-app-pod to node1"
+      "message": "Successfully assigned test-app-pod to node1",
+      "eventTime": "2026-02-24T12:01:00Z"
     },
     {
       "reason": "CrashLoopBackOff",
-      "message": "Back-off restarting failed container"
+      "message": "Back-off restarting failed container",
+      "eventTime": "2026-02-24T12:02:00Z"
     }
   ]
 }

@@ -4,7 +4,7 @@
   "evidence": [
     "PVC previously Pending but now Bound",
     "Pod successfully scheduled",
-    "CrashLoop or failure events continue post-recovery"
+    "CrashLoop or failure events detected within last 60 minutes"
   ],
   "causes": [
     {
