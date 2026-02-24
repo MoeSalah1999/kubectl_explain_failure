@@ -7,7 +7,7 @@
     {
       "type": "Warning",
       "reason": "FailedScheduling",
-      "message": "0/2 nodes are available: 1 Insufficient cpu, 1 NodeUnderMemoryPressure.",
+      "message": "0/2 nodes are available: 1 NodeUnderMemoryPressure.",
       "firstTimestamp": "2026-02-18T15:00:00Z",
       "lastTimestamp": "2026-02-18T15:05:00Z"
     }

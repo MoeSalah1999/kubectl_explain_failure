@@ -28,14 +28,20 @@ class PriorityPreemptionChainRule(FailureRule):
         if not timeline:
             return False
 
-        # Must contain preemption signal
-        if not timeline_has_pattern(timeline, "Preempted"):
+        # --- Must contain recent preemption signal ---
+        recent_preemptions = timeline.events_within_window(
+            10, reason="Preempted"
+        )
+        if not recent_preemptions:
             return False
 
-        # Must contain scheduling activity
-        # Accept any event with reason "Scheduled"
-        if not any(e.get("reason") == "Scheduled" for e in timeline.raw_events):
+        # --- Must contain recent scheduling activity ---
+        recent_scheduling = timeline.events_within_window(
+            10, reason="Scheduled"
+        )
+        if not recent_scheduling:
             return False
+
         return True
 
     def explain(self, pod, events, context):

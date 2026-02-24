@@ -58,9 +58,15 @@ class NormalizedEvent:
 
 
 class Timeline:
-    def __init__(self, events: list[dict[str, Any]]):
+    def __init__(
+        self,
+        events: list[dict[str, Any]],
+        *,
+        relative_to: str = "now",  # "now" | "last_event"
+    ):
         self.events = events
         self.normalized = [NormalizedEvent(e) for e in events]
+        self.relative_to = relative_to
 
     def first(self, reason: str):
         for e in self.events:
@@ -85,24 +91,65 @@ class Timeline:
     def repeated(self, reason: str, threshold: int) -> bool:
         return self.count(reason=reason) >= threshold
     
-    def events_within_window(self, minutes: int, *, reason: str | None = None) -> list[dict[str, Any]]:
+    def _reference_time(self) -> datetime:
         """
-        Returns events that occurred within the last `minutes` minutes.
-        Optionally filter by reason.
+        Returns the reference time used for window calculations.
 
-        Usage:
-            recent_events = timeline.events_within_window(15, reason="DiskPressure")
+        - live mode: current UTC time
+        - deterministic mode: timestamp of last event
         """
-        cutoff = datetime.now(timezone.utc) - timedelta(minutes=minutes)
+        if self.relative_to == "now":
+            return datetime.now(timezone.utc)
+
+        if self.relative_to == "last_event":
+            if not self.events:
+                return datetime.now(timezone.utc)
+
+            # Find last event with a timestamp
+            for e in reversed(self.events):
+                ts = (
+                    e.get("eventTime")
+                    or e.get("lastTimestamp")
+                    or e.get("firstTimestamp")
+                    or e.get("timestamp")
+                )
+                if ts:
+                    return parse_time(ts)
+
+            return datetime.now(timezone.utc)
+
+        # Fallback safety
+        return datetime.now(timezone.utc)
+    
+    def events_within_window(
+        self,
+        minutes: int,
+        *,
+        reason: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        Returns events within the last `minutes` relative to
+        the configured timeline reference point.
+        """
+        reference = self._reference_time()
+        cutoff = reference - timedelta(minutes=minutes)
+
         result = []
 
         for e in self.events:
-            ts = e.get("eventTime") or e.get("lastTimestamp") or e.get("firstTimestamp")
+            ts = (
+                e.get("eventTime")
+                or e.get("lastTimestamp")
+                or e.get("firstTimestamp")
+            )
             if not ts:
                 continue
+
             dt = parse_time(ts)
+
             if dt >= cutoff and (reason is None or e.get("reason") == reason):
                 result.append(e)
+
         return result
 
     def duration_between(self, reason_filter: Callable[[dict], bool]) -> float:
@@ -147,8 +194,12 @@ class Timeline:
         return self.events
 
 
-def build_timeline(events: list[dict[str, Any]]) -> Timeline:
-    return Timeline(events)
+def build_timeline(
+    events: list[dict[str, Any]],
+    *,
+    relative_to: str = "now",
+) -> Timeline:
+    return Timeline(events, relative_to=relative_to)
 
 
 def timeline_has_pattern(

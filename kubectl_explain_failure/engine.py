@@ -1,6 +1,6 @@
 import os
 from typing import Any
-
+from datetime import datetime, timezone
 from kubectl_explain_failure.causality import (
     CausalChain,
     Resolution,
@@ -325,7 +325,43 @@ def explain_failure(
 
     context["relations"] = build_relations(pod, context)
     if events:
-        context["timeline"] = build_timeline(events)
+        # Detect execution mode automatically
+        try:
+            # Extract newest event timestamp
+            timestamps = [
+                e.get("lastTimestamp") or e.get("eventTime") or e.get("firstTimestamp")
+                for e in events
+                if e.get("lastTimestamp") or e.get("eventTime") or e.get("firstTimestamp")
+            ]
+
+            parsed = [
+                datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                for ts in timestamps
+            ]
+
+            newest = max(parsed) if parsed else None
+
+            # If newest event is "recent", treat as live cluster
+            if newest:
+                now = datetime.now(timezone.utc)
+                age_seconds = (now - newest).total_seconds()
+
+                # 2 minute threshold is conservative and safe
+                if age_seconds < 120:
+                    mode = "now"  # live mode
+                else:
+                    mode = "last_event"  # deterministic mode
+            else:
+                mode = "last_event"
+
+        except Exception:
+            # Safe fallback for malformed timestamps
+            mode = "last_event"
+
+        context["timeline"] = build_timeline(
+            events,
+            relative_to=mode,
+        )
 
     if context.get("timeline") and timeline_has_event(
         context["timeline"],

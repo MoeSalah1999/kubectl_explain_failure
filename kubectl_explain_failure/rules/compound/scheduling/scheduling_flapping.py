@@ -1,5 +1,6 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
+from kubectl_explain_failure.timeline import Timeline
 
 
 class SchedulingFlappingRule(FailureRule):
@@ -29,20 +30,28 @@ class SchedulingFlappingRule(FailureRule):
     MAX_DURATION_SECONDS = 300  # 5 minutes instability window
 
     def matches(self, pod, events, context) -> bool:
-        timeline = context.get("timeline")
+        timeline: Timeline = context.get("timeline")
         if not timeline:
             return False
 
-        scheduled_count = timeline.count(reason="Scheduled")
-        failed_count = timeline.count(reason="FailedScheduling")
+        # Only look at recent scheduling activity
+        recent = timeline.events_within_window(
+            self.MAX_DURATION_SECONDS // 60
+        )
 
-        if scheduled_count < 1 or failed_count < 1:
+        scheduling_events = [
+            e for e in recent
+            if e.get("reason") in ("Scheduled", "FailedScheduling")
+        ]
+
+        if len(scheduling_events) < self.MIN_ALTERNATIONS:
             return False
 
-        total_transitions = scheduled_count + failed_count
-        if total_transitions < self.MIN_ALTERNATIONS:
+        reasons = {e.get("reason") for e in scheduling_events}
+        if not {"Scheduled", "FailedScheduling"}.issubset(reasons):
             return False
 
+        # Duration check remains global but still deterministic
         duration = timeline.duration_between(
             lambda e: e.get("reason") in ("Scheduled", "FailedScheduling")
         )

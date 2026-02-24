@@ -13,19 +13,19 @@
       "type": "Normal",
       "reason": "Scheduled",
       "message": "Successfully assigned default/high-priority-pod to node1",
-      "timestamp": "2026-02-16T10:00:00Z"
+      "lastTimestamp": "2026-02-16T10:00:00Z"
     },
     {
       "type": "Normal",
       "reason": "Preempted",
       "message": "Pod preempted by higher priority pod",
-      "timestamp": "2026-02-16T10:01:00Z"
+      "lastTimestamp": "2026-02-16T10:01:00Z"
     },
     {
       "type": "Warning",
       "reason": "Evicted",
       "message": "Pod evicted due to priority preemption",
-      "timestamp": "2026-02-16T10:02:00Z"
+      "lastTimestamp": "2026-02-16T10:02:00Z"
     }
   ]
 }

@@ -10,8 +10,8 @@ class PendingUnschedulableRule(FailureRule):
     """
 
     name = "PendingUnschedulable"
-    category = "Compound"  # True compound behavior
-    priority = 9
+    category = "Compound" 
+    priority = 15
     blocks = []
     requires = {"context": ["timeline"]}
     phases = ["Pending"]
@@ -21,27 +21,28 @@ class PendingUnschedulableRule(FailureRule):
             return False
 
         # Only match if no higher-priority rule already indicates root cause
-        if context.get("suppressed_rules"):
-            blocked_rules = context["suppressed_rules"]
-            for r in [
-                "FailedScheduling",
-                "PVCBoundNodeDiskPressureMount",
-                "NodeDiskPressure",
-            ]:
-                if r in blocked_rules:
-                    return False
+        suppressed = context.get("suppressed_rules", [])
+        for r in [ "PVCBoundNodeDiskPressureMount", "NodeDiskPressure"]:
+            if r in suppressed:
+                return False
 
-        blocking_pvc = context.get("blocking_pvc")
-        failed_scheduling = has_event(events, "FailedScheduling")
-        node_pressure = context.get("node_conditions", {}).get("DiskPressure", False)
-        insufficient_resources = context.get("node_conditions", {}).get(
-            "MemoryPressure", False
+        timeline = context.get("timeline")
+        if not timeline:
+            return False
+
+        # Check recent FailedScheduling events
+        recent_failed_scheduling = timeline.events_within_window(
+            15, reason="FailedScheduling"
         )
+        failed_scheduling = len(recent_failed_scheduling) > 0
 
-        # Match if pod cannot schedule for multiple reasons (compound behavior)
-        if blocking_pvc is None and (
-            failed_scheduling or node_pressure or insufficient_resources
-        ):
+        # Node conditions
+        node_conditions = context.get("node_conditions", {})
+        node_pressure = node_conditions.get("DiskPressure", False) or node_conditions.get("MemoryPressure", False)
+
+        # Match compound unschedulable if no PVC is blocking
+        blocking_pvc = context.get("blocking_pvc")
+        if blocking_pvc is None and (failed_scheduling or node_pressure):
             return True
 
         return False
@@ -83,8 +84,10 @@ class PendingUnschedulableRule(FailureRule):
         chain = CausalChain(causes=causes_list)
 
         root_cause_message = "Pod Pending due to unschedulable conditions"
-        if len(causes_list) == 1:
-            root_cause_message += f" ({causes_list[0].code})"
+        for cause in causes_list:
+            if cause.code == "FAILED_SCHEDULING":
+                root_cause_message += f" ({cause.code})"
+                break
 
         object_evidence = {f"pod:{pod_name}, phase:Pending": ["Unschedulable"]}
         if node_conditions.get("DiskPressure") or node_conditions.get("MemoryPressure"):

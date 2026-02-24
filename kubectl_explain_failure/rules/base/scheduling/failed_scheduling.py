@@ -38,6 +38,8 @@ class FailedSchedulingRule(FailureRule):
             "topology",
             "hostport",
             "taint",
+            "pressure",
+            "nodeunder",
         ]
 
         for e in events:

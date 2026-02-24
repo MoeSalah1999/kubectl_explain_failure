@@ -40,9 +40,7 @@ def test_pending_unschedulable_golden():
             },
         )()
     )
-
-    context["node"] = {"node1": {"metadata": {"name": "node1"}}}
-    context["pvc"] = {"metadata": {"name": "pvc1"}, "status": {"phase": "Bound"}}
+    
     context["pv"] = {"metadata": {"name": "pv1"}}
     context["storageclass"] = {"metadata": {"name": "sc1"}}
     context["serviceaccount"] = {"metadata": {"name": "default"}}
