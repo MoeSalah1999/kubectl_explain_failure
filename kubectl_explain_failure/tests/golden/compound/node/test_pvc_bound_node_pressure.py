@@ -43,8 +43,7 @@ def test_pvc_bound_then_node_pressure_golden():
     context["objects"]["pod"] = {"mypod": pod}
     context["objects"]["pvc"] = data["objects"].get("pvc", {})
     context["objects"]["node"] = data["objects"].get("node", {})
-    if events:
-        context["timeline"] = build_timeline(events)
+    context["timeline"] = build_timeline(events, relative_to="last_event")
 
     context = normalize_context(context)
 

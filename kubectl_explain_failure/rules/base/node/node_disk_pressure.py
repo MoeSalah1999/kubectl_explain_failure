@@ -21,8 +21,6 @@ class NodeDiskPressureRule(FailureRule):
 
     supported_phases = {"Pending", "Running"}
 
-    deterministic = True
-
     # Node health dominates scheduler errors
     blocks = ["FailedScheduling"]
 

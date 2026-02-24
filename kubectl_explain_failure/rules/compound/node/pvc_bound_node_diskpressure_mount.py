@@ -29,7 +29,6 @@ class PVCBoundNodeDiskPressureMountRule(FailureRule):
         all_bound = all(
             pvc.get("status", {}).get("phase") == "Bound" for pvc in pvc_objs.values()
         )
-
         if not all_bound:
             return False
 
@@ -41,12 +40,22 @@ class PVCBoundNodeDiskPressureMountRule(FailureRule):
             )
             for node in node_objs.values()
         )
-
         if not disk_pressure:
             return False
 
-        # FailedMount signal via timeline (engine-native)
-        mount_failed = timeline_has_pattern(timeline, r"FailedMount")
+        # --- Use timeline.events_within_window if possible ---
+        mount_failed = False
+        if hasattr(timeline, "events_within_window"):
+            recent_mount_failures = timeline.events_within_window(
+                minutes=60,  # configurable lookback
+                reason="FailedMount"
+            )
+            if recent_mount_failures:
+                mount_failed = True
+
+        # Fallback to pattern match if no timestamps
+        if not mount_failed:
+            mount_failed = timeline_has_pattern(timeline, r"FailedMount")
 
         return mount_failed
 

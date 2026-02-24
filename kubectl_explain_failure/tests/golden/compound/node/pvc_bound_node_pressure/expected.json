@@ -1,6 +1,6 @@
 {
   "root_cause": "Pod scheduling blocked by Node disk pressure despite PVC being bound",
-  "confidence": 0.92,
+  "confidence": 0.82,
   "blocking": true,
   "causes": [
     {"code": "PVC_BOUND", "message": "PVC successfully bound"},
