@@ -6,13 +6,20 @@
   ],
   "causes": [
     {
+      "code": "REPLICASET_RECONCILIATION_ACTIVE",
+      "message": "ReplicaSet controller is reconciling desired replica count",
+      "role": "controller_context"
+    },
+    {
       "code": "REPLICASET_ZERO_AVAILABLE",
-      "message": "ReplicaSet(s) have zero available replicas: rs1",
+      "message": "ReplicaSet(s) report zero available replicas: rs1",
+      "role": "controller_context",
       "blocking": true
     },
     {
       "code": "PODS_NOT_READY",
-      "message": "Pods managed by ReplicaSet are not becoming Ready"
+      "message": "Pods managed by ReplicaSet are not reaching Ready state",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

@@ -40,15 +40,20 @@ class ReplicaSetUnavailableRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="REPLICASET_RECONCILIATION_ACTIVE",
+                    message="ReplicaSet controller is reconciling desired replica count",
+                    role="controller_context",
+                ),
+                Cause(
                     code="REPLICASET_ZERO_AVAILABLE",
-                    message=f"ReplicaSet(s) have zero available replicas: {', '.join(failing)}",
+                    message=f"ReplicaSet(s) report zero available replicas: {', '.join(failing)}",
                     blocking=True,
-                    role="root",
+                    role="controller_root",
                 ),
                 Cause(
                     code="PODS_NOT_READY",
-                    message="Pods managed by ReplicaSet are not becoming Ready",
-                    role="symptom",
+                    message="Pods managed by ReplicaSet are not reaching Ready state",
+                    role="workload_symptom",
                 ),
             ]
         )
