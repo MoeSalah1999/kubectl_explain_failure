@@ -6,9 +6,20 @@
   ],
   "causes": [
     {
-        "code": "NODE_MEMORY_PRESSURE",
-        "message": "Node(s) under MemoryPressure",
+        "code": "NODE_MEMORY_PRESSURE_DETECTED",
+        "message": "Node(s) reporting MemoryPressure=True: node1",
+        "role": "infrastructure_root"
+    },
+    {
+        "code": "NODE_MEMORY_RESOURCE_EXHAUSTION",
+        "message": "Node memory resources are under pressure",
+        "role": "resource_root",
         "blocking": true
+    },
+    {
+        "code": "POD_SCHEDULING_OR_RUNTIME_IMPACT",
+        "message": "Pod affected by node memory constraints",
+        "role": "workload_symptom"
     }
   ],
   "object_evidence": {

@@ -7,7 +7,7 @@ class NodeMemoryPressureRule(FailureRule):
     name = "NodeMemoryPressure"
     category = "Node"
     priority = 22  # Same tier as DiskPressure-level node signals
-
+    deterministic = True
     requires = {
         "objects": ["node"],
     }
@@ -56,14 +56,15 @@ class NodeMemoryPressureRule(FailureRule):
 
             # Recent OOM or BackOff events (container pressure spillover)
             recent_failures = timeline.events_within_window(10)
+
             if any(
-                "oom" in (e.get("reason", "").lower())
-                or "backoff" in (e.get("reason", "").lower())
+                (e.get("reason") or "").lower().startswith(("oom", "backoff"))
                 for e in recent_failures
             ):
                 return True
 
-        # --- MemoryPressure alone is sufficient ---
+        # If no correlation signals matched,
+        # MemoryPressure alone is sufficient to explain impact
         return True
 
     def explain(self, pod, events, context):
@@ -79,13 +80,35 @@ class NodeMemoryPressureRule(FailureRule):
                 for cond in node.get("status", {}).get("conditions", [])
             )
         ]
+        pod_node = pod.get("spec", {}).get("nodeName")
+
+        if pod_node and pod_node not in [
+            name for name in node_objs
+            if any(
+                cond.get("type") == "MemoryPressure"
+                and cond.get("status") == "True"
+                for cond in node_objs[name].get("status", {}).get("conditions", [])
+            )
+        ]:
+            return False
 
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="NODE_MEMORY_PRESSURE",
-                    message=f"Node(s) under MemoryPressure: {', '.join(pressured_nodes)}",
+                    code="NODE_MEMORY_PRESSURE_DETECTED",
+                    message=f"Node(s) reporting MemoryPressure=True: {', '.join(pressured_nodes)}",
+                    role="infrastructure_root",
+                ),
+                Cause(
+                    code="NODE_MEMORY_RESOURCE_EXHAUSTION",
+                    message="Node memory resources are under pressure",
                     blocking=True,
+                    role="resource_root",
+                ),
+                Cause(
+                    code="POD_SCHEDULING_OR_RUNTIME_IMPACT",
+                    message="Pod affected by node memory constraints",
+                    role="workload_symptom",
                 ),
             ]
         )
