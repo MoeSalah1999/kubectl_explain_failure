@@ -11,10 +11,9 @@ class ReplicaSetCreateFailureRule(FailureRule):
     name = "ReplicaSetCreateFailure"
     category = "Controller"
     priority = 45
-
+    deterministic = True
     requires = {
         "objects": ["replicaset"],
-        "context": ["timeline"],
     }
 
     def matches(self, pod, events, context) -> bool:
@@ -40,10 +39,21 @@ class ReplicaSetCreateFailureRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="REPLICASET_CREATION_FAILED",
-                    message=f"ReplicaSet(s) failed to create pods: {', '.join(rs_names)}",
+                    code="REPLICASET_RECONCILIATION_ACTIVE",
+                    message="ReplicaSet controller is attempting to create desired replicas",
+                    role="controller_context",
+                ),
+                Cause(
+                    code="REPLICASET_REPLICA_FAILURE",
+                    message="ReplicaSet reports ReplicaFailure=True condition",
                     blocking=True,
-                )
+                    role="controller_root",
+                ),
+                Cause(
+                    code="POD_CREATION_FAILED",
+                    message="ReplicaSet failed to successfully create or maintain desired Pods",
+                    role="workload_symptom",
+                ),
             ]
         )
 
