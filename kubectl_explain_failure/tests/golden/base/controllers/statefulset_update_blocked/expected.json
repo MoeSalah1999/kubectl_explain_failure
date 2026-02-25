@@ -8,9 +8,20 @@
   ],
   "causes": [
     {
-      "code": "STATEFULSET_UPDATE_BLOCKED",
-      "message": "StatefulSet rollout blocked by partitioned updateStrategy: my-sts",
+      "code": "STATEFULSET_RECONCILIATION_ACTIVE",
+      "message": "StatefulSet controller is reconciling desired replica updates",
+      "role": "controller_context"
+    },
+    {
+      "code": "STATEFULSET_PARTITION_BLOCKING",
+      "message": "StatefulSet rollout limited by updateStrategy partition: my-sts",
+      "role": "controller_root",
       "blocking": true
+    },
+    {
+      "code": "STATEFULSET_ROLLOUT_INCOMPLETE",
+      "message": "Not all StatefulSet replicas have been updated to the new revision",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

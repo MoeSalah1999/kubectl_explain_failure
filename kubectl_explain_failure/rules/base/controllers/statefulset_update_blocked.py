@@ -12,6 +12,7 @@ class StatefulSetUpdateBlockedRule(FailureRule):
     name = "StatefulSetUpdateBlocked"
     category = "Controller"
     priority = 40
+    deterministic = True
 
     requires = {
         "objects": ["statefulset"],
@@ -53,10 +54,21 @@ class StatefulSetUpdateBlockedRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="STATEFULSET_UPDATE_BLOCKED",
-                    message=f"StatefulSet rollout blocked by partitioned updateStrategy: {', '.join(sts_names)}",
+                    code="STATEFULSET_RECONCILIATION_ACTIVE",
+                    message="StatefulSet controller is reconciling desired replica updates",
+                    role="controller_context",
+                ),
+                Cause(
+                    code="STATEFULSET_PARTITION_BLOCKING",
+                    message=f"StatefulSet rollout limited by updateStrategy partition: {', '.join(sts_names)}",
                     blocking=True,
-                )
+                    role="controller_root",
+                ),
+                Cause(
+                    code="STATEFULSET_ROLLOUT_INCOMPLETE",
+                    message="Not all StatefulSet replicas have been updated to the new revision",
+                    role="workload_symptom",
+                ),
             ]
         )
 
