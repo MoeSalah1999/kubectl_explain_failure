@@ -9,19 +9,29 @@ class CrashLoopBackOffRule(FailureRule):
     blocks = ["RepeatedCrashLoop"]
     requires = {
         "pod": True,
+        "context": ["timeline"],
     }
+    deterministic = True
     phases = ["Running", "Pending"]
 
     def matches(self, pod, events, context) -> bool:
-        return any(e.get("reason") == "BackOff" for e in events or [])
+        timeline = context.get("timeline")
+        if not timeline:
+            return False
+
+        # At least one BackOff event required
+        return timeline.repeated("BackOff", threshold=1)
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name")
         namespace = pod.get("metadata", {}).get("namespace", "default")
 
+        timeline = context.get("timeline")
+        raw_events = timeline.raw_events if timeline else (events or [])
+
         backoff_events = [
             f"{e.get('reason')} - {e.get('message', '')}"
-            for e in events or []
+            for e in raw_events
             if e.get("reason") == "BackOff"
         ]
         evidence = list(backoff_events)
@@ -41,10 +51,16 @@ class CrashLoopBackOffRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="CONTAINER_CRASHING",
+                    message="Container process exits repeatedly",
+                    role="workload_root",
+                ),
+                Cause(
                     code="CRASH_LOOP_BACKOFF",
-                    message="Container repeatedly crashing and restarting",
+                    message="Kubelet enters exponential restart backoff",
                     blocking=True,
-                )
+                    role="runtime_symptom",
+                ),
             ]
         )
 

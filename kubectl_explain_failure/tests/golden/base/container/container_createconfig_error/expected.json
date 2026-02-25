@@ -7,8 +7,14 @@
   ],
   "causes": [
     {
+      "code": "CONTAINER_CONFIG_INVALID",
+      "message": "Container specification is invalid or references missing configuration",
+      "role": "configuration_root"
+    },
+    {
       "code": "CREATE_CONTAINER_CONFIG_ERROR",
-      "message": "Container cannot be created due to config error",
+      "message": "Kubelet reports CreateContainerConfigError",
+      "role": "runtime_symptom",
       "blocking": true
     }
   ],

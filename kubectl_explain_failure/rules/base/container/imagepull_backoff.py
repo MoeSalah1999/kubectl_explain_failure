@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class ImagePullBackOffRule(FailureRule):
@@ -12,14 +11,12 @@ class ImagePullBackOffRule(FailureRule):
     name = "ImagePullBackOff"
     category = "Image"
     priority = 45
-
+    deterministic = True
     container_states = ["waiting"]
 
     requires = {
         "context": ["timeline"],
     }
-
-    deterministic = False
     blocks = []
 
     def matches(self, pod, events, context) -> bool:
@@ -27,14 +24,11 @@ class ImagePullBackOffRule(FailureRule):
         if not timeline:
             return False
 
-        # Ensure timeline shows ImagePullBackOff
-        if not timeline_has_pattern(
-            timeline,
-            [{"reason": "ImagePullBackOff"}],
-        ):
+        # Require at least one ImagePullBackOff event
+        if not timeline.repeated("ImagePullBackOff", threshold=1):
             return False
 
-        # Ensure at least one container is actually waiting with ImagePullBackOff
+        # Confirm container state reflects the backoff
         for cs in pod.get("status", {}).get("containerStatuses", []):
             waiting = cs.get("state", {}).get("waiting")
             if waiting and waiting.get("reason") == "ImagePullBackOff":
@@ -47,7 +41,8 @@ class ImagePullBackOffRule(FailureRule):
         namespace = pod.get("metadata", {}).get("namespace", "default")
 
         # Count retry events
-        retries = sum(1 for e in events if e.get("reason") == "ImagePullBackOff")
+        timeline = context.get("timeline")
+        retries = timeline.count(reason="ImagePullBackOff") if timeline else 0
 
         # Confidence scales with retries but capped
         confidence = min(0.75 + retries * 0.04, 0.92)
@@ -61,14 +56,19 @@ class ImagePullBackOffRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="IMAGE_PULL_RETRY",
+                    code="IMAGE_PULL_FAILURE",
                     message=(
-                        f"Container(s) failing image pull with backoff: "
+                        f"Container image pull failing for: "
                         f"{', '.join(failing_containers)}"
                     ),
+                    role="image_root",
+                ),
+                Cause(
+                    code="IMAGE_PULL_BACKOFF",
+                    message="Kubelet entered exponential backoff due to repeated pull failures",
                     blocking=True,
-                    role="root",
-                )
+                    role="runtime_symptom",
+                ),
             ]
         )
 

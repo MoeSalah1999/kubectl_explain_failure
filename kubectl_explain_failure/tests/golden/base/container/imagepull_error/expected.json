@@ -6,10 +6,20 @@
   ],
   "causes": [
     {
+      "code": "IMAGE_REFERENCE_SPECIFIED",
+      "message": "Pod references a container image",
+      "role": "workload_context"
+    },
+    {
       "code": "IMAGE_PULL_FAILURE",
-      "message": "Container image could not be pulled",
+      "message": "Kubelet failed to pull container image from registry",
+      "role": "infrastructure_root"
+    },
+    {
+      "code": "CONTAINER_WAITING_IMAGE_PULL",
+      "message": "Container remains in waiting state due to image pull failure",
       "blocking": true,
-      "role": "runtime_root"
+      "role": "runtime_symptom"
     }
   ],
   "object_evidence": {

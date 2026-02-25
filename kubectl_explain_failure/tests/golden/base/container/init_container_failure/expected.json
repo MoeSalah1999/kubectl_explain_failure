@@ -7,9 +7,20 @@
   ],
   "causes": [
     {
-      "code": "INIT_CONTAINER_FAILED",
-      "message": "Init container exited with non-zero code",
+      "code": "INIT_CONTAINER_PRESENT",
+      "message": "Pod defines one or more init containers",
+      "role": "workload_context"
+    },
+    {
+      "code": "INIT_CONTAINER_EXIT_NONZERO",
+      "message": "Init container exited with non-zero status",
+      "role": "execution_root",
       "blocking": true
+    },
+    {
+      "code": "POD_STARTUP_BLOCKED",
+      "message": "Pod cannot proceed to main containers until init succeeds",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

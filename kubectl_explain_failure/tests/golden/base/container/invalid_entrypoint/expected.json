@@ -2,14 +2,24 @@
   "root_cause": "Container failed due to invalid entrypoint",
   "blocking": true,
   "evidence": [
-    "Container state.waiting.reason=RunContainerError",
-    "Pod: test-pod"
+    "Container 'app' waiting: reason=RunContainerError"
   ],
   "causes": [
     {
-      "code": "INVALID_ENTRYPOINT",
-      "message": "Container failed due to invalid entrypoint",
+      "code": "CONTAINER_START_ATTEMPTED",
+      "message": "Kubelet attempted to start the container",
+      "role": "execution_context"
+    },
+    {
+      "code": "INVALID_ENTRYPOINT_DETECTED",
+      "message": "Container entrypoint or command is invalid",
+      "role": "exectution_root",
       "blocking": true
+    },
+    {
+      "code": "CONTAINER_START_FAILED",
+      "message": "Container failed to start and remains in waiting state",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

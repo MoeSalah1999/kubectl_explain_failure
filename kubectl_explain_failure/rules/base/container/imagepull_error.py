@@ -1,8 +1,6 @@
 import re
-
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class ImagePullRule(FailureRule):
@@ -13,14 +11,11 @@ class ImagePullRule(FailureRule):
     name = "ImagePullError"
     category = "Image"
     priority = 30
-
+    deterministic = True
     container_states = ["waiting"]
-
     requires = {
         "context": ["timeline"],
     }
-
-    deterministic = False
     blocks = []
 
     def matches(self, pod, events, context):
@@ -28,20 +23,28 @@ class ImagePullRule(FailureRule):
         if not timeline:
             return False
 
-        return timeline_has_pattern(
-            timeline,
-            [{"reason": "ErrImagePull"}],
-        )
+        # Direct structured check — no pattern engine needed
+        return timeline.repeated("ErrImagePull", threshold=1)
 
     def explain(self, pod, events, context):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="IMAGE_REFERENCE_SPECIFIED",
+                    message="Pod references a container image",
+                    role="workload_context",
+                ),
+                Cause(
                     code="IMAGE_PULL_FAILURE",
-                    message="Container image could not be pulled",
+                    message="Kubelet failed to pull container image from registry",
+                    role="infrastructure_root",
+                ),
+                Cause(
+                    code="CONTAINER_WAITING_IMAGE_PULL",
+                    message="Container remains in waiting state due to image pull failure",
                     blocking=True,
-                    role="runtime_root",
-                )
+                    role="runtime_symptom",
+                ),
             ]
         )
         container_evidence = []
@@ -58,7 +61,10 @@ class ImagePullRule(FailureRule):
                 )
 
         evidence_list = []
-        for e in events:
+        timeline = context.get("timeline")
+        raw_events = timeline.raw_events if timeline else (events or [])
+
+        for e in raw_events:
             reason = e.get("reason")
             msg = e.get("message", "")
             if reason:

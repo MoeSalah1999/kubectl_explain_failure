@@ -7,8 +7,14 @@
   ],
   "causes": [
     {
-      "code": "IMAGE_PULL_RETRY",
-      "message": "Container(s) failing image pull with backoff: app",
+      "code": "IMAGE_PULL_FAILURE",
+      "message": "Container image pull failing for: app",
+      "role": "image_root"
+    },
+    {
+      "code": "IMAGE_PULL_BACKOFF",
+      "message": "Kubelet entered exponential backoff due to repeated pull failures",
+      "role": "runtime_symptom",
       "blocking": true
     }
   ],

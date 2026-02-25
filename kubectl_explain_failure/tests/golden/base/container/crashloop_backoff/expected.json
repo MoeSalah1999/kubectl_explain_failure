@@ -8,8 +8,14 @@
   ],
   "causes": [
     {
+      "code": "CONTAINER_CRASHING",
+      "message": "Container process exits repeatedly",
+      "role": "workload_symptom"
+    },
+    {
       "code": "CRASH_LOOP_BACKOFF",
-      "message": "Container repeatedly crashing and restarting",
+      "message": "Kubelet enters exponential restart backoff",
+      "role": "runtime_symptom",
       "blocking": true
     }
   ],

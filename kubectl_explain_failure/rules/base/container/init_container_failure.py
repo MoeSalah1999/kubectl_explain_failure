@@ -1,13 +1,13 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
+from kubectl_explain_failure.timeline import timeline_has_event
 
 
 class InitContainerFailureRule(FailureRule):
     name = "InitContainerFailure"
     category = "Compound"
     priority = 61
-
+    deterministic = True
     # Supersedes simple init container failure signals
     blocks = ["InitContainerNonZeroExit"]
 
@@ -18,8 +18,9 @@ class InitContainerFailureRule(FailureRule):
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         # Detect BackOff / repeated init container failures if timeline present
-        backoff_pattern = (
-            timeline_has_pattern(timeline, r"BackOff") if timeline else False
+        backoff_pattern = timeline_has_event(
+            timeline,
+            phase="Failure",
         )
 
         for cs in pod.get("status", {}).get("initContainerStatuses", []):
@@ -41,9 +42,20 @@ class InitContainerFailureRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="INIT_CONTAINER_FAILED",
-                    message="Init container exited with non-zero code",
+                    code="INIT_CONTAINER_PRESENT",
+                    message="Pod defines one or more init containers",
+                    role="workload_context",
+                ),
+                Cause(
+                    code="INIT_CONTAINER_EXIT_NONZERO",
+                    message="Init container exited with non-zero status",
                     blocking=True,
+                    role="execution_root",
+                ),
+                Cause(
+                    code="POD_STARTUP_BLOCKED",
+                    message="Pod cannot proceed to main containers until init succeeds",
+                    role="workload_symptom",
                 ),
             ]
         )

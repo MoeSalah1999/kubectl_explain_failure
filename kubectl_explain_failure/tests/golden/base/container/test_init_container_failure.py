@@ -53,6 +53,7 @@ def test_init_container_failure_golden():
     assert result["confidence"] >= 0.95
 
     # Verify causal chain materialization
-    causes = result.get("causes", [])
-    assert causes[0]["code"] == "INIT_CONTAINER_FAILED"
-    assert causes[0]["blocking"] is True
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+        assert exp_cause["code"] == res_cause["code"]
+        assert exp_cause["message"] == res_cause["message"]
+        assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)

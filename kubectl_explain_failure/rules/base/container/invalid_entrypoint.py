@@ -14,6 +14,7 @@ class InvalidEntrypointRule(FailureRule):
     blocks = ["CrashLoopBackOff"]
     container_states = ["waiting"]
     phases = ["Pending", "Running"]
+    deterministic = True
 
     def matches(self, pod, events, context) -> bool:
         for c in pod.get("status", {}).get("containerStatuses", []):
@@ -27,22 +28,39 @@ class InvalidEntrypointRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="INVALID_ENTRYPOINT",
-                    message="Container failed due to invalid entrypoint",
+                    code="CONTAINER_START_ATTEMPTED",
+                    message="Kubelet attempted to start the container",
+                    role="execution_context",
+                ),
+                Cause(
+                    code="INVALID_ENTRYPOINT_DETECTED",
+                    message="Container entrypoint or command is invalid",
                     blocking=True,
-                )
+                    role="execution_root",
+                ),
+                Cause(
+                    code="CONTAINER_START_FAILED",
+                    message="Container failed to start and remains in waiting state",
+                    role="workload_symptom",
+                ),
             ]
         )
+
+        evidence = []
+        for c in pod.get("status", {}).get("containerStatuses", []):
+            waiting = c.get("state", {}).get("waiting")
+            if waiting and waiting.get("reason") == "RunContainerError":
+                evidence.append(
+                    f"Container '{c.get('name')}' waiting: reason=RunContainerError"
+                )
+
         return {
             "rule": self.name,
             "root_cause": "Container failed due to invalid entrypoint",
             "confidence": 0.93,
             "blocking": True,
             "causes": chain,
-            "evidence": [
-                "Container state.waiting.reason=RunContainerError",
-                f"Pod: {pod_name}",
-            ],
+            "evidence": evidence,
             "object_evidence": {f"pod:{pod_name}": ["RunContainerError observed"]},
             "likely_causes": [
                 "Command or args in container spec are invalid",

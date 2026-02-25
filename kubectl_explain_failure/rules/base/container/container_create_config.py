@@ -24,15 +24,23 @@ class ContainerCreateConfigErrorRule(FailureRule):
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
+        
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="CONTAINER_CONFIG_INVALID",
+                    message="Container specification is invalid or references missing configuration",
+                    role="configuration_root",
+                ),
+                Cause(
                     code="CREATE_CONTAINER_CONFIG_ERROR",
-                    message="Container cannot be created due to config error",
+                    message="Kubelet reports CreateContainerConfigError",
                     blocking=True,
-                )
+                    role="runtime_symptom",
+                ),
             ]
         )
+
         return {
             "rule": self.name,
             "root_cause": "Container failed due to CreateContainerConfigError",
