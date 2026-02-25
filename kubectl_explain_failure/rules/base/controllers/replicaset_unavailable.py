@@ -11,7 +11,6 @@ class ReplicaSetUnavailableRule(FailureRule):
     name = "ReplicaSetUnavailable"
     category = "Controller"
     priority = 44
-
     requires = {
         "objects": ["replicaset"],
         "context": [],

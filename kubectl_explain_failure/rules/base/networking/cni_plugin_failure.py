@@ -14,7 +14,7 @@ class CNIPluginFailureRule(FailureRule):
     name = "CNIPluginFailure"
     category = "Networking"
     priority = 30
-
+    deterministic = True
     requires = {"pod": True}
 
     phases = ["Pending"]
@@ -34,10 +34,21 @@ class CNIPluginFailureRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="POD_SANDBOX_INITIALIZATION",
+                    message="Kubelet is initializing Pod sandbox",
+                    role="runtime_context",
+                ),
+                Cause(
                     code="CNI_PLUGIN_FAILURE",
-                    message="Pod sandbox creation failed due to CNI plugin error",
+                    message="CNI plugin failed during network setup",
                     blocking=True,
-                )
+                    role="infrastructure_root",
+                ),
+                Cause(
+                    code="POD_NETWORK_UNAVAILABLE",
+                    message="Pod sandbox could not be created due to networking failure",
+                    role="workload_symptom",
+                ),
             ]
         )
 

@@ -8,9 +8,20 @@
   ],
   "causes": [
     {
+      "code": "POD_SANDBOX_INITIALIZATION",
+      "message": "Kubelet is initializing Pod sandbox",
+      "role": "runtime_context"
+    },
+    {
       "code": "CNI_PLUGIN_FAILURE",
-      "message": "Pod sandbox creation failed due to CNI plugin error",
+      "message": "CNI plugin failed during network setup",
+      "role": "infrastructure_root",
       "blocking": true
+    },
+    {
+      "code": "POD_NETWORK_UNAVAILABLE",
+      "message": "Pod sandbox could not be created due to networking failure",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {
