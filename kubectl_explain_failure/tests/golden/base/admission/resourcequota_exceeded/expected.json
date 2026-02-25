@@ -7,9 +7,20 @@
   ],
   "causes": [
     {
+      "code": "RESOURCE_QUOTA_POLICY",
+      "message": "Namespace ResourceQuota policies are enforced",
+      "role": "policy_root"
+    },
+    {
       "code": "RESOURCE_QUOTA_EXCEEDED",
       "message": "Namespace 'team-a' exceeded its ResourceQuota",
+      "role": "policy_root",
       "blocking": true
+    },
+    {
+      "code": "POD_CREATION_BLOCKED",
+      "message": "Pod rejected during admission",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

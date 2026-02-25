@@ -11,7 +11,7 @@ class PrivilegedNotAllowedRule(FailureRule):
     name = "PrivilegedNotAllowed"
     category = "Admission"
     priority = 30
-
+    deterministic = True
     requires = {
         "pod": True,
         "context": ["timeline"],
@@ -22,9 +22,7 @@ class PrivilegedNotAllowedRule(FailureRule):
         if not timeline:
             return False
 
-        entries = getattr(timeline, "events", [])
-
-        for entry in entries:
+        for entry in timeline.raw_events:
             message = str(entry.get("message", "")).lower()
             reason = str(entry.get("reason", "")).lower()
 
@@ -35,7 +33,7 @@ class PrivilegedNotAllowedRule(FailureRule):
             if "privileged" in message and "not allowed" in message:
                 return True
 
-            # Defensive: many admission denials use FailedCreate or similar
+            # Defensive admission-style detection
             if reason in {"failedcreate", "failed"} and "privileged" in message:
                 return True
 
@@ -48,10 +46,21 @@ class PrivilegedNotAllowedRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="POD_SECURITY_POLICY_ENFORCED",
+                    message="Cluster or namespace enforces restrictive Pod security policy",
+                    role="policy_root",
+                ),
+                Cause(
                     code="PRIVILEGED_CONTAINER_DENIED",
                     message="Privileged container not permitted by admission policy",
                     blocking=True,
-                )
+                    role="policy_root",
+                ),
+                Cause(
+                    code="POD_CREATION_BLOCKED",
+                    message="Pod rejected during admission",
+                    role="workload_symptom",
+                ),
             ]
         )
 

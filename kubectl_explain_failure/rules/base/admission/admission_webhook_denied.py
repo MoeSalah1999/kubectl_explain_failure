@@ -20,11 +20,17 @@ class AdmissionWebhookDeniedRule(FailureRule):
     phases = ["Pending"]
 
     def matches(self, pod, events, context) -> bool:
-        for e in events or []:
+        timeline = context.get("timeline")
+        if not timeline:
+            return False
+
+        for e in timeline.raw_events:
             reason = e.get("reason")
             msg = (e.get("message") or "").lower()
+
             if reason == "FailedCreate" and "admission webhook" in msg:
                 return True
+
         return False
 
     def explain(self, pod, events, context):
@@ -36,8 +42,14 @@ class AdmissionWebhookDeniedRule(FailureRule):
                 Cause(
                     code="ADMISSION_WEBHOOK_DENIED",
                     message="Admission webhook rejected pod creation",
+                    role="policy_root",
                     blocking=True,
-                )
+                ),
+                Cause(
+                    code="POD_CREATION_BLOCKED",
+                    message="Pod creation blocked by admission controller",
+                    role="workload_symptom",
+                ),
             ]
         )
 

@@ -7,9 +7,20 @@
   ],
   "causes": [
     {
+      "code": "POD_SECURITY_POLICY_ENFORCED",
+      "message": "Cluster enforces PodSecurity admission policies",
+      "role": "policy_root"
+    },
+    {
       "code": "SECURITY_CONTEXT_VIOLATION",
       "message": "Pod rejected by PodSecurity / PSP admission controller",
+      "role": "policy_root",
       "blocking": true
+    },
+    {
+      "code": "POD_CREATION_BLOCKED",
+      "message": "Pod rejected during admission",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

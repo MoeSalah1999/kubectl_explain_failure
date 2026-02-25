@@ -8,9 +8,20 @@
   ],
   "causes": [
     {
+      "code": "RBAC_POLICY_ENFORCED",
+      "message": "RBAC authorization policies are enforced in the cluster",
+      "role": "authorization_root"
+    },
+    {
       "code": "RBAC_FORBIDDEN",
       "message": "Kubernetes API denied action due to RBAC policy",
+      "role": "authorization_root",
       "blocking": true
+    },
+    {
+      "code": "POD_CREATION_BLOCKED",
+      "message": "Pod rejected during admission",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

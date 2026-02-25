@@ -13,19 +13,27 @@ class LimitRangeViolationRule(FailureRule):
     name = "LimitRangeViolation"
     category = "Admission"
     priority = 27
-
+    deterministic = True
     requires = {
         "pod": True,
+        "context": ["timeline"],
     }
 
     phases = ["Pending"]
 
     def matches(self, pod, events, context) -> bool:
-        for e in events or []:
+        timeline = context.get("timeline")
+        if not timeline:
+            return False
+
+        for e in timeline.raw_events:
             if e.get("reason") == "FailedCreate":
                 msg = (e.get("message") or "").lower()
-                if "limit" in msg or "exceed" in msg:
+
+                # More precise signal than just "limit"
+                if "limitrange" in msg or "exceed" in msg:
                     return True
+
         return False
 
     def explain(self, pod, events, context):
@@ -35,10 +43,21 @@ class LimitRangeViolationRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="LIMIT_RANGE_POLICY",
+                    message=f"Namespace '{namespace}' enforces LimitRange constraints",
+                    role="policy_root",
+                ),
+                Cause(
                     code="LIMIT_RANGE_VIOLATION",
-                    message=f"Pod resource requests violate LimitRange in namespace '{namespace}'",
+                    message="Pod resource requests violate namespace LimitRange policy",
                     blocking=True,
-                )
+                    role="policy_root",
+                ),
+                Cause(
+                    code="POD_CREATION_BLOCKED",
+                    message="Pod rejected during admission",
+                    role="workload_symptom",
+                ),
             ]
         )
 

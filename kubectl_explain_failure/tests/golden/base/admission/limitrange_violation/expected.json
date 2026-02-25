@@ -7,9 +7,20 @@
   ],
   "causes": [
     {
+      "code": "LIMIT_RANGE_POLICY",
+      "message": "Namespace 'team-a' enforces LimitRange constraints",
+      "role": "policy_root"
+    },
+    {
       "code": "LIMIT_RANGE_VIOLATION",
-      "message": "Pod resource requests violate LimitRange in namespace 'team-a'",
+      "message": "Pod resource requests violate namespace LimitRange policy",
+      "role": "policy_root",
       "blocking": true
+    },
+    {
+      "code": "POD_CREATION_BLOCKED",
+      "message": "Pod rejected during admission",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

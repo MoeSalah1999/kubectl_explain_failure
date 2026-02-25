@@ -14,28 +14,35 @@ class ResourceQuotaExceededRule(FailureRule):
     name = "ResourceQuotaExceeded"
     category = "Admission"
     priority = 26
-
+    deterministic = True
     requires = {
         "pod": True,
+        "context": ["timeline"],
     }
 
     phases = ["Pending"]
 
     def matches(self, pod, events, context) -> bool:
+        timeline = context.get("timeline")
+        if not timeline:
+            return False
+
+        # Pod.status reason check
         if pod.get("status", {}).get("reason") == "FailedCreate":
             return True
 
-        for e in events or []:
+        # Inspect timeline events structurally
+        for e in timeline.raw_events:
             reason = e.get("reason", "")
             message = (e.get("message") or "").lower()
 
             if reason == "ExceededQuota":
                 return True
+
             if "exceeded quota" in message:
                 return True
 
         return False
-
     def explain(self, pod, events, context):
         namespace = pod.get("metadata", {}).get("namespace", "default")
         pod_name = pod.get("metadata", {}).get("name")
@@ -43,10 +50,21 @@ class ResourceQuotaExceededRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="RESOURCE_QUOTA_POLICY",
+                    message="Namespace ResourceQuota policies are enforced",
+                    role="policy_root",
+                ),
+                Cause(
                     code="RESOURCE_QUOTA_EXCEEDED",
                     message=f"Namespace '{namespace}' exceeded its ResourceQuota",
                     blocking=True,
-                )
+                    role="policy_root",
+                ),
+                Cause(
+                    code="POD_CREATION_BLOCKED",
+                    message="Pod rejected during admission",
+                    role="workload_symptom",
+                ),
             ]
         )
 

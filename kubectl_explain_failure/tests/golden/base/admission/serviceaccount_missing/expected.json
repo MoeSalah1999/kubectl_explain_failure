@@ -7,8 +7,14 @@
   ],
   "causes": [
     {
-      "code": "SERVICE_ACCOUNT_MISSING",
-      "message": "Referenced ServiceAccount not found",
+      "code": "SERVICEACCOUNT_NOT_FOUND",
+      "message": "Referenced ServiceAccount does not exist",
+      "role": "identity_context"
+    },
+    {
+      "code": "POD_CREATION_BLOCKED",
+      "message": "Pod rejected during admission",
+      "role": "workload_symptom",
       "blocking": true
     }
   ],

@@ -11,7 +11,8 @@ class SecurityContextViolationRule(FailureRule):
     name = "SecurityContextViolation"
     category = "Admission"
     priority = 31
-
+    blocks = ["PrivilegedNotAllowed"]
+    deterministic = True
     requires = {
         "pod": True,
         "context": ["timeline"],
@@ -24,7 +25,7 @@ class SecurityContextViolationRule(FailureRule):
         if not timeline:
             return False
 
-        entries = getattr(timeline, "events", [])
+        entries = timeline.raw_events
 
         for entry in entries:
             message = str(entry.get("message", "")).lower()
@@ -46,7 +47,7 @@ class SecurityContextViolationRule(FailureRule):
         namespace = pod.get("metadata", {}).get("namespace", "default")
 
         timeline = context.get("timeline")
-        entries = getattr(timeline, "events", []) if timeline else []
+        entries = timeline.raw_events if timeline else []
 
         violation_messages = []
 
@@ -65,10 +66,21 @@ class SecurityContextViolationRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="POD_SECURITY_POLICY_ENFORCED",
+                    message="Cluster enforces PodSecurity admission policies",
+                    role="policy_root",
+                ),
+                Cause(
                     code="SECURITY_CONTEXT_VIOLATION",
                     message="Pod rejected by PodSecurity / PSP admission controller",
                     blocking=True,
-                )
+                    role="policy_root",
+                ),
+                Cause(
+                    code="POD_CREATION_BLOCKED",
+                    message="Pod rejected during admission",
+                    role="workload_symptom",
+                ),
             ]
         )
 

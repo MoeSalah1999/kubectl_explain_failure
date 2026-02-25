@@ -20,14 +20,21 @@ class ServiceAccountMissingRule(FailureRule):
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
-        sa_failed_event = (
-            has_event(events, "FailedCreate")
-            and "serviceaccount" in str(events).lower()
-        )
-        sa_backoff = (
-            timeline_has_pattern(timeline, r"FailedCreate") if timeline else False
-        )
-        return sa_failed_event or sa_backoff
+        if not timeline:
+            return False
+
+        for e in timeline.raw_events:
+            reason = (e.get("reason") or "").lower()
+            message = (e.get("message") or "").lower()
+
+            if (
+                reason == "failedcreate"
+                and "serviceaccount" in message
+                and "not found" in message
+            ):
+                return True
+
+        return False
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
@@ -35,9 +42,15 @@ class ServiceAccountMissingRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="SERVICE_ACCOUNT_MISSING",
-                    message="Referenced ServiceAccount not found",
+                    code="SERVICEACCOUNT_NOT_FOUND",
+                    message="Referenced ServiceAccount does not exist",
+                    role="identity_context",
+                ),
+                Cause(
+                    code="POD_CREATION_BLOCKED",
+                    message="Pod rejected during admission",
                     blocking=True,
+                    role="workload_symptom",
                 ),
             ]
         )

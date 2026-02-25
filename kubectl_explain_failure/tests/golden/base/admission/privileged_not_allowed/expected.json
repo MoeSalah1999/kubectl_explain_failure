@@ -7,9 +7,20 @@
   ],
   "causes": [
     {
+      "code": "POD_SECURITY_POLICY_ENFORCED",
+      "message": "Cluster or namespace enforces restrictive Pod security policy",
+      "role": "policy_root"
+    },
+    {
       "code": "PRIVILEGED_CONTAINER_DENIED",
       "message": "Privileged container not permitted by admission policy",
+      "role": "policy_root",
       "blocking": true
+    },
+    {
+      "code": "POD_CREATION_BLOCKED",
+      "message": "Pod rejected during admission",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {
