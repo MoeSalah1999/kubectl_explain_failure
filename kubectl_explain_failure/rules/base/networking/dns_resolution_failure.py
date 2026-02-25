@@ -14,16 +14,22 @@ class DNSResolutionFailureRule(FailureRule):
     name = "DNSResolutionFailure"
     category = "Networking"
     priority = 31
-
-    requires = {"pod": True}
+    deterministic = True
+    requires = {
+        "pod": True,
+        "context": ["timeline"],
+    }
 
     phases = ["Pending", "Running"]
 
     container_states = ["terminated", "waiting"]
 
     def matches(self, pod, events, context) -> bool:
-        for e in events or []:
-            reason = e.get("reason", "")
+        timeline = context.get("timeline")
+        if not timeline:
+            return False
+
+        for e in timeline.raw_events:
             msg = (e.get("message") or "").lower()
             if "dns" in msg and ("failed" in msg or "cannot resolve" in msg):
                 return True
@@ -46,10 +52,21 @@ class DNSResolutionFailureRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="CONTAINER_NETWORK_DEPENDENCY",
+                    message="Container requires DNS resolution for external or cluster services",
+                    role="runtime_context",
+                ),
+                Cause(
                     code="DNS_RESOLUTION_FAILURE",
                     message="DNS resolution failed inside Pod container",
                     blocking=True,
-                )
+                    role="network_root",
+                ),
+                Cause(
+                    code="APPLICATION_STARTUP_FAILURE",
+                    message="Application cannot start due to unresolved hostnames",
+                    role="workload_symptom",
+                ),
             ]
         )
 

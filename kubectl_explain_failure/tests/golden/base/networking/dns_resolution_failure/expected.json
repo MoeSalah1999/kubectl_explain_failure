@@ -8,9 +8,20 @@
   ],
   "causes": [
     {
+      "code": "CONTAINER_NETWORK_DEPENDENCY",
+      "message": "Container requires DNS resolution for external or cluster services",
+      "role": "runtime_context"
+    },
+    {
       "code": "DNS_RESOLUTION_FAILURE",
       "message": "DNS resolution failed inside Pod container",
+      "role": "network_root",
       "blocking": true
+    },
+    {
+      "code": "APPLICATION_STARTUP_FAILURE",
+      "message": "Application cannot start due to unresolved hostnames",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {
