@@ -3,18 +3,29 @@
   "blocking": true,
   "confidence": 0.94,
   "evidence": [
-    "Container lastState.terminated.reason = OOMKilled"
+    "Container 'app-container' terminated: reason=OOMKilled"
   ],
   "causes": [
     {
-      "code": "OOM_KILLED",
-      "message": "Container terminated due to out-of-memory",
+      "code": "CONTAINER_EXECUTING",
+      "message": "Container was running and consuming memory",
+      "role": "execution_context"
+    },
+    {
+      "code": "MEMORY_LIMIT_EXCEEDED",
+      "message": "Container exceeded its memory limit",
+      "role": "resource_root",
       "blocking": true
+    },
+    {
+      "code": "OOM_KILL_TERMINATION",
+      "message": "Kubelet terminated the container due to out-of-memory condition",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {
     "pod:oom-pod": [
-      "Container terminated with OOMKilled"
+      "Container 'app-container' terminated due to OOMKilled"
     ]
   },
   "likely_causes": [

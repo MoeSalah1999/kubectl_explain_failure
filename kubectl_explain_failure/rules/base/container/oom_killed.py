@@ -6,7 +6,7 @@ class OOMKilledRule(FailureRule):
     name = "OOMKilled"
     category = "Container"
     priority = 16
-
+    deterministic = True
     requires = {
         "pod": True,
     }
@@ -29,12 +29,37 @@ class OOMKilledRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="OOM_KILLED",
-                    message="Container terminated due to out-of-memory",
+                    code="CONTAINER_EXECUTING",
+                    message="Container was running and consuming memory",
+                    role="execution_context",
+                ),
+                Cause(
+                    code="MEMORY_LIMIT_EXCEEDED",
+                    message="Container exceeded its memory limit",
                     blocking=True,
-                )
+                    role="resource_root",
+                ),
+                Cause(
+                    code="OOM_KILL_TERMINATION",
+                    message="Kubelet terminated the container due to out-of-memory condition",
+                    role="workload_symptom",
+                ),
             ]
         )
+        evidence = []
+        object_evidence = {}
+
+        for cs in pod.get("status", {}).get("containerStatuses", []):
+            last_state = cs.get("lastState", {})
+            terminated = last_state.get("terminated")
+            if terminated and terminated.get("reason") == "OOMKilled":
+                name = cs.get("name")
+                evidence.append(
+                    f"Container '{name}' terminated: reason=OOMKilled"
+                )
+                object_evidence[f"pod:{pod_name}"] = [
+                    f"Container '{name}' terminated due to OOMKilled"
+                ]
 
         return {
             "rule": self.name,
@@ -42,10 +67,8 @@ class OOMKilledRule(FailureRule):
             "confidence": 0.94,
             "blocking": True,
             "causes": chain,
-            "evidence": ["Container lastState.terminated.reason = OOMKilled"],
-            "object_evidence": {
-                f"pod:{pod_name}": ["Container terminated with OOMKilled"]
-            },
+            "evidence": evidence,
+            "object_evidence": object_evidence,
             "likely_causes": [
                 "Memory limit too low",
                 "Memory spike during workload",
