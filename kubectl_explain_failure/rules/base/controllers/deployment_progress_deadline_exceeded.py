@@ -12,10 +12,9 @@ class DeploymentProgressDeadlineExceededRule(FailureRule):
     name = "DeploymentProgressDeadlineExceeded"
     category = "Controller"
     priority = 50
-
+    deterministic = True
     requires = {
         "objects": ["deployment"],
-        "context": ["timeline"],
     }
 
     def matches(self, pod, events, context) -> bool:
@@ -42,13 +41,24 @@ class DeploymentProgressDeadlineExceededRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="DEPLOYMENT_PROGRESS_DEADLINE_EXCEEDED",
-                    message=f"Deployment(s) exceeded progress deadline: {', '.join(deploy_names)}",
+                    code="DEPLOYMENT_ROLLOUT_IN_PROGRESS",
+                    message="Deployment rollout was progressing",
+                    role="controller_context",
+                ),
+                Cause(
+                    code="DEPLOYMENT_PROGRESS_TIMEOUT",
+                    message="Deployment exceeded its configured progress deadline",
                     blocking=True,
-                )
+                    role="controller_root",
+                ),
+                Cause(
+                    code="ROLLOUT_STALLED",
+                    message="Deployment failed to make required progress and rollout stalled",
+                    role="workload_symptom",
+                ),
             ]
         )
-
+        
         return {
             "rule": self.name,
             "root_cause": "Deployment rollout failed due to ProgressDeadlineExceeded",

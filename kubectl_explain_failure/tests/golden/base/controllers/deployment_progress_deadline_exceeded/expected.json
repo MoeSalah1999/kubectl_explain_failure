@@ -9,9 +9,20 @@
   ],
   "causes": [
     {
-      "code": "DEPLOYMENT_PROGRESS_DEADLINE_EXCEEDED",
-      "message": "Deployment(s) exceeded progress deadline: deployment1",
+      "code": "DEPLOYMENT_ROLLOUT_IN_PROGRESS",
+      "message": "Deployment rollout was progressing",
+      "role": "controller_context"
+    },
+    {
+      "code": "DEPLOYMENT_PROGRESS_TIMEOUT",
+      "message": "Deployment exceeded its configured progress deadline",
+      "role": "controller_root",
       "blocking": true
+    },
+    {
+      "code": "ROLLOUT_STALLED",
+      "message": "Deployment failed to make required progress and rollout stalled",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {
