@@ -29,11 +29,10 @@ class NodeDiskPressureRule(FailureRule):
         if not node_objs:
             return False
 
-        # --- Check actual node condition ---
+        # --- Detect DiskPressure nodes ---
         disk_pressure_nodes = []
         for node in node_objs.values():
-            conditions = node.get("status", {}).get("conditions", [])
-            for cond in conditions:
+            for cond in node.get("status", {}).get("conditions", []):
                 if (
                     cond.get("type") == "DiskPressure"
                     and cond.get("status") == "True"
@@ -44,11 +43,12 @@ class NodeDiskPressureRule(FailureRule):
         if not disk_pressure_nodes:
             return False
 
-        # --- Structured scheduling correlation ---
+        pod_phase = pod.get("status", {}).get("phase")
+
         timeline = context.get("timeline")
 
-        if timeline:
-            # Recent scheduling failure strengthens signal
+        # --- If pod is Pending, require scheduling signal ---
+        if pod_phase == "Pending" and timeline:
             recent_sched = timeline.events_within_window(
                 10,
                 reason="FailedScheduling",
@@ -57,15 +57,12 @@ class NodeDiskPressureRule(FailureRule):
             if recent_sched:
                 return True
 
-            # Fallback: any scheduler failure in timeline
-            if timeline_has_event(
-                timeline,
-                kind="Scheduling",
-                phase="Failure",
-            ):
+            if timeline.has(kind="Scheduling", phase="Failure"):
                 return True
 
-        # --- DiskPressure alone is sufficient ---
+            return False
+
+        # --- For Running pods, DiskPressure alone is valid ---
         return True
 
     def explain(self, pod, events, context):
@@ -88,26 +85,44 @@ class NodeDiskPressureRule(FailureRule):
             for n in affected_nodes
         ]
 
-        chain = CausalChain(
-            causes=[
-                Cause(
-                    code="NODE_DISK_PRESSURE",
-                    message="Node reports DiskPressure=True",
-                    blocking=True,
-                    role="infrastructure_root",
-                ),
+        pod_phase = pod.get("status", {}).get("phase")
+        timeline = context.get("timeline")
+
+        scheduler_blocked = False
+        if timeline:
+            if timeline.events_within_window(10, reason="FailedScheduling"):
+                scheduler_blocked = True
+            elif timeline.has(kind="Scheduling", phase="Failure"):
+                scheduler_blocked = True
+
+        causes = [
+            Cause(
+                code="NODE_DISK_PRESSURE",
+                message="Node reports DiskPressure=True",
+                blocking=True,
+                role="infrastructure_root",
+            )
+        ]
+
+        if scheduler_blocked:
+            causes.append(
                 Cause(
                     code="SCHEDULER_BLOCKED",
                     message="Scheduler cannot place pod on node",
                     role="control_plane_effect",
-                ),
+                )
+            )
+
+        if pod_phase == "Pending":
+            causes.append(
                 Cause(
                     code="POD_PENDING",
                     message="Pod remains unscheduled or Pending",
                     role="workload_symptom",
-                ),
-            ]
-        )
+                )
+            )
+
+        chain = CausalChain(causes=causes)
 
         object_evidence = {}
         for name in node_names:

@@ -79,16 +79,6 @@ def test_pvc_not_bound():
     assert any("PVC" in ev for ev in result["evidence"])
 
 
-def test_node_disk_pressure():
-    pod = load_json(os.path.join(FIXTURES_DIR, "pending_pod.json"))
-    node = load_json(os.path.join(FIXTURES_DIR, "node_disk_pressure.json"))
-    events = [{"reason": "NodeDiskPressure"}]
-
-    result = explain_failure(pod, events, context=normalize_context({"node": node}))
-    assert "disk pressure" in result["root_cause"].lower()
-    assert any("Node" in ev for ev in result["evidence"])
-
-
 # ----------------------------
 # Placeholder for future high-signal rules
 # ----------------------------

@@ -10,15 +10,18 @@
     {
       "code": "NODE_DISK_PRESSURE",
       "message": "Node reports DiskPressure=True",
+      "role": "infrastructure_root",
       "blocking": true
     },
     {
       "code": "SCHEDULER_BLOCKED",
-      "message": "Scheduler cannot place pod on node"
+      "message": "Scheduler cannot place pod on node",
+      "role": "control_plane_effect"
     },
     {
       "code": "POD_PENDING",
-      "message": "Pod remains unscheduled or Pending"
+      "message": "Pod remains unscheduled or Pending",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

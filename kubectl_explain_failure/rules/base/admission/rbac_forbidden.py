@@ -60,7 +60,7 @@ class RBACForbiddenRule(FailureRule):
                 Cause(
                     code="RBAC_POLICY_ENFORCED",
                     message="RBAC authorization policies are enforced in the cluster",
-                    role="authorization_root",
+                    role="cluster_security_context",
                 ),
                 Cause(
                     code="RBAC_FORBIDDEN",
