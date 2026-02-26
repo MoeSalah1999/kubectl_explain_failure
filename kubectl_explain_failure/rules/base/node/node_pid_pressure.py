@@ -32,6 +32,21 @@ class NodePIDPressureRule(FailureRule):
 
         if not pressured_nodes:
             return False
+        
+        pod_node = pod.get("spec", {}).get("nodeName")
+
+        if pod_node:
+            pressured_node_names = [
+                name
+                for name, node in node_objs.items()
+                if any(
+                    cond.get("type") == "PIDPressure"
+                    and cond.get("status") == "True"
+                    for cond in node.get("status", {}).get("conditions", [])
+                )
+            ]
+            if pod_node not in pressured_node_names:
+                return False
 
         # --- Optional temporal corroboration ---
         timeline = context.get("timeline")

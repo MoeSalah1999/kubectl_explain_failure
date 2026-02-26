@@ -1,0 +1,30 @@
+{
+  "root_cause": "Pod was evicted from node",
+  "blocking": true,
+  "evidence": [
+    "Event: Evicted"
+  ],
+  "causes": [
+    {
+      "code": "NODE_RESOURCE_PRESSURE",
+      "message": "Node reports resource pressure (memory, disk, or PID)",
+      "role": "node_condition"
+    },
+    {
+      "code": "KUBELET_EVICTION_MANAGER",
+      "message": "Kubelet eviction manager selected Pod for eviction",
+      "role": "scheduler_action"
+    },
+    {
+      "code": "POD_EVICTED",
+      "message": "Pod was evicted from node",
+      "role": "workload_termination",
+      "blocking": true
+    }
+  ],
+  "object_evidence": {
+    "pod:evicted-pod": [
+      "Evicted from node node1"
+    ]
+  }
+}

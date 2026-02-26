@@ -1,0 +1,34 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "evicted-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node1"
+    },
+    "status": {
+      "phase": "Failed",
+      "reason": "Evicted"
+    }
+  },
+  "node": {
+    "metadata": {
+      "name": "node1"
+    },
+    "status": {
+      "conditions": []
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Evicted",
+      "message": "The node was low on resource: memory.",
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "evicted-pod"
+      }
+    }
+  ]
+}
