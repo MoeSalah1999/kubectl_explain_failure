@@ -7,15 +7,25 @@
   ],
   "causes": [
     {
-      "code": "SERVICEACCOUNT_NOT_FOUND",
-      "message": "Referenced ServiceAccount does not exist",
+      "code": "SERVICEACCOUNT_REFERENCED",
+      "message": "Pod specification references a ServiceAccount",
       "role": "identity_context"
     },
     {
-      "code": "POD_CREATION_BLOCKED",
-      "message": "Pod rejected during admission",
-      "role": "workload_symptom",
+      "code": "SERVICEACCOUNT_NOT_FOUND",
+      "message": "Referenced ServiceAccount does not exist",
+      "role": "identity_root"
+    },
+    {
+      "code": "ADMISSION_REJECTED",
+      "message": "Kubernetes API rejected Pod during admission",
+      "role": "admission_root",
       "blocking": true
+    },
+    {
+      "code": "POD_CREATION_BLOCKED",
+      "message": "Pod was not created",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

@@ -5,6 +5,23 @@ from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class ServiceAccountMissingRule(FailureRule):
+    """
+    Detects Pod admission failures caused by a missing ServiceAccount.
+
+    Signals:
+      - Event.reason == "FailedCreate"
+      - Event.message contains "serviceaccount" and "not found"
+
+    Interpretation:
+      The Pod spec references a ServiceAccount that does not exist
+      in the target namespace at admission time, causing the API
+      server to reject Pod creation.
+
+    Scope:
+      - Admission phase only
+      - Deterministic (event-message based)
+      - Supersedes generic Pod creation failures
+    """
     name = "ServiceAccountMissing"
     category = "Admission"
     priority = 56
@@ -42,14 +59,24 @@ class ServiceAccountMissingRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="SERVICEACCOUNT_NOT_FOUND",
-                    message="Referenced ServiceAccount does not exist",
+                    code="SERVICEACCOUNT_REFERENCED",
+                    message="Pod specification references a ServiceAccount",
                     role="identity_context",
                 ),
                 Cause(
-                    code="POD_CREATION_BLOCKED",
-                    message="Pod rejected during admission",
+                    code="SERVICEACCOUNT_NOT_FOUND",
+                    message="Referenced ServiceAccount does not exist",
+                    role="identity_root",
+                ),
+                Cause(
+                    code="ADMISSION_REJECTED",
+                    message="Kubernetes API rejected Pod during admission",
                     blocking=True,
+                    role="admission_root",
+                ),
+                Cause(
+                    code="POD_CREATION_BLOCKED",
+                    message="Pod was not created",
                     role="workload_symptom",
                 ),
             ]
