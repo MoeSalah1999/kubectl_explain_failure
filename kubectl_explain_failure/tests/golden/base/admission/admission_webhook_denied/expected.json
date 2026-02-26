@@ -8,9 +8,25 @@
   ],
   "causes": [
     {
+      "code": "ADMISSION_WEBHOOK_PRESENT",
+      "message": "Admission webhook is configured in the cluster/namespace",
+      "role": "cluster_policy_context"
+    },
+    {
+      "code": "WEBHOOK_POLICY_EVALUATED",
+      "message": "Webhook evaluated Pod spec against policy constraints",
+      "role": "policy_rule"
+    },
+    {
       "code": "ADMISSION_WEBHOOK_DENIED",
-      "message": "Admission webhook rejected pod creation",
+      "message": "Webhook rejected pod creation",
+      "role": "authorization_root",
       "blocking": true
+    },
+    {
+      "code": "POD_CREATION_BLOCKED",
+      "message": "Pod creation blocked during admission",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

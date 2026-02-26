@@ -4,11 +4,24 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class AdmissionWebhookDeniedRule(FailureRule):
     """
-    Detects failures caused by admission webhooks rejecting Pod creation.
-    Triggered by:
-      - event.reason == FailedCreate
-      - event.message contains 'admission webhook'
-    High enterprise relevance.
+    Detects Pod creation failures caused by admission webhooks rejecting the Pod.
+
+    Signals:
+      - timeline event.reason == "FailedCreate"
+      - event.message contains "admission webhook"
+
+    Interpretation:
+      The Pod was blocked by an external admission webhook, which
+      enforces custom or enterprise policies (validating or mutating).
+
+    Scope:
+      - Admission phase (Pod rejected before scheduling)
+      - Deterministic (event-message based)
+      - Relevant for enterprise environments with webhooks enabled
+
+    Exclusions:
+      - Does not capture standard PodSecurity or LimitRange violations
+      - Does not indicate kubelet-level failures or node scheduling issues
     """
 
     name = "AdmissionWebhookDenied"
@@ -40,14 +53,24 @@ class AdmissionWebhookDeniedRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="ADMISSION_WEBHOOK_PRESENT",
+                    message="Admission webhook is configured in the cluster/namespace",
+                    role="cluster_policy_context",
+                ),
+                Cause(
+                    code="WEBHOOK_POLICY_EVALUATED",
+                    message="Webhook evaluated Pod spec against policy constraints",
+                    role="policy_rule",
+                ),
+                Cause(
                     code="ADMISSION_WEBHOOK_DENIED",
-                    message="Admission webhook rejected pod creation",
-                    role="policy_root",
+                    message="Webhook rejected pod creation",
                     blocking=True,
+                    role="authorization_root",
                 ),
                 Cause(
                     code="POD_CREATION_BLOCKED",
-                    message="Pod creation blocked by admission controller",
+                    message="Pod creation blocked during admission",
                     role="workload_symptom",
                 ),
             ]
