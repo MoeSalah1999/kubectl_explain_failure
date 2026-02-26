@@ -4,10 +4,29 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class PrivilegedNotAllowedRule(FailureRule):
     """
-    Detects admission rejection when privileged container is not allowed.
-    Triggered by security policy denial referencing privileged=true.
-    """
+    Detects Pod admission rejection caused by a privileged container
+    being disallowed by cluster security policy.
 
+    This rule matches when admission events (typically FailedCreate or Failed)
+    contain denial messages indicating that `securityContext.privileged=true`
+    is not permitted.
+
+    Detection Signals:
+      - timeline event.reason in {"FailedCreate", "Failed"}
+      - event.message contains:
+            * "privileged containers are not allowed"
+            * or a combination of "privileged" and "not allowed"
+
+    Scope:
+      - Admission phase (Pod never scheduled)
+      - Security policy enforcement (PodSecurity Admission, validating
+        admission policies, or legacy PodSecurityPolicy)
+
+    Exclusions:
+      - Does not attempt to distinguish between PodSecurity Admission,
+        custom admission webhooks, or deprecated PodSecurityPolicy.
+      - Does not inspect container specs directly — relies on event evidence.
+    """
     name = "PrivilegedNotAllowed"
     category = "Admission"
     priority = 30
@@ -46,15 +65,20 @@ class PrivilegedNotAllowedRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="POD_SECURITY_POLICY_ENFORCED",
-                    message="Cluster or namespace enforces restrictive Pod security policy",
-                    role="policy_root",
+                    code="POD_SECURITY_ADMISSION_ACTIVE",
+                    message="Pod Security Admission or equivalent policy engine is enforcing security constraints",
+                    role="cluster_security_context",
+                ),
+                Cause(
+                    code="PRIVILEGED_MODE_RESTRICTED",
+                    message="Cluster policy forbids containers with securityContext.privileged=true",
+                    role="policy_rule",
                 ),
                 Cause(
                     code="PRIVILEGED_CONTAINER_DENIED",
-                    message="Privileged container not permitted by admission policy",
+                    message="Admission controller rejected pod due to privileged container configuration",
                     blocking=True,
-                    role="policy_root",
+                    role="authorization_root",
                 ),
                 Cause(
                     code="POD_CREATION_BLOCKED",

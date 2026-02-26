@@ -7,14 +7,19 @@
   ],
   "causes": [
     {
-      "code": "POD_SECURITY_POLICY_ENFORCED",
-      "message": "Cluster or namespace enforces restrictive Pod security policy",
-      "role": "policy_root"
+      "code": "POD_SECURITY_ADMISSION_ACTIVE",
+      "message": "Pod Security Admission or equivalent policy engine is enforcing security constraints",
+      "role": "cluster_security_context"
+    },
+    {
+      "code": "PRIVILEGED_MODE_RESTRICTED",
+      "message": "Cluster policy forbids containers with securityContext.privileged=true",
+      "role": "policy_rule"
     },
     {
       "code": "PRIVILEGED_CONTAINER_DENIED",
-      "message": "Privileged container not permitted by admission policy",
-      "role": "policy_root",
+      "message": "Admission controller rejected pod due to privileged container configuration",
+      "role": "authorization_root",
       "blocking": true
     },
     {
