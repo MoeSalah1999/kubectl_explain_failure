@@ -7,9 +7,14 @@
   ],
   "causes": [
     {
-      "code": "RESOURCE_QUOTA_POLICY",
-      "message": "Namespace ResourceQuota policies are enforced",
-      "role": "policy_root"
+      "code": "RESOURCE_QUOTA_ACTIVE",
+      "message": "Namespace 'team-a' enforces ResourceQuota policies",
+      "role": "policy_context"
+    },
+    {
+      "code": "RESOURCE_REQUEST_EVALUATED",
+      "message": "Pod resource requests evaluated against namespace quota",
+      "role": "policy_context"
     },
     {
       "code": "RESOURCE_QUOTA_EXCEEDED",

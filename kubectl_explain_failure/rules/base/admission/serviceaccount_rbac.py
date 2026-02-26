@@ -4,24 +4,27 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class ServiceAccountRBACCompoundRule(FailureRule):
     """
-    Detects RBAC authorization failures affecting a Pod that references
-    an existing ServiceAccount.
+    Detects compound identity + authorization failures where a Pod
+    references an existing ServiceAccount but RBAC denies required
+    permissions.
 
     Signals:
-      - A ServiceAccount object exists in the namespace
-      - No "ServiceAccount not found" condition is present
-      - Event messages contain RBAC authorization errors
+      - A ServiceAccount object is present in the namespace
+      - No "ServiceAccount not found" admission error is detected
+      - Event messages contain RBAC authorization denial patterns
         (e.g., "forbidden", "cannot", referencing serviceaccount)
 
     Interpretation:
-      The ServiceAccount exists, but RBAC policies deny required
-      permissions for the Pod's identity, resulting in admission
-      or API authorization failures.
+      The Pod is correctly bound to a ServiceAccount, but the
+      ServiceAccount lacks sufficient RBAC permissions to perform
+      required actions. The Kubernetes API server denies the request
+      during authorization.
 
     Scope:
       - Admission / authorization phase
-      - Deterministic (event-message based)
-      - Supersedes simpler RBACForbidden and ServiceAccountMissing rules
+      - Deterministic (event-message based detection)
+      - Supersedes RBACForbidden and ServiceAccountMissing rules
+        to provide higher-fidelity root cause modeling
     """
 
     name = "ServiceAccountRBACCompound"
@@ -86,8 +89,8 @@ class ServiceAccountRBACCompoundRule(FailureRule):
                     role="authorization_root",
                 ),
                 Cause(
-                    code="API_ACCESS_BLOCKED",
-                    message="Pod cannot access required Kubernetes resources",
+                    code="POD_CREATION_BLOCKED",
+                    message="Pod rejected during admission",
                     role="workload_symptom",
                 ),
             ]

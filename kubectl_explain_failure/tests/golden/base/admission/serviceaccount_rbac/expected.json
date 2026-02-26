@@ -23,8 +23,8 @@
       "blocking": true
     },
     {
-      "code": "API_ACCESS_BLOCKED",
-      "message": "Pod cannot access required Kubernetes resources",
+      "code": "POD_CREATION_BLOCKED",
+      "message": "Pod rejected during admission",
       "role": "workload_symptom"
     }
   ],

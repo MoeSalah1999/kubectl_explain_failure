@@ -4,11 +4,23 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class ResourceQuotaExceededRule(FailureRule):
     """
-    Detects Pod creation failure due to namespace ResourceQuota exhaustion.
+    Detects Pod admission failures caused by namespace ResourceQuota exhaustion.
+
     Signals:
-      - Pod.status.reason == FailedCreate
-      - OR event.reason == ExceededQuota
-      - OR event.message contains 'exceeded quota'
+      - Pod.status.reason == "FailedCreate"
+      - Event.reason == "ExceededQuota"
+      - Event.message contains "exceeded quota"
+
+    Interpretation:
+      The namespace has an active ResourceQuota object, and the
+      requested Pod would exceed one or more enforced limits
+      (e.g., CPU, memory, storage, object count). The API server
+      rejects Pod creation during admission.
+
+    Scope:
+      - Admission phase only (Pod remains Pending)
+      - Deterministic (status / event based detection)
+      - Represents a policy-enforced resource constraint
     """
 
     name = "ResourceQuotaExceeded"
@@ -50,9 +62,14 @@ class ResourceQuotaExceededRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="RESOURCE_QUOTA_POLICY",
-                    message="Namespace ResourceQuota policies are enforced",
-                    role="policy_root",
+                    code="RESOURCE_QUOTA_ACTIVE",
+                    message=f"Namespace '{namespace}' enforces ResourceQuota policies",
+                    role="policy_context",
+                ),
+                Cause(
+                    code="RESOURCE_REQUEST_EVALUATED",
+                    message="Pod resource requests evaluated against namespace quota",
+                    role="policy_context",
                 ),
                 Cause(
                     code="RESOURCE_QUOTA_EXCEEDED",
