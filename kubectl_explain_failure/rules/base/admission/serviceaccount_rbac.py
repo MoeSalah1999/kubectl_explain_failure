@@ -4,9 +4,24 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class ServiceAccountRBACCompoundRule(FailureRule):
     """
-    ServiceAccount present
-    → RBAC denies
-    → Pod cannot mount token / access API
+    Detects RBAC authorization failures affecting a Pod that references
+    an existing ServiceAccount.
+
+    Signals:
+      - A ServiceAccount object exists in the namespace
+      - No "ServiceAccount not found" condition is present
+      - Event messages contain RBAC authorization errors
+        (e.g., "forbidden", "cannot", referencing serviceaccount)
+
+    Interpretation:
+      The ServiceAccount exists, but RBAC policies deny required
+      permissions for the Pod's identity, resulting in admission
+      or API authorization failures.
+
+    Scope:
+      - Admission / authorization phase
+      - Deterministic (event-message based)
+      - Supersedes simpler RBACForbidden and ServiceAccountMissing rules
     """
 
     name = "ServiceAccountRBACCompound"
@@ -55,9 +70,14 @@ class ServiceAccountRBACCompoundRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="SERVICEACCOUNT_PRESENT",
-                    message="ServiceAccount is attached to the Pod",
+                    code="SERVICEACCOUNT_ATTACHED",
+                    message="Pod is configured to use a ServiceAccount",
                     role="identity_context",
+                ),
+                Cause(
+                    code="RBAC_POLICY_EVALUATED",
+                    message="Kubernetes API evaluated RBAC permissions for the ServiceAccount",
+                    role="authorization_context",
                 ),
                 Cause(
                     code="RBAC_DENIED",
@@ -66,8 +86,8 @@ class ServiceAccountRBACCompoundRule(FailureRule):
                     role="authorization_root",
                 ),
                 Cause(
-                    code="API_ACCESS_FAILURE",
-                    message="Pod cannot access Kubernetes API or mount token",
+                    code="API_ACCESS_BLOCKED",
+                    message="Pod cannot access required Kubernetes resources",
                     role="workload_symptom",
                 ),
             ]
