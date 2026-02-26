@@ -4,8 +4,24 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class ImagePullBackOffRule(FailureRule):
     """
-    Image pull repeatedly failed, Kubernetes entered backoff state.
-    Indicates runtime-level image retrieval failure.
+    Detects Pods entering ImagePullBackOff due to repeated container image pull failures.
+
+    Signals:
+    - Timeline contains repeated 'ImagePullBackOff' events
+    - Container state.waiting.reason == "ImagePullBackOff"
+
+    Interpretation:
+    The container image could not be pulled (missing, invalid, or unreachable), 
+    causing the Kubelet to apply exponential restart backoff. The Pod cannot start.
+
+    Scope:
+    - Container runtime / Kubelet phase
+    - Deterministic (event & state-based)
+    - Blocks downstream image-dependent runtime failures
+
+    Exclusions:
+    - Does not include CrashLoopBackOff due to application crash
+    - Does not include OOMKilled or configuration errors
     """
 
     name = "ImagePullBackOff"
@@ -68,6 +84,11 @@ class ImagePullBackOffRule(FailureRule):
                     message="Kubelet entered exponential backoff due to repeated pull failures",
                     blocking=True,
                     role="runtime_symptom",
+                ),
+                Cause(
+                    code="POD_UNABLE_TO_RUN",
+                    message="Pod cannot reach Running state due to image pull failures",
+                    role="workload_symptom",
                 ),
             ]
         )

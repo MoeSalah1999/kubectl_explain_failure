@@ -16,6 +16,11 @@
       "message": "Kubelet entered exponential backoff due to repeated pull failures",
       "role": "runtime_symptom",
       "blocking": true
+    },
+    {
+      "code": "POD_UNABLE_TO_RUN",
+      "message": "Pod cannot reach Running state due to image pull failures",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {
