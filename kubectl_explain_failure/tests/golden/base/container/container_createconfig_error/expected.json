@@ -7,8 +7,13 @@
   ],
   "causes": [
     {
+      "code": "CONTAINER_SPEC_PROVIDED",
+      "message": "Container spec was provided in Pod manifest",
+      "role": "configuration_context"
+    },
+    {
       "code": "CONTAINER_CONFIG_INVALID",
-      "message": "Container specification is invalid or references missing configuration",
+      "message": "Container spec is invalid or references missing resources",
       "role": "configuration_root"
     },
     {
@@ -16,6 +21,11 @@
       "message": "Kubelet reports CreateContainerConfigError",
       "role": "runtime_symptom",
       "blocking": true
+    },
+    {
+      "code": "POD_START_BLOCKED",
+      "message": "Pod cannot start container due to configuration error",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

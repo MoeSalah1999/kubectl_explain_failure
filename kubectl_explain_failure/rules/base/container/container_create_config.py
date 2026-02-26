@@ -4,8 +4,25 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class ContainerCreateConfigErrorRule(FailureRule):
     """
-    Detects containers failing due to CreateContainerConfigError.
-    Triggered when container state.waiting.reason=CreateContainerConfigError
+    Detects container failures caused by invalid container configuration.
+
+    Signals:
+      - container state.waiting.reason == "CreateContainerConfigError"
+
+    Interpretation:
+      The Pod's container spec is invalid or references missing/incorrect
+      configuration (e.g., environment variables, secrets, or configMaps),
+      preventing the container from starting.
+
+    Scope:
+      - Container runtime / Kubelet phase
+      - Phases: Pending, Running
+      - Deterministic (state-based)
+      - Blocks downstream CrashLoopBackOff failures
+
+    Exclusions:
+      - Does not cover runtime errors unrelated to configuration
+      - Does not include image pull errors (ImagePullBackOff)
     """
 
     name = "ContainerCreateConfigError"
@@ -28,8 +45,13 @@ class ContainerCreateConfigErrorRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="CONTAINER_SPEC_PROVIDED",
+                    message="Container spec was provided in Pod manifest",
+                    role="configuration_context",
+                ),
+                Cause(
                     code="CONTAINER_CONFIG_INVALID",
-                    message="Container specification is invalid or references missing configuration",
+                    message="Container spec is invalid or references missing resources",
                     role="configuration_root",
                 ),
                 Cause(
@@ -37,6 +59,11 @@ class ContainerCreateConfigErrorRule(FailureRule):
                     message="Kubelet reports CreateContainerConfigError",
                     blocking=True,
                     role="runtime_symptom",
+                ),
+                Cause(
+                    code="POD_START_BLOCKED",
+                    message="Pod cannot start container due to configuration error",
+                    role="workload_symptom",
                 ),
             ]
         )

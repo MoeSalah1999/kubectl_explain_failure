@@ -13,7 +13,7 @@
     {
       "code": "INVALID_ENTRYPOINT_DETECTED",
       "message": "Container entrypoint or command is invalid",
-      "role": "exectution_root",
+      "role": "execution_root",
       "blocking": true
     },
     {
