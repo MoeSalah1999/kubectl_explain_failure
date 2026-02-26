@@ -8,13 +8,18 @@
   ],
   "causes": [
     {
-      "code": "RBAC_POLICY_ENFORCED",
-      "message": "RBAC authorization policies are enforced in the cluster",
-      "role": "cluster_security_context"
+      "code": "RBAC_POLICY_ACTIVE",
+      "message": "Cluster enforces RBAC authorization policies",
+      "role": "authorization_context"
     },
     {
-      "code": "RBAC_FORBIDDEN",
-      "message": "Kubernetes API denied action due to RBAC policy",
+      "code": "RBAC_POLICY_EVALUATED",
+      "message": "Kubernetes API evaluated permissions for the requesting identity",
+      "role": "authorization_context"
+    },
+    {
+      "code": "RBAC_DENIED",
+      "message": "RBAC policy denies required permission",
       "role": "authorization_root",
       "blocking": true
     },

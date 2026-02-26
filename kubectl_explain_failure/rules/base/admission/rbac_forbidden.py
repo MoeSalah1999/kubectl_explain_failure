@@ -4,11 +4,29 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class RBACForbiddenRule(FailureRule):
     """
-    Detects RBAC authorization failures.
+    Detects Pod admission failures caused by RBAC authorization denial.
+
     Signals:
-      - event.reason == FailedCreate
-      - event.message contains 'forbidden'
-      - API error message contains 'cannot'
+      - Event.reason == "FailedCreate"
+      - Event.message contains authorization denial patterns
+        (e.g., "forbidden", "cannot")
+      - Pod.status.message contains RBAC-related denial text
+
+    Exclusions:
+      - Messages referencing quota or limit exhaustion
+        (handled by ResourceQuota / LimitRange rules)
+
+    Interpretation:
+      The Kubernetes API server evaluated the requesting identity
+      (user or ServiceAccount) against RBAC policies and denied
+      the required permission, preventing Pod creation during
+      admission.
+
+    Scope:
+      - Admission / authorization phase
+      - Deterministic (event/status message based)
+      - Models direct RBAC denial not involving compound
+        ServiceAccount resolution
     """
 
     name = "RBACForbidden"
@@ -58,13 +76,18 @@ class RBACForbiddenRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="RBAC_POLICY_ENFORCED",
-                    message="RBAC authorization policies are enforced in the cluster",
-                    role="cluster_security_context",
+                    code="RBAC_POLICY_ACTIVE",
+                    message="Cluster enforces RBAC authorization policies",
+                    role="authorization_context",
                 ),
                 Cause(
-                    code="RBAC_FORBIDDEN",
-                    message="Kubernetes API denied action due to RBAC policy",
+                    code="RBAC_POLICY_EVALUATED",
+                    message="Kubernetes API evaluated permissions for the requesting identity",
+                    role="authorization_context",
+                ),
+                Cause(
+                    code="RBAC_DENIED",
+                    message="RBAC policy denies required permission",
                     blocking=True,
                     role="authorization_root",
                 ),
