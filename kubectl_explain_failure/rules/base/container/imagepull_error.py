@@ -5,7 +5,25 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class ImagePullRule(FailureRule):
     """
-    Generic image pull failure without specific authentication signal.
+    Detects generic container image pull failures (ErrImagePull) in Pods.
+
+    Signals:
+    - Timeline contains repeated 'ErrImagePull' events
+    - Container state.waiting.reason == "ErrImagePull"
+
+    Interpretation:
+    The Pod references a container image, but the Kubelet cannot pull it 
+    from the registry due to missing image, authentication errors, or network issues. 
+    Containers remain in a waiting state, preventing Pod startup.
+
+    Scope:
+    - Container runtime / Kubelet phase
+    - Deterministic (event & state-based)
+    - Captures runtime-level image retrieval failures
+
+    Exclusions:
+    - Does not include ImagePullBackOff (which tracks exponential backoff)
+    - Does not include CrashLoopBackOff, OOMKilled, or config errors
     """
 
     name = "ImagePullError"
