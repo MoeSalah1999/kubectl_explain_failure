@@ -16,6 +16,7 @@ class StartupProbeFailureRule(FailureRule):
     blocks = ["CrashLoopBackOff", "RepeatedCrashLoop"]
     requires = {
         "pod": True,
+        "context": ["timeline"],
     }
 
     phases = ["Running", "Pending"]
@@ -23,11 +24,18 @@ class StartupProbeFailureRule(FailureRule):
     container_states = ["terminated", "waiting"]
 
     def matches(self, pod, events, context) -> bool:
-        for e in events or []:
-            msg = (e.get("message") or "").lower()
-            if "startup probe" in msg and "fail" in msg:
-                return True
-        return False
+        timeline = context.get("timeline")
+        if not timeline:
+            return False
+
+        # Detect startup probe failure message
+        startup_failure = any(
+            "startup probe" in (e.get("message", "").lower())
+            and "fail" in (e.get("message", "").lower())
+            for e in timeline.raw_events
+        )
+
+        return startup_failure
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name")
@@ -36,10 +44,21 @@ class StartupProbeFailureRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="STARTUP_PROBE_CONFIGURED",
+                    message="Container has startupProbe configured",
+                    role="healthcheck_context",
+                ),
+                Cause(
                     code="STARTUP_PROBE_FAILED",
-                    message="Container startupProbe failed",
+                    message="Startup probe checks are failing",
                     blocking=True,
-                )
+                    role="container_health_root",
+                ),
+                Cause(
+                    code="CONTAINER_STARTUP_BLOCKED",
+                    message="Container cannot complete initialization phase",
+                    role="workload_symptom",
+                ),
             ]
         )
 

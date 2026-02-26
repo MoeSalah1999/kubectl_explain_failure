@@ -7,9 +7,20 @@
   ],
   "causes": [
     {
+      "code": "STARTUP_PROBE_CONFIGURED",
+      "message": "Container has startupProbe configured",
+      "role": "healthcheck_context"
+    },
+    {
       "code": "STARTUP_PROBE_FAILED",
-      "message": "Container startupProbe failed",
+      "message": "Startup probe checks are failing",
+      "role": "container_health_root",
       "blocking": true
+    },
+    {
+      "code": "CONTAINER_STARTUP_BLOCKED",
+      "message": "Container cannot complete initialization phase",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {
