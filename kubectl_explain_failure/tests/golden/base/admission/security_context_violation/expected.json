@@ -7,9 +7,14 @@
   ],
   "causes": [
     {
-      "code": "POD_SECURITY_POLICY_ENFORCED",
-      "message": "Cluster enforces PodSecurity admission policies",
-      "role": "policy_root"
+      "code": "POD_SECURITY_POLICY_ACTIVE",
+      "message": "Namespace enforces PodSecurity admission policies",
+      "role": "policy_context"
+    },
+    {
+      "code": "POD_SECURITY_EVALUATED",
+      "message": "Pod specification evaluated against security constraints",
+      "role": "policy_context"
     },
     {
       "code": "SECURITY_CONTEXT_VIOLATION",

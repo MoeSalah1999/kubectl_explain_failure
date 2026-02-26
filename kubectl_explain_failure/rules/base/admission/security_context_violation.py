@@ -4,8 +4,23 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class SecurityContextViolationRule(FailureRule):
     """
-    Detects Pod rejection due to PodSecurity or legacy PSP violations.
-    Triggered by admission denial events referencing security context violations.
+    Detects Pod admission rejections caused by PodSecurity admission
+    (PSA) or legacy PodSecurityPolicy (PSP) violations.
+
+    Signals:
+      - Event messages referencing "podsecurity", "violates PodSecurity",
+        or "podsecuritypolicy"
+      - Event.reason == "FailedCreate" with security-related denial message
+
+    Interpretation:
+      The Pod specification violates enforced security constraints
+      (e.g., restricted/baseline PodSecurity levels or legacy PSP rules),
+      causing the API server to reject Pod creation during admission.
+
+    Scope:
+      - Admission phase only (Pod remains Pending)
+      - Deterministic (event-message based detection)
+      - Supersedes more specific privilege-related rules
     """
 
     name = "SecurityContextViolation"
@@ -66,9 +81,14 @@ class SecurityContextViolationRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="POD_SECURITY_POLICY_ENFORCED",
-                    message="Cluster enforces PodSecurity admission policies",
-                    role="policy_root",
+                    code="POD_SECURITY_POLICY_ACTIVE",
+                    message="Namespace enforces PodSecurity admission policies",
+                    role="policy_context",
+                ),
+                Cause(
+                    code="POD_SECURITY_EVALUATED",
+                    message="Pod specification evaluated against security constraints",
+                    role="policy_context",
                 ),
                 Cause(
                     code="SECURITY_CONTEXT_VIOLATION",
