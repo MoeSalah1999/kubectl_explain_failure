@@ -3,6 +3,27 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 
 class CrashLoopBackOffRule(FailureRule):
+    """
+    Detects Pods entering CrashLoopBackOff due to containers repeatedly crashing.
+
+    Signals:
+      - Timeline contains repeated 'BackOff' events
+      - Container state.waiting.reason == "CrashLoopBackOff"
+
+    Interpretation:
+      The container process exits repeatedly, triggering the Kubelet to
+      apply exponential restart backoff, preventing the Pod from running normally.
+
+    Scope:
+      - Container runtime / Kubelet phase
+      - Phases: Running, Pending
+      - Deterministic (event & state-based)
+      - Blocks downstream RepeatedCrashLoop failures
+
+    Exclusions:
+      - Does not include ImagePullBackOff errors
+      - Does not include PodSecurity or admission failures
+    """
     name = "CrashLoopBackOff"
     category = "Container"
     priority = 15
@@ -60,6 +81,11 @@ class CrashLoopBackOffRule(FailureRule):
                     message="Kubelet enters exponential restart backoff",
                     blocking=True,
                     role="runtime_symptom",
+                ),
+                Cause(
+                    code="POD_UNABLE_TO_RUN",
+                    message="Pod cannot reach Running state due to container crashes",
+                    role="workload_symptom",
                 ),
             ]
         )
