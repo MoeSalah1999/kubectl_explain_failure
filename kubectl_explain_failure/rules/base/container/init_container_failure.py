@@ -4,6 +4,22 @@ from kubectl_explain_failure.timeline import timeline_has_event
 
 
 class InitContainerFailureRule(FailureRule):
+    """
+    Detects Pods blocked due to failing init containers.
+
+    Signals:
+    - Init container state.terminated.exitCode != 0
+    - Timeline may include repeated init container failures (BackOff events)
+
+    Interpretation:
+    The Pod defines one or more init containers. One or more of these containers
+    exited with a non-zero status, preventing the Pod from starting its main containers.
+
+    Scope:
+    - Compound / multi-step startup failure
+    - Deterministic (event & state-based)
+    - Supersedes simpler InitContainerNonZeroExit signals
+    """
     name = "InitContainerFailure"
     category = "Compound"
     priority = 61

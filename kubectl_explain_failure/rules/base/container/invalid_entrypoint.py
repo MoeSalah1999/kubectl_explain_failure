@@ -4,8 +4,21 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class InvalidEntrypointRule(FailureRule):
     """
-    Detects containers failing due to invalid entrypoint.
-    Triggered when container state.waiting.reason=RunContainerError
+    Detects containers failing to start due to invalid entrypoint or command.
+
+    Signals:
+    - container state.waiting.reason == "RunContainerError"
+
+    Interpretation:
+    Kubelet attempted to start the container, but the entrypoint or command
+    is invalid, leaving the container in waiting state. This blocks normal
+    container execution and can trigger downstream CrashLoopBackOff.
+
+    Scope:
+    - Container runtime / Kubelet phase
+    - Phases: Pending, Running
+    - Deterministic (state-based)
+    - Blocks downstream CrashLoopBackOff
     """
 
     name = "InvalidEntrypoint"

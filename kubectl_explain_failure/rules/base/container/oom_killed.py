@@ -3,6 +3,22 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 
 class OOMKilledRule(FailureRule):
+    """
+    Detects containers terminated due to out-of-memory (OOM) conditions.
+
+    Signals:
+    - container.lastState.terminated.reason == "OOMKilled"
+
+    Interpretation:
+    The container was running and exceeded its configured memory limit,
+    causing the Kubelet to terminate it to protect node stability. This
+    is a runtime-level resource enforcement failure.
+
+    Scope:
+    - Container runtime / Kubelet phase
+    - Phases: Running, Failed
+    - Deterministic (state-based)
+    """
     name = "OOMKilled"
     category = "Container"
     priority = 16

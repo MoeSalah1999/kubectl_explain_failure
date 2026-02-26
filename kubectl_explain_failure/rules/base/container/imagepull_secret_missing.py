@@ -5,9 +5,25 @@ from kubectl_explain_failure.timeline import timeline_has_pattern
 
 class ImagePullSecretMissingRule(FailureRule):
     """
-    Registry authentication failed due to missing or invalid imagePullSecret.
-    → Image cannot be pulled
-    → Container cannot start
+    Detects container image pull failures caused by missing or invalid imagePullSecrets.
+
+    Signals:
+    - Timeline contains ErrImagePull events
+    - Event messages include 'pull access denied' or 'unauthorized'
+    - Pod references imagePullSecrets
+
+    Interpretation:
+    The Pod references an imagePullSecret, but the secret is missing, misconfigured,
+    or contains invalid credentials. This prevents the Kubelet from pulling the image,
+    leaving the container in a waiting state.
+
+    Scope:
+    - Container runtime / Kubelet phase
+    - Deterministic (event & state-based)
+    - Blocks downstream generic ImagePullError
+
+    Exclusions:
+    - Does not include non-authentication image pull errors (e.g., network or non-existent image)
     """
 
     name = "ImagePullSecretMissing"
@@ -54,7 +70,7 @@ class ImagePullSecretMissingRule(FailureRule):
                 ),
                 Cause(
                     code="IMAGE_PULL_SECRET_INVALID",
-                    message="Registry authentication failed",
+                    message="Registry authentication failed due to missing or invalid secret",
                     blocking=True,
                     role="config_root",
                 ),

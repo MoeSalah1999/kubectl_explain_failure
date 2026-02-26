@@ -8,16 +8,19 @@
   "causes": [
     {
       "code": "IMAGE_PULL_SECRET_REFERENCE",
-      "message": "Pod references imagePullSecret"
+      "message": "Pod references imagePullSecret",
+      "role": "workload_context"
     },
     {
       "code": "IMAGE_PULL_SECRET_INVALID",
-      "message": "Registry authentication failed",
+      "message": "Registry authentication failed due to missing or invalid secret",
+      "role": "config_root",
       "blocking": true
     },
     {
       "code": "IMAGE_PULL_FAILURE",
-      "message": "Container image could not be pulled"
+      "message": "Container image could not be pulled",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {
