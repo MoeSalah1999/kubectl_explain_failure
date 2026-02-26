@@ -4,10 +4,26 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class LimitRangeViolationRule(FailureRule):
     """
-    Detects Pod admission failure due to LimitRange violations.
-    Signals:
-      - event.reason == FailedCreate
-      - event.message contains 'limit' or 'exceeds'
+    Detects Pod admission rejection caused by a namespace LimitRange policy violation.
+
+    This rule matches when admission events (typically FailedCreate)
+    indicate that container resource requests or limits exceed, fall below,
+    or omit values required by a namespace-scoped LimitRange.
+
+    Detection Signals:
+      - timeline event.reason == "FailedCreate"
+      - event.message contains:
+            * "limitrange"
+            * or resource constraint terms such as "exceed", "maximum",
+              "minimum", or "must specify"
+
+    Scope:
+      - Admission phase (Pod rejected before scheduling)
+      - Namespace-level resource governance via LimitRange
+
+    Exclusions:
+      - Does not detect ResourceQuota exhaustion (separate rule)
+      - Does not validate container spec directly; relies on admission event evidence
     """
 
     name = "LimitRangeViolation"
@@ -43,15 +59,20 @@ class LimitRangeViolationRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="LIMIT_RANGE_POLICY",
-                    message=f"Namespace '{namespace}' enforces LimitRange constraints",
-                    role="policy_root",
+                    code="LIMIT_RANGE_ENFORCEMENT_ACTIVE",
+                    message=f"Namespace '{namespace}' enforces LimitRange resource constraints",
+                    role="cluster_policy_context",
+                ),
+                Cause(
+                    code="RESOURCE_CONSTRAINT_DEFINED",
+                    message="Namespace defines minimum and/or maximum CPU or memory boundaries",
+                    role="policy_rule",
                 ),
                 Cause(
                     code="LIMIT_RANGE_VIOLATION",
                     message="Pod resource requests violate namespace LimitRange policy",
                     blocking=True,
-                    role="policy_root",
+                    role="authorization_root",
                 ),
                 Cause(
                     code="POD_CREATION_BLOCKED",

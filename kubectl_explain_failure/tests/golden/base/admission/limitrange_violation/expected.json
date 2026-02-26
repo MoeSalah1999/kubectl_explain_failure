@@ -7,14 +7,19 @@
   ],
   "causes": [
     {
-      "code": "LIMIT_RANGE_POLICY",
-      "message": "Namespace 'team-a' enforces LimitRange constraints",
-      "role": "policy_root"
+      "code": "LIMIT_RANGE_ENFORCEMENT_ACTIVE",
+      "message": "Namespace 'team-a' enforces LimitRange resource constraints",
+      "role": "cluster_policy_context"
+    },
+    {
+      "code": "RESOURCE_CONSTRAINT_DEFINED",
+      "message": "Namespace defines minimum and/or maximum CPU or memory boundaries",
+      "role": "policy_rule"
     },
     {
       "code": "LIMIT_RANGE_VIOLATION",
       "message": "Pod resource requests violate namespace LimitRange policy",
-      "role": "policy_root",
+      "role": "authorization_root",
       "blocking": true
     },
     {
