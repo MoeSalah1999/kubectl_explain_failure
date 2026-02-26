@@ -51,10 +51,11 @@ class NodePIDPressureRule(FailureRule):
 
             # Recent container instability signals
             recent = timeline.events_within_window(10)
-            for e in recent:
-                reason = (e.get("reason") or "").lower()
-                if "backoff" in reason or "oom" in reason:
-                    return True
+            if any(
+                (e.get("reason") or "").lower().startswith(("oom", "backoff"))
+                for e in recent
+            ):
+                return True
 
         # --- PIDPressure alone is sufficient ---
         return True
@@ -76,9 +77,20 @@ class NodePIDPressureRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="NODE_PID_PRESSURE",
-                    message=f"Node(s) under PIDPressure: {', '.join(pressured_nodes)}",
+                    code="NODE_PID_PRESSURE_DETECTED",
+                    message=f"Node(s) reporting PIDPressure=True: {', '.join(pressured_nodes)}",
+                    role="infrastructure_root",
+                ),
+                Cause(
+                    code="NODE_PROCESS_TABLE_EXHAUSTION",
+                    message="Node process table resources are under pressure",
                     blocking=True,
+                    role="resource_root",
+                ),
+                Cause(
+                    code="POD_RUNTIME_OR_SCHEDULING_IMPACT",
+                    message="Pod affected by node PID resource constraints",
+                    role="workload_symptom",
                 ),
             ]
         )

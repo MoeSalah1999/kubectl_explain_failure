@@ -6,9 +6,20 @@
   ],
   "causes": [
     {
-      "code": "NODE_PID_PRESSURE",
-      "message": "Node(s) under PIDPressure: node1",
+      "code": "NODE_PID_PRESSURE_DETECTED",
+      "message": "Node(s) reporting PIDPressure=True: node1",
+      "role": "infrastructure_root"
+    },
+    {
+      "code": "NODE_PROCESS_TABLE_EXHAUSTION",
+      "message": "Node process table resources are under pressure",
+      "role": "resource_root",
       "blocking": true
+    },
+    {
+      "code": "POD_RUNTIME_OR_SCHEDULING_IMPACT",
+      "message": "Pod affected by node PID resource constraints",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

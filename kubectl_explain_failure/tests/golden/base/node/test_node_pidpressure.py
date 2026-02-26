@@ -61,11 +61,11 @@ def test_node_pidpressure_golden():
     assert result["confidence"] >= 0.85
 
     # Causes
-    for i, cause in enumerate(expected["causes"]):
-        assert result["causes"][i]["code"] == cause["code"]
-        assert result["causes"][i]["message"] == cause["message"]
-        if "blocking" in cause:
-            assert result["causes"][i]["blocking"] is cause["blocking"]
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+        assert exp_cause["code"] == res_cause["code"]
+        assert exp_cause["message"] == res_cause["message"]
+        assert exp_cause["role"] == res_cause["role"]
+        assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
 
     # Evidence
     for ev in expected["evidence"]:
