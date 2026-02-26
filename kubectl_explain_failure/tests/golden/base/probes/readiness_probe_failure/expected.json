@@ -7,9 +7,20 @@
   ],
   "causes": [
     {
+      "code": "READINESS_PROBE_CONFIGURED",
+      "message": "Container has readinessProbe configured",
+      "role": "healthcheck_context"
+    },
+    {
       "code": "READINESS_PROBE_FAILED",
-      "message": "Container readinessProbe failing",
+      "message": "Readiness probe checks are failing",
+      "role": "container_health_root",
       "blocking": true
+    },
+    {
+      "code": "POD_NOT_READY",
+      "message": "Pod is running but not Ready",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {
