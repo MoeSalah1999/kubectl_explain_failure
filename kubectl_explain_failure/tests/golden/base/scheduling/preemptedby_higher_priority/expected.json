@@ -6,8 +6,24 @@
   ],
   "causes": [
     {
-      "code": "POD_PREEMPTED",
-      "message": "Pod was preempted by a higher-priority Pod",
+      "code": "HIGHER_PRIORITY_POD_PRESENT",
+      "message": "A higher-priority Pod required scheduling",
+      "role": "workload_context"
+    },
+    {
+      "code": "INSUFFICIENT_NODE_CAPACITY",
+      "message": "Target node lacked sufficient free resources for both Pods",
+      "role": "infrastructure_condition"
+    },
+    {
+      "code": "SCHEDULER_PREEMPTION_TRIGGERED",
+      "message": "Scheduler selected lower-priority Pods for eviction",
+      "role": "scheduler_decision"
+    },
+    {
+      "code": "POD_EVICTED_PREEMPTION",
+      "message": "Pod was evicted and marked as Preempted",
+      "role": "scheduler_symptom",
       "blocking": true
     }
   ],
