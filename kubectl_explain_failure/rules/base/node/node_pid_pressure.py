@@ -89,26 +89,48 @@ class NodePIDPressureRule(FailureRule):
             )
         ]
 
-        chain = CausalChain(
-            causes=[
+        pod_phase = pod.get("status", {}).get("phase")
+        timeline = context.get("timeline")
+
+        impact_detected = False
+
+        if timeline:
+            recent_events = timeline.events_within_window(10)
+
+            for e in recent_events:
+                reason = (e.get("reason") or "").lower()
+                if reason.startswith(("failedscheduling", "backoff", "oom")):
+                    impact_detected = True
+                    break
+
+        causes = [
+            Cause(
+                code="NODE_PID_PRESSURE",
+                message=f"Node(s) reporting PIDPressure=True: {', '.join(pressured_nodes)}",
+                role="infrastructure_root",
+            )
+        ]
+
+        if impact_detected:
+            causes.append(
                 Cause(
-                    code="NODE_PID_PRESSURE_DETECTED",
-                    message=f"Node(s) reporting PIDPressure=True: {', '.join(pressured_nodes)}",
-                    role="infrastructure_root",
-                ),
+                    code="CONTROL_PLANE_OR_RUNTIME_IMPACT",
+                    message="Scheduler or runtime impacted by PID resource constraints",
+                    role="control_plane_effect",
+                )
+            )
+
+        if pod_phase in {"Pending", "Failed"} or impact_detected:
+            causes.append(
                 Cause(
-                    code="NODE_PROCESS_TABLE_EXHAUSTION",
-                    message="Node process table resources are under pressure",
+                    code="POD_IMPACTED_BY_PID_PRESSURE",
+                    message="Pod affected by node PID pressure",
                     blocking=True,
-                    role="resource_root",
-                ),
-                Cause(
-                    code="POD_RUNTIME_OR_SCHEDULING_IMPACT",
-                    message="Pod affected by node PID resource constraints",
                     role="workload_symptom",
-                ),
-            ]
-        )
+                )
+            )
+
+        chain = CausalChain(causes=causes)
 
         return {
             "rule": self.name,
