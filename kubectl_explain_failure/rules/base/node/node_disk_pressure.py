@@ -5,9 +5,29 @@ from kubectl_explain_failure.timeline import timeline_has_event
 
 class NodeDiskPressureRule(FailureRule):
     """
-    Node reports DiskPressure=True
-    → Scheduler cannot place pods
-    → Pod remains Pending or scheduling fails
+    Detects node-level disk pressure impacting Pod scheduling or stability.
+
+    Signals:
+    - Node.status.conditions[type="DiskPressure"].status == "True"
+    - (For Pending Pods) recent FailedScheduling events or scheduling failures
+
+    Interpretation:
+    A node reports DiskPressure=True, indicating insufficient available
+    filesystem resources. Under disk pressure, the scheduler may be unable
+    to place new Pods on the node, or existing Pods may be subject to
+    eviction policies. This condition blocks normal workload placement
+    and cluster stability.
+
+    Scope:
+    - Node infrastructure condition
+    - Deterministic (node state & event-based)
+    - Captures scheduler and workload impact caused by disk resource exhaustion
+
+    Exclusions:
+    - Does not diagnose specific filesystem paths or partitions
+    - Does not inspect kubelet eviction thresholds
+    - Does not model image garbage collection behavior
+    - Does not detect memory or PID pressure
     """
 
     name = "NodeDiskPressure"
@@ -99,7 +119,6 @@ class NodeDiskPressureRule(FailureRule):
             Cause(
                 code="NODE_DISK_PRESSURE",
                 message="Node reports DiskPressure=True",
-                blocking=True,
                 role="infrastructure_root",
             )
         ]
@@ -117,7 +136,8 @@ class NodeDiskPressureRule(FailureRule):
             causes.append(
                 Cause(
                     code="POD_PENDING",
-                    message="Pod remains unscheduled or Pending",
+                    message="Pod remains Pending due to scheduling constraints",
+                    blocking=True,
                     role="workload_symptom",
                 )
             )
