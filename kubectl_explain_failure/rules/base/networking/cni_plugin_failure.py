@@ -4,11 +4,27 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class CNIPluginFailureRule(FailureRule):
     """
-    Detects infra-level CNI plugin failures during Pod sandbox creation.
-    Triggered by:
-      - event.reason == FailedCreatePodSandBox
-      - event.message contains 'CNI'
-    Critical networking-level failure.
+    Detects CNI plugin failures during Pod sandbox creation.
+
+    Signals:
+    - Event.reason == "FailedCreatePodSandBox"
+    - Event.message contains "CNI"
+
+    Interpretation:
+    During Pod startup, the Kubelet attempts to create a sandbox and configure
+    networking using the Container Network Interface (CNI) plugin. If the CNI
+    plugin fails, the Pod sandbox cannot be created, preventing network
+    initialization and blocking Pod startup.
+
+    Scope:
+    - Node runtime / Kubelet initialization phase
+    - Deterministic (event-message based)
+    - Captures infrastructure-level networking failures
+
+    Exclusions:
+    - Does not detect scheduler failures or admission rejections
+    - Does not detect container runtime crashes unrelated to networking
+    - Does not diagnose specific CNI implementation details
     """
 
     name = "CNIPluginFailure"
