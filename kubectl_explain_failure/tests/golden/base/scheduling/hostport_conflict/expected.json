@@ -7,8 +7,19 @@
   ],
   "causes": [
     {
-      "code": "HOSTPORT_CONFLICT",
-      "message": "Requested hostPort already allocated on target node",
+      "code": "HOSTPORT_REQUESTED",
+      "message": "Pod requests hostPort binding",
+      "role": "workload_context"
+    },
+    {
+      "code": "HOSTPORT_ALREADY_ALLOCATED",
+      "message": "Requested hostPort already allocated on candidate node(s)",
+      "role": "scheduling_root"
+    },
+    {
+      "code": "POD_UNSCHEDULABLE",
+      "message": "Scheduler cannot place Pod due to hostPort conflict",
+      "role": "workload_symptom",
       "blocking": true
     }
   ],

@@ -4,8 +4,27 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class HostPortConflictRule(FailureRule):
     """
-    Detects scheduling failure due to hostPort already allocated.
-    Triggered by FailedScheduling events referencing hostPort conflicts.
+    Detects Pod scheduling failures caused by hostPort conflicts.
+
+    Signals:
+    - Timeline contains 'FailedScheduling' events
+    - Event message references hostPort conflict or allocated port
+    - Pod specifies hostPort in container spec
+
+    Interpretation:
+    The Pod requests a hostPort that is already allocated on one or more
+    candidate nodes. Because hostPorts must be unique per node, the
+    scheduler cannot place the Pod, leaving it in Pending state.
+
+    Scope:
+    - Scheduler port allocation layer
+    - Deterministic (event-based)
+    - Captures host-level port binding conflicts
+
+    Exclusions:
+    - Does not include affinity or topology spread conflicts
+    - Does not include taint/toleration mismatches
+    - Does not include resource insufficiency (CPU/memory pressure)
     """
 
     name = "HostPortConflict"
@@ -44,10 +63,21 @@ class HostPortConflictRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="HOSTPORT_CONFLICT",
-                    message="Requested hostPort already allocated on target node",
+                    code="HOSTPORT_REQUESTED",
+                    message="Pod requests hostPort binding",
+                    role="workload_context",
+                ),
+                Cause(
+                    code="HOSTPORT_ALREADY_ALLOCATED",
+                    message="Requested hostPort already allocated on candidate node(s)",
+                    role="scheduling_root",
+                ),
+                Cause(
+                    code="POD_UNSCHEDULABLE",
+                    message="Scheduler cannot place Pod due to hostPort conflict",
                     blocking=True,
-                )
+                    role="workload_symptom",
+                ),
             ]
         )
 
