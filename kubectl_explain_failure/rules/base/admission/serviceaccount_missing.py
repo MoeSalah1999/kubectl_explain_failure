@@ -67,11 +67,11 @@ class ServiceAccountMissingRule(FailureRule):
                     code="SERVICEACCOUNT_NOT_FOUND",
                     message="Referenced ServiceAccount does not exist",
                     role="identity_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="ADMISSION_REJECTED",
                     message="Kubernetes API rejected Pod during admission",
-                    blocking=True,
                     role="admission_root",
                 ),
                 Cause(
