@@ -4,8 +4,26 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class ReplicaSetUnavailableRule(FailureRule):
     """
-    Detects ReplicaSet that exists but has zero available replicas.
-    Indicates controller-level availability failure.
+    Detects ReplicaSet availability failures where zero replicas are available.
+
+    Signals:
+    - ReplicaSet.status.availableReplicas == 0
+
+    Interpretation:
+    The ReplicaSet exists and may be creating replicas, but none of its
+    managed Pods are currently in the Ready/Available state.
+    This indicates that the controller cannot achieve availability,
+    blocking workload readiness.
+
+    Scope:
+    - Controller reconciliation / availability phase
+    - Deterministic (status-field based)
+    - Captures controller-level availability failures
+
+    Exclusions:
+    - Does not inspect underlying Pod-level causes such as container crashes,
+    readiness probe failures, scheduling issues, or image pull errors
+    - Does not require ReplicaFailure condition to be present
     """
 
     name = "ReplicaSetUnavailable"
