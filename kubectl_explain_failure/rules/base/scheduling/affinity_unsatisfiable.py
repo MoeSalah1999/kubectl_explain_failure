@@ -5,9 +5,28 @@ from kubectl_explain_failure.timeline import timeline_has_pattern
 
 class AffinityUnsatisfiableRule(FailureRule):
     """
-    Detects pod scheduling failures caused by affinity/anti-affinity constraints.
-    Triggered when Pod.spec.affinity exists and scheduling failed.
-    """
+    Detects Pod scheduling failures caused by unsatisfiable affinity or anti-affinity constraints.
+
+    Signals:
+    - Pod.spec.affinity is defined
+    - Timeline contains 'FailedScheduling' events
+    - Cluster nodes are present but cannot satisfy constraints
+
+    Interpretation:
+    The Pod declares affinity or anti-affinity rules that cannot be
+    satisfied by any available node. The scheduler fails to place the Pod,
+    leaving it Pending with repeated FailedScheduling events.
+
+    Scope:
+    - Scheduler constraint resolution layer
+    - Deterministic (spec & event-based)
+    - Captures topology and label constraint conflicts
+
+    Exclusions:
+    - Does not include resource-based scheduling failures (CPU/memory pressure)
+    - Does not include taint/toleration conflicts
+    - Does not include node readiness or infrastructure outages
+"""
 
     name = "AffinityUnsatisfiable"
     category = "Scheduling"
@@ -32,14 +51,26 @@ class AffinityUnsatisfiableRule(FailureRule):
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
         node_names = list(context.get("objects", {}).get("node", {}).keys())
+        node_count = len(node_names)
 
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="AFFINITY_UNSATISFIABLE",
-                    message="Pod affinity/anti-affinity rules cannot be satisfied on available nodes",
+                    code="AFFINITY_RULES_DEFINED",
+                    message="Pod defines affinity/anti-affinity constraints",
+                    role="workload_context",
+                ),
+                Cause(
+                    code="SCHEDULER_CONSTRAINT_UNSATISFIED",
+                    message=f"No available node (out of {node_count}) satisfies affinity constraints",
+                    role="scheduler_root",
+                ),
+                Cause(
+                    code="POD_UNSCHEDULABLE",
+                    message="Scheduler cannot place Pod; Pod remains Pending",
                     blocking=True,
-                )
+                    role="workload_symptom",
+                ),
             ]
         )
 

@@ -7,8 +7,19 @@
   ],
   "causes": [
     {
-      "code": "AFFINITY_UNSATISFIABLE",
-      "message": "Pod affinity/anti-affinity rules cannot be satisfied on available nodes",
+      "code": "AFFINITY_RULES_DEFINED",
+      "message": "Pod defines affinity/anti-affinity constraints",
+      "role": "workload_context"
+    },
+    {
+      "code": "SCHEDULER_CONSTRAINT_UNSATISFIED",
+      "message": "No available node (out of {node_count}) satisfies affinity constraints",
+      "role": "scheduler_root"
+    },
+    {
+      "code": "POD_UNSCHEDULABLE",
+      "message": "Scheduler cannot place Pod; Pod remains Pending",
+      "role": "workload_symptom",
       "blocking": true
     }
   ],
