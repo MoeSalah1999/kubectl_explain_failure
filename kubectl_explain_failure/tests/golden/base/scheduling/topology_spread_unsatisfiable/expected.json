@@ -7,8 +7,19 @@
   ],
   "causes": [
     {
-      "code": "TOPOLOGY_SPREAD_UNSATISFIABLE",
-      "message": "Pod topologySpreadConstraints cannot be satisfied on available nodes",
+      "code": "POD_TOPOLOGY_CONSTRAINTS_DEFINED",
+      "message": "Pod declares topologySpreadConstraints: [{'maxSkew': 1, 'topologyKey': 'zone', 'whenUnsatisfiable': 'DoNotSchedule', 'labelSelector': {'matchLabels': {'app': 'web'}}}]",
+      "role": "workload_context"
+    },
+    {
+      "code": "TOPOLOGY_CONSTRAINTS_UNSATISFIABLE",
+      "message": "Scheduler found no feasible node placement satisfying maxSkew and topologyKey rules",
+      "role": "infrastructure_root"
+    },
+    {
+      "code": "POD_SCHEDULING_FAILED_TOPOLOGY",
+      "message": "Pod remains Pending due to unsatisfiable topology spread constraints",
+      "role": "scheduler_symptom",
       "blocking": true
     }
   ],

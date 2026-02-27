@@ -5,8 +5,29 @@ from kubectl_explain_failure.timeline import timeline_has_pattern
 
 class TopologySpreadUnsatisfiableRule(FailureRule):
     """
-    Detects pod scheduling failures due to unsatisfiable topologySpreadConstraints.
-    Triggered when Pod.spec.topologySpreadConstraints exist and scheduling failed.
+    Detects Pod scheduling failures caused by unsatisfiable topologySpreadConstraints.
+
+    Signals:
+    - Pod.spec.topologySpreadConstraints is defined
+    - Timeline contains 'FailedScheduling' events
+    - Scheduler reports inability to satisfy topology skew requirements
+
+    Interpretation:
+    The Pod declares topology spread constraints requiring balanced 
+    distribution across topology domains (e.g., zones or nodes). 
+    The scheduler cannot find a placement that satisfies maxSkew and 
+    topologyKey rules given the current cluster state, leaving the Pod 
+    in a Pending state.
+
+    Scope:
+    - Scheduler phase
+    - Deterministic (object + event based)
+    - Captures hard topology constraint violations
+
+    Exclusions:
+    - Does not include resource insufficiency failures
+    - Does not include nodeSelector or node affinity mismatches
+    - Does not include priority-based preemption
     """
 
     name = "TopologySpreadUnsatisfiable"
@@ -33,13 +54,26 @@ class TopologySpreadUnsatisfiableRule(FailureRule):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
         node_names = list(context.get("objects", {}).get("node", {}).keys())
 
+        tsc = pod.get("spec", {}).get("topologySpreadConstraints", [])
+
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="TOPOLOGY_SPREAD_UNSATISFIABLE",
-                    message="Pod topologySpreadConstraints cannot be satisfied on available nodes",
+                    code="POD_TOPOLOGY_CONSTRAINTS_DEFINED",
+                    message=f"Pod declares topologySpreadConstraints: {tsc}",
+                    role="workload_context",
+                ),
+                Cause(
+                    code="TOPOLOGY_CONSTRAINTS_UNSATISFIABLE",
+                    message="Scheduler found no feasible node placement satisfying maxSkew and topologyKey rules",
+                    role="infrastructure_root",
+                ),
+                Cause(
+                    code="POD_SCHEDULING_FAILED_TOPOLOGY",
+                    message="Pod remains Pending due to unsatisfiable topology spread constraints",
                     blocking=True,
-                )
+                    role="scheduler_symptom",
+                ),
             ]
         )
 
