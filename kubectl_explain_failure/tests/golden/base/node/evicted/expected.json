@@ -8,12 +8,12 @@
     {
       "code": "NODE_RESOURCE_PRESSURE",
       "message": "Node reports resource pressure (memory, disk, or PID)",
-      "role": "node_condition"
+      "role": "infrastructure_context"
     },
     {
       "code": "KUBELET_EVICTION_MANAGER",
       "message": "Kubelet eviction manager selected Pod for eviction",
-      "role": "scheduler_action"
+      "role": "infrastructure_root"
     },
     {
       "code": "POD_EVICTED",

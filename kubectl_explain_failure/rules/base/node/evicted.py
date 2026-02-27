@@ -3,6 +3,28 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 
 class EvictedRule(FailureRule):
+    """
+    Detects Pod eviction events triggered by the Kubelet.
+
+    Signals:
+    - Timeline contains an event with reason "Evicted"
+    - Pod phase transitions to "Failed"
+
+    Interpretation:
+    The Kubelet eviction manager terminated the Pod due to node-level
+    resource pressure (e.g., memory, disk, or PID exhaustion).
+    The Pod is forcibly removed from the node and cannot continue running.
+
+    Scope:
+    - Node-level resource management
+    - Deterministic (event-based)
+    - Captures Kubelet-initiated eviction decisions
+
+    Exclusions:
+    - Does not diagnose the specific resource threshold exceeded
+    - Does not detect NodeNotReady conditions (handled by compound rules)
+    - Does not model scheduler rescheduling behavior
+    """
     name = "Evicted"
     category = "Node"
     priority = 21  # Lower than compound rules like NodeNotReadyEvicted
@@ -29,12 +51,12 @@ class EvictedRule(FailureRule):
                 Cause(
                     code="NODE_RESOURCE_PRESSURE",
                     message="Node reports resource pressure (memory, disk, or PID)",
-                    role="node_condition",
+                    role="infrastructure_context",
                 ),
                 Cause(
                     code="KUBELET_EVICTION_MANAGER",
                     message="Kubelet eviction manager selected Pod for eviction",
-                    role="scheduler_action",
+                    role="infrastructure_root",
                 ),
                 Cause(
                     code="POD_EVICTED",
@@ -58,12 +80,14 @@ class EvictedRule(FailureRule):
             "likely_causes": [
                 "Node memory pressure",
                 "Node disk pressure",
-                "Node resource exhaustion",
+                "Node PID exhaustion",
+                "Resource limits exceeded relative to QoS class",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
                 f"kubectl describe node {node_name}",
                 "Check node conditions (MemoryPressure, DiskPressure)",
+                "Review Pod QoS class and resource requests/limits",
             ],
             "blocking": True,
         }
