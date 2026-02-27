@@ -6,7 +6,7 @@
   ],
   "causes": [
     {
-        "code": "NODE_MEMORY_PRESSURE_DETECTED",
+        "code": "NODE_MEMORY_PRESSURE",
         "message": "Node(s) reporting MemoryPressure=True: node1",
         "role": "infrastructure_root"
     },

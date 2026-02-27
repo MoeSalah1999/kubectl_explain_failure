@@ -4,6 +4,30 @@ from kubectl_explain_failure.timeline import timeline_has_event
 
 
 class NodeMemoryPressureRule(FailureRule):
+    """
+    Detects node-level memory pressure impacting Pod scheduling or runtime stability.
+
+    Signals:
+    - Node.status.conditions[type="MemoryPressure"].status == "True"
+    - Optional correlation with recent FailedScheduling, OOM, or BackOff events
+
+    Interpretation:
+    A node reports MemoryPressure=True, indicating insufficient available
+    memory resources. Under memory pressure, the scheduler may be unable
+    to place new Pods, or existing Pods may experience eviction,
+    OOM termination, or runtime instability.
+
+    Scope:
+    - Node infrastructure condition
+    - Deterministic (node state with optional event correlation)
+    - Captures scheduler and workload impact caused by memory exhaustion
+
+    Exclusions:
+    - Does not compute allocatable vs requested memory
+    - Does not inspect cgroup or container memory statistics
+    - Does not model kubelet eviction thresholds explicitly
+    - Does not diagnose application-level memory leaks
+    """
     name = "NodeMemoryPressure"
     category = "Node"
     priority = 22  # Same tier as DiskPressure-level node signals
@@ -80,38 +104,46 @@ class NodeMemoryPressureRule(FailureRule):
                 for cond in node.get("status", {}).get("conditions", [])
             )
         ]
-        pod_node = pod.get("spec", {}).get("nodeName")
+        pod_phase = pod.get("status", {}).get("phase")
+        timeline = context.get("timeline")
 
-        if pod_node and pod_node not in [
-            name for name in node_objs
-            if any(
-                cond.get("type") == "MemoryPressure"
-                and cond.get("status") == "True"
-                for cond in node_objs[name].get("status", {}).get("conditions", [])
+        impact_detected = False
+        if timeline:
+            recent_events = timeline.events_within_window(10)
+            for e in recent_events:
+                reason = (e.get("reason") or "").lower()
+                if reason.startswith(("oom", "backoff", "failedscheduling")):
+                    impact_detected = True
+                    break
+
+        causes = [
+            Cause(
+                code="NODE_MEMORY_PRESSURE",
+                message=f"Node(s) reporting MemoryPressure=True: {', '.join(pressured_nodes)}",
+                role="infrastructure_root",
             )
-        ]:
-            return False
+        ]
 
-        chain = CausalChain(
-            causes=[
+        if impact_detected:
+            causes.append(
                 Cause(
-                    code="NODE_MEMORY_PRESSURE_DETECTED",
-                    message=f"Node(s) reporting MemoryPressure=True: {', '.join(pressured_nodes)}",
-                    role="infrastructure_root",
-                ),
+                    code="CONTROL_PLANE_OR_RUNTIME_IMPACT",
+                    message="Scheduler or runtime impacted by node memory constraints",
+                    role="control_plane_effect",
+                )
+            )
+
+        if pod_phase in {"Pending", "Failed"} or impact_detected:
+            causes.append(
                 Cause(
-                    code="NODE_MEMORY_RESOURCE_EXHAUSTION",
-                    message="Node memory resources are under pressure",
+                    code="POD_IMPACTED_BY_MEMORY_PRESSURE",
+                    message="Pod affected by node memory pressure",
                     blocking=True,
-                    role="resource_root",
-                ),
-                Cause(
-                    code="POD_SCHEDULING_OR_RUNTIME_IMPACT",
-                    message="Pod affected by node memory constraints",
                     role="workload_symptom",
-                ),
-            ]
-        )
+                )
+            )
+
+        chain = CausalChain(causes=causes)
 
         return {
             "rule": self.name,
