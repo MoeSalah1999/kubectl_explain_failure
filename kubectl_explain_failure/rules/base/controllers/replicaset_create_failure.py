@@ -4,8 +4,26 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class ReplicaSetCreateFailureRule(FailureRule):
     """
-    Detects ReplicaSet creation failures.
-    Triggered when ReplicaSet.status.conditions[ReplicaFailure] = True.
+    Detects ReplicaSet reconciliation failures via the ReplicaFailure condition.
+
+    Signals:
+    - ReplicaSet.status.conditions[type="ReplicaFailure"].status == True
+
+    Interpretation:
+    The ReplicaSet controller is attempting to reconcile the desired replica count,
+    but reports a ReplicaFailure condition. This indicates that the controller
+    cannot successfully create or maintain the required Pods. As a result,
+    the workload does not reach the desired state.
+
+    Scope:
+    - Controller reconciliation phase
+    - Deterministic (status-condition based)
+    - Captures controller-level replica management failures
+
+    Exclusions:
+    - Does not inspect specific underlying causes (e.g., scheduling failure,
+    quota exhaustion, admission rejection, or image pull errors)
+    - Does not include Pod-level runtime failures such as CrashLoopBackOff
     """
 
     name = "ReplicaSetCreateFailure"
