@@ -4,9 +4,20 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class DeploymentProgressDeadlineExceededRule(FailureRule):
     """
-    Detects Deployment rollout failures due to exceeding the progress deadline.
-    Triggered when Deployment.status.conditions[type=Progressing]=False
-    with reason=ProgressDeadlineExceeded.
+    Detects Deployment rollout failures caused by exceeding the progress deadline.
+
+    Signals:
+    - Deployment.status.conditions[type=Progressing] == False
+    - Reason == ProgressDeadlineExceeded
+
+    Interpretation:
+    The Deployment controller attempted a rollout, but some replicas failed
+    to become ready within the configured progressDeadlineSeconds. This
+    prevents the Deployment from completing successfully.
+
+    Scope:
+    - Controller-level failure
+    - Deterministic (based on Deployment object status)
     """
 
     name = "DeploymentProgressDeadlineExceeded"
