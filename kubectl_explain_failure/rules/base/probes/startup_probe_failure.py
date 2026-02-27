@@ -4,10 +4,28 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class StartupProbeFailureRule(FailureRule):
     """
-    Detects containers failing startupProbe before readiness/liveness.
-    Triggered by:
-      - container waiting/terminated
-      - event message contains 'startup probe'
+    Detects container startup probe failures in Pods.
+
+    Signals:
+    - Timeline contains startup probe failure events
+    - Container state is waiting or terminated during initialization
+    - Pod phase is Pending or Running
+
+    Interpretation:
+    The container defines a startupProbe, but the probe is failing.
+    Kubernetes blocks normal container lifecycle progression until
+    the startup probe succeeds. Repeated failures may lead to
+    container restarts and CrashLoopBackOff.
+
+    Scope:
+    - Container health check layer
+    - Deterministic (event & state-based)
+    - Captures initialization-phase gating failures
+
+    Exclusions:
+    - Does not include readinessProbe failures
+    - Does not include livenessProbe failures after successful startup
+    - Does not include image pull or configuration errors
     """
 
     name = "StartupProbeFailure"
