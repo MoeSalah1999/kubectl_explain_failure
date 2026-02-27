@@ -5,8 +5,27 @@ from kubectl_explain_failure.timeline import timeline_has_event, event_frequency
 
 class UnschedulableTaintRule(FailureRule):
     """
-    Detects scheduling failure due to node taints not tolerated by the Pod.
-    Triggered by FailedScheduling events referencing taints.
+    Detects Pod scheduling failures caused by untolerated node taints.
+
+    Signals:
+    - Timeline contains 'FailedScheduling' events
+    - Event message references taints or missing tolerations
+    - Pod lacks tolerations matching node taints
+
+    Interpretation:
+    One or more nodes in the cluster have taints that the Pod does not 
+    tolerate. The scheduler cannot place the Pod onto any available node, 
+    resulting in repeated FailedScheduling events and a Pending state.
+
+    Scope:
+    - Scheduler phase
+    - Deterministic (event-based)
+    - Captures hard taint/toleration constraint violations
+
+    Exclusions:
+    - Does not include nodeSelector or node affinity mismatches
+    - Does not include resource insufficiency failures
+    - Does not include priority-based preemption
     """
 
     name = "UnschedulableTaint"
@@ -59,10 +78,21 @@ class UnschedulableTaintRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="UNSCHEDULABLE_TAINT",
-                    message="Pod does not tolerate required node taints",
+                    code="POD_TOLERATIONS_DEFINED",
+                    message=f"Pod declares tolerations",
+                    role="workload_context",
+                ),
+                Cause(
+                    code="NODE_TAINT_NOT_TOLERATED",
+                    message="Available nodes have taints not tolerated by the Pod",
+                    role="infrastructure_root",
+                ),
+                Cause(
+                    code="POD_UNSCHEDULABLE_TAINT",
+                    message="Scheduler cannot place Pod due to untolerated node taints",
                     blocking=True,
-                )
+                    role="scheduler_symptom",
+                ),
             ]
         )
 
