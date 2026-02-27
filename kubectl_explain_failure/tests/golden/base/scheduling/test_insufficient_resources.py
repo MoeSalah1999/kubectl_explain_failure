@@ -62,8 +62,8 @@ def test_insufficient_resources_golden():
     for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
         assert exp_cause["code"] == res_cause["code"]
         assert exp_cause["message"] == res_cause["message"]
-        if "blocking" in exp_cause:
-            assert res_cause.get("blocking") is True
+        assert exp_cause["role"] == res_cause["role"]
+        assert res_cause.get("blocking") is True
 
     # Evidence verification
     for ev in expected["evidence"]:

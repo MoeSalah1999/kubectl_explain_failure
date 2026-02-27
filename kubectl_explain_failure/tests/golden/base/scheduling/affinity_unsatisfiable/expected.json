@@ -13,7 +13,7 @@
     },
     {
       "code": "SCHEDULER_CONSTRAINT_UNSATISFIED",
-      "message": "No available node (out of {node_count}) satisfies affinity constraints",
+      "message": "No available node (out of 2) satisfies affinity constraints",
       "role": "scheduler_root"
     },
     {

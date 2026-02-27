@@ -56,8 +56,12 @@ def test_topology_spread_unsatisfiable_golden():
     assert result["blocking"] is True
     assert result["confidence"] >= 0.85
 
-    for cause in expected["causes"]:
-        assert any(c.get("code") == cause["code"] for c in result["causes"])
+    # Causes
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+        assert exp_cause["code"] == res_cause["code"]
+        assert exp_cause["message"] == res_cause["message"]
+        assert exp_cause["role"] == res_cause["role"]
+        assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
 
     for ev in expected["evidence"]:
         assert ev in result["evidence"]

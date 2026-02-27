@@ -71,8 +71,7 @@ def test_failed_scheduling_golden():
         assert exp_cause["code"] == res_cause["code"]
         assert exp_cause["message"] == res_cause["message"]
         assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
-        if "role" in exp_cause:
-            assert exp_cause["role"] == res_cause.get("role")
+        assert exp_cause["role"] == res_cause["role"]
 
     # Object evidence
     for obj_key, items in expected["object_evidence"].items():

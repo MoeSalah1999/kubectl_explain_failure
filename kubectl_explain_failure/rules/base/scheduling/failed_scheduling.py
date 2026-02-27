@@ -5,8 +5,28 @@ from kubectl_explain_failure.timeline import timeline_has_event
 
 class FailedSchedulingRule(FailureRule):
     """
-    Scheduler cannot place Pod
-    → Pod remains Pending
+    Detects generic Pod scheduling failures when no specific constraint
+    reason is identified.
+
+    Signals:
+    - Timeline contains Scheduling failure events
+    - Event reason == "FailedScheduling"
+    - No specific patterns (affinity, taints, resource pressure, topology, etc.) detected
+
+    Interpretation:
+    The scheduler attempted to place the Pod but could not assign it to
+    any node. The exact constraint cause is not identifiable by more
+    specific scheduling rules. The Pod remains in Pending state.
+
+    Scope:
+    - Scheduler placement layer
+    - Deterministic (event-based)
+    - Acts as fallback for unspecialized scheduling failures
+
+    Exclusions:
+    - Does not include affinity/anti-affinity conflicts
+    - Does not include resource insufficiency (CPU/memory)
+    - Does not include taints, topology spread, or hostPort conflicts
     """
 
     name = "FailedScheduling"
@@ -57,6 +77,11 @@ class FailedSchedulingRule(FailureRule):
 
         chain = CausalChain(
             causes=[
+                Cause(
+                    code="POD_SUBMITTED_FOR_SCHEDULING",
+                    message="Pod submitted to scheduler for placement",
+                    role="workload_context",
+                ),
                 Cause(
                     code="SCHEDULER_REJECTION",
                     message="Scheduler could not place Pod on any node",

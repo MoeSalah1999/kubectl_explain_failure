@@ -52,7 +52,11 @@ def test_node_selector_mismatch_golden():
     assert result["root_cause"] == expected["root_cause"]
     assert result["blocking"] == expected["blocking"]
     assert set(result["evidence"]) == set(expected["evidence"])
-    assert [c["code"] for c in result["causes"]] == [
-        c["code"] for c in expected["causes"]
-    ]
     assert result["object_evidence"] == expected["object_evidence"]
+    
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+        assert exp_cause["code"] == res_cause["code"]
+        assert exp_cause["message"] == res_cause["message"]
+        assert exp_cause["role"] == res_cause["role"]
+        assert res_cause.get("blocking") is True
+    

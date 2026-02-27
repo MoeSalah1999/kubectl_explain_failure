@@ -6,6 +6,11 @@
   ],
   "causes": [
     {
+      "code": "POD_SUBMITTED_FOR_SCHEDULING",
+      "message": "Pod submitted to scheduler for placement",
+      "role": "workload_context"
+    },
+    {
       "code": "SCHEDULER_REJECTION",
       "message": "Scheduler could not place Pod on any node",
       "blocking": true,
