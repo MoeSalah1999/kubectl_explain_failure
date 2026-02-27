@@ -6,8 +6,19 @@
   ],
   "causes": [
     {
+      "code": "POD_NODE_SELECTOR_DEFINED",
+      "message": "Pod declares nodeSelector constraints: {'gpu': 'true', 'zone': 'us-east-1a'}",
+      "role": "workload_context"
+    },
+    {
       "code": "NODE_SELECTOR_MISMATCH",
-      "message": "No nodes match Pod.nodeSelector: {'gpu': 'true', 'zone': 'us-east-1a'}",
+      "message": "No available node satisfies all required label constraints",
+      "role": "infrastructure_root"
+    },
+    {
+      "code": "POD_UNSCHEDULABLE_NODE_SELECTOR",
+      "message": "Scheduler cannot place Pod due to nodeSelector mismatch",
+      "role": "scheduler_symptom",
       "blocking": true
     }
   ],

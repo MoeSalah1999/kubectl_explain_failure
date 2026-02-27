@@ -4,8 +4,26 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class NodeSelectorMismatchRule(FailureRule):
     """
-    Detects scheduling failures when Pod.spec.nodeSelector cannot match any node labels.
-    High-signal object-first scheduling failure.
+    Detects Pod scheduling failures caused by nodeSelector label mismatch.
+
+    Signals:
+    - Pod.spec.nodeSelector is defined
+    - No cluster node satisfies all specified label constraints
+
+    Interpretation:
+    The Pod declares strict node label requirements via nodeSelector, 
+    but no available node in the cluster matches all required labels. 
+    The scheduler cannot place the Pod, leaving it in a Pending state.
+
+    Scope:
+    - Scheduler phase
+    - Deterministic (object-state based)
+    - Captures hard label constraint mismatches
+
+    Exclusions:
+    - Does not include node affinity (requiredDuringSchedulingIgnoredDuringExecution)
+    - Does not include taints and tolerations
+    - Does not include resource insufficiency failures
     """
 
     name = "NodeSelectorMismatch"
@@ -42,10 +60,21 @@ class NodeSelectorMismatchRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="POD_NODE_SELECTOR_DEFINED",
+                    message=f"Pod declares nodeSelector constraints: {node_selector}",
+                    role="workload_context",
+                ),
+                Cause(
                     code="NODE_SELECTOR_MISMATCH",
-                    message=f"No nodes match Pod.nodeSelector: {node_selector}",
+                    message="No available node satisfies all required label constraints",
+                    role="infrastructure_root",
+                ),
+                Cause(
+                    code="POD_UNSCHEDULABLE_NODE_SELECTOR",
+                    message="Scheduler cannot place Pod due to nodeSelector mismatch",
                     blocking=True,
-                )
+                    role="scheduler_symptom",
+                ),
             ]
         )
 
