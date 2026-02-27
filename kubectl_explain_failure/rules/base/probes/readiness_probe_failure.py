@@ -4,11 +4,28 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class ReadinessProbeFailureRule(FailureRule):
     """
-    Detects containers that are running but not ready due to failing readiness probes.
-    Triggered when:
-      - Pod phase=Running
-      - container ready=False
-      - events indicate readiness probe failure
+    Detects container readiness probe failures in running Pods.
+
+    Signals:
+    - Pod phase == Running
+    - At least one container has ready == False
+    - Timeline contains readiness probe failure events
+
+    Interpretation:
+    The container is running but failing readinessProbe checks.
+    Kubernetes keeps the Pod in NotReady state because the
+    container does not pass its configured readiness gate.
+    Traffic will not be routed to the Pod.
+
+    Scope:
+    - Container health check layer
+    - Deterministic (event & state-based)
+    - Captures runtime readiness gating failures
+
+    Exclusions:
+    - Does not include livenessProbe failures (which may restart containers)
+    - Does not include startupProbe failures
+    - Does not include CrashLoopBackOff or image pull errors
     """
 
     name = "ReadinessProbeFailure"
@@ -19,7 +36,6 @@ class ReadinessProbeFailureRule(FailureRule):
         "context": ["timeline"],
     }
     phases = ["Running"]
-
     container_states = ["running"]
 
     def matches(self, pod, events, context) -> bool:
