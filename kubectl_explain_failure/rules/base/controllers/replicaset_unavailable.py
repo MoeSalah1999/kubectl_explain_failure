@@ -57,9 +57,9 @@ class ReplicaSetUnavailableRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="REPLICASET_RECONCILIATION_ACTIVE",
-                    message="ReplicaSet controller is reconciling desired replica count",
-                    role="controller_context",
+                    code="REPLICASET_DESIRED_REPLICAS_DECLARED",
+                    message="ReplicaSet defines a desired replica count",
+                    role="controller_intent",
                 ),
                 Cause(
                     code="REPLICASET_ZERO_AVAILABLE",

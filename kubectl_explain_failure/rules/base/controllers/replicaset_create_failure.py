@@ -57,9 +57,9 @@ class ReplicaSetCreateFailureRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="REPLICASET_RECONCILIATION_ACTIVE",
-                    message="ReplicaSet controller is attempting to create desired replicas",
-                    role="controller_context",
+                    code="REPLICASET_DESIRED_STATE_ENFORCEMENT",
+                    message="ReplicaSet controller is enforcing desired replica count",
+                    role="controller_intent",
                 ),
                 Cause(
                     code="REPLICASET_REPLICA_FAILURE",

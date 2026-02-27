@@ -6,14 +6,14 @@
   ],
   "causes": [
     {
-      "code": "REPLICASET_RECONCILIATION_ACTIVE",
-      "message": "ReplicaSet controller is reconciling desired replica count",
-      "role": "controller_context"
+      "code": "REPLICASET_DESIRED_REPLICAS_DECLARED",
+      "message": "ReplicaSet defines a desired replica count",
+      "role": "controller_intent"
     },
     {
       "code": "REPLICASET_ZERO_AVAILABLE",
       "message": "ReplicaSet(s) report zero available replicas: rs1",
-      "role": "controller_context",
+      "role": "controller_root",
       "blocking": true
     },
     {

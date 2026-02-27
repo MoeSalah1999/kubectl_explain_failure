@@ -4,11 +4,29 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class StatefulSetUpdateBlockedRule(FailureRule):
     """
-    Detects StatefulSet rollout blocking due to partitioned updateStrategy.
-    Triggered when StatefulSet.status.updateRevision != updateStatus.updatedReplicas
-    indicating the rollout is paused or blocked by partitioning.
-    """
+    Detects StatefulSet rollout blocking caused by updateStrategy partitioning.
 
+    Signals:
+    - StatefulSet.spec.updateStrategy.rollingUpdate.partition is set
+    - StatefulSet.status.updatedReplicas is less than the allowed rollout target
+    - StatefulSet.status.updateRevision is present but not fully applied
+
+    Interpretation:
+    The StatefulSet controller is performing a rolling update, but the
+    partition setting intentionally limits how many replicas may update.
+    As a result, not all replicas transition to the new revision,
+    and rollout progress is effectively constrained or paused.
+
+    Scope:
+    - Controller reconciliation / rollout phase
+    - Deterministic (spec & status field based)
+    - Captures controller-level rollout partition constraints
+
+    Exclusions:
+    - Does not detect Pod-level failures (crashes, readiness probe failures)
+    - Does not detect image pull errors or runtime issues
+    - Does not indicate infrastructure failure; may reflect intentional rollout configuration
+    """
     name = "StatefulSetUpdateBlocked"
     category = "Controller"
     priority = 40
@@ -54,9 +72,9 @@ class StatefulSetUpdateBlockedRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="STATEFULSET_RECONCILIATION_ACTIVE",
-                    message="StatefulSet controller is reconciling desired replica updates",
-                    role="controller_context",
+                    code="STATEFULSET_UPDATE_INITIATED",
+                    message="StatefulSet controller is applying a new revision",
+                    role="controller_intent",
                 ),
                 Cause(
                     code="STATEFULSET_PARTITION_BLOCKING",

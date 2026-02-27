@@ -8,9 +8,9 @@
   ],
   "causes": [
     {
-      "code": "STATEFULSET_RECONCILIATION_ACTIVE",
-      "message": "StatefulSet controller is reconciling desired replica updates",
-      "role": "controller_context"
+      "code": "STATEFULSET_UPDATE_INITIATED",
+      "message": "StatefulSet controller is applying a new revision",
+      "role": "controller_intent"
     },
     {
       "code": "STATEFULSET_PARTITION_BLOCKING",
