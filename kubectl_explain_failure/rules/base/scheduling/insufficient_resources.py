@@ -4,8 +4,26 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class InsufficientResourcesRule(FailureRule):
     """
-    Detects pod scheduling failures due to insufficient CPU, memory, or ephemeral storage.
-    Object-first: checks structured scheduler status.
+    Detects Pod scheduling failures caused by insufficient cluster resources.
+
+    Signals:
+    - Timeline contains 'FailedScheduling' events with "Insufficient" resource messages
+    - Scheduler reports inability to place Pod due to resource constraints
+
+    Interpretation:
+    The Pod specifies CPU, memory, or ephemeral storage requests that cannot 
+    be satisfied by any available node in the cluster. The scheduler fails 
+    placement, leaving the Pod in a Pending state.
+
+    Scope:
+    - Scheduler phase
+    - Deterministic (event-based)
+    - Captures infrastructure-level resource exhaustion
+
+    Exclusions:
+    - Does not include taint/toleration mismatches
+    - Does not include node affinity or topology constraints
+    - Does not include image pull or runtime failures
     """
 
     name = "InsufficientResources"
@@ -42,10 +60,21 @@ class InsufficientResourcesRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="INSUFFICIENT_RESOURCES",
-                    message=f"Pod failed scheduling due to insufficient CPU/memory/ephemeral-storage on node(s): {', '.join(node_names)}",
+                    code="POD_RESOURCE_REQUEST_DEFINED",
+                    message="Pod declares CPU/memory/ephemeral-storage resource requests",
+                    role="workload_context",
+                ),
+                Cause(
+                    code="SCHEDULER_INSUFFICIENT_CAPACITY",
+                    message="Kubernetes scheduler found no node with sufficient allocatable resources",
+                    role="infrastructure_root",
+                ),
+                Cause(
+                    code="POD_SCHEDULING_FAILED",
+                    message=f"Pod remains Pending due to insufficient resources on node(s): {', '.join(node_names)}",
                     blocking=True,
-                )
+                    role="scheduler_symptom",
+                ),
             ]
         )
 

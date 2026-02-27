@@ -69,6 +69,7 @@ def test_privileged_not_allowed_golden():
         assert exp_cause["message"] == res_cause["message"]
         assert exp_cause["role"] == res_cause["role"]
         assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
+        assert exp_cause.get("blocking", True) == res_cause.get("blocking", True)
 
     # Object evidence
     assert "object_evidence" in result

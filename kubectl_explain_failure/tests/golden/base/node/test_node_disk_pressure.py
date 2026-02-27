@@ -81,6 +81,7 @@ def test_node_disk_pressure_golden():
         assert exp_cause["message"] == res_cause["message"]
         assert exp_cause["role"] == res_cause["role"]
         assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
+        assert exp_cause.get("blocking", True) == res_cause.get("blocking", True)
 
     # Object evidence check
     for obj, items in expected["object_evidence"].items():
