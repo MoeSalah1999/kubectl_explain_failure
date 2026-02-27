@@ -15,7 +15,7 @@
     {
       "code": "DNS_RESOLUTION_FAILURE",
       "message": "DNS resolution failed inside Pod container",
-      "role": "network_root",
+      "role": "infrastructure_root",
       "blocking": true
     },
     {

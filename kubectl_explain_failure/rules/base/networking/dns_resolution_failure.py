@@ -4,11 +4,28 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class DNSResolutionFailureRule(FailureRule):
     """
-    Detects DNS resolution failures inside Pod containers.
-    Triggered by:
-      - Container in CrashLoop
-      - Event message (or logs, if adapter present) shows DNS resolution failure
-    For now event-based detection.
+    Detects DNS resolution failures occurring inside Pod containers.
+
+    Signals:
+    - Timeline event message contains DNS-related failure indicators
+    (e.g., "dns", "cannot resolve", "lookup failed")
+
+    Interpretation:
+    The container attempts to resolve a hostname using cluster DNS,
+    but resolution fails. As a result, the application cannot reach
+    required services or external endpoints, leading to startup
+    or runtime failure.
+
+    Scope:
+    - Container runtime / in-Pod networking phase
+    - Deterministic (event-message based)
+    - Captures application-visible DNS resolution failures
+
+    Exclusions:
+    - Does not directly verify CoreDNS health or Service availability
+    - Does not diagnose CNI plugin failures
+    - Does not inspect NetworkPolicy configuration
+    - Does not analyze container logs beyond event messages
     """
 
     name = "DNSResolutionFailure"
@@ -60,7 +77,7 @@ class DNSResolutionFailureRule(FailureRule):
                     code="DNS_RESOLUTION_FAILURE",
                     message="DNS resolution failed inside Pod container",
                     blocking=True,
-                    role="network_root",
+                    role="infrastructure_root",
                 ),
                 Cause(
                     code="APPLICATION_STARTUP_FAILURE",
@@ -86,10 +103,12 @@ class DNSResolutionFailureRule(FailureRule):
                 "CoreDNS unavailable or misconfigured",
                 "Network policy blocks DNS traffic",
                 "Node network misconfiguration",
+                "Cluster DNS Service misconfiguration",
             ],
             "suggested_checks": [
                 "kubectl get pods -n kube-system | grep coredns",
                 "kubectl describe pod {pod_name} -n {namespace}",
-                "Verify node network connectivity to DNS server",
+                "kubectl get svc -n kube-system",
+                "Verify node connectivity to cluster DNS IP",
             ],
         }
