@@ -10,7 +10,8 @@
     {
       "code": "NODE_DISK_PRESSURE",
       "message": "Node reports DiskPressure=True",
-      "role": "infrastructure_root"
+      "role": "infrastructure_root",
+      "blocking": true
     },
     {
       "code": "SCHEDULER_BLOCKED",
@@ -20,8 +21,7 @@
     {
       "code": "POD_PENDING",
       "message": "Pod remains Pending due to scheduling constraints",
-      "role": "workload_symptom",
-      "blocking": true
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

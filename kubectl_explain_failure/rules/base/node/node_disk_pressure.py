@@ -120,6 +120,7 @@ class NodeDiskPressureRule(FailureRule):
                 code="NODE_DISK_PRESSURE",
                 message="Node reports DiskPressure=True",
                 role="infrastructure_root",
+                blocking=True,
             )
         ]
 
@@ -137,7 +138,6 @@ class NodeDiskPressureRule(FailureRule):
                 Cause(
                     code="POD_PENDING",
                     message="Pod remains Pending due to scheduling constraints",
-                    blocking=True,
                     role="workload_symptom",
                 )
             )

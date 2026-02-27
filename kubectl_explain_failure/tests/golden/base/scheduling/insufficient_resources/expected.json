@@ -13,13 +13,13 @@
     {
       "code": "SCHEDULER_INSUFFICIENT_CAPACITY",
       "message": "Kubernetes scheduler found no node with sufficient allocatable resources",
-      "role": "infrastructure_root"
+      "role": "infrastructure_root",
+      "blocking": true
     },
     {
       "code": "POD_SCHEDULING_FAILED",
       "message": "Pod remains Pending due to insufficient resources on node(s): node1",
-      "role": "scheduler_symptom",
-      "blocking": true
+      "role": "scheduler_symptom"
     }
   ],
   "object_evidence": {

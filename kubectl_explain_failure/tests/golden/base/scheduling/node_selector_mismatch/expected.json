@@ -13,13 +13,13 @@
     {
       "code": "NODE_SELECTOR_MISMATCH",
       "message": "No available node satisfies all required label constraints",
-      "role": "infrastructure_root"
+      "role": "infrastructure_root",
+      "blocking": true
     },
     {
       "code": "POD_UNSCHEDULABLE_NODE_SELECTOR",
       "message": "Scheduler cannot place Pod due to nodeSelector mismatch",
-      "role": "scheduler_symptom",
-      "blocking": true
+      "role": "scheduler_symptom"
     }
   ],
   "object_evidence": {

@@ -8,7 +8,8 @@
     {
       "code": "NODE_PID_PRESSURE",
       "message": "Node(s) reporting PIDPressure=True: node1",
-      "role": "infrastructure_root"
+      "role": "infrastructure_root",
+      "blocking": true
     },
     {
       "code": "CONTROL_PLANE_OR_RUNTIME_IMPACT",
@@ -18,8 +19,7 @@
     {
       "code": "POD_IMPACTED_BY_PID_PRESSURE",
       "message": "Pod affected by node PID pressure",
-      "role": "workload_symptom",
-      "blocking": true
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

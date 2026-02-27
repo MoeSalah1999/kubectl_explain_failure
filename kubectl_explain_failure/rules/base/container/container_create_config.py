@@ -53,11 +53,11 @@ class ContainerCreateConfigErrorRule(FailureRule):
                     code="CONTAINER_CONFIG_INVALID",
                     message="Container spec is invalid or references missing resources",
                     role="configuration_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="CREATE_CONTAINER_CONFIG_ERROR",
                     message="Kubelet reports CreateContainerConfigError",
-                    blocking=True,
                     role="runtime_symptom",
                 ),
                 Cause(

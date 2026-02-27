@@ -64,11 +64,11 @@ class AffinityUnsatisfiableRule(FailureRule):
                     code="SCHEDULER_CONSTRAINT_UNSATISFIED",
                     message=f"No available node (out of {node_count}) satisfies affinity constraints",
                     role="scheduler_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_UNSCHEDULABLE",
                     message="Scheduler cannot place Pod; Pod remains Pending",
-                    blocking=True,
                     role="workload_symptom",
                 ),
             ]

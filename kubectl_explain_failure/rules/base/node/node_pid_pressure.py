@@ -108,6 +108,7 @@ class NodePIDPressureRule(FailureRule):
                 code="NODE_PID_PRESSURE",
                 message=f"Node(s) reporting PIDPressure=True: {', '.join(pressured_nodes)}",
                 role="infrastructure_root",
+                blocking=True,
             )
         ]
 
@@ -125,7 +126,6 @@ class NodePIDPressureRule(FailureRule):
                 Cause(
                     code="POD_IMPACTED_BY_PID_PRESSURE",
                     message="Pod affected by node PID pressure",
-                    blocking=True,
                     role="workload_symptom",
                 )
             )

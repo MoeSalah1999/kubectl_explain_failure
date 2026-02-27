@@ -68,11 +68,11 @@ class NodeSelectorMismatchRule(FailureRule):
                     code="NODE_SELECTOR_MISMATCH",
                     message="No available node satisfies all required label constraints",
                     role="infrastructure_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_UNSCHEDULABLE_NODE_SELECTOR",
                     message="Scheduler cannot place Pod due to nodeSelector mismatch",
-                    blocking=True,
                     role="scheduler_symptom",
                 ),
             ]

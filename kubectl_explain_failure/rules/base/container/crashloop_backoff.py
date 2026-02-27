@@ -75,11 +75,11 @@ class CrashLoopBackOffRule(FailureRule):
                     code="CONTAINER_CRASHING",
                     message="Container process exits repeatedly",
                     role="workload_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="CRASH_LOOP_BACKOFF",
                     message="Kubelet enters exponential restart backoff",
-                    blocking=True,
                     role="runtime_symptom",
                 ),
                 Cause(

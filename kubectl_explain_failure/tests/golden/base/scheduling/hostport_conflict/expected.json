@@ -14,13 +14,13 @@
     {
       "code": "HOSTPORT_ALREADY_ALLOCATED",
       "message": "Requested hostPort already allocated on candidate node(s)",
-      "role": "scheduling_root"
+      "role": "scheduling_root",
+      "blocking": true
     },
     {
       "code": "POD_UNSCHEDULABLE",
       "message": "Scheduler cannot place Pod due to hostPort conflict",
-      "role": "workload_symptom",
-      "blocking": true
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

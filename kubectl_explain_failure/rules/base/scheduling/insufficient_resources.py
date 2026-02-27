@@ -68,11 +68,11 @@ class InsufficientResourcesRule(FailureRule):
                     code="SCHEDULER_INSUFFICIENT_CAPACITY",
                     message="Kubernetes scheduler found no node with sufficient allocatable resources",
                     role="infrastructure_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_SCHEDULING_FAILED",
                     message=f"Pod remains Pending due to insufficient resources on node(s): {', '.join(node_names)}",
-                    blocking=True,
                     role="scheduler_symptom",
                 ),
             ]

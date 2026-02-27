@@ -10,13 +10,13 @@
     {
       "code": "CONTAINER_CRASHING",
       "message": "Container process exits repeatedly",
-      "role": "workload_root"
+      "role": "workload_root",
+      "blocking": true
     },
     {
       "code": "CRASH_LOOP_BACKOFF",
       "message": "Kubelet enters exponential restart backoff",
-      "role": "runtime_symptom",
-      "blocking": true
+      "role": "runtime_symptom"
     },
     {
       "code": "POD_UNABLE_TO_RUN",

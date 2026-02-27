@@ -71,11 +71,11 @@ class HostPortConflictRule(FailureRule):
                     code="HOSTPORT_ALREADY_ALLOCATED",
                     message="Requested hostPort already allocated on candidate node(s)",
                     role="scheduling_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_UNSCHEDULABLE",
                     message="Scheduler cannot place Pod due to hostPort conflict",
-                    blocking=True,
                     role="workload_symptom",
                 ),
             ]

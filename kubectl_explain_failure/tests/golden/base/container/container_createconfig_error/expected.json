@@ -14,13 +14,13 @@
     {
       "code": "CONTAINER_CONFIG_INVALID",
       "message": "Container spec is invalid or references missing resources",
-      "role": "configuration_root"
+      "role": "configuration_root",
+      "blocking": true
     },
     {
       "code": "CREATE_CONTAINER_CONFIG_ERROR",
       "message": "Kubelet reports CreateContainerConfigError",
-      "role": "runtime_symptom",
-      "blocking": true
+      "role": "runtime_symptom"
     },
     {
       "code": "POD_START_BLOCKED",

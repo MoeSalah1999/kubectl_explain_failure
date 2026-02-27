@@ -121,6 +121,7 @@ class NodeMemoryPressureRule(FailureRule):
                 code="NODE_MEMORY_PRESSURE",
                 message=f"Node(s) reporting MemoryPressure=True: {', '.join(pressured_nodes)}",
                 role="infrastructure_root",
+                blocking=True,
             )
         ]
 
@@ -138,7 +139,6 @@ class NodeMemoryPressureRule(FailureRule):
                 Cause(
                     code="POD_IMPACTED_BY_MEMORY_PRESSURE",
                     message="Pod affected by node memory pressure",
-                    blocking=True,
                     role="workload_symptom",
                 )
             )
