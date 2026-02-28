@@ -4,6 +4,30 @@ from kubectl_explain_failure.timeline import build_timeline
 
 
 class RapidRestartEscalationRule(FailureRule):
+    """
+    Detects Pods experiencing rapid restart escalation, where multiple
+    BackOff events occur within a defined time window, indicating
+    persistent container instability.
+
+    Signals:
+    - Multiple BackOff events observed within a bounded time window
+    - Restart frequency exceeds configured threshold
+
+    Interpretation:
+    The container is repeatedly crashing or failing health checks in
+    quick succession. The restart frequency indicates an unstable
+    execution state that prevents the Pod from achieving a steady
+    Running condition.
+
+    Scope:
+    - Timeline + container health layer
+    - Deterministic (event-frequency based)
+    - Acts as a compound escalation check for restart storms
+
+    Exclusions:
+    - Does not include isolated or transient restarts below threshold
+    - Does not identify the underlying crash reason (handled by other rules)
+    """
     name = "RapidRestartEscalation"
     category = "Compound"
     priority = 52
@@ -42,10 +66,21 @@ class RapidRestartEscalationRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="RAPID_RESTARTS",
-                    message="Repeated BackOff events detected within time window",
+                    code="BACKOFF_EVENTS_WINDOW",
+                    message=f"{len(recent_backoffs)} BackOff events detected within {self.BACKOFF_WINDOW_MINUTES} minute window",
+                    role="container_health_context",
+                ),
+                Cause(
+                    code="RAPID_RESTART_ESCALATION",
+                    message="Container restart frequency exceeds stability threshold",
+                    role="container_health_root",
                     blocking=True,
-                )
+                ),
+                Cause(
+                    code="WORKLOAD_UNSTABLE",
+                    message="Pod unable to reach stable running state due to restart storm",
+                    role="workload_symptom",
+                ),
             ]
         )
 

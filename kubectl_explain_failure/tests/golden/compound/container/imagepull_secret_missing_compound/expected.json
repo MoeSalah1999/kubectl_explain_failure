@@ -4,11 +4,20 @@
   "blocking": true,
   "causes": [
     {
+      "code": "IMAGE_PULL_SECRET_RETRIEVAL_FAILED",
+      "message": "Timeline shows FailedToRetrieveImagePullSecret events",
+      "role": "image_context"
+    },
+    {
       "code": "IMAGE_PULL_SECRET_MISSING",
+      "message": "ImagePullSecret is missing, invalid, or inaccessible",
+      "role": "configuration_root",
       "blocking": true
     },
     {
-      "code": "IMAGE_PULL_BACKOFF"
+      "code": "IMAGE_PULL_BACKOFF",
+      "message": "Pod entered ImagePullBackOff due to authentication failure",
+      "role": "workload_symptom"
     }
   ]
 }

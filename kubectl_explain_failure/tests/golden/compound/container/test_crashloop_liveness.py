@@ -48,27 +48,19 @@ def test_crashloop_liveness_probe_compound_golden():
 
     result = explain_failure(pod, events, context=context)
 
-    # -------------------------------------------------
     # Root cause validation
-    # -------------------------------------------------
     assert result["root_cause"] == expected["root_cause"]
 
-    # -------------------------------------------------
     # Blocking validation
-    # -------------------------------------------------
     assert result["blocking"] is True
 
-    # -------------------------------------------------
     # Confidence validation
-    # -------------------------------------------------
     assert result["confidence"] >= expected["confidence_min"]
 
-    # -------------------------------------------------
-    # Causal chain validation (engine materializes list of dicts)
-    # -------------------------------------------------
-    causes = result["causes"]
-
-    assert causes[0]["code"] == expected["causes"][0]["code"]
-    assert causes[0]["blocking"] is True
-
-    assert causes[1]["code"] == expected["causes"][1]["code"]
+    # Causes
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+        assert exp_cause["code"] == res_cause["code"]
+        assert exp_cause["message"] == res_cause["message"]
+        assert exp_cause["role"] == res_cause["role"]
+        assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
+        assert exp_cause.get("blocking", True) == res_cause.get("blocking", True)

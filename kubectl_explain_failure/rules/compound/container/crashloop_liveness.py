@@ -2,12 +2,32 @@ from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import timeline_has_pattern
 
-# ---------------------------------------------------------
-# Compound: CrashLoopBackOff caused by failing liveness probe
-# ---------------------------------------------------------
-
 
 class CrashLoopLivenessProbeCompoundRule(FailureRule):
+    """
+    Detects Pods that enter CrashLoopBackOff due to repeated
+    liveness probe failures, indicating that the container
+    cannot remain healthy even when properly scheduled.
+
+    Signals:
+    - Unhealthy events observed in pod timeline
+    - BackOff events observed in pod timeline
+    - CrashLoopBackOff follows liveness probe failures
+
+    Interpretation:
+    The container is repeatedly failing its liveness probe, which
+    causes the kubelet to restart it. This results in a CrashLoopBackOff
+    condition, preventing the Pod from achieving stable running state.
+
+    Scope:
+    - Timeline + container health layer
+    - Deterministic (event-based correlation)
+    - Acts as a compound check for liveness probe induced CrashLoops
+
+    Exclusions:
+    - Does not include CrashLoops caused by configuration changes
+    - Does not include transient startup failures unrelated to liveness probes
+    """
     name = "CrashLoopLivenessProbe"
     category = "Compound"
     priority = 59
@@ -35,13 +55,20 @@ class CrashLoopLivenessProbeCompoundRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="LIVENESS_PROBE_CONTEXT",
+                    message="Timeline shows repeated liveness probe failures",
+                    role="container_health_context",
+                ),
+                Cause(
                     code="LIVENESS_PROBE_FAILED",
                     message="Liveness probe failed repeatedly",
+                    role="container_health_root",
                     blocking=True,
                 ),
                 Cause(
                     code="CRASH_LOOP",
                     message="Container restarted repeatedly (BackOff events observed)",
+                    role="workload_symptom",
                 ),
             ]
         )

@@ -56,10 +56,13 @@ def test_rapid_restart_escalation_golden():
     assert result["blocking"] is True
     assert result["confidence"] >= 0.90
 
-    # Verify causal chain materialization
-    causes = result["causes"]
-    assert causes[0]["code"] == "RAPID_RESTARTS"
-    assert causes[0]["blocking"] is True
+    # Causes
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+        assert exp_cause["code"] == res_cause["code"]
+        assert exp_cause["message"] == res_cause["message"]
+        assert exp_cause["role"] == res_cause["role"]
+        assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
+        assert exp_cause.get("blocking", True) == res_cause.get("blocking", True)
 
     # Verify object evidence matches pod
     pod_name = pod.get("metadata", {}).get("name", "<unknown>")

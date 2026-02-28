@@ -10,16 +10,19 @@
     {
       "code": "CONFIGMAP_UPDATED",
       "message": "ConfigMap was modified prior to failure",
+      "role": "configuration_root",
       "blocking": true
     },
     {
       "code": "CONTAINER_CRASH_AFTER_CONFIG",
       "message": "Container began crashing after configuration change",
-      "blocking": true
+      "role": "container_intermediate"
+      
     },
     {
       "code": "POD_CRASHLOOP",
-      "message": "Pod entered CrashLoopBackOff state"
+      "message": "Pod entered CrashLoopBackOff state",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

@@ -5,12 +5,20 @@
   "confidence": 0.98,
   "causes": [
     {
+      "code": "OOM_CONTEXT",
+      "message": "Timeline shows repeated BackOff events indicating instability",
+      "role": "container_health_context"
+    },
+    {
       "code": "OOM_KILLED",
+      "message": "Container terminated due to OOMKilled (memory limit exceeded)",
+      "role": "container_health_root",
       "blocking": true
     },
     {
       "code": "CRASH_LOOP",
-      "blocking": false
+      "message": "Container repeatedly restarted (BackOff events observed)",
+      "role": "workload_symptom"
     }
   ]
 }

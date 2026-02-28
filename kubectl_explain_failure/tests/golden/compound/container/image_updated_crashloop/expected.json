@@ -8,18 +8,20 @@
   ],
   "causes": [
     {
-      "code": "IMAGE_UPDATED",
-      "message": "New container image was deployed",
-      "blocking": true
+      "code": "IMAGE_DEPLOYMENT_EVENT",
+      "message": "Timeline shows container image pull or update events",
+      "role": "image_context"
     },
     {
       "code": "CONTAINER_RUNTIME_FAILURE",
       "message": "Container runtime failure after image update",
+      "role": "execution_root",
       "blocking": true
     },
     {
       "code": "POD_CRASHLOOP",
-      "message": "Pod entered CrashLoopBackOff state"
+      "message": "Pod entered CrashLoopBackOff state",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

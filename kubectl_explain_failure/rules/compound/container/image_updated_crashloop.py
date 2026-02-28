@@ -4,8 +4,28 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class ImageUpdatedThenCrashLoopRule(FailureRule):
     """
-    New image pulled
-    → Container enters CrashLoopBackOff
+    Detects Pods that enter CrashLoopBackOff shortly after a new container
+    image has been deployed, indicating a runtime failure triggered by the
+    image update.
+
+    Signals:
+    - Image pull or deployment event observed in pod timeline
+    - Container enters CrashLoopBackOff following image update
+
+    Interpretation:
+    The newly deployed image caused the container to fail at runtime,
+    leading to repeated restarts (CrashLoopBackOff). This prevents the
+    Pod from reaching a stable running state.
+
+    Scope:
+    - Timeline + container runtime layer
+    - Deterministic (event-based correlation)
+    - Acts as a compound check for image-induced CrashLoops
+
+    Exclusions:
+    - Does not include CrashLoops caused by configuration changes
+    - Does not include transient startup failures unrelated to image
+    deployment
     """
 
     name = "ImageUpdatedThenCrashLoop"
@@ -82,16 +102,15 @@ class ImageUpdatedThenCrashLoopRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="IMAGE_UPDATED",
-                    message="New container image was deployed",
-                    blocking=True,
-                    role="image_root",
+                    code="IMAGE_DEPLOYMENT_EVENT",
+                    message="Timeline shows container image pull or update events",
+                    role="image_context",
                 ),
                 Cause(
                     code="CONTAINER_RUNTIME_FAILURE",
                     message="Container runtime failure after image update",
+                    role="execution_root",
                     blocking=True,
-                    role="runtime_intermediate",
                 ),
                 Cause(
                     code="POD_CRASHLOOP",

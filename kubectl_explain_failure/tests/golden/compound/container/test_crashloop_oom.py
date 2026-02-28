@@ -55,8 +55,10 @@ def test_crashloop_oom_golden():
     assert result["blocking"] is True
     assert result["confidence"] >= 0.95
 
-    # Verify causal chain materialization (engine returns list of dicts)
-    causes = result["causes"]
-    assert causes[0]["code"] == "OOM_KILLED"
-    assert causes[0]["blocking"] is True
-    assert causes[1]["code"] == "CRASH_LOOP"
+    # Causes
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+        assert exp_cause["code"] == res_cause["code"]
+        assert exp_cause["message"] == res_cause["message"]
+        assert exp_cause["role"] == res_cause["role"]
+        assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
+        assert exp_cause.get("blocking", True) == res_cause.get("blocking", True)

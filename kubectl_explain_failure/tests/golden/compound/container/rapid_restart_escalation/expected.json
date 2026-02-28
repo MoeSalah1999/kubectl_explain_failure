@@ -11,9 +11,20 @@
   },
   "causes": [
     {
-      "code": "RAPID_RESTARTS",
-      "message": "Repeated BackOff events detected",
+      "code": "BACKOFF_EVENTS_WINDOW",
+      "message": "3 BackOff events detected within 30 minute window",
+      "role": "container_health_context"
+    },
+    {
+      "code": "RAPID_RESTART_ESCALATION",
+      "message": "Container restart frequency exceeds stability threshold",
+      "role": "container_health_root",
       "blocking": true
+    },
+    {
+      "code": "WORKLOAD_UNSTABLE",
+      "message": "Pod unable to reach stable running state due to restart storm",
+      "role": "workload_symptom"
     }
   ]
 }

@@ -4,8 +4,28 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class CrashLoopAfterConfigChangeRule(FailureRule):
     """
-    ConfigMap update detected
-    → CrashLoopBackOff begins shortly after
+    Detects Pods that enter CrashLoopBackOff shortly after a ConfigMap
+    update, indicating that configuration changes likely triggered container failures.
+
+    Signals:
+    - ConfigMap update event detected in pod timeline
+    - Pod enters CrashLoopBackOff or BackOff state within a short time window
+    - Crash closely follows configuration modification
+
+    Interpretation:
+    The container begins crashing due to a configuration change. The
+    update may introduce invalid values, incompatible settings, or
+    parsing errors. This leads to repeated container restarts and
+    workload disruption.
+
+    Scope:
+    - Timeline + container layer
+    - Deterministic (event-based correlation)
+    - Acts as a compound check for configuration-induced CrashLoops
+
+    Exclusions:
+    - Does not include container crashes unrelated to configuration changes
+    - Excludes transient failures unrelated to ConfigMap updates
     """
 
     name = "CrashLoopAfterConfigChange"
@@ -87,13 +107,12 @@ class CrashLoopAfterConfigChangeRule(FailureRule):
                 Cause(
                     code="CONFIGMAP_UPDATED",
                     message="ConfigMap was modified prior to failure",
-                    blocking=True,
                     role="configuration_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="CONTAINER_CRASH_AFTER_CONFIG",
                     message="Container began crashing after configuration change",
-                    blocking=True,
                     role="container_intermediate",
                 ),
                 Cause(

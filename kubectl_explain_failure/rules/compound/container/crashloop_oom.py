@@ -4,6 +4,28 @@ from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class CrashLoopOOMKilledRule(FailureRule):
+    """
+    Detects Pods that enter CrashLoopBackOff due to container
+    termination by OOMKilled, indicating memory exhaustion.
+
+    Signals:
+    - BackOff events observed in pod timeline
+    - Container lastState terminated with reason OOMKilled
+
+    Interpretation:
+    The container exceeds its memory limit, triggering the
+    kubelet to terminate it. This repeated termination causes
+    CrashLoopBackOff, preventing the Pod from stabilizing.
+
+    Scope:
+    - Timeline + container health layer
+    - Deterministic (event + status based)
+    - Acts as a compound check for memory-induced CrashLoops
+
+    Exclusions:
+    - Does not include CrashLoops caused by application logic errors
+    - Does not include transient startup failures unrelated to OOMKilled
+    """
     name = "CrashLoopOOMKilled"
     category = "Compound"
     priority = 55
@@ -44,13 +66,20 @@ class CrashLoopOOMKilledRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="OOM_CONTEXT",
+                    message="Timeline shows repeated BackOff events indicating instability",
+                    role="container_health_context",
+                ),
+                Cause(
                     code="OOM_KILLED",
                     message="Container terminated due to OOMKilled (memory limit exceeded)",
+                    role="container_health_root",
                     blocking=True,
                 ),
                 Cause(
                     code="CRASH_LOOP",
                     message="Container repeatedly restarted (BackOff events observed)",
+                    role="workload_symptom",
                 ),
             ]
         )

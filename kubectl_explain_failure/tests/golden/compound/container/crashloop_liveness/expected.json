@@ -4,11 +4,20 @@
   "blocking": true,
   "causes": [
     {
+      "code": "LIVENESS_PROBE_CONTEXT",
+      "message": "Timeline shows repeated liveness probe failures",
+      "role": "container_health_context"
+    },
+    {
       "code": "LIVENESS_PROBE_FAILED",
+      "message": "Liveness probe failed repeatedly",
+      "role": "container_health_root",
       "blocking": true
     },
     {
-      "code": "CRASH_LOOP"
+      "code": "CRASH_LOOP",
+      "message": "Container restarted repeatedly (BackOff events observed)",
+      "role": "workload_symptom"
     }
   ]
 }
