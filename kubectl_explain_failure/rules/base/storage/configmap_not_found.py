@@ -77,7 +77,7 @@ class ConfigMapNotFoundRule(FailureRule):
                     code="CONFIGMAP_NOT_FOUND",
                     message=f"ConfigMap '{missing_name}' not found",
                     blocking=True,
-                    role="config_root",
+                    role="configuration_root",
                 ),
                 Cause(
                     code="CONTAINER_CONFIG_ERROR",

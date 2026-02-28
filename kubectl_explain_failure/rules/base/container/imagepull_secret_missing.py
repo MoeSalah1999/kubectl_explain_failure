@@ -71,8 +71,8 @@ class ImagePullSecretMissingRule(FailureRule):
                 Cause(
                     code="IMAGE_PULL_SECRET_INVALID",
                     message="Registry authentication failed due to missing or invalid secret",
+                    role="configuration_root",
                     blocking=True,
-                    role="config_root",
                 ),
                 Cause(
                     code="IMAGE_PULL_FAILURE",

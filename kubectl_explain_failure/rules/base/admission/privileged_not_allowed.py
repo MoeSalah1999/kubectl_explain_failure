@@ -77,8 +77,8 @@ class PrivilegedNotAllowedRule(FailureRule):
                 Cause(
                     code="PRIVILEGED_CONTAINER_DENIED",
                     message="Admission controller rejected pod due to privileged container configuration",
-                    blocking=True,
                     role="authorization_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_CREATION_BLOCKED",

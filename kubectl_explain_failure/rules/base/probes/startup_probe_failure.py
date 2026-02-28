@@ -69,8 +69,8 @@ class StartupProbeFailureRule(FailureRule):
                 Cause(
                     code="STARTUP_PROBE_FAILED",
                     message="Startup probe checks are failing",
-                    blocking=True,
                     role="container_health_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="CONTAINER_STARTUP_BLOCKED",

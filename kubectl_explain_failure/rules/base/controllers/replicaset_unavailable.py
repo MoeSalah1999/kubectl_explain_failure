@@ -64,8 +64,8 @@ class ReplicaSetUnavailableRule(FailureRule):
                 Cause(
                     code="REPLICASET_ZERO_AVAILABLE",
                     message=f"ReplicaSet(s) report zero available replicas: {', '.join(failing)}",
-                    blocking=True,
                     role="controller_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="PODS_NOT_READY",

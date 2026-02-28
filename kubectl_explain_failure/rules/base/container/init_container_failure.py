@@ -65,8 +65,8 @@ class InitContainerFailureRule(FailureRule):
                 Cause(
                     code="INIT_CONTAINER_EXIT_NONZERO",
                     message="Init container exited with non-zero status",
-                    blocking=True,
                     role="execution_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_STARTUP_BLOCKED",

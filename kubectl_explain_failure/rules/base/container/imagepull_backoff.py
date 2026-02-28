@@ -82,8 +82,8 @@ class ImagePullBackOffRule(FailureRule):
                 Cause(
                     code="IMAGE_PULL_BACKOFF",
                     message="Kubelet entered exponential backoff due to repeated pull failures",
+                    role="execution_root",
                     blocking=True,
-                    role="runtime_symptom",
                 ),
                 Cause(
                     code="POD_UNABLE_TO_RUN",

@@ -57,11 +57,11 @@ class EvictedRule(FailureRule):
                     code="KUBELET_EVICTION_MANAGER",
                     message="Kubelet eviction manager selected Pod for eviction",
                     role="infrastructure_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_EVICTED",
                     message="Pod was evicted from node",
-                    blocking=True,
                     role="workload_termination",
                 ),
             ]

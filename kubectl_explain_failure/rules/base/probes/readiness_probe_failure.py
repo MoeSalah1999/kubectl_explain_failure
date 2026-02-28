@@ -73,8 +73,8 @@ class ReadinessProbeFailureRule(FailureRule):
                 Cause(
                     code="READINESS_PROBE_FAILED",
                     message="Readiness probe checks are failing",
-                    blocking=True,
                     role="container_health_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_NOT_READY",

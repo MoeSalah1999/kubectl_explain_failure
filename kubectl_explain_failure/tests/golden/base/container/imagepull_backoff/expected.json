@@ -14,7 +14,7 @@
     {
       "code": "IMAGE_PULL_BACKOFF",
       "message": "Kubelet entered exponential backoff due to repeated pull failures",
-      "role": "runtime_symptom",
+      "role": "execution_root",
       "blocking": true
     },
     {

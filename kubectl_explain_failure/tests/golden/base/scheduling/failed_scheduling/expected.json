@@ -13,8 +13,8 @@
     {
       "code": "SCHEDULER_REJECTION",
       "message": "Scheduler could not place Pod on any node",
-      "blocking": true,
-      "role": "scheduling_root"
+      "role": "scheduling_root",
+      "blocking": true
     },
     {
       "code": "POD_PENDING",

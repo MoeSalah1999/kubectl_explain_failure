@@ -88,8 +88,8 @@ class RBACForbiddenRule(FailureRule):
                 Cause(
                     code="RBAC_DENIED",
                     message="RBAC policy denies required permission",
-                    blocking=True,
                     role="authorization_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_CREATION_BLOCKED",

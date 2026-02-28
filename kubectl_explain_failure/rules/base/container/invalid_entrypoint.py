@@ -48,8 +48,8 @@ class InvalidEntrypointRule(FailureRule):
                 Cause(
                     code="INVALID_ENTRYPOINT_DETECTED",
                     message="Container entrypoint or command is invalid",
-                    blocking=True,
                     role="execution_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="CONTAINER_START_FAILED",

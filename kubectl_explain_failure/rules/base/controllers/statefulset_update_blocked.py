@@ -79,8 +79,8 @@ class StatefulSetUpdateBlockedRule(FailureRule):
                 Cause(
                     code="STATEFULSET_PARTITION_BLOCKING",
                     message=f"StatefulSet rollout limited by updateStrategy partition: {', '.join(sts_names)}",
-                    blocking=True,
                     role="controller_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="STATEFULSET_ROLLOUT_INCOMPLETE",

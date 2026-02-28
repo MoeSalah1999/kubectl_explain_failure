@@ -76,8 +76,8 @@ class DNSResolutionFailureRule(FailureRule):
                 Cause(
                     code="DNS_RESOLUTION_FAILURE",
                     message="DNS resolution failed inside Pod container",
-                    blocking=True,
                     role="infrastructure_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="APPLICATION_STARTUP_FAILURE",

@@ -101,7 +101,7 @@ class PVCRecoveredButAppStillFailingRule(FailureRule):
                     code="APPLICATION_CRASHLOOP",
                     message="Application continues failing despite storage recovery",
                     blocking=True,
-                    role="container_root",
+                    role="container_health_root",
                 ),
             ]
         )

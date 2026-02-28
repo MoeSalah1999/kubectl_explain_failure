@@ -69,7 +69,8 @@ class SchedulingFlappingRule(FailureRule):
                 Cause(
                     code="SCHEDULER_INSTABILITY",
                     message="Scheduler repeatedly alternated between success and failure",
-                    role="scheduler_root",
+                    role="scheduling_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="RESOURCE_CONTENTION",
@@ -79,7 +80,6 @@ class SchedulingFlappingRule(FailureRule):
                 Cause(
                     code="POD_PENDING_UNSTABLE",
                     message="Pod scheduling state is unstable due to cluster conditions",
-                    blocking=True,
                     role="workload_symptom",
                 ),
             ]

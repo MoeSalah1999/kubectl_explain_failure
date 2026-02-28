@@ -86,11 +86,11 @@ class UnschedulableTaintRule(FailureRule):
                     code="NODE_TAINT_NOT_TOLERATED",
                     message="Available nodes have taints not tolerated by the Pod",
                     role="infrastructure_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_UNSCHEDULABLE_TAINT",
                     message="Scheduler cannot place Pod due to untolerated node taints",
-                    blocking=True,
                     role="scheduler_symptom",
                 ),
             ]

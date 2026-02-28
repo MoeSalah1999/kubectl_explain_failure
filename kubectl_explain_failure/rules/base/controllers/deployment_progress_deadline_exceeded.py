@@ -59,8 +59,8 @@ class DeploymentProgressDeadlineExceededRule(FailureRule):
                 Cause(
                     code="DEPLOYMENT_PROGRESS_TIMEOUT",
                     message="Deployment exceeded its configured progress deadline",
-                    blocking=True,
                     role="controller_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="ROLLOUT_STALLED",

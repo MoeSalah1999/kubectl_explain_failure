@@ -9,16 +9,19 @@
   "causes": [
     {
       "code": "SCHEDULER_INSTABILITY",
-      "message": "Scheduler repeatedly alternated between success and failure"
+      "message": "Scheduler repeatedly alternated between success and failure",
+      "role": "scheduling_root",
+      "blocking": true
     },
     {
       "code": "RESOURCE_CONTENTION",
-      "message": "Cluster resource availability fluctuated"
+      "message": "Cluster resource availability fluctuated",
+      "role": "cluster_intermediate"
     },
     {
       "code": "POD_PENDING_UNSTABLE",
       "message": "Pod scheduling state is unstable due to cluster conditions",
-      "blocking": true
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

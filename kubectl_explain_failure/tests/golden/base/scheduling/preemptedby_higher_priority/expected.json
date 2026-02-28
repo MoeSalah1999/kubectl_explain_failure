@@ -18,13 +18,13 @@
     {
       "code": "SCHEDULER_PREEMPTION_TRIGGERED",
       "message": "Scheduler selected lower-priority Pods for eviction",
-      "role": "scheduler_decision"
+      "role": "scheduling_root",
+      "blocking": true
     },
     {
       "code": "POD_EVICTED_PREEMPTION",
       "message": "Pod was evicted and marked as Preempted",
-      "role": "scheduler_symptom",
-      "blocking": true
+      "role": "scheduling_symptom"
     }
   ],
   "object_evidence": {

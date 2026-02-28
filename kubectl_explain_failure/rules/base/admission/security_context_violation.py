@@ -93,8 +93,8 @@ class SecurityContextViolationRule(FailureRule):
                 Cause(
                     code="SECURITY_CONTEXT_VIOLATION",
                     message="Pod rejected by PodSecurity / PSP admission controller",
-                    blocking=True,
                     role="policy_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_CREATION_BLOCKED",

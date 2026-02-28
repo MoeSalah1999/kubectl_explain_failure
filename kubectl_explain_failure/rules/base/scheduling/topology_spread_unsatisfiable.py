@@ -67,11 +67,11 @@ class TopologySpreadUnsatisfiableRule(FailureRule):
                     code="TOPOLOGY_CONSTRAINTS_UNSATISFIABLE",
                     message="Scheduler found no feasible node placement satisfying maxSkew and topologyKey rules",
                     role="infrastructure_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_SCHEDULING_FAILED_TOPOLOGY",
                     message="Pod remains Pending due to unsatisfiable topology spread constraints",
-                    blocking=True,
                     role="scheduler_symptom",
                 ),
             ]

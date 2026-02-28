@@ -14,7 +14,7 @@
     {
       "code": "IMAGE_PULL_SECRET_INVALID",
       "message": "Registry authentication failed due to missing or invalid secret",
-      "role": "config_root",
+      "role": "configuration_root",
       "blocking": true
     },
     {

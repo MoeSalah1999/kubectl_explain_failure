@@ -56,13 +56,13 @@ class PreemptedByHigherPriorityRule(FailureRule):
                 Cause(
                     code="SCHEDULER_PREEMPTION_TRIGGERED",
                     message="Scheduler selected lower-priority Pods for eviction",
-                    role="scheduler_decision",
+                    role="scheduling_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_EVICTED_PREEMPTION",
                     message="Pod was evicted and marked as Preempted",
-                    blocking=True,
-                    role="scheduler_symptom",
+                    role="scheduling_symptom",
                 ),
             ]
         )

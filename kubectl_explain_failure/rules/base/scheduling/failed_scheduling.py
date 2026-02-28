@@ -85,8 +85,8 @@ class FailedSchedulingRule(FailureRule):
                 Cause(
                     code="SCHEDULER_REJECTION",
                     message="Scheduler could not place Pod on any node",
-                    blocking=True,
                     role="scheduling_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_PENDING",

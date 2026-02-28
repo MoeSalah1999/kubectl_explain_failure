@@ -63,7 +63,7 @@ class AffinityUnsatisfiableRule(FailureRule):
                 Cause(
                     code="SCHEDULER_CONSTRAINT_UNSATISFIED",
                     message=f"No available node (out of {node_count}) satisfies affinity constraints",
-                    role="scheduler_root",
+                    role="scheduling_root",
                     blocking=True,
                 ),
                 Cause(

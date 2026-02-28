@@ -52,8 +52,8 @@ class OOMKilledRule(FailureRule):
                 Cause(
                     code="MEMORY_LIMIT_EXCEEDED",
                     message="Container exceeded its memory limit",
-                    blocking=True,
                     role="resource_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="OOM_KILL_TERMINATION",

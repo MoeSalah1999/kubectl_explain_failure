@@ -71,8 +71,8 @@ class LimitRangeViolationRule(FailureRule):
                 Cause(
                     code="LIMIT_RANGE_VIOLATION",
                     message="Pod resource requests violate namespace LimitRange policy",
-                    blocking=True,
                     role="authorization_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_CREATION_BLOCKED",

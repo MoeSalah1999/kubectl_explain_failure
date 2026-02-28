@@ -56,11 +56,11 @@ class ImagePullRule(FailureRule):
                     code="IMAGE_PULL_FAILURE",
                     message="Kubelet failed to pull container image from registry",
                     role="infrastructure_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="CONTAINER_WAITING_IMAGE_PULL",
                     message="Container remains in waiting state due to image pull failure",
-                    blocking=True,
                     role="runtime_symptom",
                 ),
             ]

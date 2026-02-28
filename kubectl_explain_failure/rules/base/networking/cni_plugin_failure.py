@@ -57,8 +57,8 @@ class CNIPluginFailureRule(FailureRule):
                 Cause(
                     code="CNI_PLUGIN_FAILURE",
                     message="CNI plugin failed during network setup",
-                    blocking=True,
                     role="infrastructure_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_NETWORK_UNAVAILABLE",

@@ -74,8 +74,8 @@ class ResourceQuotaExceededRule(FailureRule):
                 Cause(
                     code="RESOURCE_QUOTA_EXCEEDED",
                     message=f"Namespace '{namespace}' exceeded its ResourceQuota",
-                    blocking=True,
                     role="policy_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_CREATION_BLOCKED",

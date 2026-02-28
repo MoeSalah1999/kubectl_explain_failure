@@ -85,8 +85,8 @@ class ServiceAccountRBACCompoundRule(FailureRule):
                 Cause(
                     code="RBAC_DENIED",
                     message="RBAC policy denies required permissions",
-                    blocking=True,
                     role="authorization_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_CREATION_BLOCKED",

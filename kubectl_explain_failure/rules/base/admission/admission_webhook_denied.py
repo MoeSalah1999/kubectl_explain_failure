@@ -65,8 +65,8 @@ class AdmissionWebhookDeniedRule(FailureRule):
                 Cause(
                     code="ADMISSION_WEBHOOK_DENIED",
                     message="Webhook rejected pod creation",
-                    blocking=True,
                     role="authorization_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_CREATION_BLOCKED",

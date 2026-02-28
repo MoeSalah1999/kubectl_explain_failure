@@ -64,8 +64,8 @@ class ReplicaSetCreateFailureRule(FailureRule):
                 Cause(
                     code="REPLICASET_REPLICA_FAILURE",
                     message="ReplicaSet reports ReplicaFailure=True condition",
-                    blocking=True,
                     role="controller_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="POD_CREATION_FAILED",
