@@ -57,38 +57,28 @@ def test_node_notready_evicted_golden():
 
     result = explain_failure(pod, events, context=context)
 
-    # ---------------------------------
     # Root cause contract
-    # ---------------------------------
     assert result["root_cause"] == expected["root_cause"]
     assert result["blocking"] is True
     assert result["confidence"] >= 0.95
 
-    # ---------------------------------
     # Resolution dominance
-    # ---------------------------------
     assert result["resolution"]["winner"] == "NodeNotReadyEvicted"
     assert "Evicted" in result["resolution"]["suppressed"]
 
-    # ---------------------------------
-    # Causal chain validation
-    # ---------------------------------
-    causes = result["causes"]
+    # Causes
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+        assert exp_cause["code"] == res_cause["code"]
+        assert exp_cause["message"] == res_cause["message"]
+        assert exp_cause["role"] == res_cause["role"]
+        assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
+        assert exp_cause.get("blocking", True) == res_cause.get("blocking", True)
 
-    assert causes[0]["code"] == "NODE_NOT_READY"
-    assert causes[0]["blocking"] is True
-
-    assert causes[1]["code"] == "POD_EVICTED"
-
-    # ---------------------------------
     # Evidence validation
-    # ---------------------------------
     for ev in expected.get("evidence", []):
         assert ev in result["evidence"]
 
-    # ---------------------------------
     # Object evidence validation
-    # ---------------------------------
     if "object_evidence" in expected:
         assert "object_evidence" in result
         for obj, items in expected["object_evidence"].items():

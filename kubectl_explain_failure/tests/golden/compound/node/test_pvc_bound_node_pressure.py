@@ -58,5 +58,7 @@ def test_pvc_bound_then_node_pressure_golden():
     # Causal chain
     for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
         assert exp_cause["code"] == res_cause["code"]
-        if "blocking" in exp_cause:
-            assert exp_cause["blocking"] == res_cause.get("blocking", False)
+        assert exp_cause["message"] == res_cause["message"]
+        assert exp_cause["role"] == res_cause["role"]
+        assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
+        assert exp_cause.get("blocking", True) == res_cause.get("blocking", True)

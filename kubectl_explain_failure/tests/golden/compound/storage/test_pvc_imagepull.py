@@ -47,22 +47,16 @@ def test_pvc_then_imagepull_fail_golden():
     with open(os.path.join(FIXTURES, "expected.json")) as f:
         expected = json.load(f)
 
-    # -------------------------------------------------
     # Root cause validation
-    # -------------------------------------------------
     assert result["root_cause"] == expected["root_cause"]
 
-    # -------------------------------------------------
     # Confidence validation
-    # -------------------------------------------------
     assert result["confidence"] >= expected["confidence"]
 
-    # -------------------------------------------------
-    # Causal chain validation (engine materializes list of dicts)
-    # -------------------------------------------------
-    causes = result["causes"]
-
-    assert causes[0]["code"] == expected["causes"][0]["code"]
-    # assert causes[0]["blocking"] is True
-
-    assert causes[1]["code"] == expected["causes"][1]["code"]
+    # Causes
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+        assert exp_cause["code"] == res_cause["code"]
+        assert exp_cause["message"] == res_cause["message"]
+        assert exp_cause["role"] == res_cause["role"]
+        assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
+        assert exp_cause.get("blocking", True) == res_cause.get("blocking", True)

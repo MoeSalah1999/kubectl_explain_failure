@@ -8,18 +8,25 @@
   ],
   "causes": [
     {
+      "code": "DEPLOYMENT_STALLED_EVENT",
+      "message": "Deployment test-deployment reports ProgressDeadlineExceeded",
+      "role": "controller_context"
+    },
+    {
       "code": "DEPLOYMENT_PROGRESS_DEADLINE_EXCEEDED",
-      "message": "Deployment exceeded its progress deadline",
+      "message": "Deployment rollout exceeded progress deadline",
+      "role": "controller_root",
       "blocking": true
     },
     {
       "code": "REPLICASET_DEGRADED",
-      "message": "ReplicaSet has unavailable replicas",
-      "blocking": true
+      "message": "ReplicaSet test-replicaset has unavailable replicas",
+      "role": "controller_intermediate"
     },
     {
       "code": "POD_PENDING",
-      "message": "Pod remains Pending due to controller failure"
+      "message": "Pod remains Pending due to stalled controller rollout",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

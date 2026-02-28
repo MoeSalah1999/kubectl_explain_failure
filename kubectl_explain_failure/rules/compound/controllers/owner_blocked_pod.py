@@ -4,9 +4,29 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class OwnerBlockedPodRule(FailureRule):
     """
-    Deployment ProgressDeadlineExceeded
-    → ReplicaSet degraded
-    → Pod Pending
+    Detects Pods that remain Pending because their owning Deployment
+    has stalled, causing ReplicaSet degradation and preventing new
+    replicas from becoming ready.
+
+    Signals:
+    - Deployment.status.conditions includes ProgressDeadlineExceeded
+    - ReplicaSet has fewer ready replicas than desired
+    - Pod phase is Pending
+
+    Interpretation:
+    The Deployment rollout has exceeded its progress deadline,
+    indicating a stalled rollout. This causes the associated
+    ReplicaSet to remain degraded, preventing Pods from becoming
+    ready and leaving them in Pending state.
+
+    Scope:
+    - Controller layer (Deployment + ReplicaSet)
+    - Deterministic (object-state based)
+    - Acts as a compound check for rollout stall propagation
+
+    Exclusions:
+    - Does not include Pod-level scheduling failures
+    - Does not include container runtime crashes unrelated to rollout
     """
 
     name = "OwnerBlockedPod"
@@ -62,20 +82,24 @@ class OwnerBlockedPodRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="DEPLOYMENT_STALLED_EVENT",
+                    message=f"Deployment {dep_name} reports ProgressDeadlineExceeded",
+                    role="controller_context",
+                ),
+                Cause(
                     code="DEPLOYMENT_PROGRESS_DEADLINE_EXCEEDED",
-                    message="Deployment exceeded its progress deadline",
-                    blocking=True,
+                    message="Deployment rollout exceeded progress deadline",
                     role="controller_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="REPLICASET_DEGRADED",
-                    message="ReplicaSet has unavailable replicas",
-                    blocking=True,
+                    message=f"ReplicaSet {rs_name} has unavailable replicas",
                     role="controller_intermediate",
                 ),
                 Cause(
                     code="POD_PENDING",
-                    message="Pod remains Pending due to controller failure",
+                    message="Pod remains Pending due to stalled controller rollout",
                     role="workload_symptom",
                 ),
             ]
