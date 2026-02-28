@@ -4,8 +4,26 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class PVReleasedOrFailedRule(FailureRule):
     """
-    Detects PersistentVolumes that are in Released or Failed state.
-    PVC may still appear Bound but backing PV is unusable.
+    Detects PersistentVolumes that are in Released or Failed state, making
+    their associated PVCs unusable even if they appear Bound.
+
+    Signals:
+    - PV.status.phase == "Released" or "Failed"
+    - PV objects present in cluster
+
+    Interpretation:
+    The PersistentVolume backing the claim is unusable. Any Pod relying on
+    this PV may fail to start or mount the volume, leading to workload
+    disruption.
+
+    Scope:
+    - PersistentVolume layer
+    - Deterministic (object-state based)
+    - Acts as a compound check for PV lifecycle anomalies
+
+    Exclusions:
+    - Does not include PVC misconfiguration unrelated to PV state
+    - Does not include transient volume provisioning delays
     """
 
     name = "PVReleasedOrFailed"
@@ -39,10 +57,21 @@ class PVReleasedOrFailedRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="PVC_BOUND_TO_PV",
+                    message=f"PVCs reference PV(s): {', '.join(affected)}",
+                    role="volume_context",
+                ),
+                Cause(
                     code="PV_RELEASED_OR_FAILED",
                     message=f"PersistentVolume(s) unusable: {', '.join(affected)}",
+                    role="volume_root",
                     blocking=True,
-                )
+                ),
+                Cause(
+                    code="POD_VOLUME_UNAVAILABLE",
+                    message="Pods cannot access volume(s) due to PV state",
+                    role="volume_symptom",
+                ),
             ]
         )
 

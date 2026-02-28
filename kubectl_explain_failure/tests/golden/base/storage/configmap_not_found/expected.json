@@ -8,16 +8,19 @@
   "causes": [
     {
       "code": "CONFIGMAP_REFERENCE",
-      "message": "Pod references a ConfigMap"
+      "message": "Pod references a ConfigMap",
+      "role": "workload_context"
     },
     {
       "code": "CONFIGMAP_NOT_FOUND",
       "message": "ConfigMap 'app-config' not found",
+      "role": "configuration_root",
       "blocking": true
     },
     {
       "code": "CONTAINER_CONFIG_ERROR",
-      "message": "Container configuration cannot be constructed"
+      "message": "Container configuration cannot be constructed",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

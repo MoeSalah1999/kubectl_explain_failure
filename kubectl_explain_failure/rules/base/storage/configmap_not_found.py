@@ -5,10 +5,25 @@ from kubectl_explain_failure.timeline import timeline_has_pattern
 
 class ConfigMapNotFoundRule(FailureRule):
     """
-    Container configuration fails because a referenced ConfigMap
-    does not exist.
-    → Kubelet cannot construct container spec
-    → Container cannot start
+    Detects Pod container startup failures caused by missing ConfigMaps.
+
+    Signals:
+    - Event reason == "CreateContainerConfigError"
+    - Event message references a non-existent ConfigMap
+
+    Interpretation:
+    The Pod references a ConfigMap that does not exist. As a result,
+    the Kubelet cannot construct the container spec, and the container
+    cannot start. The Pod remains in the Pending or ContainerCreating state.
+
+    Scope:
+    - Container configuration layer
+    - Deterministic (event-based)
+    - Applies to Pods referencing missing ConfigMaps
+
+    Exclusions:
+    - Does not include other container configuration errors
+    - Does not include existing ConfigMaps with invalid data
     """
 
     name = "ConfigMapNotFound"
@@ -76,8 +91,8 @@ class ConfigMapNotFoundRule(FailureRule):
                 Cause(
                     code="CONFIGMAP_NOT_FOUND",
                     message=f"ConfigMap '{missing_name}' not found",
-                    blocking=True,
                     role="configuration_root",
+                    blocking=True,
                 ),
                 Cause(
                     code="CONTAINER_CONFIG_ERROR",

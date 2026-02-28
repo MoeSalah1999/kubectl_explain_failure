@@ -4,8 +4,27 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class StorageClassProvisionerMissingRule(FailureRule):
     """
-    Detects PVC stuck Pending due to missing or uninstalled provisioner.
-    PVC.phase=Pending AND StorageClass.provisioner absent or invalid.
+    Detects PersistentVolumeClaims stuck in Pending state due to a missing
+    or uninstalled StorageClass provisioner.
+
+    Signals:
+    - PVC.status.phase == "Pending"
+    - PVC references a StorageClass whose provisioner is absent or invalid
+    - PVC cannot be dynamically provisioned
+
+    Interpretation:
+    The PVC cannot be fulfilled because the referenced StorageClass has no
+    valid provisioner installed. This prevents volume creation, blocking
+    Pods from mounting or starting until the issue is resolved.
+
+    Scope:
+    - Volume/PVC layer
+    - Deterministic (object-state based)
+    - Acts as a root cause for PVC provisioning failures
+
+    Exclusions:
+    - Does not include PVCs that are already Bound
+    - Does not cover transient delays in PVC provisioning
     """
 
     name = "StorageClassProvisionerMissing"
@@ -62,10 +81,21 @@ class StorageClassProvisionerMissingRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="PVC_REFERENCES_STORAGECLASS",
+                    message=f"PVC(s) reference StorageClass: {', '.join(affected)}",
+                    role="volume_context",
+                ),
+                Cause(
                     code="STORAGECLASS_PROVISIONER_MISSING",
-                    message=f"StorageClass provisioner missing for PVC(s): {', '.join(affected)}",
+                    message=f"Provisioner missing for PVC(s): {', '.join(affected)}",
+                    role="volume_root",
                     blocking=True,
-                )
+                ),
+                Cause(
+                    code="PVC_PROVISIONING_BLOCKED",
+                    message="PVC(s) cannot be provisioned",
+                    role="volume_symptom",
+                ),
             ]
         )
 

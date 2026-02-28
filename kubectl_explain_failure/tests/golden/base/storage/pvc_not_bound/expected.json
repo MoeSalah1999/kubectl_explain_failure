@@ -3,6 +3,29 @@
   "phase": "Pending",
   "root_cause": "PersistentVolumeClaim not bound",
   "confidence": 0.97,
+  "causes": [
+    {
+      "code": "PVC_PRESENT",
+      "message": "PVC 'mypvc' attached to Pod",
+      "role": "volume_context"
+    },
+    {
+      "code": "PVC_NOT_BOUND",
+      "message": "PVC 'mypvc' phase is 'Pending'",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "SCHEDULING_BLOCKED",
+      "message": "Pod cannot be scheduled until PVC is Bound",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pvc:mypvc, phase:Pending": [
+      "PVC not Bound"
+    ]
+  },
   "evidence": ["PVC mypvc phase: Pending", "PVC not in Bound state"],
   "likely_causes": [
                 "No PersistentVolume matches the PVC",

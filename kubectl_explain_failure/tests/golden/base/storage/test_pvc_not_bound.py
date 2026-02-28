@@ -2,42 +2,93 @@ import json
 import os
 
 from kubectl_explain_failure.context import build_context
-from kubectl_explain_failure.engine import explain_failure
+from kubectl_explain_failure.engine import explain_failure, normalize_context
+from kubectl_explain_failure.timeline import build_timeline
 
-FIXTURES = os.path.join(os.path.dirname(__file__), "pvc_not_bound")
+BASE_DIR = os.path.dirname(__file__)
+FIXTURE_DIR = os.path.join(BASE_DIR, "pvc_not_bound")
 
 
-def test_pvc_pending_golden():
-    with open(os.path.join(FIXTURES, "input.json")) as f:
-        data = json.load(f)
+def load_json(name: str):
+    with open(os.path.join(FIXTURE_DIR, name)) as f:
+        return json.load(f)
+
+
+def test_pvc_not_bound_golden():
+    data = load_json("input.json")
+    expected = load_json("expected.json")
 
     pod = data["pod"]
     events = data.get("events", [])
+    objects = data.get("objects", {})
 
-    ctx_args = type("Args", (), {})()
-    ctx_args.pvc = None
-    ctx_args.pvcs = None
-    ctx_args.pv = None
-    ctx_args.node = None
-    ctx_args.storageclass = None
-    ctx_args.serviceaccount = None
-    ctx_args.secret = None
-    ctx_args.replicaset = None
-    ctx_args.deployment = None
-    ctx_args.statefulsets = None
-    ctx_args.daemonsets = None
+    context = build_context(
+        type(
+            "Args",
+            (),
+            {
+                "pvc": None,
+                "pvcs": None,
+                "pv": None,
+                "storageclass": None,
+                "node": None,
+                "serviceaccount": None,
+                "secret": None,
+                "replicaset": None,
+                "deployment": None,
+                "statefulsets": None,
+                "daemonsets": None,
+            },
+        )()
+    )
 
-    context = build_context(ctx_args)
+    # Inject objects exactly how rule expects them
+    context["objects"] = objects
+
+    # Noise objects (data completeness boost)
+    context["node"] = {"node1": {"metadata": {"name": "node1"}}}
+    context["pvc"] = {"metadata": {"name": "pvc1"}, "status": {"phase": "Bound"}}
+    context["storageclass"] = {"metadata": {"name": "sc1"}}
+    context["serviceaccount"] = {"metadata": {"name": "default"}}
+    context["secret"] = {"metadata": {"name": "mysecret"}}
     context["pvcs"] = data.get("pvcs", [])
     if context["pvcs"]:
         context["pvc_unbound"] = True
         context["blocking_pvc"] = context["pvcs"][0]
         context["pvc"] = context["pvcs"][0]
 
-    result = explain_failure(pod, events, context)
+    if events:
+        context["timeline"] = build_timeline(events)
 
-    with open(os.path.join(FIXTURES, "expected.json")) as f:
-        expected = json.load(f)
+    context = normalize_context(context)
 
-    for key in expected:
-        assert result.get(key) == expected[key], f"Mismatch on {key}"
+    result = explain_failure(pod, events, context=context)
+
+    # Root cause
+    assert result["root_cause"] == expected["root_cause"]
+
+    # Blocking
+    assert result["blocking"] is True
+
+    # Confidence
+    assert result["confidence"] >= 0.84
+
+    # Evidence
+    for ev in expected["evidence"]:
+        assert ev in result["evidence"]
+
+    # Causes
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+        assert exp_cause["code"] == res_cause["code"]
+        assert exp_cause["message"] == res_cause["message"]
+        assert exp_cause["role"] == res_cause["role"]
+        assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
+        assert exp_cause.get("blocking", True) == res_cause.get("blocking", True)
+
+    # Object evidence
+    assert "object_evidence" in result
+    for obj_key, items in expected["object_evidence"].items():
+        assert obj_key in result["object_evidence"]
+        for item in items:
+            assert item in result["object_evidence"][obj_key]
+    

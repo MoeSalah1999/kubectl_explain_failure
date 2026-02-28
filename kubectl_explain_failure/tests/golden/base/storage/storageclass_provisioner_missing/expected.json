@@ -7,9 +7,20 @@
   ],
   "causes": [
     {
+      "code": "PVC_REFERENCES_STORAGECLASS",
+      "message": "PVC(s) reference StorageClass: pvc1",
+      "role": "volume_context"
+    },
+    {
       "code": "STORAGECLASS_PROVISIONER_MISSING",
-      "message": "StorageClass provisioner missing for PVC(s): pvc1",
+      "message": "Provisioner missing for PVC(s): pvc1",
+      "role": "volume_root",
       "blocking": true
+    },
+    {
+      "code": "PVC_PROVISIONING_BLOCKED",
+      "message": "PVC(s) cannot be provisioned",
+      "role": "volume_symptom"
     }
   ],
   "object_evidence": {

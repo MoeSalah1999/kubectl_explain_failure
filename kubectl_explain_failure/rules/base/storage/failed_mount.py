@@ -5,9 +5,27 @@ from kubectl_explain_failure.timeline import timeline_has_pattern
 
 class FailedMountRule(FailureRule):
     """
-    Pod fails to mount a volume
-    → PVC not bound or storage unavailable
-    → Pod cannot start
+    Detects Pod failures to mount volumes due to unbound PVCs or unavailable storage.
+
+    Signals:
+    - Event reason == "FailedMount"
+    - Timeline contains volume mount failure events
+    - PVC not bound or storage backend unavailable
+
+    Interpretation:
+    The Pod cannot mount a required PersistentVolumeClaim. This prevents
+    the container from starting, leaving the Pod in Pending or ContainerCreating
+    state. The root cause can be a PVC that is not yet bound or a storage
+    backend that is unavailable.
+
+    Scope:
+    - Volume provisioning and mounting layer
+    - Deterministic (event-based)
+    - Applies to Pods referencing PVCs
+
+    Exclusions:
+    - Does not include already bound PVCs
+    - Does not include container runtime or filesystem errors unrelated to volume mount
     """
 
     name = "FailedMount"
@@ -49,7 +67,7 @@ class FailedMountRule(FailureRule):
                 Cause(
                     code="PVC_PRESENT",
                     message=f"PVC '{pvc_name}' is attached to the Pod",
-                    role="workload_context",
+                    role="volume_context",
                 ),
                 Cause(
                     code=root_cause_code,
@@ -60,7 +78,7 @@ class FailedMountRule(FailureRule):
                 Cause(
                     code="VOLUME_MOUNT_FAILURE",
                     message="Pod cannot mount the volume",
-                    role="workload_symptom",
+                    role="volume_symptom",
                 ),
             ]
         )

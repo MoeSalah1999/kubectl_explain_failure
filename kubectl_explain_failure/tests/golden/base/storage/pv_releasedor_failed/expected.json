@@ -7,9 +7,20 @@
   ],
   "causes": [
     {
+      "code": "PVC_BOUND_TO_PV",
+      "message": "PVCs reference PV(s): pv1",
+      "role": "volume_context"
+    },
+    {
       "code": "PV_RELEASED_OR_FAILED",
       "message": "PersistentVolume(s) unusable: pv1",
+      "role": "volume_root",
       "blocking": true
+    },
+    {
+      "code": "POD_VOLUME_UNAVAILABLE",
+      "message": "Pods cannot access volume(s) due to PV state",
+      "role": "volume_symptom"
     }
   ],
   "object_evidence": {

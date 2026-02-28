@@ -4,8 +4,28 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class PVCNotBoundRule(FailureRule):
     """
-    Pod cannot schedule because its PersistentVolumeClaim
+    Detects Pods that cannot schedule because their PersistentVolumeClaim
     is not yet Bound.
+
+    Signals:
+    - PVC exists but its status.phase != "Bound"
+    - Pod remains in Pending phase due to unbound PVC
+    - Timeline or context indicates PVC is unbound
+
+    Interpretation:
+    The Pod cannot be scheduled because the PersistentVolumeClaim it depends
+    on has not yet been bound to a PersistentVolume. This may result from
+    no matching PV, a failed StorageClass provisioning, or unavailable dynamic
+    provisioner. Until the PVC is Bound, the Pod remains in Pending state.
+
+    Scope:
+    - Volume/PVC layer
+    - Deterministic (object-state based)
+    - Acts as a root cause for scheduling and mount failures
+
+    Exclusions:
+    - Does not include PVCs that are Bound
+    - Does not cover transient scheduling delays unrelated to PVC state
     """
 
     name = "PVCNotBound"
@@ -55,7 +75,7 @@ class PVCNotBoundRule(FailureRule):
                 Cause(
                     code="PVC_PRESENT",
                     message=f"PVC '{pvc_name}' attached to Pod",
-                    role="workload_context",
+                    role="volume_context",
                 ),
                 Cause(
                     code="PVC_NOT_BOUND",
@@ -80,7 +100,9 @@ class PVCNotBoundRule(FailureRule):
                 f"PVC {pvc_name} phase: {phase}",
                 "PVC not in Bound state",
             ],
-            "object_evidence": {f"pvc:{pvc_name}, phase:{phase}": ["PVC not Bound"]},
+            "object_evidence": {
+                f"pvc:{pvc_name}, phase:{phase}": ["PVC not Bound"]
+            },
             "likely_causes": [
                 "No PersistentVolume matches the PVC",
                 "StorageClass provisioning failed",

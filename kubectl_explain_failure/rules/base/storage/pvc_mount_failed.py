@@ -5,8 +5,27 @@ from kubectl_explain_failure.timeline import timeline_has_pattern
 
 class PVCMountFailedRule(FailureRule):
     """
-    Volume mount failed for a PVC after scheduling.
-    Typically indicates storage backend or node access issue.
+    Detects PVC mount failures after Pod scheduling, typically due to storage
+    backend or node access issues.
+
+    Signals:
+    - Timeline contains FailedMount events
+    - PVC object attached to Pod exists
+    - Pod cannot start due to volume mount failure
+
+    Interpretation:
+    The Pod cannot mount its PersistentVolumeClaim because the underlying
+    storage is inaccessible or misconfigured. This may be caused by node-level
+    storage access issues, CSI driver failures, or storage backend unavailability.
+
+    Scope:
+    - Volume layer
+    - Deterministic (event/timeline based)
+    - Acts as a root cause for Pod startup failures related to volume mounts
+
+    Exclusions:
+    - Does not include PVC misconfiguration unrelated to mount
+    - Does not include scheduling failures (covered by FailedScheduling)
     """
 
     name = "PVCMountFailed"
@@ -40,7 +59,7 @@ class PVCMountFailedRule(FailureRule):
                 Cause(
                     code="PVC_PRESENT",
                     message=f"PVC '{pvc_name}' attached to Pod",
-                    role="workload_context",
+                    role="volume_context",
                 ),
                 Cause(
                     code="VOLUME_MOUNT_FAILURE",
