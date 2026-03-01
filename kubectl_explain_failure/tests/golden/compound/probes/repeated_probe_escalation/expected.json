@@ -8,18 +8,20 @@
   ],
   "causes": [
     {
-      "code": "PROBE_REPEATED_FAILURE",
-      "message": "Container probe repeatedly failed over sustained duration",
+      "code": "CONTAINER_SUSTAINED_PROBE_FAILURE",
+      "message": "Container failed health probes repeatedly over sustained duration",
+      "role": "container_health_root",
       "blocking": true
     },
     {
-      "code": "CONTAINER_RESTART_ESCALATION",
-      "message": "Kubelet restarted container due to probe failures",
-      "blocking": true
+      "code": "KUBELET_RESTART_ESCALATION",
+      "message": "Kubelet restarted container due to repeated probe failures",
+      "role": "execution_intermediate"
     },
     {
       "code": "POD_UNSTABLE",
-      "message": "Pod remains unstable due to repeated probe failures"
+      "message": "Pod remains unstable due to restart escalation from probe failures",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

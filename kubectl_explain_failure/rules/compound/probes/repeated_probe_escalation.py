@@ -4,9 +4,32 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class RepeatedProbeFailureEscalationRule(FailureRule):
     """
-    Liveness/Readiness probe failing repeatedly
-    over sustained time window
-    → Container restart escalation
+    Detects Pods whose containers experience sustained probe failures,
+    resulting in kubelet-driven restart escalation and workload instability.
+
+    Signals:
+    - Repeated probe failure events (Unhealthy, ProbeError, Failed)
+    within a sustained time window
+    - Failure count exceeds restart escalation threshold
+    - Container state transitions include waiting or terminated
+
+    Interpretation:
+    The container repeatedly fails its configured liveness or readiness
+    probes over a sustained duration. The kubelet interprets these failures
+    as health degradation and triggers restart escalation, causing the Pod
+    to become unstable or enter CrashLoopBackOff.
+
+    Scope:
+    - Container health + kubelet execution layer
+    - Deterministic (event timeline + container state correlation)
+    - Acts as a compound escalation rule suppressing simple probe failure
+    and generic CrashLoopBackOff rules when sustained probe failure is
+    the upstream cause
+
+    Exclusions:
+    - Does not include single or transient probe failures
+    - Does not include application crashes unrelated to probes
+    - Does not include scheduling or infrastructure-level failures
     """
 
     name = "RepeatedProbeFailureEscalation"
@@ -74,20 +97,19 @@ class RepeatedProbeFailureEscalationRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="PROBE_REPEATED_FAILURE",
-                    message="Container probe repeatedly failed over sustained duration",
+                    code="CONTAINER_SUSTAINED_PROBE_FAILURE",
+                    message="Container failed health probes repeatedly over sustained duration",
+                    role="container_health_root",
                     blocking=True,
-                    role="container_root",
                 ),
                 Cause(
-                    code="CONTAINER_RESTART_ESCALATION",
-                    message="Kubelet restarted container due to probe failures",
-                    blocking=True,
-                    role="kubelet_intermediate",
+                    code="KUBELET_RESTART_ESCALATION",
+                    message="Kubelet restarted container due to repeated probe failures",
+                    role="execution_intermediate",
                 ),
                 Cause(
                     code="POD_UNSTABLE",
-                    message="Pod remains unstable due to repeated probe failures",
+                    message="Pod remains unstable due to restart escalation from probe failures",
                     role="workload_symptom",
                 ),
             ]
