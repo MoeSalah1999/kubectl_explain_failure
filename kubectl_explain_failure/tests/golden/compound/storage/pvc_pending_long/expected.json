@@ -1,0 +1,36 @@
+{
+  "root_cause": "PersistentVolumeClaim provisioning is stalled",
+  "blocking": true,
+  "confidence": 0.97,
+  "evidence": [
+    "PVC Pending for >30 minutes"
+  ],
+  "causes": [
+    {
+      "code": "PVC_PENDING_CONTEXT",
+      "message": "PersistentVolumeClaim app-pvc remains Pending",
+      "role": "volume_context"
+    },
+    {
+      "code": "PVC_PROVISIONING_STALLED",
+      "message": "PersistentVolumeClaim provisioning has exceeded acceptable duration",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_STARTUP_GATED_BY_PVC",
+      "message": "Pod startup is blocked by unresolved volume binding",
+      "role": "scheduling_intermediate"
+    },
+    {
+      "code": "POD_PENDING",
+      "message": "Pod cannot progress due to unbound PersistentVolumeClaim",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pvc:app-pvc, phase:Pending": [
+      "PVC not Bound"
+    ]
+  }
+}

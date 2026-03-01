@@ -42,18 +42,18 @@ class PVCNotBoundRule(FailureRule):
     deterministic = True
 
     def matches(self, pod, events, context) -> bool:
-        # Engine canonical signal (preferred)
-        if context.get("pvc_unbound"):
-            return True
+        pvc = context.get("blocking_pvc")
+        timeline = context.get("timeline")
 
-        # Defensive fallback (object graph scan)
-        pvc_objects = context.get("objects", {}).get("pvc", {})
-        for pvc in pvc_objects.values():
+        if pvc and timeline:
             phase = pvc.get("status", {}).get("phase")
-            if phase != "Bound":
-                return True
+            recent_events = timeline.events_within_window(minutes=30)
+            if phase == "Pending" and len(recent_events) > 5:
+                # Escalate to PVCPendingTooLongRule instead
+                return False
 
-        return False
+        # Only match if PVC is unbound but not stuck
+        return context.get("pvc_unbound", False)
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<pod>")
