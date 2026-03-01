@@ -8,18 +8,20 @@
   ],
   "causes": [
     {
-      "code": "NETWORK_POLICY_PRESENT",
-      "message": "NetworkPolicy applies to this Pod",
+      "code": "NETWORK_POLICY_APPLIES",
+      "message": "NetworkPolicy selects this Pod and connection failures detected",
+      "role": "policy_context"
+    },
+    {
+      "code": "NETWORK_POLICY_TRAFFIC_DENIED",
+      "message": "NetworkPolicy denies required ingress or egress traffic",
+      "role": "policy_root",
       "blocking": true
     },
     {
-      "code": "TRAFFIC_DENIED",
-      "message": "Ingress/Egress traffic denied by policy",
-      "blocking": true
-    },
-    {
-      "code": "READINESS_FAILURE",
-      "message": "Container readiness failing due to connectivity issues"
+      "code": "READINESS_PROBE_FAILURE",
+      "message": "Container readiness failing due to connectivity denial",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {
