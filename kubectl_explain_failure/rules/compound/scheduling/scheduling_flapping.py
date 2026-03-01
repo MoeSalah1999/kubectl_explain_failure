@@ -5,10 +5,32 @@ from kubectl_explain_failure.timeline import Timeline
 
 class SchedulingFlappingRule(FailureRule):
     """
-    Alternating Scheduled / FailedScheduling events
-    within a short window.
+    Detects Pods that repeatedly alternate between Scheduled and
+    FailedScheduling events within a short duration, indicating
+    scheduling instability.
 
-    Indicates cluster instability or resource contention.
+    Signals:
+    - Alternating Scheduled and FailedScheduling events
+    - Multiple scheduling transitions within a bounded time window
+    - Pod phase remains Pending
+
+    Interpretation:
+    The scheduler repeatedly attempts to place the Pod but alternates
+    between successful and failed placement decisions. This behavior
+    indicates fluctuating cluster feasibility conditions such as
+    resource contention or rapid node state changes, resulting in
+    unstable scheduling outcomes.
+
+    Scope:
+    - Scheduling layer (scheduler decision stability)
+    - Deterministic (event pattern correlation within bounded window)
+    - Acts as a compound rule suppressing simple FailedScheduling
+    explanations when instability is the upstream cause
+
+    Exclusions:
+    - Does not include single scheduling failures
+    - Does not include PVC or controller blocking conditions
+    - Does not include post-scheduling container runtime failures
     """
 
     name = "SchedulingFlapping"
@@ -73,13 +95,13 @@ class SchedulingFlappingRule(FailureRule):
                     blocking=True,
                 ),
                 Cause(
-                    code="RESOURCE_CONTENTION",
-                    message="Cluster resource availability fluctuated",
-                    role="cluster_intermediate",
+                    code="REPEATED_SCHEDULING_ATTEMPTS",
+                    message="Scheduler repeatedly attempted placement due to fluctuating feasibility",
+                    role="scheduling_intermediate",
                 ),
                 Cause(
                     code="POD_PENDING_UNSTABLE",
-                    message="Pod scheduling state is unstable due to cluster conditions",
+                    message="Pod remains Pending due to scheduling instability",
                     role="workload_symptom",
                 ),
             ]

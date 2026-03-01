@@ -5,8 +5,31 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class PendingUnschedulableRule(FailureRule):
     """
-    Compound rule for Pods stuck Pending due to unschedulable conditions.
-    Aggregates multiple low-level scheduling failure signals.
+    Detects Pods that remain Pending because the scheduler cannot
+    place them onto any Node due to unschedulable conditions.
+
+    Signals:
+    - Pod phase is Pending
+    - FailedScheduling events observed
+    - Node conditions indicate DiskPressure or MemoryPressure
+    - No PVC-level blocking condition detected
+
+    Interpretation:
+    The scheduler is unable to bind the Pod to any available Node.
+    This may be due to resource exhaustion, node pressure conditions,
+    taints, or other scheduling constraints. The Pod remains Pending
+    because no feasible scheduling decision can be made.
+
+    Scope:
+    - Scheduling + infrastructure layer
+    - Deterministic (event timeline + node condition correlation)
+    - Acts as a compound unschedulable aggregation rule when no
+    higher-priority PVC or controller rule explains the Pending state
+
+    Exclusions:
+    - Does not include PVC provisioning or volume binding failures
+    - Does not include controller rollout stalls
+    - Does not include post-scheduling container runtime failures
     """
 
     name = "PendingUnschedulable"
@@ -50,36 +73,38 @@ class PendingUnschedulableRule(FailureRule):
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
 
-        # Aggregate multiple causes
-        causes_list = []
-
-        if has_event(events, "FailedScheduling"):
-            causes_list.append(
-                Cause(
-                    code="FAILED_SCHEDULING",
-                    message="Scheduler failed to place pod",
-                    blocking=True,
-                )
-            )
-
+        # Determine specific scheduling constraint message
         node_conditions = context.get("node_conditions", {})
+        constraint_details = []
+
         if node_conditions.get("DiskPressure"):
-            causes_list.append(
-                Cause(
-                    code="NODE_DISK_PRESSURE",
-                    message="One or more nodes under DiskPressure",
-                    blocking=True,
-                )
-            )
+            constraint_details.append("DiskPressure=True")
 
         if node_conditions.get("MemoryPressure"):
-            causes_list.append(
-                Cause(
-                    code="NODE_MEMORY_PRESSURE",
-                    message="One or more nodes under MemoryPressure",
-                    blocking=True,
-                )
-            )
+            constraint_details.append("MemoryPressure=True")
+
+        constraint_msg = "Unschedulable due to scheduling constraints"
+        if constraint_details:
+            constraint_msg += f" ({', '.join(constraint_details)})"
+
+        causes_list = [
+            Cause(
+                code="SCHEDULING_CONSTRAINT",
+                message=constraint_msg,
+                role="scheduling_root",
+                blocking=True,
+            ),
+            Cause(
+                code="FAILED_SCHEDULING",
+                message="Scheduler failed to place Pod on any available Node",
+                role="scheduling_intermediate",
+            ),
+            Cause(
+                code="POD_PENDING",
+                message="Pod remains Pending due to unsatisfied scheduling constraints",
+                role="workload_symptom",
+            ),
+        ]
 
         chain = CausalChain(causes=causes_list)
 

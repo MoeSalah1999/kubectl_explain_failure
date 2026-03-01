@@ -8,19 +8,20 @@
   ],
   "causes": [
     {
+      "code": "SCHEDULING_CONSTRAINT",
+      "message": "Unschedulable due to scheduling constraints (DiskPressure=True, MemoryPressure=True)",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
       "code": "FAILED_SCHEDULING",
-      "message": "Scheduler failed to place pod",
-      "blocking": true
+      "message": "Scheduler failed to place Pod on any available Node",
+      "role": "scheduling_intermediate"
     },
     {
-      "code": "NODE_DISK_PRESSURE",
-      "message": "One or more nodes under DiskPressure",
-      "blocking": true
-    },
-    {
-      "code": "NODE_MEMORY_PRESSURE",
-      "message": "One or more nodes under MemoryPressure",
-      "blocking": true
+      "code": "POD_PENDING",
+      "message": "Pod remains Pending due to unsatisfied scheduling constraints",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

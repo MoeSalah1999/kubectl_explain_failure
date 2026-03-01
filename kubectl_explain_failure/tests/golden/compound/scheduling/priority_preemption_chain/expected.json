@@ -8,15 +8,14 @@
   ],
   "causes": [
     {
-      "code": "HIGH_PRIORITY_POD_SCHEDULED",
-      "message": "Higher priority pod scheduled on node",
-      "blocking": true,
-      "role": "scheduler_root"
+      "code": "PRIORITY_SCHEDULING_DECISION",
+      "message": "Scheduler admitted higher-priority Pod, triggering preemption",
+      "role": "scheduling_root",
+      "blocking": true
     },
     {
       "code": "LOW_PRIORITY_POD_PREEMPTED",
-      "message": "Lower priority pod was preempted",
-      "blocking": true,
+      "message": "Lower priority pod was preempted by scheduler",
       "role": "scheduler_intermediate"
     },
     {

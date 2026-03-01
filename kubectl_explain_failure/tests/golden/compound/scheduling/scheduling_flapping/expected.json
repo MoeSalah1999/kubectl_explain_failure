@@ -14,13 +14,13 @@
       "blocking": true
     },
     {
-      "code": "RESOURCE_CONTENTION",
-      "message": "Cluster resource availability fluctuated",
-      "role": "cluster_intermediate"
+      "code": "REPEATED_SCHEDULING_ATTEMPTS",
+      "message": "Scheduler repeatedly attempted placement due to fluctuating feasibility",
+      "role": "scheduling_intermediate"
     },
     {
       "code": "POD_PENDING_UNSTABLE",
-      "message": "Pod scheduling state is unstable due to cluster conditions",
+      "message": "Pod remains Pending due to scheduling instability",
       "role": "workload_symptom"
     }
   ],

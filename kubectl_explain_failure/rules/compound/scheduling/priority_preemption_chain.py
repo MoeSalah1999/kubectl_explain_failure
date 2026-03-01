@@ -5,11 +5,33 @@ from kubectl_explain_failure.timeline import timeline_has_pattern
 
 class PriorityPreemptionChainRule(FailureRule):
     """
-    High-priority pod scheduled
-    → Lower-priority pod preempted
-    → Pod evicted
-    """
+    Detects Pods that enter Failed state because they were preempted
+    by a higher-priority workload during scheduling.
 
+    Signals:
+    - Recent Scheduled event for a higher-priority Pod
+    - Preempted event for the affected Pod
+    - Pod phase is Failed
+
+    Interpretation:
+    The scheduler admitted a higher-priority Pod onto a Node with
+    constrained capacity. As a result, a lower-priority Pod was
+    preempted and subsequently evicted. The Pod failure is therefore
+    a consequence of priority-based scheduling policy rather than
+    node health or container runtime failure.
+
+    Scope:
+    - Scheduling layer (priority + preemption mechanics)
+    - Deterministic (event sequence correlation)
+    - Acts as a compound rule suppressing generic eviction
+    or node-level failure explanations when preemption
+    is the upstream cause
+
+    Exclusions:
+    - Does not include evictions due to node pressure
+    - Does not include controller-driven Pod deletions
+    - Does not include container runtime crashes
+    """
     name = "PriorityPreemptionChain"
     category = "Compound"
     priority = 60
@@ -62,15 +84,14 @@ class PriorityPreemptionChainRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="HIGH_PRIORITY_POD_SCHEDULED",
-                    message="Higher priority pod scheduled on node",
+                    code="PRIORITY_SCHEDULING_DECISION",
+                    message="Scheduler admitted higher-priority Pod, triggering preemption",
+                    role="scheduling_root",
                     blocking=True,
-                    role="scheduler_root",
                 ),
                 Cause(
                     code="LOW_PRIORITY_POD_PREEMPTED",
-                    message="Lower priority pod was preempted",
-                    blocking=True,
+                    message="Lower priority pod was preempted by scheduler",
                     role="scheduler_intermediate",
                 ),
                 Cause(
