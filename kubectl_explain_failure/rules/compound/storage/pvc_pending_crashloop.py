@@ -34,8 +34,8 @@ class PVCPendingThenCrashLoopRule(FailureRule):
     name = "PVCPendingThenCrashLoop"
     category = "Compound"
     priority = 50
-    blocks = ["CrashLoopBackOff", "FailedMount"]
-
+    blocks = ["CrashLoopBackOff", "FailedMount", "PVCMountFailed"]
+    deterministic = True
     requires = {
         "objects": ["pvc"],
         "context": ["timeline"],

@@ -85,4 +85,5 @@ def test_compound_pvc_rule_beats_simple_pvc_rules():
     # 5. Simpler PVC rules must be suppressed
     suppressed = result["resolution"]["suppressed"]
     assert "PVCNotBound" in suppressed
-    assert "PVCMountFailed" in suppressed
+    assert "CrashLoopBackOff" in suppressed
+    assert "FailedMount" in suppressed

@@ -1,0 +1,30 @@
+{
+  "root_cause": "PersistentVolumeClaim not bound",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "PVC app-pvc attached",
+    "Event: FailedMount"
+  ],
+  "causes": [
+    {
+      "code": "PVC_PRESENT",
+      "message": "PVC 'app-pvc' is attached to the Pod",
+      "role": "volume_context"
+    },
+    {
+      "code": "PVC_NOT_BOUND",
+      "message": "PersistentVolumeClaim not bound",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "VOLUME_MOUNT_FAILURE",
+      "message": "Pod cannot mount the volume",
+      "role": "volume_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pvc:app-pvc": ["PersistentVolumeClaim not bound"]
+  }
+}

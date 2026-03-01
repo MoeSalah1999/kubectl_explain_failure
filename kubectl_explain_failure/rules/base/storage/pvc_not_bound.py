@@ -39,7 +39,6 @@ class PVCNotBoundRule(FailureRule):
 
     # This is the true root — suppress downstream noise
     blocks = ["FailedScheduling", "FailedMount"]
-    deterministic = True
 
     def matches(self, pod, events, context) -> bool:
         pvc = context.get("blocking_pvc")

@@ -1,0 +1,32 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "app-pod"
+    },
+    "spec": {
+      "volumes": [
+        {"name": "data", "persistentVolumeClaim": {"claimName": "app-pvc"}}
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "conditions": []
+    }
+  },
+  "pvc": {
+    "metadata": {
+      "name": "app-pvc"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedMount",
+      "message": "MountVolume.SetUp failed for volume \"data\": PersistentVolumeClaim is not bound",
+      "firstTimestamp": "2026-02-28T12:00:00Z",
+      "lastTimestamp": "2026-02-28T12:01:00Z"
+    }
+  ]
+}

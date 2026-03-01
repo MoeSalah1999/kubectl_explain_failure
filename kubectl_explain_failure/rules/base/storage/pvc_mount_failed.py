@@ -44,9 +44,12 @@ class PVCMountFailedRule(FailureRule):
         timeline = context.get("timeline")
         if not timeline:
             return False
-
+        # Only match if PVC is bound (i.e., exclude unbound PVCs)
+        pvc_unbound = context.get("pvc_unbound", False)
+        if pvc_unbound:
+            return False
         return timeline_has_pattern(timeline, [{"reason": "FailedMount"}])
-
+    
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<pod>")
         pvc_objs = context.get("objects", {}).get("pvc", {})
