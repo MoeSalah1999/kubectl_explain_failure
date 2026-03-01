@@ -8,18 +8,20 @@
   ],
   "causes": [
     {
-      "code": "PARTIAL_CONTAINER_FAILURE",
-      "message": "One container is failing while others remain healthy",
-      "blocking": true
+      "code": "PARTIAL_CONTAINER_FAILURE_DETECTED",
+      "message": "Pod has both healthy and failing containers",
+      "role": "container_health_context"
     },
     {
-      "code": "SERVICE_DEGRADATION",
-      "message": "Pod functionality degraded due to partial container failure",
+      "code": "CONTAINER_PARTIAL_FAILURE",
+      "message": "At least one container is in CrashLoop or failure state",
+      "role": "container_health_root",
       "blocking": true
     },
     {
       "code": "POD_PARTIALLY_UNAVAILABLE",
-      "message": "Pod is not fully operational due to failing container"
+      "message": "Pod functionality degraded due to partial container failure",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

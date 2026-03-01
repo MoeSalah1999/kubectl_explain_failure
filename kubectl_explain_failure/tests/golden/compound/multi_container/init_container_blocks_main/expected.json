@@ -8,18 +8,20 @@
   ],
   "causes": [
     {
+      "code": "INIT_CONTAINER_FAILURE_DETECTED",
+      "message": "Init container init-db entered failure state",
+      "role": "container_health_context"
+    },
+    {
       "code": "INIT_CONTAINER_FAILURE",
-      "message": "Init container failed before main containers could start",
+      "message": "Init container failed during Pod initialization",
+      "role": "container_health_root",
       "blocking": true
     },
     {
-      "code": "MAIN_CONTAINERS_NOT_STARTED",
-      "message": "Main containers blocked by failing init container",
-      "blocking": true
-    },
-    {
-      "code": "POD_INITIALIZATION_FAILED",
-      "message": "Pod failed during initialization phase"
+      "code": "POD_INITIALIZATION_BLOCKED",
+      "message": "Main containers not started due to init container failure",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

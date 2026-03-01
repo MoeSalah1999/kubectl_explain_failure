@@ -4,11 +4,31 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class InitContainerBlocksMainRule(FailureRule):
     """
-    Init container failure suppresses
-    container-level crash and probe rules.
+    Detects Pods whose main containers never start because an init
+    container has failed, blocking the initialization sequence.
 
-    Ensures causal correctness:
-    main containers never started due to init failure.
+    Signals:
+    - Pod.status.initContainerStatuses contains a failed state
+    - Init container reason in [Error, CrashLoopBackOff,
+    ImagePullBackOff, CreateContainerConfigError]
+    - Main containers not yet started
+
+    Interpretation:
+    An init container failed during the initialization phase,
+    preventing the kubelet from starting the main application
+    containers. Because init containers must complete successfully
+    before normal containers start, the Pod cannot progress to
+    Running state.
+
+    Scope:
+    - Pod + container initialization layer
+    - Deterministic (object-state based)
+    - Acts as a compound guard to suppress container-level
+    crash and probe rules when init failure is the true cause
+
+    Exclusions:
+    - Does not include failures occurring after main containers start
+    - Does not include controller-level rollout failures
     """
 
     name = "InitContainerBlocksMain"
@@ -72,20 +92,19 @@ class InitContainerBlocksMainRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
+                    code="INIT_CONTAINER_FAILURE_DETECTED",
+                    message=f"Init container {failing_init} entered failure state",
+                    role="container_health_context",
+                ),
+                Cause(
                     code="INIT_CONTAINER_FAILURE",
-                    message="Init container failed before main containers could start",
+                    message="Init container failed during Pod initialization",
+                    role="container_health_root",
                     blocking=True,
-                    role="init_root",
                 ),
                 Cause(
-                    code="MAIN_CONTAINERS_NOT_STARTED",
-                    message="Main containers blocked by failing init container",
-                    blocking=True,
-                    role="kubelet_intermediate",
-                ),
-                Cause(
-                    code="POD_INITIALIZATION_FAILED",
-                    message="Pod failed during initialization phase",
+                    code="POD_INITIALIZATION_BLOCKED",
+                    message="Main containers not started due to init container failure",
                     role="workload_symptom",
                 ),
             ]

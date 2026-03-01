@@ -4,11 +4,31 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class MultiContainerPartialFailureRule(FailureRule):
     """
-    One container Ready
-    One container CrashLoopBackOff / failing
+    Detects multi-container Pods where at least one container is Ready
+    while another container is in a failure state, resulting in partial
+    workload degradation.
 
-    Prevents generic pod-level blame when only
-    a subset of containers are failing.
+    Signals:
+    - Pod.status.containerStatuses contains 2 or more containers
+    - At least one container has ready=True
+    - At least one container reason in [CrashLoopBackOff, Error, OOMKilled]
+
+    Interpretation:
+    One container within the Pod is failing while others continue
+    running successfully. The Pod remains in Running phase, but
+    functionality is degraded because a subset of containers is
+    not operational.
+
+    Scope:
+    - Pod + container health layer
+    - Deterministic (object-state based)
+    - Acts as a compound guard to prevent generic pod-level blame
+    when failure is isolated to specific containers
+
+    Exclusions:
+    - Does not include single-container Pods
+    - Does not include full Pod failure where all containers are failing
+    - Does not include controller-level rollout or scheduling failures
     """
 
     name = "MultiContainerPartialFailure"
@@ -77,20 +97,19 @@ class MultiContainerPartialFailureRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="PARTIAL_CONTAINER_FAILURE",
-                    message="One container is failing while others remain healthy",
-                    blocking=True,
-                    role="container_root",
+                    code="PARTIAL_CONTAINER_FAILURE_DETECTED",
+                    message="Pod has both healthy and failing containers",
+                    role="container_health_context",
                 ),
                 Cause(
-                    code="SERVICE_DEGRADATION",
-                    message="Pod functionality degraded due to partial container failure",
+                    code="CONTAINER_PARTIAL_FAILURE",
+                    message="At least one container is in CrashLoop or failure state",
+                    role="container_health_root",
                     blocking=True,
-                    role="workload_intermediate",
                 ),
                 Cause(
                     code="POD_PARTIALLY_UNAVAILABLE",
-                    message="Pod is not fully operational due to failing container",
+                    message="Pod functionality degraded due to partial container failure",
                     role="workload_symptom",
                 ),
             ]
