@@ -5,9 +5,32 @@ from kubectl_explain_failure.timeline import Timeline, parse_time
 
 class PVCThenCrashLoopRule(FailureRule):
     """
-    PVC Pending → Bound
-    Pod still failing (CrashLoopBackOff or container not ready)
-    → Indicates CrashLoopBackOff caused by missing or delayed volume
+    Detects Pods that enter CrashLoopBackOff following a
+    PersistentVolumeClaim transition from Pending to Bound,
+    indicating the container began failing while waiting for
+    volume availability.
+
+    Signals:
+    - PVC transitioned from PersistentVolumeClaimPending to PersistentVolumeClaimBound
+    - CrashLoopBackOff events occurred before or during volume binding
+    - Pod phase is Running
+
+    Interpretation:
+    The PersistentVolumeClaim was unavailable during container
+    startup. The container attempted to initialize without
+    required storage, leading to repeated restarts. Even though
+    the PVC eventually bound, the CrashLoopBackOff originated
+    from the earlier volume unavailability.
+
+    Scope:
+    - Volume + container health layers
+    - Deterministic (event ordering within bounded window)
+    - Acts as a compound attribution rule for storage-induced CrashLoops
+
+    Exclusions:
+    - Does not include CrashLoops caused purely by application logic
+    - Does not include PVCs that never transitioned to Bound
+    - Does not include post-recovery execution failures
     """
 
     name = "PVCThenCrashLoop"
@@ -68,16 +91,20 @@ class PVCThenCrashLoopRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="PVC_BLOCKING",
-                    message=f"PersistentVolumeClaim(s) Bound after Pending: {', '.join(pvc_names)}",
+                    code="PVC_UNAVAILABLE_AT_STARTUP",
+                    message=f"PersistentVolumeClaim(s) were Pending during container startup: {', '.join(pvc_names)}",
+                    role="volume_root",
                     blocking=True,
-                    role="storage_root",
                 ),
                 Cause(
                     code="CONTAINER_RESTARTS",
-                    message="Containers repeatedly restarted while waiting for volume",
-                    blocking=True,
-                    role="application_failure",
+                    message="Container restarted repeatedly while waiting for required volume",
+                    role="container_health_intermediate",
+                ),
+                Cause(
+                    code="CRASH_LOOP_BACKOFF",
+                    message="Pod entered CrashLoopBackOff due to earlier volume unavailability",
+                    role="workload_symptom",
                 ),
             ]
         )

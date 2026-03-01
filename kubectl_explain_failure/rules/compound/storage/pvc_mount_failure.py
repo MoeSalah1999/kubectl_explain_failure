@@ -4,6 +4,33 @@ from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class PVCMountFailureRule(FailureRule):
+    """
+    Detects Pods whose PersistentVolumeClaims are Bound but
+    fail during the volume mount phase, preventing container
+    startup.
+
+    Signals:
+    - All associated PVCs are in Bound phase
+    - Pod events include FailedMount or MountVolume errors
+    - No PV-level failure (Released/Failed) is present
+
+    Interpretation:
+    Although the PersistentVolumeClaim is successfully bound,
+    the kubelet fails to mount the volume to the Pod. This
+    indicates a volume-layer failure during the mount phase,
+    blocking container initialization and preventing the Pod
+    from progressing to Ready.
+
+    Scope:
+    - Volume layer (post-binding mount phase)
+    - Deterministic (object state + event based)
+    - Acts as a compound suppression rule for simple FailedMount signals
+
+    Exclusions:
+    - Does not include PVC Pending scenarios
+    - Does not include PV Released or Failed root causes
+    - Does not include container runtime crashes unrelated to volume mount
+    """
     name = "PVCMountFailure"
     category = "Compound"
     priority = 54
@@ -67,11 +94,26 @@ class PVCMountFailureRule(FailureRule):
 
         chain = CausalChain(
             causes=[
-                Cause(code="PVC_BOUND", message=f"PVCs bound: {', '.join(pvc_names)}"),
                 Cause(
-                    code="MOUNT_FAILED",
-                    message=f"Volume mount failed ({mount_fail_count} events)",
+                    code="PVC_BOUND_CONTEXT",
+                    message=f"PersistentVolumeClaim(s) successfully bound: {', '.join(pvc_names)}",
+                    role="volume_context",
+                ),
+                Cause(
+                    code="VOLUME_MOUNT_FAILURE",
+                    message=f"Volume mount failed ({mount_fail_count} events observed)",
+                    role="volume_root",
                     blocking=True,
+                ),
+                Cause(
+                    code="CONTAINER_STARTUP_BLOCKED",
+                    message="Container initialization blocked due to mount failure",
+                    role="execution_intermediate",
+                ),
+                Cause(
+                    code="POD_NOT_READY",
+                    message="Pod cannot progress to Ready state due to mount failure",
+                    role="workload_symptom",
                 ),
             ]
         )

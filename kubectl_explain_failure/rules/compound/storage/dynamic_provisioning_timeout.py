@@ -4,9 +4,31 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class DynamicProvisioningTimeoutRule(FailureRule):
     """
-    PVC Pending
-    → Repeated provisioning attempts
-    → Time exceeds threshold
+    Detects PersistentVolumeClaims that remain Pending due to
+    dynamic provisioning repeatedly retrying and exceeding a
+    defined timeout threshold.
+
+    Signals:
+    - PVC.status.phase is Pending
+    - Repeated provisioning-related events observed
+    - Provisioning duration exceeds configured timeout
+
+    Interpretation:
+    The dynamic volume provisioner is repeatedly attempting to
+    create a PersistentVolume but is unable to complete the
+    operation successfully. The sustained retry behavior over
+    a bounded duration indicates a provisioning failure rather
+    than a transient delay.
+
+    Scope:
+    - Volume layer (dynamic provisioning lifecycle)
+    - Deterministic (object state + timeline duration)
+    - Acts as a temporal escalation rule for provisioning stalls
+
+    Exclusions:
+    - Does not include statically provisioned volumes
+    - Does not include PVCs blocked by Node pressure
+    - Does not include PVs in Released or Failed states
     """
 
     name = "DynamicProvisioningTimeout"
@@ -49,21 +71,20 @@ class DynamicProvisioningTimeoutRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="PVC_PENDING",
-                    message="PersistentVolumeClaim remains Pending",
+                    code="DYNAMIC_PROVISIONING_STALLED",
+                    message="Dynamic volume provisioner repeatedly failed to create volume",
+                    role="volume_root",
                     blocking=True,
-                    role="storage_root",
                 ),
                 Cause(
-                    code="PROVISIONING_RETRY_LOOP",
-                    message="Provisioner repeatedly attempts volume creation",
-                    blocking=True,
-                    role="provisioning_intermediate",
+                    code="PROVISIONING_RETRY_DURATION_EXCEEDED",
+                    message=f"Provisioning attempts exceeded {self.TIMEOUT_SECONDS} second threshold",
+                    role="volume_intermediate",
                 ),
                 Cause(
-                    code="PROVISIONING_TIMEOUT",
-                    message="Provisioning exceeded acceptable time threshold",
-                    role="temporal_escalation",
+                    code="PVC_REMAINS_PENDING",
+                    message="PersistentVolumeClaim remains Pending due to provisioning stall",
+                    role="workload_symptom",
                 ),
             ]
         )

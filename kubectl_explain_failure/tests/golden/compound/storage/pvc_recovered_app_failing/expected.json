@@ -8,17 +8,25 @@
   ],
   "causes": [
     {
-      "code": "PVC_RECOVERED",
-      "message": "PersistentVolumeClaim was successfully bound"
+      "code": "PVC_RECOVERED_CONTEXT",
+      "message": "PersistentVolumeClaim test-pvc is now Bound",
+      "role": "volume_context"
     },
     {
-      "code": "POD_RUNNING_AFTER_PVC",
-      "message": "Pod transitioned to Running after PVC binding"
-    },
-    {
-      "code": "APPLICATION_CRASHLOOP",
-      "message": "Application continues failing despite storage recovery",
+      "code": "APPLICATION_CRASH_LOOP",
+      "message": "Container repeatedly failing despite successful volume binding",
+      "role": "container_health_root",
       "blocking": true
+    },
+    {
+      "code": "CONTAINER_UNSTABLE",
+      "message": "Container cannot maintain stable execution",
+      "role": "execution_intermediate"
+    },
+    {
+      "code": "POD_NOT_READY",
+      "message": "Pod remains unstable due to repeated container failures",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

@@ -8,13 +8,25 @@
   ],
   "causes": [
     {
-      "code": "PVC_BOUND",
-      "message": "PVCs bound: test-pvc"
+      "code": "PVC_BOUND_CONTEXT",
+      "message": "PersistentVolumeClaim(s) successfully bound: test-pvc",
+      "role": "volume_context"
     },
     {
-      "code": "MOUNT_FAILED",
-      "message": "Volume mount failed (1 events)",
+      "code": "VOLUME_MOUNT_FAILURE",
+      "message": "Volume mount failed (1 events observed)",
+      "role": "volume_root",
       "blocking": true
+    },
+    {
+      "code": "CONTAINER_STARTUP_BLOCKED",
+      "message": "Container initialization blocked due to mount failure",
+      "role": "execution_intermediate"
+    },
+    {
+      "code": "POD_NOT_READY",
+      "message": "Pod cannot progress to Ready state due to mount failure",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

@@ -6,13 +6,25 @@
   ],
   "causes": [
     {
-      "code": "PVC_BOUND",
-      "message": "PersistentVolumeClaim(s) Bound after Pending: app-pvc"
+      "code": "PVC_RECOVERY_CONTEXT",
+      "message": "PersistentVolumeClaim(s) successfully bound after Pending: app-pvc",
+      "role": "volume_context"
     },
     {
-      "code": "CRASH_LOOP",
-      "message": "Container repeatedly crashing",
+      "code": "APPLICATION_RUNTIME_FAILURE",
+      "message": "Container continues crashing after storage successfully bound",
+      "role": "execution_root",
       "blocking": true
+    },
+    {
+      "code": "CRASH_LOOP_BACKOFF",
+      "message": "Container entered CrashLoopBackOff after PVC recovery",
+      "role": "container_health_intermediate"
+    },
+    {
+      "code": "POD_RUNNING_UNHEALTHY",
+      "message": "Pod is Running but application repeatedly crashes",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

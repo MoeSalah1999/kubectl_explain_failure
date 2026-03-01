@@ -5,9 +5,33 @@ from kubectl_explain_failure.timeline import timeline_has_pattern, parse_time, T
 
 class PVCBoundThenCrashLoopRule(FailureRule):
     """
-    PVC must have transitioned from unbound → bound
-    App is still failing (CrashLoopBackOff or pod not ready)
-    → Indicates application-level failure after storage recovery.
+    Detects Pods that enter CrashLoopBackOff after their
+    PersistentVolumeClaim successfully transitions from Pending
+    to Bound, indicating that storage recovery did not resolve
+    the application failure.
+
+    Signals:
+    - PVC transitioned from PersistentVolumeClaimPending to PersistentVolumeClaimBound
+    - Pod is Running
+    - Container enters CrashLoopBackOff after PVC Bound event
+
+    Interpretation:
+    The PersistentVolumeClaim was previously unbound and has
+    successfully bound to a PersistentVolume, restoring storage
+    availability. Despite this recovery, the application
+    continues to crash. This indicates that the failure is
+    application-level and no longer attributable to storage
+    binding issues.
+
+    Scope:
+    - Volume + execution layers (cross-domain temporal correlation)
+    - Deterministic (event sequence ordering)
+    - Acts as a compound suppression rule for prior PVCNotBound explanations
+
+    Exclusions:
+    - Does not include PVCs that remain Pending
+    - Does not include scheduling failures
+    - Does not include pre-bind container crashes
     """
 
     name = "PVCBoundThenCrashLoop"
@@ -78,11 +102,28 @@ class PVCBoundThenCrashLoopRule(FailureRule):
 
         chain = CausalChain(
             causes=[
+                # Context: storage recovered
                 Cause(
-                    code="PVC_BOUND",
-                    message=f"PersistentVolumeClaim(s) Bound after Pending: {', '.join(pvc_names)}"
+                    code="PVC_RECOVERY_CONTEXT",
+                    message=f"PersistentVolumeClaim(s) successfully bound after Pending: {', '.join(pvc_names)}",
+                    role="volume_context",
                 ),
-                Cause(code="CRASH_LOOP", message="Container repeatedly crashing", blocking=True),
+                Cause(
+                    code="APPLICATION_RUNTIME_FAILURE",
+                    message="Container continues crashing after storage successfully bound",
+                    role="execution_root",
+                    blocking=True,
+                ),
+                Cause(
+                    code="CRASH_LOOP_BACKOFF",
+                    message="Container entered CrashLoopBackOff after PVC recovery",
+                    role="container_health_intermediate",
+                ),
+                Cause(
+                    code="POD_RUNNING_UNHEALTHY",
+                    message="Pod is Running but application repeatedly crashes",
+                    role="workload_symptom",
+                ),
             ]
         )
 

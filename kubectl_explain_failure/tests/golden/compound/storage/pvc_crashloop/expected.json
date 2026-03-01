@@ -6,14 +6,20 @@
   ],
   "causes": [
     {
-      "code": "PVC_BLOCKING",
-      "message": "PersistentVolumeClaim(s) Bound after Pending: app-pvc",
+      "code": "PVC_UNAVAILABLE_AT_STARTUP",
+      "message": "PersistentVolumeClaim(s) were Pending during container startup: app-pvc",
+      "role": "volume_root",
       "blocking": true
     },
     {
       "code": "CONTAINER_RESTARTS",
-      "message": "Containers repeatedly restarted while waiting for volume",
-      "blocking": true
+      "message": "Container restarted repeatedly while waiting for required volume",
+      "role": "container_health_intermediate"
+    },
+    {
+      "code": "CRASH_LOOP_BACKOFF",
+      "message": "Pod entered CrashLoopBackOff due to earlier volume unavailability",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

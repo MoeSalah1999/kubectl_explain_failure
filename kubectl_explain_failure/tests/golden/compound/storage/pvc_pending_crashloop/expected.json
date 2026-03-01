@@ -3,9 +3,32 @@
   "confidence": 0.88,
   "blocking": true,
   "causes": [
-    {"code": "PVC_PENDING", "message": "PersistentVolumeClaim is Pending", "blocking": true},
-    {"code": "FAILED_MOUNT", "message": "Pod failed to mount volume", "blocking": true},
-    {"code": "CRASHLOOP", "message": "Containers repeatedly restarted"}
+    {
+      "code": "PVC_PENDING_CONTEXT",
+      "message": "PersistentVolumeClaim mypvc is Pending",
+      "role": "volume_context"
+    },
+    {
+      "code": "PVC_BINDING_BLOCKED",
+      "message": "PersistentVolumeClaim is not bound, preventing volume attachment",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "VOLUME_MOUNT_FAILED",
+      "message": "Kubelet failed to mount required volume",
+      "role": "execution_intermediate"
+    },
+    {
+      "code": "CONTAINER_CRASH_LOOP",
+      "message": "Container repeatedly restarted due to missing volume dependency",
+      "role": "container_health_root"
+    },
+    {
+      "code": "POD_NOT_READY",
+      "message": "Pod cannot reach Ready state due to repeated container restarts",
+      "role": "workload_symptom"
+    }
   ],
   "evidence": [
     "PVC mypvc is Pending",

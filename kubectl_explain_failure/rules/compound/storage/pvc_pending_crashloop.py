@@ -2,6 +2,35 @@ from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class PVCPendingThenCrashLoopRule(FailureRule):
+    """
+    Detects Pods that experience CrashLoopBackOff following
+    volume mount failures caused by a PersistentVolumeClaim
+    remaining in Pending state.
+
+    Signals:
+    - PersistentVolumeClaim.status.phase is Pending
+    - Pod events include FailedMount
+    - Pod events include BackOff (CrashLoopBackOff)
+
+    Interpretation:
+    The PersistentVolumeClaim is not bound, preventing the
+    kubelet from mounting the required volume. This blocks
+    container initialization, which results in repeated
+    startup attempts and eventual CrashLoopBackOff. The
+    CrashLoop is a downstream symptom of a storage-layer
+    binding failure.
+
+    Scope:
+    - Volume layer with execution propagation
+    - Deterministic (object state + time-correlated events)
+    - Acts as a compound suppression rule for simple
+    CrashLoopBackOff and FailedMount signals
+
+    Exclusions:
+    - Does not include container crashes unrelated to volume usage
+    - Does not include image pull failures
+    - Does not include scheduling failures
+    """
     name = "PVCPendingThenCrashLoop"
     category = "Compound"
     priority = 50
@@ -30,27 +59,39 @@ class PVCPendingThenCrashLoopRule(FailureRule):
         return pvc_pending and crash_events_present
 
     def explain(self, pod, events, context):
+        pvc = context.get("blocking_pvc")
+        pvc_name = pvc["metadata"]["name"] if pvc else "unknown"
+        
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="PVC_PENDING",
-                    message="PersistentVolumeClaim is Pending",
+                    code="PVC_PENDING_CONTEXT",
+                    message=f"PersistentVolumeClaim {pvc_name} is Pending",
+                    role="volume_context",
+                ),
+                Cause(
+                    code="PVC_BINDING_BLOCKED",
+                    message="PersistentVolumeClaim is not bound, preventing volume attachment",
+                    role="volume_root",
                     blocking=True,
                 ),
                 Cause(
-                    code="FAILED_MOUNT",
-                    message="Pod failed to mount volume",
-                    blocking=True,
+                    code="VOLUME_MOUNT_FAILED",
+                    message="Kubelet failed to mount required volume",
+                    role="execution_intermediate",
                 ),
                 Cause(
-                    code="CRASHLOOP",
-                    message="Containers repeatedly restarted",
+                    code="CONTAINER_CRASH_LOOP",
+                    message="Container repeatedly restarted due to missing volume dependency",
+                    role="container_health_root",
+                ),
+                Cause(
+                    code="POD_NOT_READY",
+                    message="Pod cannot reach Ready state due to repeated container restarts",
+                    role="workload_symptom",
                 ),
             ]
         )
-
-        pvc = context.get("blocking_pvc")
-        pvc_name = pvc["metadata"]["name"] if pvc else "unknown"
 
         return {
             "root_cause": "PVC Pending caused mount failures and CrashLoopBackOff",

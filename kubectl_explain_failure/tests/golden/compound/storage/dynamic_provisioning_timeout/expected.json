@@ -8,18 +8,20 @@
   ],
   "causes": [
     {
-      "code": "PVC_PENDING",
-      "message": "PersistentVolumeClaim remains Pending",
+      "code": "DYNAMIC_PROVISIONING_STALLED",
+      "message": "Dynamic volume provisioner repeatedly failed to create volume",
+      "role": "volume_root",
       "blocking": true
     },
     {
-      "code": "PROVISIONING_RETRY_LOOP",
-      "message": "Provisioner repeatedly attempts volume creation",
-      "blocking": true
+      "code": "PROVISIONING_RETRY_DURATION_EXCEEDED",
+      "message": "Provisioning attempts exceeded 600 second threshold",
+      "role": "volume_intermediate"
     },
     {
-      "code": "PROVISIONING_TIMEOUT",
-      "message": "Provisioning exceeded acceptable time threshold"
+      "code": "PVC_REMAINS_PENDING",
+      "message": "PersistentVolumeClaim remains Pending due to provisioning stall",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

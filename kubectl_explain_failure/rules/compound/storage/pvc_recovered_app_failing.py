@@ -5,10 +5,33 @@ from kubectl_explain_failure.timeline import timeline_has_pattern
 
 class PVCRecoveredButAppStillFailingRule(FailureRule):
     """
-    PVC was Pending → becomes Bound
-    Pod transitions to Running
-    But CrashLoop / container failures continue within a recent window.
-    Root cause shifts from infrastructure to application layer.
+    Detects Pods that continue to experience container failures
+    after a previously Pending PersistentVolumeClaim has
+    successfully bound and the Pod has transitioned to Running.
+
+    Signals:
+    - PersistentVolumeClaim.status.phase is Bound
+    - Timeline shows historical PVC Pending state
+    - Pod successfully Scheduled and transitioned to Running
+    - Recent CrashLoopBackOff / BackOff / Error events observed
+
+    Interpretation:
+    The original storage-layer blockage has been resolved.
+    The Pod is scheduled and volumes are mounted successfully.
+    Ongoing container failures therefore indicate an
+    application- or container-level root cause independent
+    of the PVC lifecycle.
+
+    Scope:
+    - Container health layer (post-infrastructure recovery)
+    - Deterministic (timeline + object-state correlation)
+    - Acts as a compound suppression rule preventing
+    misattribution to historical PVC failures
+
+    Exclusions:
+    - Does not include active PVC Pending states
+    - Does not include mount failures
+    - Does not include scheduling failures
     """
 
     name = "PVCRecoveredButAppStillFailing"
@@ -88,20 +111,25 @@ class PVCRecoveredButAppStillFailingRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="PVC_RECOVERED",
-                    message="PersistentVolumeClaim was successfully bound",
-                    role="infrastructure_resolved",
+                    code="PVC_RECOVERED_CONTEXT",
+                    message=f"PersistentVolumeClaim {pvc_name} is now Bound",
+                    role="volume_context",
                 ),
                 Cause(
-                    code="POD_RUNNING_AFTER_PVC",
-                    message="Pod transitioned to Running after PVC binding",
-                    role="scheduler_intermediate",
-                ),
-                Cause(
-                    code="APPLICATION_CRASHLOOP",
-                    message="Application continues failing despite storage recovery",
-                    blocking=True,
+                    code="APPLICATION_CRASH_LOOP",
+                    message="Container repeatedly failing despite successful volume binding",
                     role="container_health_root",
+                    blocking=True,
+                ),
+                Cause(
+                    code="CONTAINER_UNSTABLE",
+                    message="Container cannot maintain stable execution",
+                    role="execution_intermediate",
+                ),
+                Cause(
+                    code="POD_NOT_READY",
+                    message="Pod remains unstable due to repeated container failures",
+                    role="workload_symptom",
                 ),
             ]
         )

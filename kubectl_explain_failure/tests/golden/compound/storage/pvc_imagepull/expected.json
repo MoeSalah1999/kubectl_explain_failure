@@ -2,8 +2,27 @@
   "root_cause": "Pod blocked by PVC Pending then failed to pull image",
   "confidence": 0.82,
   "causes": [
-    {"code": "PVC_PENDING", "message": "PVC is Pending", "blocking": true},
-    {"code": "IMAGE_PULL_FAIL", "message": "Image could not be pulled"}
+    {
+      "code": "PVC_PENDING_CONTEXT",
+      "message": "PersistentVolumeClaim data-pvc is Pending",
+      "role": "volume_context"
+    },
+    {
+      "code": "IMAGE_PULL_FAILURE",
+      "message": "Container image could not be pulled (ImagePullBackOff or ErrImagePull)",
+      "role": "execution_root",
+      "blocking": true
+    },
+    {
+      "code": "CONTAINER_STARTUP_BLOCKED",
+      "message": "Container startup blocked during image retrieval phase",
+      "role": "container_health_intermediate"
+    },
+    {
+      "code": "POD_NOT_READY",
+      "message": "Pod cannot become Ready due to image pull failure",
+      "role": "workload_symptom"
+    }
   ],
   "evidence": [
     "PVC data-pvc is Pending",
