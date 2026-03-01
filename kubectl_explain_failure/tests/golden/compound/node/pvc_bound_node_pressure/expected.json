@@ -3,8 +3,27 @@
   "confidence": 0.82,
   "blocking": true,
   "causes": [
-    {"code": "PVC_BOUND", "message": "PVC successfully bound"},
-    {"code": "NODE_PRESSURE", "message": "Node has DiskPressure", "blocking": true}
+    {
+      "code": "PVC_BOUND_CONFIRMED",
+      "message": "PVCs bound successfully: data-pvc",
+      "role": "volume_context"
+    },
+    {
+      "code": "NODE_DISK_PRESSURE",
+      "message": "Node(s) under DiskPressure: node-1",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "SCHEDULER_BLOCKED_BY_NODE",
+      "message": "Scheduler cannot place Pod due to node disk pressure",
+      "role": "scheduling_intermediate"
+    },
+    {
+      "code": "POD_PENDING",
+      "message": "Pod remains Pending due to scheduling constraint",
+      "role": "workload_symptom"
+    }
   ],
   "object_evidence": {
     "pvc:pvc1": ["PVC bound successfully"],

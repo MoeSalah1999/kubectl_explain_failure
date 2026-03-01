@@ -4,6 +4,33 @@ from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class PVCBoundNodeDiskPressureMountRule(FailureRule):
+    """
+    Detects Pods whose volumes fail to mount despite PVCs being Bound,
+    because the hosting Node is under DiskPressure.
+
+    Signals:
+    - All referenced PVCs have status.phase=Bound
+    - Node.status.conditions includes DiskPressure=True
+    - FailedMount events observed in timeline
+
+    Interpretation:
+    Although PersistentVolumeClaims are successfully bound,
+    the hosting Node is experiencing DiskPressure. As a result,
+    the kubelet cannot complete volume mount operations,
+    causing mount failures independent of PVC provisioning state.
+
+    Scope:
+    - Infrastructure + volume layer (Node health + mount lifecycle)
+    - Deterministic (object-state + event correlation based)
+    - Acts as a compound check to suppress generic FailedMount
+    or NodeDiskPressure rules when disk pressure is the
+    upstream cause of mount failure
+
+    Exclusions:
+    - Does not include unbound PVC provisioning failures
+    - Does not include CSI driver misconfiguration unrelated to disk pressure
+    - Does not include scheduling failures unrelated to volume mount
+    """
     name = "PVCBoundNodeDiskPressureMount"
     category = "Compound"
     priority = 62
@@ -69,17 +96,25 @@ class PVCBoundNodeDiskPressureMountRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="PVC_BOUND",
+                    code="PVC_BOUND_CONFIRMED",
                     message=f"PVCs bound successfully: {', '.join(pvc_names)}",
+                    role="volume_context",
                 ),
                 Cause(
                     code="NODE_DISK_PRESSURE",
                     message=f"Node(s) under DiskPressure: {', '.join(node_names)}",
+                    role="infrastructure_root",
+                    blocking=True,
                 ),
                 Cause(
-                    code="MOUNT_FAILED",
-                    message="Volume mount failed due to node disk pressure",
-                    blocking=True,
+                    code="VOLUME_MOUNT_OPERATION_FAILED",
+                    message="Kubelet mount operation failed due to node disk pressure",
+                    role="volume_intermediate",
+                ),
+                Cause(
+                    code="POD_VOLUME_MOUNT_FAILED",
+                    message="Pod volume mount failed while PVCs were Bound",
+                    role="workload_symptom",
                 ),
             ]
         )

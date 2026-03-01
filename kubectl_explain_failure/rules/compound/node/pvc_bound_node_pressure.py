@@ -5,10 +5,31 @@ from kubectl_explain_failure.timeline import timeline_has_pattern
 
 class PVCBoundThenNodePressureRule(FailureRule):
     """
-    Pod remains Pending despite PVC being Bound, due to Node DiskPressure.
-    → PVC successfully bound
-    → Node has DiskPressure
-    → Pod cannot be scheduled
+    Detects Pods that remain Pending despite PVCs being Bound,
+    because Nodes are under DiskPressure and cannot accept new
+    workloads.
+
+    Signals:
+    - All referenced PVCs have status.phase=Bound
+    - Node.status.conditions includes DiskPressure=True
+    - FailedScheduling events observed
+
+    Interpretation:
+    Although storage provisioning succeeded and PVCs are fully
+    Bound, the scheduler cannot place the Pod because one or more
+    Nodes report DiskPressure=True. This represents an infrastructure
+    capacity constraint rather than a volume provisioning failure.
+
+    Scope:
+    - Scheduling + infrastructure layer (Node condition propagation)
+    - Deterministic (object-state + scheduling event correlation)
+    - Acts as a compound check to suppress generic FailedScheduling
+    when Node disk pressure is the upstream constraint
+
+    Exclusions:
+    - Does not include unbound PVC provisioning failures
+    - Does not include mount-time failures after scheduling
+    - Does not include controller-level rollout stalls
     """
 
     name = "PVCBoundThenNodePressure"
@@ -77,8 +98,27 @@ class PVCBoundThenNodePressureRule(FailureRule):
 
         chain = CausalChain(
             causes=[
-                Cause(code="PVC_BOUND", message="PVC successfully bound"),
-                Cause(code="NODE_PRESSURE", message="Node has DiskPressure", blocking=True),
+                Cause(
+                    code="PVC_BOUND_CONFIRMED",
+                    message=f"PVCs bound successfully: {', '.join(pvc_names)}",
+                    role="volume_context",
+                ),
+                Cause(
+                    code="NODE_DISK_PRESSURE",
+                    message=f"Node(s) under DiskPressure: {', '.join(node_names)}",
+                    role="infrastructure_root",
+                    blocking=True,
+                ),
+                Cause(
+                    code="SCHEDULER_BLOCKED_BY_NODE",
+                    message="Scheduler cannot place Pod due to node disk pressure",
+                    role="scheduling_intermediate",
+                ),
+                Cause(
+                    code="POD_PENDING",
+                    message="Pod remains Pending due to scheduling constraint",
+                    role="workload_symptom",
+                ),
             ]
         )
 

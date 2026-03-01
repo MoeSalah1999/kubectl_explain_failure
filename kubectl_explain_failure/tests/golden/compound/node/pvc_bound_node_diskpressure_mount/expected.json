@@ -8,17 +8,25 @@
   ],
   "causes": [
     {
-      "code": "PVC_BOUND",
-      "message": "PVCs bound successfully: data-pvc"
+      "code": "PVC_BOUND_CONFIRMED",
+      "message": "PVCs bound successfully: data-pvc",
+      "role": "volume_context"
     },
     {
       "code": "NODE_DISK_PRESSURE",
-      "message": "Node(s) under DiskPressure: node1"
+      "message": "Node(s) under DiskPressure: node1",
+      "role": "infrastructure_root",
+      "blocking": true
     },
     {
-      "code": "MOUNT_FAILED",
-      "message": "Volume mount failed due to node disk pressure",
-      "blocking": true
+      "code": "VOLUME_MOUNT_OPERATION_FAILED",
+      "message": "Kubelet mount operation failed due to node disk pressure",
+      "role": "volume_intermediate"
+    },
+    {
+      "code": "POD_VOLUME_MOUNT_FAILED",
+      "message": "Pod volume mount failed while PVCs were Bound",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

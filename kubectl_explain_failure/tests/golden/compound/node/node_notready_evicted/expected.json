@@ -7,13 +7,20 @@
   ],
   "causes": [
     {
-      "code": "NODE_NOT_READY",
+      "code": "NODE_READY_CONDITION_FALSE",
       "message": "Node Ready condition is False",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "NODE_NOT_READY",
+      "message": "Node is NotReady due to kubelet or node-level failure",
+      "role": "infrastructure_root",
       "blocking": true
     },
     {
       "code": "POD_EVICTED",
-      "message": "Pod evicted from node"
+      "message": "Pod evicted as a result of NodeNotReady condition",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

@@ -3,6 +3,32 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 
 class NodeNotReadyEvictedRule(FailureRule):
+    """
+    Detects Pods that were evicted because their hosting Node
+    entered a NotReady state, triggering kubelet-driven eviction.
+
+    Signals:
+    - Node.status.conditions includes Ready=False
+    - Pod has Event reason=Evicted
+    - Node object present in context
+
+    Interpretation:
+    The Node hosting the Pod transitioned to NotReady,
+    indicating kubelet unavailability or node-level failure.
+    As a result, the control plane evicted Pods from the Node,
+    causing termination independent of Pod configuration.
+
+    Scope:
+    - Infrastructure layer (Node health + kubelet state)
+    - Deterministic (object-state + event correlation based)
+    - Acts as a compound check to suppress generic eviction
+    rules when Node health is the true cause
+
+    Exclusions:
+    - Does not include resource-pressure evictions (MemoryPressure, DiskPressure)
+    - Does not include voluntary Pod deletion
+    - Does not include scheduling failures unrelated to Node readiness
+    """
     name = "NodeNotReadyEvicted"
     category = "Compound"
     priority = 59
@@ -44,13 +70,20 @@ class NodeNotReadyEvictedRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="NODE_NOT_READY",
+                    code="NODE_READY_CONDITION_FALSE",
                     message="Node Ready condition is False",
+                    role="infrastructure_context",
+                ),
+                Cause(
+                    code="NODE_NOT_READY",
+                    message="Node is NotReady due to kubelet or node-level failure",
+                    role="infrastructure_root",
                     blocking=True,
                 ),
                 Cause(
                     code="POD_EVICTED",
-                    message="Pod evicted from node",
+                    message="Pod evicted as a result of NodeNotReady condition",
+                    role="workload_symptom",
                 ),
             ]
         )
