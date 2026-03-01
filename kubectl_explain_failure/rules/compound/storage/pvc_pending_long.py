@@ -5,7 +5,7 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 class PVCPendingTooLongRule(FailureRule):
     name = "PVCPendingTooLong"
     category = "PersistentVolumeClaim"
-    priority = 20  # higher than basic PVC pending
+    priority = 20
     blocks = ["PVCNotBound", "FailedScheduling"]
 
     requires = {

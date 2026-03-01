@@ -8,18 +8,25 @@
   ],
   "causes": [
     {
-      "code": "PVC_PENDING",
-      "message": "PersistentVolumeClaim is not yet bound",
+      "code": "IMAGE_PULL_SIGNAL_CONTEXT",
+      "message": "Image pull errors observed but storage gate precedes runtime stage",
+      "role": "execution_context"
+    },
+    {
+      "code": "PVC_BINDING_BLOCKED",
+      "message": "PersistentVolumeClaim is not bound, preventing Pod startup",
+      "role": "volume_root",
       "blocking": true
     },
     {
-      "code": "SCHEDULING_BLOCKED_BY_STORAGE",
-      "message": "Pod scheduling is gated by unresolved volume binding",
-      "blocking": true
+      "code": "POD_STARTUP_GATED_BY_VOLUME",
+      "message": "Pod cannot progress past scheduling due to unresolved volume binding",
+      "role": "scheduling_intermediate"
     },
     {
-      "code": "IMAGE_PULL_SIGNAL_SUPPRESSED",
-      "message": "Image pull errors observed but dominated by upstream PVC blockage"
+      "code": "POD_PENDING",
+      "message": "Pod remains Pending due to volume binding failure",
+      "role": "workload_symptom"
     }
   ],
   "object_evidence": {

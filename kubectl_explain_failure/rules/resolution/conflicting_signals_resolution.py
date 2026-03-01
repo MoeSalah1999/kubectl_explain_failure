@@ -4,18 +4,34 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class ConflictingSignalsResolutionRule(FailureRule):
     """
-    Meta-compound deterministic conflict resolver.
+    Detects Pods that report image pull failures while an
+    associated PersistentVolumeClaim remains Pending, and
+    resolves the conflict by enforcing storage-layer precedence.
 
-    When:
-        - PVC is Pending (unbound)
-        AND
-        - ImagePullError signals are present
+    Signals:
+    - PersistentVolumeClaim.status.phase is Pending
+    - Pod events include ErrImagePull or ImagePullBackOff
+    - Pod phase is Pending
 
-    Dominance logic:
-        PVC scheduling/storage gate dominates image pull failures,
-        because containers cannot start before volume binding succeeds.
+    Interpretation:
+    Volume binding occurs before container image retrieval
+    in the Pod startup lifecycle. If the PersistentVolumeClaim
+    is not bound, the Pod cannot progress to container startup.
+    Image pull errors observed during this state are treated
+    as secondary or speculative signals. The storage-layer
+    binding failure deterministically dominates and is
+    considered the true root cause.
 
-    This rule formalizes precedence to prevent ambiguous root causes.
+    Scope:
+    - Volume layer precedence resolution
+    - Deterministic (state + event correlation)
+    - Acts as a meta-compound suppression rule to prevent
+    ambiguous multi-root attribution
+
+    Exclusions:
+    - Does not include PVCs already in Bound phase
+    - Does not include standalone image pull failures
+    - Does not include mount failures after successful binding
     """
 
     name = "ConflictingSignalsResolution"
@@ -101,21 +117,25 @@ class ConflictingSignalsResolutionRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="PVC_PENDING",
-                    message="PersistentVolumeClaim is not yet bound",
-                    blocking=True,
-                    role="storage_root",
+                    code="IMAGE_PULL_SIGNAL_CONTEXT",
+                    message="Image pull errors observed but storage gate precedes runtime stage",
+                    role="execution_context",
                 ),
                 Cause(
-                    code="SCHEDULING_BLOCKED_BY_STORAGE",
-                    message="Pod scheduling is gated by unresolved volume binding",
+                    code="PVC_BINDING_BLOCKED",
+                    message="PersistentVolumeClaim is not bound, preventing Pod startup",
+                    role="volume_root",
                     blocking=True,
-                    role="scheduler_intermediate",
                 ),
                 Cause(
-                    code="IMAGE_PULL_SIGNAL_SUPPRESSED",
-                    message="Image pull errors observed but dominated by upstream PVC blockage",
-                    role="container_symptom",
+                    code="POD_STARTUP_GATED_BY_VOLUME",
+                    message="Pod cannot progress past scheduling due to unresolved volume binding",
+                    role="scheduling_intermediate",
+                ),
+                Cause(
+                    code="POD_PENDING",
+                    message="Pod remains Pending due to volume binding failure",
+                    role="workload_symptom",
                 ),
             ]
         )
