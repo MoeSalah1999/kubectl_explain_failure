@@ -1,0 +1,4 @@
+# file: C:\Users\salah\Desktop\Kubernetes contributions\kubectl_explain_failure\kubectl_explain_failure\rules\base\storage\pvc_not_bound.py
+# hypothesis_version: 6.151.9
+
+[0.97, '<pod>', '<unknown>', 'FailedMount', 'FailedScheduling', 'PVC not Bound', 'PVCNotBound', 'PVC_NOT_BOUND', 'PVC_PRESENT', 'Pending', 'SCHEDULING_BLOCKED', 'blocking', 'blocking_pvc', 'causes', 'confidence', 'evidence', 'kubectl get pv', 'likely_causes', 'metadata', 'name', 'object_evidence', 'objects', 'phase', 'pvc', 'pvc_unbound', 'root_cause', 'status', 'suggested_checks', 'timeline', 'volume_context', 'volume_root', 'workload_symptom']

@@ -1,0 +1,4 @@
+# file: C:\Users\salah\Desktop\Kubernetes contributions\kubectl_explain_failure\kubectl_explain_failure\model.py
+# hypothesis_version: 6.151.9
+
+['<unknown>', 'List', 'Unknown', 'conditions', 'items', 'kind', 'metadata', 'name', 'phase', 'reason', 'status', 'type', 'utf-8']

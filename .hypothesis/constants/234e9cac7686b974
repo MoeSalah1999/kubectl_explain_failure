@@ -1,0 +1,4 @@
+# file: C:\Users\salah\Desktop\Kubernetes contributions\kubectl_explain_failure\kubectl_explain_failure\rules\base\scheduling\failed_scheduling.py
+# hypothesis_version: 6.151.9
+
+[0.92, 'FailedScheduling', 'Failure', 'POD_PENDING', 'SCHEDULER_REJECTION', 'Scheduling', 'affinity', 'blocking', 'causes', 'confidence', 'context', 'evidence', 'hostport', 'insufficient', 'message', 'metadata', 'name', 'nodeunder', 'object_evidence', 'pressure', 'reason', 'root_cause', 'scheduling_root', 'suggested_checks', 'taint', 'timeline', 'topology', 'workload_context', 'workload_symptom']
