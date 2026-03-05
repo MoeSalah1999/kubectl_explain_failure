@@ -189,3 +189,72 @@ def test_property_engine_is_deterministic_for_identical_inputs(
     )
 
     assert result_1 == result_2
+
+@settings(max_examples=120, suppress_health_check=[HealthCheck.too_slow])
+@given(
+    count=st.integers(min_value=1, max_value=12),
+    rotation=st.integers(min_value=0, max_value=50),
+)
+def test_property_timestamped_failedscheduling_order_invariance(
+    count: int, rotation: int
+):
+    events = [
+        {
+            "reason": "FailedScheduling",
+            "message": "0/3 nodes are available",
+            "lastTimestamp": f"2024-01-01T00:{i:02d}:00Z",
+        }
+        for i in range(count)
+    ]
+
+    rotation = rotation % len(events)
+    rotated = events[rotation:] + events[:rotation]
+
+    rules = [FailedSchedulingRule()]
+    result_a = explain_failure(
+        _pod("Pending"),
+        copy.deepcopy(events),
+        context={},
+        rules=rules,
+    )
+    result_b = explain_failure(
+        _pod("Pending"),
+        copy.deepcopy(rotated),
+        context={},
+        rules=rules,
+    )
+
+    assert result_a["root_cause"] == result_b["root_cause"]
+    assert result_a.get("resolution") == result_b.get("resolution")
+    assert result_a["blocking"] == result_b["blocking"]
+
+
+minimal_event_strategy = st.fixed_dictionaries(
+    {},
+    optional={
+        "reason": st.one_of(
+            st.none(),
+            st.sampled_from(["BackOff", "FailedScheduling", "FailedMount"]),
+        ),
+        "message": st.one_of(st.none(), st.text(max_size=120)),
+        "lastTimestamp": st.one_of(
+            st.none(),
+            st.sampled_from(
+                [
+                    "2024-01-01T00:00:00Z",
+                    "not-a-timestamp",
+                    "",
+                ]
+            ),
+        ),
+        "source": st.one_of(
+            st.none(),
+            st.text(max_size=20),
+            st.fixed_dictionaries(
+                {"component": st.text(max_size=20)}
+            ),
+        ),
+    },
+)
+
+
