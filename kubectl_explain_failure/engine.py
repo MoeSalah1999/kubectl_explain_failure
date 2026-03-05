@@ -868,8 +868,16 @@ def explain_failure(
     winner_exp, winner_rule, winner_chain = sorted_explanations[0]
     winner_rule_name = winner_rule.name
     merged_suppressed_rules = [
-        r.name for _, r, _ in filtered_explanations[1:]
+        r.name
+        for _, r, _ in filtered_explanations
+        if r.name != winner_rule_name
     ] + suppression_map.get(winner_rule_name, [])
+
+    merged_suppressed_rules = [
+        name
+        for name in dict.fromkeys(merged_suppressed_rules)
+        if name != winner_rule_name
+    ]
 
     # Determine winner rule object
     winner_exp = next(
@@ -940,3 +948,5 @@ def explain_failure(
     merged["confidence"] = min(1.0, max(0.0, merged["confidence"]))
 
     return merged
+
+
