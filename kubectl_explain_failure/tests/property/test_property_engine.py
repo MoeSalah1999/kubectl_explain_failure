@@ -258,3 +258,25 @@ minimal_event_strategy = st.fixed_dictionaries(
 )
 
 
+@settings(max_examples=120, suppress_health_check=[HealthCheck.too_slow])
+@given(
+    phase=st.sampled_from(["Pending", "Running", "Unknown"]),
+    events=st.lists(minimal_event_strategy, max_size=20),
+)
+def test_property_malformed_or_minimal_events_do_not_break_engine(
+    phase: str, events: list[dict]
+):
+    result = explain_failure(
+        _pod(phase),
+        copy.deepcopy(events),
+        context={},
+        rules=RULES,
+    )
+
+    assert isinstance(result, dict)
+    assert isinstance(result.get("root_cause"), str)
+    assert isinstance(result.get("evidence"), list)
+    assert isinstance(result.get("likely_causes"), list)
+    assert isinstance(result.get("suggested_checks"), list)
+    assert isinstance(result.get("blocking"), bool)
+    assert 0.0 <= float(result.get("confidence", 0.0)) <= 1.0
