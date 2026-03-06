@@ -82,3 +82,56 @@ def test_property_single_deterministic_rule_short_circuits_aggregation(
     assert result["blocking"] is True
     assert isinstance(result.get("causes"), list)
     assert len(result["causes"]) >= 1
+
+
+def _pending_pvc() -> dict:
+    return {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "metadata": {"name": "test-pvc"},
+        "status": {"phase": "Pending"},
+    }
+
+
+@settings(max_examples=120, suppress_health_check=[HealthCheck.too_slow])
+@given(
+    noise=st.lists(
+        st.sampled_from(["NodeNotReady", "TaintBasedEviction", "Pulled"]),
+        max_size=12,
+    ),
+    rotation=st.integers(min_value=0, max_value=50),
+)
+def test_property_enabled_categories_restricts_to_scheduling(
+    noise: list[str],
+    rotation: int,
+):
+    events = [{"reason": "FailedScheduling", "message": "0/3 nodes are available"}] + [
+        {"reason": r, "message": f"{r} event"} for r in noise
+    ]
+
+    rotation = rotation % len(events)
+    rotated = events[rotation:] + events[:rotation]
+
+    rules = [PVCNotBoundRule(), FailedSchedulingRule()]
+    context = {"pvc": _pending_pvc()}
+
+    result_a = explain_failure(
+        _pod("cat-gate-a", "Pending"),
+        events=copy.deepcopy(events),
+        context=copy.deepcopy(context),
+        rules=rules,
+        enabled_categories=["Scheduling"],
+    )
+    result_b = explain_failure(
+        _pod("cat-gate-b", "Pending"),
+        events=copy.deepcopy(rotated),
+        context=copy.deepcopy(context),
+        rules=rules,
+        enabled_categories=["Scheduling"],
+    )
+
+    for result in (result_a, result_b):
+        assert "persistentvolumeclaim" not in result["root_cause"].lower()
+        assert result["resolution"]["winner"] == "FailedScheduling"
+
+

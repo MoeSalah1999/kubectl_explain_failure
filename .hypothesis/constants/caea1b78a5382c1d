@@ -1,0 +1,4 @@
+# file: C:\Users\salah\Desktop\Kubernetes contributions\kubectl_explain_failure\kubectl_explain_failure\rules\base_rule.py
+# hypothesis_version: 6.151.9
+
+[100, 'BaseRule', 'Generic', 'High', 'Low', 'Medium', 'context', 'events', 'objects', 'optional_objects', 'pod']
