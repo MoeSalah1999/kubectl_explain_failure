@@ -1,4 +1,0 @@
-# file: C:\Users\salah\Desktop\Kubernetes contributions\kubectl_explain_failure\kubectl_explain_failure\context.py
-# hypothesis_version: 6.151.9
-
-['.json', 'Bound', 'blocking_pvc', 'conditions', 'daemonset', 'daemonsets', 'deployment', 'lastTransitionTime', 'message', 'metadata', 'name', 'node', 'node_conditions', 'objects', 'owner', 'phase', 'pv', 'pvc', 'pvc_unbound', 'pvcs', 'reason', 'replicaset', 'secret', 'serviceaccount', 'statefulset', 'statefulsets', 'status', 'storageclass', 'type']

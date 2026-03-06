@@ -1,4 +1,0 @@
-# file: C:\Users\salah\Desktop\Kubernetes contributions\kubectl_explain_failure\kubectl_explain_failure\rules\base\container\crashloop_backoff.py
-# hypothesis_version: 6.151.9
-
-[0.92, 'BackOff', 'CONTAINER_CRASHING', 'CRASH_LOOP_BACKOFF', 'Configuration error', 'Container', 'CrashLoopBackOff', 'POD_UNABLE_TO_RUN', 'Pending', 'RepeatedCrashLoop', 'Running', 'blocking', 'causes', 'confidence', 'containerStatuses', 'context', 'default', 'evidence', 'likely_causes', 'metadata', 'name', 'namespace', 'object_evidence', 'pod', 'reason', 'root_cause', 'rule', 'runtime_symptom', 'state', 'status', 'suggested_checks', 'timeline', 'waiting', 'workload_root', 'workload_symptom']

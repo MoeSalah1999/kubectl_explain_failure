@@ -1,4 +1,0 @@
-# file: C:\Users\salah\Desktop\Kubernetes contributions\kubectl_explain_failure\kubectl_explain_failure\causality.py
-# hypothesis_version: 6.151.9
-
-['_', 'admission_root', 'authorization_root', 'blocking', 'causes', 'code', 'configuration_root', 'contributing', 'controller_root', 'execution_root', 'identity_root', 'infrastructure_root', 'likely_causes', 'policy_root', 'resource_root', 'role', 'root_cause', 'scheduling_root', 'volume_root', 'workload_root']
