@@ -6,7 +6,7 @@ hypothesis = pytest.importorskip(
     "hypothesis",
     reason="Install hypothesis to run property tests: pip install hypothesis",
 )
-from hypothesis import HealthCheck, given, settings, strategies as st
+from hypothesis import given, strategies as st
 
 from kubectl_explain_failure.engine import explain_failure
 from kubectl_explain_failure.rules.base.container.crashloop_backoff import (
@@ -19,6 +19,7 @@ from kubectl_explain_failure.rules.base.storage.pvc_not_bound import PVCNotBound
 from kubectl_explain_failure.rules.compound.container.crashloop_oom import (
     CrashLoopOOMKilledRule,
 )
+from kubectl_explain_failure.tests.property.strategies import event_strategy, pvc_strategy
 
 RULES = [
     PVCNotBoundRule(),
@@ -43,49 +44,21 @@ def _pod(phase: str, oom: bool) -> dict:
     return pod
 
 
-def _pvc(phase: str) -> dict:
-    return {
-        "apiVersion": "v1",
-        "kind": "PersistentVolumeClaim",
-        "metadata": {"name": "test-pvc"},
-        "status": {"phase": phase},
-    }
-
-
-event_strategy = st.fixed_dictionaries(
-    {
-        "reason": st.sampled_from(
-            [
-                "FailedScheduling",
-                "BackOff",
-                "FailedMount",
-                "Pulled",
-                "Created",
-                "Started",
-                "NodeNotReady",
-            ]
-        ),
-        "message": st.text(max_size=100),
-    }
-)
-
-
-@settings(max_examples=160, suppress_health_check=[HealthCheck.too_slow])
 @given(
     phase=st.sampled_from(["Pending", "Running", "Failed"]),
-    events=st.lists(event_strategy, max_size=20),
+    events=st.lists(event_strategy(), max_size=20),
     pvc_present=st.booleans(),
-    pvc_phase=st.sampled_from(["Pending", "Bound"]),
+    pvc_obj=pvc_strategy(name="test-pvc"),
     oom=st.booleans(),
 )
 def test_property_resolution_and_causes_integrity(
     phase: str,
     events: list[dict],
     pvc_present: bool,
-    pvc_phase: str,
+    pvc_obj: dict,
     oom: bool,
 ):
-    context = {"pvc": _pvc(pvc_phase)} if pvc_present else {}
+    context = {"pvc": copy.deepcopy(pvc_obj)} if pvc_present else {}
 
     result = explain_failure(
         _pod(phase, oom),

@@ -58,6 +58,15 @@ class K8sSnapshot:
 
         return injected
 
+    def as_engine_input(
+        self,
+    ) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, Any]]:
+        return (
+            copy.deepcopy(self.pod),
+            copy.deepcopy(self.events),
+            copy.deepcopy(self.context),
+        )
+
 
 _dns_label = st.text(
     alphabet=st.characters(min_codepoint=97, max_codepoint=122),
@@ -85,7 +94,9 @@ def event_strategy(draw) -> dict[str, Any]:
         event["lastTimestamp"] = draw(_timestamp_z())
 
     if draw(st.booleans()):
-        event["source"] = {"component": draw(st.sampled_from(["scheduler", "kubelet"]))}
+        event["source"] = {
+            "component": draw(st.sampled_from(["scheduler", "kubelet"]))
+        }
 
     return event
 
@@ -143,7 +154,9 @@ def pod_strategy(draw, pvc_names: list[str] | None = None) -> dict[str, Any]:
     }
 
     if draw(st.booleans()):
-        waiting_reason = draw(st.sampled_from(["CrashLoopBackOff", "ImagePullBackOff"]))
+        waiting_reason = draw(
+            st.sampled_from(["CrashLoopBackOff", "ImagePullBackOff"])
+        )
         pod["status"]["containerStatuses"] = [
             {
                 "name": "app",
@@ -190,7 +203,11 @@ def snapshot_strategy(draw) -> K8sSnapshot:
 
     if pvc_objects:
         context["objects"]["pvc"] = copy.deepcopy(pvc_objects)
-        unbound = [p for p in pvc_objects.values() if p.get("status", {}).get("phase") != "Bound"]
+        unbound = [
+            p
+            for p in pvc_objects.values()
+            if p.get("status", {}).get("phase") != "Bound"
+        ]
         if unbound:
             context["pvc_unbound"] = True
             context["blocking_pvc"] = copy.deepcopy(unbound[0])
@@ -207,6 +224,114 @@ def snapshot_strategy(draw) -> K8sSnapshot:
 
 
 @st.composite
+def crashloop_snapshot_strategy(draw) -> K8sSnapshot:
+    pod_name = draw(_dns_label)
+    backoff_count = draw(st.integers(min_value=1, max_value=12))
+
+    pod = {
+        "metadata": {"name": pod_name, "namespace": "default"},
+        "status": {
+            "phase": "Running",
+            "containerStatuses": [
+                {
+                    "name": "app",
+                    "state": {"waiting": {"reason": "CrashLoopBackOff"}},
+                }
+            ],
+        },
+    }
+    events = [
+        {"reason": "BackOff", "message": "restart backoff"}
+        for _ in range(backoff_count)
+    ]
+
+    return K8sSnapshot(pod=pod, events=events, context={})
+
+
+@st.composite
+def pvc_scheduler_snapshot_strategy(draw) -> K8sSnapshot:
+    pvc_name = draw(_dns_label)
+    pod_name = draw(_dns_label)
+
+    pvc_obj = {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "metadata": {"name": pvc_name},
+        "status": {"phase": "Pending"},
+    }
+
+    pod = {
+        "metadata": {"name": pod_name, "namespace": "default"},
+        "status": {"phase": "Pending"},
+        "spec": {
+            "containers": [{"name": "app", "image": "nginx:latest"}],
+            "volumes": [
+                {
+                    "name": "data",
+                    "persistentVolumeClaim": {"claimName": pvc_name},
+                }
+            ],
+        },
+    }
+
+    extra_noise = draw(
+        st.lists(
+            st.sampled_from(["NodeNotReady", "TaintBasedEviction", "Created"]),
+            max_size=8,
+        )
+    )
+    events = [
+        {"reason": "FailedScheduling", "message": "0/3 nodes are available"}
+    ] + [{"reason": r, "message": f"{r} event"} for r in extra_noise]
+
+    context = {
+        "pvc": copy.deepcopy(pvc_obj),
+        "objects": {"pvc": {pvc_name: copy.deepcopy(pvc_obj)}},
+        "blocking_pvc": copy.deepcopy(pvc_obj),
+        "pvc_unbound": True,
+    }
+
+    return K8sSnapshot(pod=pod, events=events, context=context)
+
+
+@st.composite
+def malformed_snapshot_strategy(draw) -> K8sSnapshot:
+    pod_name = draw(_dns_label)
+    phase = draw(st.sampled_from(["Pending", "Running", "Unknown"]))
+
+    pod = {
+        "metadata": {"name": pod_name, "namespace": "default"},
+        "status": {"phase": phase},
+    }
+
+    minimal_event = st.fixed_dictionaries(
+        {},
+        optional={
+            "reason": st.one_of(st.none(), st.sampled_from(EVENT_REASONS)),
+            "message": st.one_of(st.none(), st.text(max_size=120)),
+            "lastTimestamp": st.one_of(
+                st.none(),
+                st.sampled_from(
+                    [
+                        "2024-01-01T00:00:00Z",
+                        "not-a-timestamp",
+                        "",
+                    ]
+                ),
+            ),
+            "source": st.one_of(
+                st.none(),
+                st.text(max_size=20),
+                st.fixed_dictionaries({"component": st.text(max_size=20)}),
+            ),
+        },
+    )
+    events = draw(st.lists(minimal_event, max_size=20))
+
+    return K8sSnapshot(pod=pod, events=events, context={})
+
+
+@st.composite
 def unrelated_noise(draw) -> dict[str, Any]:
     count = draw(st.integers(min_value=0, max_value=8))
     noise: dict[str, Any] = {"objects": {}}
@@ -220,3 +345,22 @@ def unrelated_noise(draw) -> dict[str, Any]:
         }
 
     return noise
+
+@st.composite
+def crashloop_oom_snapshot_strategy(draw) -> K8sSnapshot:
+    snapshot = draw(crashloop_snapshot_strategy())
+    noise = draw(
+        st.lists(
+            st.sampled_from(["Created", "Pulled", "Started", "NodeNotReady"]),
+            max_size=10,
+        )
+    )
+    snapshot.events.extend({"reason": r, "message": f"{r} event"} for r in noise)
+    snapshot.pod.setdefault("status", {})
+    snapshot.pod["status"]["containerStatuses"] = [
+        {
+            "name": "app",
+            "lastState": {"terminated": {"reason": "OOMKilled"}},
+        }
+    ]
+    return snapshot

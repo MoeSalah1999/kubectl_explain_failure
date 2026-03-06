@@ -6,7 +6,7 @@ hypothesis = pytest.importorskip(
     "hypothesis",
     reason="Install hypothesis to run property tests: pip install hypothesis",
 )
-from hypothesis import HealthCheck, given, settings, strategies as st
+from hypothesis import given, strategies as st
 
 from kubectl_explain_failure.engine import explain_failure
 from kubectl_explain_failure.rules.base.container.crashloop_backoff import (
@@ -16,6 +16,11 @@ from kubectl_explain_failure.rules.base.scheduling.failed_scheduling import (
     FailedSchedulingRule,
 )
 from kubectl_explain_failure.rules.base.storage.pvc_not_bound import PVCNotBoundRule
+from kubectl_explain_failure.tests.property.strategies import (
+    K8sSnapshot,
+    crashloop_snapshot_strategy,
+    pvc_scheduler_snapshot_strategy,
+)
 
 
 def _pod(name: str, phase: str) -> dict:
@@ -25,7 +30,6 @@ def _pod(name: str, phase: str) -> dict:
     }
 
 
-@settings(max_examples=120, suppress_health_check=[HealthCheck.too_slow])
 @given(
     pod_name=st.text(min_size=1, max_size=24),
     phase=st.sampled_from(["Pending", "Running", "Failed", "Unknown"]),
@@ -52,31 +56,24 @@ def test_property_no_signals_returns_unknown(
     assert "resolution" not in result
 
 
-@settings(max_examples=120, suppress_health_check=[HealthCheck.too_slow])
-@given(
-    phase=st.sampled_from(["Pending", "Running"]),
-    backoff_count=st.integers(min_value=1, max_value=12),
-    noise=st.lists(st.sampled_from(["Pulled", "Created", "Started"]), max_size=12),
-)
+@given(snapshot=crashloop_snapshot_strategy())
 def test_property_single_deterministic_rule_short_circuits_aggregation(
-    phase: str,
-    backoff_count: int,
-    noise: list[str],
+    snapshot: K8sSnapshot,
 ):
-    events = (
-        [{"reason": "BackOff", "message": "container restart backoff"}] * backoff_count
-        + [{"reason": r, "message": f"{r} event"} for r in noise]
-    )
+    pod, events, context = snapshot.as_engine_input()
 
     result = explain_failure(
-        _pod("deterministic-pod", phase),
+        pod,
         events=copy.deepcopy(events),
-        context={},
+        context=context,
         rules=[CrashLoopBackOffRule()],
     )
 
     assert result["resolution"]["winner"] == "CrashLoopBackOff"
-    assert result["resolution"]["reason"] == "Deterministic rule matched with high confidence"
+    assert (
+        result["resolution"]["reason"]
+        == "Deterministic rule matched with high confidence"
+    )
     assert "crashloopbackoff" in result["root_cause"].lower()
     assert float(result["confidence"]) == pytest.approx(0.92, abs=1e-9)
     assert result["blocking"] is True
@@ -84,46 +81,28 @@ def test_property_single_deterministic_rule_short_circuits_aggregation(
     assert len(result["causes"]) >= 1
 
 
-def _pending_pvc() -> dict:
-    return {
-        "apiVersion": "v1",
-        "kind": "PersistentVolumeClaim",
-        "metadata": {"name": "test-pvc"},
-        "status": {"phase": "Pending"},
-    }
-
-
-@settings(max_examples=120, suppress_health_check=[HealthCheck.too_slow])
-@given(
-    noise=st.lists(
-        st.sampled_from(["NodeNotReady", "TaintBasedEviction", "Pulled"]),
-        max_size=12,
-    ),
-    rotation=st.integers(min_value=0, max_value=50),
-)
+@given(snapshot=pvc_scheduler_snapshot_strategy(), rotation=st.integers(min_value=0, max_value=50))
 def test_property_enabled_categories_restricts_to_scheduling(
-    noise: list[str],
+    snapshot: K8sSnapshot,
     rotation: int,
 ):
-    events = [{"reason": "FailedScheduling", "message": "0/3 nodes are available"}] + [
-        {"reason": r, "message": f"{r} event"} for r in noise
-    ]
-
+    events = copy.deepcopy(snapshot.events)
     rotation = rotation % len(events)
     rotated = events[rotation:] + events[:rotation]
 
+    pod = copy.deepcopy(snapshot.pod)
+    context = copy.deepcopy(snapshot.context)
     rules = [PVCNotBoundRule(), FailedSchedulingRule()]
-    context = {"pvc": _pending_pvc()}
 
     result_a = explain_failure(
-        _pod("cat-gate-a", "Pending"),
+        copy.deepcopy(pod),
         events=copy.deepcopy(events),
         context=copy.deepcopy(context),
         rules=rules,
         enabled_categories=["Scheduling"],
     )
     result_b = explain_failure(
-        _pod("cat-gate-b", "Pending"),
+        copy.deepcopy(pod),
         events=copy.deepcopy(rotated),
         context=copy.deepcopy(context),
         rules=rules,
@@ -135,37 +114,28 @@ def test_property_enabled_categories_restricts_to_scheduling(
         assert result["resolution"]["winner"] == "FailedScheduling"
 
 
-@settings(max_examples=120, suppress_health_check=[HealthCheck.too_slow])
-@given(
-    noise=st.lists(
-        st.sampled_from(["NodeNotReady", "TaintBasedEviction", "Created"]),
-        max_size=12,
-    ),
-    rotation=st.integers(min_value=0, max_value=50),
-)
+@given(snapshot=pvc_scheduler_snapshot_strategy(), rotation=st.integers(min_value=0, max_value=50))
 def test_property_disabled_categories_excludes_pvc_rules(
-    noise: list[str],
+    snapshot: K8sSnapshot,
     rotation: int,
 ):
-    events = [{"reason": "FailedScheduling", "message": "0/3 nodes are available"}] + [
-        {"reason": r, "message": f"{r} event"} for r in noise
-    ]
-
+    events = copy.deepcopy(snapshot.events)
     rotation = rotation % len(events)
     rotated = events[rotation:] + events[:rotation]
 
+    pod = copy.deepcopy(snapshot.pod)
+    context = copy.deepcopy(snapshot.context)
     rules = [PVCNotBoundRule(), FailedSchedulingRule()]
-    context = {"pvc": _pending_pvc()}
 
     result_a = explain_failure(
-        _pod("cat-disable-a", "Pending"),
+        copy.deepcopy(pod),
         events=copy.deepcopy(events),
         context=copy.deepcopy(context),
         rules=rules,
         disabled_categories=["PersistentVolumeClaim"],
     )
     result_b = explain_failure(
-        _pod("cat-disable-b", "Pending"),
+        copy.deepcopy(pod),
         events=copy.deepcopy(rotated),
         context=copy.deepcopy(context),
         rules=rules,
