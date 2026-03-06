@@ -52,3 +52,33 @@ def test_property_no_signals_returns_unknown(
     assert "resolution" not in result
 
 
+@settings(max_examples=120, suppress_health_check=[HealthCheck.too_slow])
+@given(
+    phase=st.sampled_from(["Pending", "Running"]),
+    backoff_count=st.integers(min_value=1, max_value=12),
+    noise=st.lists(st.sampled_from(["Pulled", "Created", "Started"]), max_size=12),
+)
+def test_property_single_deterministic_rule_short_circuits_aggregation(
+    phase: str,
+    backoff_count: int,
+    noise: list[str],
+):
+    events = (
+        [{"reason": "BackOff", "message": "container restart backoff"}] * backoff_count
+        + [{"reason": r, "message": f"{r} event"} for r in noise]
+    )
+
+    result = explain_failure(
+        _pod("deterministic-pod", phase),
+        events=copy.deepcopy(events),
+        context={},
+        rules=[CrashLoopBackOffRule()],
+    )
+
+    assert result["resolution"]["winner"] == "CrashLoopBackOff"
+    assert result["resolution"]["reason"] == "Deterministic rule matched with high confidence"
+    assert "crashloopbackoff" in result["root_cause"].lower()
+    assert float(result["confidence"]) == pytest.approx(0.92, abs=1e-9)
+    assert result["blocking"] is True
+    assert isinstance(result.get("causes"), list)
+    assert len(result["causes"]) >= 1
