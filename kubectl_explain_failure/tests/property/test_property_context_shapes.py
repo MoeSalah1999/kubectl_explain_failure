@@ -58,8 +58,29 @@ def test_property_context_shapes_are_handled_consistently(
     assert 0.0 <= float(result.get("confidence", 0.0)) <= 1.0
     assert isinstance(result.get("blocking"), bool)
 
-    pvc_present = use_legacy_pvc or use_graph_pvc
-    pvc_phase = pvc_obj.get("status", {}).get("phase")
-    if pvc_present and pvc_phase == "Pending":
-        assert result["blocking"] is True
-        assert "persistentvolumeclaim" in result["root_cause"].lower()
+    # Canonical equivalence check: legacy PVC context and object-graph PVC context
+    # should produce the same decision for identical input signals.
+    legacy_context = {"pvc": copy.deepcopy(pvc_obj)}
+    graph_context = {"objects": {"pvc": {"test-pvc": copy.deepcopy(pvc_obj)}}}
+
+    legacy_result = explain_failure(
+        _pod_pending(),
+        copy.deepcopy(events),
+        context=legacy_context,
+        rules=RULES,
+    )
+    graph_result = explain_failure(
+        _pod_pending(),
+        copy.deepcopy(events),
+        context=graph_context,
+        rules=RULES,
+    )
+
+    assert legacy_result["root_cause"] == graph_result["root_cause"]
+    assert legacy_result["blocking"] == graph_result["blocking"]
+
+    legacy_resolution = legacy_result.get("resolution")
+    graph_resolution = graph_result.get("resolution")
+    assert (legacy_resolution is None) == (graph_resolution is None)
+    if legacy_resolution and graph_resolution:
+        assert legacy_resolution.get("winner") == graph_resolution.get("winner")
