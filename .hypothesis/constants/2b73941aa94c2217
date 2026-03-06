@@ -1,4 +1,0 @@
-# file: C:\Users\salah\Desktop\Kubernetes contributions\kubectl_explain_failure\kubectl_explain_failure\loader.py
-# hypothesis_version: 6.151.9
-
-[0.5, 100, 1000, '**', '*.py', '*.yaml', 'False', 'Generic', 'Medium', 'Unknown', '_', 'base_rule.py', 'blocking', 'category', 'causes', 'code', 'confidence', 'context', 'events', 'evidence', 'if', 'labels', 'likely_causes', 'message', 'metadata', 'name', 'node', 'objects', 'optional_objects', 'pod', 'priority', 'pvc', 'requires', 'root_cause', 'rules', 'severity', 'status', 'suggested_checks', 'then', 'timeline_has_pattern', 'utf-8']

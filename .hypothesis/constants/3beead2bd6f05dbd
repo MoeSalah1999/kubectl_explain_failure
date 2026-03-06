@@ -1,4 +1,0 @@
-# file: C:\Users\salah\Desktop\Kubernetes contributions\kubectl_explain_failure\kubectl_explain_failure\rules\compound\container\crashloop_oom.py
-# hypothesis_version: 6.151.9
-
-[0.98, 'BackOff', 'CRASH_LOOP', 'Compound', 'CrashLoopBackOff', 'CrashLoopOOMKilled', 'OOMKilled', 'OOM_CONTEXT', 'OOM_KILLED', 'blocking', 'causes', 'confidence', 'containerStatuses', 'context', 'evidence', 'lastState', 'metadata', 'name', 'object_evidence', 'reason', 'root_cause', 'rule', 'status', 'suggested_checks', 'terminated', 'timeline', 'workload_symptom']
