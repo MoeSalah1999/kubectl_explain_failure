@@ -343,6 +343,7 @@ Output is fully deterministic for identical inputs.
 ### The project uses:
 
 - pytest
+- hypothesis (property-based testing)
 - tox
 - mypy
 - Golden snapshot testing
@@ -360,6 +361,7 @@ To run tests in the development environment:
 Tox automatically installs required dependencies, including:
 
 - pytest
+- hypothesis
 - mypy
 - PyYAML
 
@@ -392,6 +394,8 @@ This ensures tests run in a clean environment and type checks are enforced.
 - loader.py – rule and plugin discovery
 - rules/ – rule corpus (Python + YAML)
 - tests/ – golden + regression + contract tests
+- tests/property/strategies.py – reusable Hypothesis Kubernetes snapshot generator
+- tests/property/conftest.py – property-testing profile configuration
 
 ### Rule contract (base_rule.py):
 
@@ -436,4 +440,51 @@ This is a **diagnostic explainer**, not a fixer.
 Live cluster access is intentionally out of scope for the initial design.
 
 License: MIT
+
+
+
+# Property-Based Testing & Snapshot Generator
+
+The project includes a reusable Hypothesis snapshot generator for Kubernetes-style inputs:
+
+- file: `kubectl_explain_failure/tests/property/strategies.py`
+- primary APIs:
+  - `snapshot_strategy()`
+  - `crashloop_snapshot_strategy()`
+  - `pvc_scheduler_snapshot_strategy()`
+  - `malformed_snapshot_strategy()`
+  - `crashloop_oom_snapshot_strategy()`
+  - `unrelated_noise()`
+
+The generator produces coherent engine inputs (`pod`, `events`, `context`) and supports snapshot cloning/injection for monotonicity and idempotence properties.
+
+## Hypothesis profiles
+
+Property tests are configured through:
+
+- file: `kubectl_explain_failure/tests/property/conftest.py`
+- profiles:
+  - `fast` (default, local dev)
+  - `deep` (higher example count for CI/fuzzing)
+
+Run with default profile:
+
+- `venv\\Scripts\\python.exe -m pytest kubectl_explain_failure/tests/property -q`
+
+Run with deep profile:
+
+- PowerShell: `$env:HYPOTHESIS_PROFILE="deep"`
+- then: `venv\\Scripts\\python.exe -m pytest kubectl_explain_failure/tests/property -q`
+
+## Invariants covered by property tests
+
+Property suite validates engine-level invariants such as:
+
+- idempotence / determinism for identical snapshots
+- monotonicity under unrelated object noise
+- causal-chain structural integrity
+- confidence bounds and output contract stability
+- suppression/resolution integrity
+- category gating and rule dependency/phase/state gating
+
 
