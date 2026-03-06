@@ -382,7 +382,7 @@ This ensures tests run in a clean environment and type checks are enforced.
 - Rule contract enforcement
 - PVC dominance semantics
 
-# Property-Based Testing & Snapshot Generator
+## Property-Based Testing & Snapshot Generator
 
 The project includes a reusable Hypothesis snapshot generator for Kubernetes-style inputs:
 
@@ -397,7 +397,7 @@ The project includes a reusable Hypothesis snapshot generator for Kubernetes-sty
 
 The generator produces coherent engine inputs (`pod`, `events`, `context`) and supports snapshot cloning/injection for monotonicity and idempotence properties.
 
-## Hypothesis profiles
+### Hypothesis profiles
 
 Property tests are configured through:
 
@@ -415,7 +415,7 @@ Run with deep profile:
 - PowerShell: `$env:HYPOTHESIS_PROFILE="deep"`
 - then: `venv\\Scripts\\python.exe -m pytest kubectl_explain_failure/tests/property -q`
 
-## Invariants covered by property tests
+### Invariants covered by property tests
 
 Property suite validates engine-level invariants such as:
 
