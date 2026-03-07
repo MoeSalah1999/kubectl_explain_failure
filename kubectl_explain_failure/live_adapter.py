@@ -3,13 +3,51 @@ from __future__ import annotations
 import json
 import subprocess
 from datetime import datetime
-from typing import Any
+from typing import Any, Protocol
 
 from kubectl_explain_failure.engine import normalize_context
 
 
 class LiveIntrospectionError(RuntimeError):
     pass
+
+
+class LiveDataProvider(Protocol):
+    def get_json(
+        self,
+        kind: str,
+        name: str | None = None,
+        *,
+        namespace: str | None = None,
+        kube_context: str | None = None,
+        kubeconfig: str | None = None,
+        timeout_seconds: int = 10,
+        extra_args: list[str] | None = None,
+    ) -> dict[str, Any]:
+        ...
+
+
+class KubectlLiveDataProvider:
+    def get_json(
+        self,
+        kind: str,
+        name: str | None = None,
+        *,
+        namespace: str | None = None,
+        kube_context: str | None = None,
+        kubeconfig: str | None = None,
+        timeout_seconds: int = 10,
+        extra_args: list[str] | None = None,
+    ) -> dict[str, Any]:
+        return _kubectl_get_json(
+            kind,
+            name,
+            namespace=namespace,
+            kube_context=kube_context,
+            kubeconfig=kubeconfig,
+            timeout_seconds=timeout_seconds,
+            extra_args=extra_args,
+        )
 
 
 def _resource_for_owner_kind(kind: str) -> str | None:
@@ -85,6 +123,7 @@ def _kubectl_get_json(
 
 
 def _safe_get_json(
+    provider: LiveDataProvider,
     kind: str,
     name: str | None,
     *,
@@ -97,7 +136,7 @@ def _safe_get_json(
     extra_args: list[str] | None = None,
 ) -> dict[str, Any] | None:
     try:
-        return _kubectl_get_json(
+        return provider.get_json(
             kind,
             name,
             namespace=namespace,
@@ -251,6 +290,7 @@ def _sort_and_limit_events(
 
 
 def _resolve_owner_chain(
+    provider: LiveDataProvider,
     *,
     start_obj: dict[str, Any],
     namespace: str,
@@ -291,6 +331,7 @@ def _resolve_owner_chain(
         visited.add(key)
 
         owner_obj = _safe_get_json(
+            provider,
             resource,
             owner_name,
             namespace=namespace,
@@ -318,11 +359,14 @@ def fetch_live_snapshot(
     timeout_seconds: int = 10,
     event_limit: int = 200,
     event_chunk_size: int = 200,
+    provider: LiveDataProvider | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, Any], list[str], dict[str, Any]]:
+    provider = provider or KubectlLiveDataProvider()
+
     warnings: list[str] = []
     missing_resources: list[dict[str, Any]] = []
 
-    pod = _kubectl_get_json(
+    pod = provider.get_json(
         "pod",
         pod_name,
         namespace=namespace,
@@ -333,6 +377,7 @@ def fetch_live_snapshot(
 
     events_selector = f"involvedObject.kind=Pod,involvedObject.name={pod_name}"
     events_raw = _safe_get_json(
+        provider,
         "events",
         None,
         namespace=namespace,
@@ -361,6 +406,7 @@ def fetch_live_snapshot(
 
     for pvc_name in _extract_pvc_names(pod):
         pvc = _safe_get_json(
+            provider,
             "pvc",
             pvc_name,
             namespace=namespace,
@@ -376,6 +422,7 @@ def fetch_live_snapshot(
             pv_name = pvc.get("spec", {}).get("volumeName")
             if pv_name:
                 pv = _safe_get_json(
+                    provider,
                     "pv",
                     pv_name,
                     namespace=None,
@@ -390,6 +437,7 @@ def fetch_live_snapshot(
             sc_name = pvc.get("spec", {}).get("storageClassName")
             if sc_name:
                 sc = _safe_get_json(
+                    provider,
                     "storageclass",
                     sc_name,
                     namespace=None,
@@ -404,6 +452,7 @@ def fetch_live_snapshot(
     node_name = pod.get("spec", {}).get("nodeName")
     if node_name:
         node = _safe_get_json(
+            provider,
             "node",
             node_name,
             namespace=None,
@@ -418,6 +467,7 @@ def fetch_live_snapshot(
             context["node"] = node
 
     owner_chain = _resolve_owner_chain(
+        provider,
         start_obj=pod,
         namespace=namespace,
         kube_context=kube_context,
@@ -435,6 +485,7 @@ def fetch_live_snapshot(
     service_account = pod.get("spec", {}).get("serviceAccountName")
     if service_account:
         sa_obj = _safe_get_json(
+            provider,
             "serviceaccount",
             service_account,
             namespace=namespace,
@@ -451,6 +502,7 @@ def fetch_live_snapshot(
 
     for secret_name in sorted(secret_names):
         secret_obj = _safe_get_json(
+            provider,
             "secret",
             secret_name,
             namespace=namespace,
