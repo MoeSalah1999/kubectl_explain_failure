@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import time
 from datetime import datetime
 from typing import Any, Protocol
 
@@ -27,7 +28,41 @@ class LiveDataProvider(Protocol):
         ...
 
 
+def _is_retryable_error(exc: Exception) -> bool:
+    if isinstance(exc, subprocess.TimeoutExpired):
+        return True
+
+    msg = str(exc).lower()
+    retry_markers = (
+        "timeout",
+        "timed out",
+        "temporarily unavailable",
+        "connection refused",
+        "unable to connect to the server",
+        "tls handshake timeout",
+        "i/o timeout",
+        "eof",
+        "too many requests",
+        "service unavailable",
+    )
+    return any(marker in msg for marker in retry_markers)
+
+
 class KubectlLiveDataProvider:
+    def __init__(
+        self,
+        *,
+        max_retries: int = 1,
+        retry_backoff_seconds: float = 0.25,
+    ) -> None:
+        if max_retries < 0:
+            raise ValueError("max_retries must be >= 0")
+        if retry_backoff_seconds <= 0:
+            raise ValueError("retry_backoff_seconds must be > 0")
+
+        self.max_retries = max_retries
+        self.retry_backoff_seconds = retry_backoff_seconds
+
     def get_json(
         self,
         kind: str,
@@ -39,15 +74,29 @@ class KubectlLiveDataProvider:
         timeout_seconds: int = 10,
         extra_args: list[str] | None = None,
     ) -> dict[str, Any]:
-        return _kubectl_get_json(
-            kind,
-            name,
-            namespace=namespace,
-            kube_context=kube_context,
-            kubeconfig=kubeconfig,
-            timeout_seconds=timeout_seconds,
-            extra_args=extra_args,
-        )
+        last_exc: Exception | None = None
+
+        for attempt in range(self.max_retries + 1):
+            try:
+                return _kubectl_get_json(
+                    kind,
+                    name,
+                    namespace=namespace,
+                    kube_context=kube_context,
+                    kubeconfig=kubeconfig,
+                    timeout_seconds=timeout_seconds,
+                    extra_args=extra_args,
+                )
+            except (LiveIntrospectionError, subprocess.TimeoutExpired) as exc:
+                last_exc = exc
+                if attempt >= self.max_retries or not _is_retryable_error(exc):
+                    raise
+                sleep_seconds = self.retry_backoff_seconds * (2**attempt)
+                time.sleep(sleep_seconds)
+
+        if last_exc:
+            raise last_exc
+        raise LiveIntrospectionError("live data provider failed unexpectedly")
 
 
 def _resource_for_owner_kind(kind: str) -> str | None:
@@ -100,13 +149,18 @@ def _kubectl_get_json(
 
     cmd += ["--request-timeout", f"{timeout_seconds}s", "-o", "json"]
 
-    proc = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=max(1, timeout_seconds),
-    )
+    try:
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=max(1, timeout_seconds),
+        )
+    except FileNotFoundError as exc:
+        raise LiveIntrospectionError(
+            "kubectl binary was not found in PATH"
+        ) from exc
 
     if proc.returncode != 0:
         stderr = (proc.stderr or "").strip()
@@ -359,9 +413,14 @@ def fetch_live_snapshot(
     timeout_seconds: int = 10,
     event_limit: int = 200,
     event_chunk_size: int = 200,
+    retry_count: int = 1,
+    retry_backoff_seconds: float = 0.25,
     provider: LiveDataProvider | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, Any], list[str], dict[str, Any]]:
-    provider = provider or KubectlLiveDataProvider()
+    provider = provider or KubectlLiveDataProvider(
+        max_retries=retry_count,
+        retry_backoff_seconds=retry_backoff_seconds,
+    )
 
     warnings: list[str] = []
     missing_resources: list[dict[str, Any]] = []

@@ -1,12 +1,20 @@
 import argparse
 import os
+import shutil
+import subprocess
 
 from kubectl_explain_failure.context import build_context
 from kubectl_explain_failure.engine import explain_failure
-from kubectl_explain_failure.live_adapter import fetch_live_snapshot
+from kubectl_explain_failure.live_adapter import LiveIntrospectionError, fetch_live_snapshot
 from kubectl_explain_failure.loader import load_plugins, load_rules
 from kubectl_explain_failure.model import load_json, normalize_events
 from kubectl_explain_failure.output import output_result
+
+MAX_TIMEOUT_SECONDS = 300
+MAX_EVENT_LIMIT = 5000
+MAX_EVENT_CHUNK_SIZE = 1000
+MAX_RETRIES = 5
+MAX_RETRY_BACKOFF_SECONDS = 10.0
 
 
 def _apply_live_completeness_penalty(result: dict, live_metadata: dict) -> None:
@@ -63,6 +71,68 @@ def _build_provenance_metadata(
     return provenance
 
 
+def _validate_live_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    if shutil.which("kubectl") is None:
+        parser.error("Live mode requires kubectl in PATH")
+
+    if args.kubeconfig and not os.path.isfile(args.kubeconfig):
+        parser.error(f"kubeconfig file not found: {args.kubeconfig}")
+
+    if args.timeout <= 0 or args.timeout > MAX_TIMEOUT_SECONDS:
+        parser.error(
+            f"--timeout must be between 1 and {MAX_TIMEOUT_SECONDS} seconds"
+        )
+
+    if args.event_limit < 1 or args.event_limit > MAX_EVENT_LIMIT:
+        parser.error(
+            f"--event-limit must be between 1 and {MAX_EVENT_LIMIT}"
+        )
+
+    if args.event_chunk_size < 1 or args.event_chunk_size > MAX_EVENT_CHUNK_SIZE:
+        parser.error(
+            f"--event-chunk-size must be between 1 and {MAX_EVENT_CHUNK_SIZE}"
+        )
+
+    if args.retries < 0 or args.retries > MAX_RETRIES:
+        parser.error(f"--retries must be between 0 and {MAX_RETRIES}")
+
+    if (
+        args.retry_backoff <= 0.0
+        or args.retry_backoff > MAX_RETRY_BACKOFF_SECONDS
+    ):
+        parser.error(
+            f"--retry-backoff must be between 0 and {MAX_RETRY_BACKOFF_SECONDS} seconds"
+        )
+
+
+def _emit_live_fatal_error(
+    *,
+    message: str,
+    output_format: str,
+    namespace: str,
+    pod_name: str,
+) -> None:
+    if output_format in {"json", "yaml"}:
+        output_result(
+            {
+                "source": "live",
+                "error": message,
+                "root_cause": "Live introspection failed",
+                "confidence": 0.0,
+                "blocking": False,
+                "evidence": [],
+                "likely_causes": [],
+                "suggested_checks": [
+                    f"kubectl get pod {pod_name} -n {namespace}",
+                    f"kubectl get events -n {namespace}",
+                ],
+            },
+            output_format,
+        )
+    else:
+        print(f"[ERROR] {message}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Explain Kubernetes Pod failures")
 
@@ -98,6 +168,18 @@ def main():
         type=int,
         default=200,
         help="Kubectl server-side chunk size for live event listing",
+    )
+    parser.add_argument(
+        "--retries",
+        type=int,
+        default=1,
+        help="Retry count for transient kubectl failures in live mode",
+    )
+    parser.add_argument(
+        "--retry-backoff",
+        type=float,
+        default=0.25,
+        help="Initial retry backoff in seconds for live mode",
     )
 
     parser.add_argument(
@@ -140,15 +222,29 @@ def main():
                 "Live mode requires pod name: use 'pod <name> --live' or '--pod-name <name> --live'"
             )
 
-        pod, events, context, live_warnings, live_metadata = fetch_live_snapshot(
-            pod_name=pod_name,
-            namespace=args.namespace,
-            kube_context=args.kube_context,
-            kubeconfig=args.kubeconfig,
-            timeout_seconds=args.timeout,
-            event_limit=args.event_limit,
-            event_chunk_size=args.event_chunk_size,
-        )
+        _validate_live_args(parser, args)
+
+        try:
+            pod, events, context, live_warnings, live_metadata = fetch_live_snapshot(
+                pod_name=pod_name,
+                namespace=args.namespace,
+                kube_context=args.kube_context,
+                kubeconfig=args.kubeconfig,
+                timeout_seconds=args.timeout,
+                event_limit=args.event_limit,
+                event_chunk_size=args.event_chunk_size,
+                retry_count=args.retries,
+                retry_backoff_seconds=args.retry_backoff,
+            )
+        except (LiveIntrospectionError, subprocess.TimeoutExpired, OSError) as exc:
+            _emit_live_fatal_error(
+                message=str(exc),
+                output_format=args.format,
+                namespace=args.namespace,
+                pod_name=pod_name,
+            )
+            raise SystemExit(2) from exc
+
         source = "live"
     else:
         if not args.pod or not args.events:

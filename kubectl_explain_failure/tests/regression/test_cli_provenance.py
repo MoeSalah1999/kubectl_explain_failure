@@ -68,6 +68,7 @@ def test_cli_live_output_includes_provenance_metadata(monkeypatch):
     monkeypatch.setattr(cli, "output_result", fake_output_result)
     monkeypatch.setattr(cli, "load_rules", lambda rule_folder: [_DummyRule()])
     monkeypatch.setattr(cli, "load_plugins", lambda plugin_folder: [])
+    monkeypatch.setattr(cli.shutil, "which", lambda _: "kubectl")
 
     monkeypatch.setattr(
         sys,
