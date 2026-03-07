@@ -16,7 +16,6 @@ def _apply_live_completeness_penalty(result: dict, live_metadata: dict) -> None:
     if rbac_missing <= 0:
         return
 
-    # Penalize confidence when RBAC blocks context needed for full diagnosis.
     penalty = min(0.35, 0.05 * rbac_missing)
     adjusted = max(0.0, min(1.0, confidence * (1.0 - penalty)))
 
@@ -28,6 +27,40 @@ def _apply_live_completeness_penalty(result: dict, live_metadata: dict) -> None:
             "rbac_missing_total": rbac_missing,
         }
     )
+
+
+def _build_provenance_metadata(
+    *,
+    source: str,
+    context: dict,
+    events: list[dict],
+    warnings: list[str],
+    live_metadata: dict | None,
+) -> dict:
+    obj_counts = {
+        kind: len(mapping)
+        for kind, mapping in context.get("objects", {}).items()
+        if isinstance(mapping, dict)
+    }
+
+    provenance = {
+        "source": source,
+        "event_count": len(events),
+        "fetched_object_counts": obj_counts,
+        "fetched_object_total": sum(obj_counts.values()),
+        "fetch_warning_count": len(warnings),
+        "fetch_warnings": warnings,
+        "missing_kinds": [],
+        "missing_kinds_by_reason": {},
+    }
+
+    if live_metadata:
+        provenance["missing_kinds"] = list(live_metadata.get("missing_kinds", []))
+        provenance["missing_kinds_by_reason"] = dict(
+            live_metadata.get("missing_kinds_by_reason", {})
+        )
+
+    return provenance
 
 
 def main():
@@ -116,6 +149,7 @@ def main():
             event_limit=args.event_limit,
             event_chunk_size=args.event_chunk_size,
         )
+        source = "live"
     else:
         if not args.pod or not args.events:
             parser.error("Snapshot mode requires --pod and --events")
@@ -125,6 +159,7 @@ def main():
         pod = load_json(args.pod)
         events_raw = load_json(args.events)
         events = normalize_events(events_raw)
+        source = "snapshot"
 
     rules_folder = os.path.join(os.path.dirname(__file__), "rules")
     rules = load_rules(rule_folder=rules_folder)
@@ -151,13 +186,21 @@ def main():
         verbose=args.verbose,
     )
 
-    result["source"] = "live" if args.live else "snapshot"
+    result["source"] = source
     if live_warnings:
         result["live_warnings"] = live_warnings
 
     if live_metadata:
         _apply_live_completeness_penalty(result, live_metadata)
         result["live_metadata"] = live_metadata
+
+    result["provenance"] = _build_provenance_metadata(
+        source=source,
+        context=context,
+        events=events,
+        warnings=live_warnings,
+        live_metadata=live_metadata,
+    )
 
     if not rules:
         print("[WARNING] No rules loaded, check your rules/ and plugins/ folders")

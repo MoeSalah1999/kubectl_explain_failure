@@ -463,8 +463,33 @@ def fetch_live_snapshot(
         _add_object(context, "secret", secret_obj)
 
     rbac_missing = [m for m in missing_resources if m.get("reason") == "rbac_forbidden"]
+    missing_kinds = sorted({m.get("kind") for m in missing_resources if m.get("kind")})
+
+    missing_kinds_by_reason: dict[str, list[str]] = {}
+    for reason in ("rbac_forbidden", "not_found", "timeout", "other"):
+        kinds = sorted(
+            {
+                m.get("kind")
+                for m in missing_resources
+                if m.get("reason") == reason and m.get("kind")
+            }
+        )
+        if kinds:
+            missing_kinds_by_reason[reason] = kinds
+
+    fetched_object_counts = {
+        kind: len(mapping)
+        for kind, mapping in context.get("objects", {}).items()
+        if isinstance(mapping, dict)
+    }
 
     live_metadata = {
+        "event_count": len(events),
+        "fetch_warning_count": len(warnings),
+        "fetched_object_counts": fetched_object_counts,
+        "fetched_object_total": sum(fetched_object_counts.values()),
+        "missing_kinds": missing_kinds,
+        "missing_kinds_by_reason": missing_kinds_by_reason,
         "missing_resources": missing_resources,
         "missing_due_to_rbac": rbac_missing,
         "completeness": {
