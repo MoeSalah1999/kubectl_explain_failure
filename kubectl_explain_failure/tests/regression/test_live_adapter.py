@@ -45,7 +45,10 @@ def test_fetch_live_snapshot_discovers_dependency_objects(monkeypatch):
         ("pvc", "pvc-a"): pvc_obj,
         ("pv", "pv-a"): {"metadata": {"name": "pv-a"}},
         ("storageclass", "sc-a"): {"metadata": {"name": "sc-a"}},
-        ("node", "node-a"): {"metadata": {"name": "node-a"}},
+        ("node", "node-a"): {
+            "metadata": {"name": "node-a"},
+            "status": {"conditions": [{"type": "Ready", "status": "True"}]},
+        },
         ("replicaset", "rs-a"): {
             "metadata": {
                 "name": "rs-a",
@@ -96,7 +99,13 @@ def test_fetch_live_snapshot_discovers_dependency_objects(monkeypatch):
     assert "env-secret" in objects["secret"]
     assert "sa-token" in objects["secret"]
     assert "sa-pull-secret" in objects["secret"]
+
+    # Explicit validation: live context is canonicalized via normalize_context().
     assert context["owner"]["metadata"]["name"] == "deploy-a"
+    assert context.get("pvc_unbound") is True
+    assert context.get("blocking_pvc", {}).get("metadata", {}).get("name") == "pvc-a"
+    assert context.get("pvc", {}).get("metadata", {}).get("name") == "pvc-a"
+    assert context.get("node_conditions", {}).get("Ready", {}).get("status") == "True"
 
 
 def test_fetch_live_snapshot_keeps_partial_context_on_fetch_failures(monkeypatch):

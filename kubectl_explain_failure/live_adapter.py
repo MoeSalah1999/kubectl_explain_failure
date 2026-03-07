@@ -4,6 +4,8 @@ import json
 import subprocess
 from typing import Any
 
+from kubectl_explain_failure.engine import normalize_context
+
 
 class LiveIntrospectionError(RuntimeError):
     pass
@@ -390,4 +392,5 @@ def fetch_live_snapshot(
         )
         _add_object(context, "secret", secret_obj)
 
-    return pod, events, context, warnings
+    return pod, events, normalize_context(context), warnings
+
