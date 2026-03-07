@@ -41,3 +41,42 @@ def test_live_adapter_fetch_smoke_from_real_cluster():
     assert isinstance(metadata, dict)
     assert metadata.get("event_count") == len(events)
     assert metadata.get("fetch_warning_count") == len(warnings)
+
+
+def test_live_adapter_event_limit_is_honored_on_real_cluster():
+    if not POD_NAME:
+        pytest.skip("Set KUBECTL_EXPLAIN_FAILURE_LIVE_POD to run integration fetch")
+
+    _, events, _, _, metadata = fetch_live_snapshot(
+        pod_name=POD_NAME,
+        namespace=NAMESPACE,
+        kube_context=KUBE_CONTEXT,
+        kubeconfig=KUBECONFIG,
+        timeout_seconds=15,
+        event_limit=5,
+        event_chunk_size=100,
+    )
+
+    assert len(events) <= 5
+    assert metadata.get("event_count") == len(events)
+
+
+def test_live_adapter_metadata_totals_are_consistent_on_real_cluster():
+    if not POD_NAME:
+        pytest.skip("Set KUBECTL_EXPLAIN_FAILURE_LIVE_POD to run integration fetch")
+
+    _, events, context, warnings, metadata = fetch_live_snapshot(
+        pod_name=POD_NAME,
+        namespace=NAMESPACE,
+        kube_context=KUBE_CONTEXT,
+        kubeconfig=KUBECONFIG,
+        timeout_seconds=15,
+        event_limit=50,
+        event_chunk_size=100,
+    )
+
+    fetched_counts = metadata.get("fetched_object_counts", {})
+    assert metadata.get("fetched_object_total") == sum(fetched_counts.values())
+    assert metadata.get("event_count") == len(events)
+    assert metadata.get("fetch_warning_count") == len(warnings)
+    assert isinstance(context.get("objects", {}), dict)

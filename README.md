@@ -311,7 +311,7 @@ This ensures you can import the package as:
 and run tests or scripts directly.
 
 # Usage
-## Basic usage:
+## Snapshot mode (file inputs):
 python -m kubectl_explain_failure \
   --pod /kubectl_explain_failure/tests/fixtures/pod.json \
   --events /kubectl_explain_failure/tests/fixtures/events.json
@@ -323,6 +323,26 @@ python -m kubectl_explain_failure \
   --events /kubectl_explain_failure/tests/fixtures/empty_events.json \
   --pvc /kubectl_explain_failure/tests/fixtures/pvc_pending.json \
   --node /kubectl_explain_failure/tests/fixtures/node_disk_pressure.json
+
+
+## Live introspection (production-ready path):
+python -m kubectl_explain_failure \
+  pod my-pod \
+  --live \
+  --namespace default \
+  --format json
+
+### Live mode flags:
+- `--namespace`, `--context`, `--kubeconfig`
+- `--timeout`
+- `--event-limit`, `--event-chunk-size`
+- `--retries`, `--retry-backoff`
+
+### Kubectl plugin wrapper:
+The `kubectl-explain-failure` plugin forwards directly to the live CLI path.
+
+Example:
+- `kubectl explain-failure my-pod -n default --format json`
 
 # Output Structure
 
@@ -381,6 +401,9 @@ This ensures tests run in a clean environment and type checks are enforced.
 - Object-graph compatibility
 - Rule contract enforcement
 - PVC dominance semantics
+- Live CLI provenance metadata
+- Live provider abstraction behavior
+- Live provider retry behavior (transient vs non-retryable errors)
 
 ## Property-Based Testing & Snapshot Generator
 
@@ -429,19 +452,31 @@ Property suite validates engine-level invariants such as:
 
 
 
+### Live adapter test coverage
+
+The live path is covered at three levels:
+
+- Regression/unit tests with mocked providers and kubectl responses
+- Property tests for live adapter normalization and metadata invariants
+- Optional real-cluster integration smoke tests (env-gated):
+  - `kubectl_explain_failure/tests/integration/test_live_adapter_integration.py`
+  - set `KUBECTL_EXPLAIN_FAILURE_RUN_LIVE_INTEGRATION=1` to enable
+
 # Architecture Overview
 ### Core modules:
 
-- engine.py – rule evaluation, resolution, confidence composition
-- causality.py – CausalChain and Resolution structures
-- context.py – context normalization
-- timeline.py – normalized timeline abstraction
-- relations.py – object dependency graph logic
-- loader.py – rule and plugin discovery
-- rules/ – rule corpus (Python + YAML)
-- tests/ – golden + regression + contract tests
-- tests/property/strategies.py – reusable Hypothesis Kubernetes snapshot generator
-- tests/property/conftest.py – property-testing profile configuration
+- engine.py - rule evaluation, resolution, confidence composition
+- causality.py - CausalChain and Resolution structures
+- context.py - context normalization
+- timeline.py - normalized timeline abstraction
+- relations.py - object dependency graph logic
+- loader.py - rule and plugin discovery
+- live_adapter.py - live data adapter, provider abstraction, retries, partial-fetch handling
+- cli.py - snapshot/live orchestration, provenance, live completeness confidence penalty
+- rules/ - rule corpus (Python + YAML)
+- tests/ - golden + regression + contract tests
+- tests/property/strategies.py - reusable Hypothesis Kubernetes snapshot generator
+- tests/property/conftest.py - property-testing profile configuration
 
 ### Rule contract (base_rule.py):
 
@@ -460,7 +495,6 @@ Property suite validates engine-level invariants such as:
 All rules must be deterministic and side-effect free.
 
 # What this tool does NOT do
-- No live Kubernetes API integration
 - No cluster mutation
 - No remediation
 - No automatic fixes
@@ -480,12 +514,14 @@ This is a **diagnostic explainer**, not a fixer.
 
 # Future work
 
-- Additional failure heuristics
-- Optional kubectl plugin wrapper
-
-Live cluster access is intentionally out of scope for the initial design.
+- Additional failure heuristics and rule coverage
+- Expanded real-cluster integration scenarios for CI/nightly
+- Additional provider implementations behind the live adapter interface
 
 License: MIT
+
+
+
 
 
 
