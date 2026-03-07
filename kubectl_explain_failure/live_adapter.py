@@ -119,7 +119,7 @@ def _extract_pvc_names(pod: dict[str, Any]) -> list[str]:
     return sorted(set(out))
 
 
-def _extract_secret_names(pod: dict[str, Any]) -> list[str]:
+def _extract_secret_names_from_pod(pod: dict[str, Any]) -> list[str]:
     names: set[str] = set()
 
     spec = pod.get("spec", {})
@@ -166,6 +166,86 @@ def _extract_secret_names(pod: dict[str, Any]) -> list[str]:
                 names.add(env_from_secret)
 
     return sorted(names)
+
+
+def _extract_secret_names_from_serviceaccount(sa_obj: dict[str, Any] | None) -> list[str]:
+    if not sa_obj:
+        return []
+
+    names: set[str] = set()
+
+    for ref in sa_obj.get("secrets", []):
+        if not isinstance(ref, dict):
+            continue
+        name = ref.get("name")
+        if name:
+            names.add(name)
+
+    for ref in sa_obj.get("imagePullSecrets", []):
+        if not isinstance(ref, dict):
+            continue
+        name = ref.get("name")
+        if name:
+            names.add(name)
+
+    return sorted(names)
+
+
+def _resolve_owner_chain(
+    *,
+    start_obj: dict[str, Any],
+    namespace: str,
+    kube_context: str | None,
+    kubeconfig: str | None,
+    timeout_seconds: int,
+    warnings: list[str],
+) -> list[tuple[str, dict[str, Any]]]:
+    resolved: list[tuple[str, dict[str, Any]]] = []
+    visited: set[tuple[str, str]] = set()
+
+    current = start_obj
+    max_depth = 5
+
+    for _ in range(max_depth):
+        refs = current.get("metadata", {}).get("ownerReferences", [])
+        if not isinstance(refs, list) or not refs:
+            break
+
+        next_ref = None
+        for ref in refs:
+            if isinstance(ref, dict) and ref.get("kind") and ref.get("name"):
+                next_ref = ref
+                break
+        if not next_ref:
+            break
+
+        owner_kind = next_ref["kind"]
+        owner_name = next_ref["name"]
+        resource = _resource_for_owner_kind(owner_kind)
+        if not resource:
+            break
+
+        key = (resource, owner_name)
+        if key in visited:
+            break
+        visited.add(key)
+
+        owner_obj = _safe_get_json(
+            resource,
+            owner_name,
+            namespace=namespace,
+            kube_context=kube_context,
+            kubeconfig=kubeconfig,
+            timeout_seconds=timeout_seconds,
+            warnings=warnings,
+        )
+        if not owner_obj:
+            break
+
+        resolved.append((resource, owner_obj))
+        current = owner_obj
+
+    return resolved
 
 
 def fetch_live_snapshot(
@@ -263,38 +343,24 @@ def fetch_live_snapshot(
         )
         _add_object(context, "node", node)
         if node:
-            # Legacy compatibility for existing node rules
             context["node"] = node
 
-    # Owner controllers
-    owners = pod.get("metadata", {}).get("ownerReferences", [])
-    for owner in owners:
-        if not isinstance(owner, dict):
-            continue
-        owner_kind = owner.get("kind")
-        owner_name = owner.get("name")
-        if not owner_kind or not owner_name:
-            continue
-
-        resource = _resource_for_owner_kind(owner_kind)
-        if not resource:
-            continue
-
-        owner_obj = _safe_get_json(
-            resource,
-            owner_name,
-            namespace=namespace,
-            kube_context=kube_context,
-            kubeconfig=kubeconfig,
-            timeout_seconds=timeout_seconds,
-            warnings=warnings,
-        )
+    # Owner controller chain (Pod -> ReplicaSet -> Deployment, etc.)
+    owner_chain = _resolve_owner_chain(
+        start_obj=pod,
+        namespace=namespace,
+        kube_context=kube_context,
+        kubeconfig=kubeconfig,
+        timeout_seconds=timeout_seconds,
+        warnings=warnings,
+    )
+    for resource, owner_obj in owner_chain:
         _add_object(context, resource, owner_obj)
-
-        if owner_obj and "owner" not in context:
-            context["owner"] = owner_obj
+    if owner_chain:
+        context["owner"] = owner_chain[-1][1]
 
     # ServiceAccount
+    sa_obj: dict[str, Any] | None = None
     service_account = pod.get("spec", {}).get("serviceAccountName")
     if service_account:
         sa_obj = _safe_get_json(
@@ -308,8 +374,11 @@ def fetch_live_snapshot(
         )
         _add_object(context, "serviceaccount", sa_obj)
 
-    # Secrets
-    for secret_name in _extract_secret_names(pod):
+    # Secrets (Pod refs + ServiceAccount refs)
+    secret_names = set(_extract_secret_names_from_pod(pod))
+    secret_names.update(_extract_secret_names_from_serviceaccount(sa_obj))
+
+    for secret_name in sorted(secret_names):
         secret_obj = _safe_get_json(
             "secret",
             secret_name,
