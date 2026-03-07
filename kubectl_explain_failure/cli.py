@@ -37,6 +37,18 @@ def main():
         default=10,
         help="Kubectl request timeout in seconds (live mode)",
     )
+    parser.add_argument(
+        "--event-limit",
+        type=int,
+        default=200,
+        help="Maximum number of pod events to keep in live mode",
+    )
+    parser.add_argument(
+        "--event-chunk-size",
+        type=int,
+        default=200,
+        help="Kubectl server-side chunk size for live event listing",
+    )
 
     parser.add_argument(
         "--format",
@@ -83,20 +95,19 @@ def main():
             kube_context=args.kube_context,
             kubeconfig=args.kubeconfig,
             timeout_seconds=args.timeout,
+            event_limit=args.event_limit,
+            event_chunk_size=args.event_chunk_size,
         )
     else:
         if not args.pod or not args.events:
             parser.error("Snapshot mode requires --pod and --events")
 
-        # Build cross-object context
         context = build_context(args)
 
-        # Load core objects
         pod = load_json(args.pod)
         events_raw = load_json(args.events)
         events = normalize_events(events_raw)
 
-    # Load rules
     rules_folder = os.path.join(os.path.dirname(__file__), "rules")
     rules = load_rules(rule_folder=rules_folder)
 
@@ -112,7 +123,6 @@ def main():
             for warning in live_warnings:
                 print(f"[WARN] {warning}")
 
-    # Run engine
     result = explain_failure(
         pod,
         events,

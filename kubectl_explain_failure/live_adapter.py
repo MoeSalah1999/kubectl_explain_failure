@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from datetime import datetime
 from typing import Any
 
 from kubectl_explain_failure.engine import normalize_context
@@ -193,6 +194,40 @@ def _extract_secret_names_from_serviceaccount(sa_obj: dict[str, Any] | None) -> 
     return sorted(names)
 
 
+def _event_timestamp_value(event: dict[str, Any]) -> datetime | None:
+    ts = (
+        event.get("eventTime")
+        or event.get("lastTimestamp")
+        or event.get("firstTimestamp")
+        or event.get("metadata", {}).get("creationTimestamp")
+    )
+    if not ts or not isinstance(ts, str):
+        return None
+    try:
+        return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    except Exception:
+        return None
+
+
+def _sort_and_limit_events(
+    events: list[dict[str, Any]],
+    *,
+    event_limit: int,
+) -> list[dict[str, Any]]:
+    if event_limit <= 0:
+        return []
+
+    ordered = sorted(
+        events,
+        key=lambda e: (_event_timestamp_value(e) is None, _event_timestamp_value(e)),
+    )
+
+    if len(ordered) <= event_limit:
+        return ordered
+
+    return ordered[-event_limit:]
+
+
 def _resolve_owner_chain(
     *,
     start_obj: dict[str, Any],
@@ -257,6 +292,8 @@ def fetch_live_snapshot(
     kube_context: str | None = None,
     kubeconfig: str | None = None,
     timeout_seconds: int = 10,
+    event_limit: int = 200,
+    event_chunk_size: int = 200,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, Any], list[str]]:
     warnings: list[str] = []
 
@@ -278,7 +315,11 @@ def fetch_live_snapshot(
         kubeconfig=kubeconfig,
         timeout_seconds=timeout_seconds,
         warnings=warnings,
-        extra_args=[f"--field-selector={events_selector}"],
+        extra_args=[
+            f"--field-selector={events_selector}",
+            f"--chunk-size={max(1, event_chunk_size)}",
+            "--sort-by=.metadata.creationTimestamp",
+        ],
     )
 
     events: list[dict[str, Any]] = []
@@ -288,10 +329,10 @@ def fetch_live_snapshot(
             if events_raw.get("kind") == "List"
             else [events_raw]
         )
+    events = _sort_and_limit_events(events, event_limit=event_limit)
 
     context: dict[str, Any] = {"objects": {}}
 
-    # PVC -> PV -> StorageClass
     for pvc_name in _extract_pvc_names(pod):
         pvc = _safe_get_json(
             "pvc",
@@ -331,7 +372,6 @@ def fetch_live_snapshot(
                 )
                 _add_object(context, "storageclass", sc)
 
-    # Node
     node_name = pod.get("spec", {}).get("nodeName")
     if node_name:
         node = _safe_get_json(
@@ -347,7 +387,6 @@ def fetch_live_snapshot(
         if node:
             context["node"] = node
 
-    # Owner controller chain (Pod -> ReplicaSet -> Deployment, etc.)
     owner_chain = _resolve_owner_chain(
         start_obj=pod,
         namespace=namespace,
@@ -361,7 +400,6 @@ def fetch_live_snapshot(
     if owner_chain:
         context["owner"] = owner_chain[-1][1]
 
-    # ServiceAccount
     sa_obj: dict[str, Any] | None = None
     service_account = pod.get("spec", {}).get("serviceAccountName")
     if service_account:
@@ -376,7 +414,6 @@ def fetch_live_snapshot(
         )
         _add_object(context, "serviceaccount", sa_obj)
 
-    # Secrets (Pod refs + ServiceAccount refs)
     secret_names = set(_extract_secret_names_from_pod(pod))
     secret_names.update(_extract_secret_names_from_serviceaccount(sa_obj))
 
@@ -393,4 +430,3 @@ def fetch_live_snapshot(
         _add_object(context, "secret", secret_obj)
 
     return pod, events, normalize_context(context), warnings
-

@@ -100,7 +100,6 @@ def test_fetch_live_snapshot_discovers_dependency_objects(monkeypatch):
     assert "sa-token" in objects["secret"]
     assert "sa-pull-secret" in objects["secret"]
 
-    # Explicit validation: live context is canonicalized via normalize_context().
     assert context["owner"]["metadata"]["name"] == "deploy-a"
     assert context.get("pvc_unbound") is True
     assert context.get("blocking_pvc", {}).get("metadata", {}).get("name") == "pvc-a"
@@ -187,3 +186,41 @@ def test_fetch_live_snapshot_owner_chain_partial_failure_still_keeps_first_owner
     assert "owner" in context
     assert context["owner"]["metadata"]["name"] == "rs-a"
     assert warnings
+
+
+def test_fetch_live_snapshot_sorts_and_limits_events_for_timeline(monkeypatch):
+    pod_obj = {
+        "metadata": {"name": "mypod", "namespace": "default"},
+        "spec": {},
+        "status": {"phase": "Pending"},
+    }
+
+    events = {
+        "kind": "List",
+        "items": [
+            {"reason": "A", "lastTimestamp": "2024-01-01T00:03:00Z"},
+            {"reason": "B", "lastTimestamp": "2024-01-01T00:01:00Z"},
+            {"reason": "C", "lastTimestamp": "2024-01-01T00:02:00Z"},
+            {"reason": "D", "lastTimestamp": "2024-01-01T00:04:00Z"},
+        ],
+    }
+
+    def fake_get(kind, name=None, **kwargs):
+        if (kind, name) == ("pod", "mypod"):
+            return copy.deepcopy(pod_obj)
+        if (kind, name) == ("events", None):
+            return copy.deepcopy(events)
+        raise live_adapter.LiveIntrospectionError(f"not found: {kind}/{name}")
+
+    monkeypatch.setattr(live_adapter, "_kubectl_get_json", fake_get)
+
+    _, fetched_events, _, _ = live_adapter.fetch_live_snapshot(
+        pod_name="mypod",
+        namespace="default",
+        timeout_seconds=5,
+        event_limit=2,
+        event_chunk_size=50,
+    )
+
+    # Keep most recent 2 events and return them oldest->newest for timeline duration math.
+    assert [e["reason"] for e in fetched_events] == ["A", "D"]
