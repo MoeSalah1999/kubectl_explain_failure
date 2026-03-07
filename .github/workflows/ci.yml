@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_live:
+        description: "Run gated live integration tests"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  quality-and-tests:
+    name: "quality+tests (${{ matrix.os }}, py${{ matrix.python-version }})"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install package + dev deps
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .[dev]
+
+      - name: Format check
+        run: |
+          python -m black --check kubectl_explain_failure
+          python -m isort --check-only kubectl_explain_failure
+
+      - name: Lint
+        run: python -m ruff check kubectl_explain_failure
+
+      - name: Type check
+        run: python -m mypy kubectl_explain_failure
+
+      - name: Test suite
+        run: python -m pytest -q
+
+  live-integration:
+    name: "live integration (gated)"
+    needs: quality-and-tests
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_live == 'true' }}
+    runs-on: ubuntu-latest
+
+    env:
+      KUBECTL_EXPLAIN_FAILURE_RUN_LIVE_INTEGRATION: "1"
+      KUBECTL_EXPLAIN_FAILURE_LIVE_NAMESPACE: ${{ secrets.KUBECTL_EXPLAIN_FAILURE_LIVE_NAMESPACE }}
+      KUBECTL_EXPLAIN_FAILURE_LIVE_CONTEXT: ${{ secrets.KUBECTL_EXPLAIN_FAILURE_LIVE_CONTEXT }}
+      KUBECTL_EXPLAIN_FAILURE_LIVE_KUBECONFIG: ${{ secrets.KUBECTL_EXPLAIN_FAILURE_LIVE_KUBECONFIG }}
+      KUBECTL_EXPLAIN_FAILURE_LIVE_POD: ${{ secrets.KUBECTL_EXPLAIN_FAILURE_LIVE_POD }}
+      KUBECTL_EXPLAIN_FAILURE_LIVE_POD_PVC_PENDING: ${{ secrets.KUBECTL_EXPLAIN_FAILURE_LIVE_POD_PVC_PENDING }}
+      KUBECTL_EXPLAIN_FAILURE_LIVE_POD_SCHEDULING: ${{ secrets.KUBECTL_EXPLAIN_FAILURE_LIVE_POD_SCHEDULING }}
+      KUBECTL_EXPLAIN_FAILURE_LIVE_POD_CRASHLOOP: ${{ secrets.KUBECTL_EXPLAIN_FAILURE_LIVE_POD_CRASHLOOP }}
+      KUBECTL_EXPLAIN_FAILURE_LIVE_POD_IMAGEPULL: ${{ secrets.KUBECTL_EXPLAIN_FAILURE_LIVE_POD_IMAGEPULL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Install package + dev deps
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .[dev]
+
+      - name: Run gated live integration tests
+        run: |
+          python -m pytest -q kubectl_explain_failure/tests/integration

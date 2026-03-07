@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import json
+import logging
 import subprocess
 import time
-from datetime import datetime
+import uuid
+from datetime import datetime, timezone
 from typing import Any, Protocol
 
 from kubectl_explain_failure.engine import normalize_context
+
+LOGGER = logging.getLogger("kubectl_explain_failure.live")
 
 
 class LiveIntrospectionError(RuntimeError):
@@ -26,6 +30,25 @@ class LiveDataProvider(Protocol):
         extra_args: list[str] | None = None,
     ) -> dict[str, Any]:
         ...
+
+
+def _log_structured(
+    level: int,
+    event: str,
+    trace_id: str,
+    **fields: Any,
+) -> None:
+    payload = {
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "event": event,
+        "trace_id": trace_id,
+    }
+    payload.update(fields)
+    try:
+        LOGGER.log(level, json.dumps(payload, default=str, sort_keys=True))
+    except Exception:
+        # Logging must never affect diagnosis execution.
+        LOGGER.log(level, f"event={event} trace_id={trace_id}")
 
 
 def _is_retryable_error(exc: Exception) -> bool:
@@ -187,10 +210,11 @@ def _safe_get_json(
     timeout_seconds: int,
     warnings: list[str],
     missing_resources: list[dict[str, Any]],
+    trace_id: str,
     extra_args: list[str] | None = None,
 ) -> dict[str, Any] | None:
     try:
-        return provider.get_json(
+        obj = provider.get_json(
             kind,
             name,
             namespace=namespace,
@@ -199,16 +223,37 @@ def _safe_get_json(
             timeout_seconds=timeout_seconds,
             extra_args=extra_args,
         )
+        _log_structured(
+            logging.DEBUG,
+            "live.fetch.success",
+            trace_id,
+            kind=kind,
+            name=name,
+            namespace=namespace,
+        )
+        return obj
     except (LiveIntrospectionError, subprocess.TimeoutExpired) as exc:
+        reason = _classify_fetch_error(exc)
         warnings.append(str(exc))
         missing_resources.append(
             {
                 "kind": kind,
                 "name": name,
                 "namespace": namespace,
-                "reason": _classify_fetch_error(exc),
+                "reason": reason,
                 "error": str(exc),
+                "trace_id": trace_id,
             }
+        )
+        _log_structured(
+            logging.WARNING,
+            "live.fetch.failure",
+            trace_id,
+            kind=kind,
+            name=name,
+            namespace=namespace,
+            reason=reason,
+            error=str(exc),
         )
         return None
 
@@ -353,6 +398,7 @@ def _resolve_owner_chain(
     timeout_seconds: int,
     warnings: list[str],
     missing_resources: list[dict[str, Any]],
+    trace_id: str,
 ) -> list[tuple[str, dict[str, Any]]]:
     resolved: list[tuple[str, dict[str, Any]]] = []
     visited: set[tuple[str, str]] = set()
@@ -394,6 +440,7 @@ def _resolve_owner_chain(
             timeout_seconds=timeout_seconds,
             warnings=warnings,
             missing_resources=missing_resources,
+            trace_id=trace_id,
         )
         if not owner_obj:
             break
@@ -416,7 +463,9 @@ def fetch_live_snapshot(
     retry_count: int = 1,
     retry_backoff_seconds: float = 0.25,
     provider: LiveDataProvider | None = None,
+    trace_id: str | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, Any], list[str], dict[str, Any]]:
+    trace_id = trace_id or uuid.uuid4().hex
     provider = provider or KubectlLiveDataProvider(
         max_retries=retry_count,
         retry_backoff_seconds=retry_backoff_seconds,
@@ -425,14 +474,46 @@ def fetch_live_snapshot(
     warnings: list[str] = []
     missing_resources: list[dict[str, Any]] = []
 
-    pod = provider.get_json(
-        "pod",
-        pod_name,
+    _log_structured(
+        logging.INFO,
+        "live.pipeline.start",
+        trace_id,
+        pod_name=pod_name,
         namespace=namespace,
         kube_context=kube_context,
-        kubeconfig=kubeconfig,
-        timeout_seconds=timeout_seconds,
+        event_limit=event_limit,
+        event_chunk_size=event_chunk_size,
+        retry_count=retry_count,
     )
+
+    try:
+        pod = provider.get_json(
+            "pod",
+            pod_name,
+            namespace=namespace,
+            kube_context=kube_context,
+            kubeconfig=kubeconfig,
+            timeout_seconds=timeout_seconds,
+        )
+        _log_structured(
+            logging.INFO,
+            "live.fetch.success",
+            trace_id,
+            kind="pod",
+            name=pod_name,
+            namespace=namespace,
+        )
+    except (LiveIntrospectionError, subprocess.TimeoutExpired) as exc:
+        _log_structured(
+            logging.ERROR,
+            "live.pipeline.abort",
+            trace_id,
+            reason="pod_fetch_failed",
+            error=str(exc),
+            pod_name=pod_name,
+            namespace=namespace,
+        )
+        raise
 
     events_selector = f"involvedObject.kind=Pod,involvedObject.name={pod_name}"
     events_raw = _safe_get_json(
@@ -445,6 +526,7 @@ def fetch_live_snapshot(
         timeout_seconds=timeout_seconds,
         warnings=warnings,
         missing_resources=missing_resources,
+        trace_id=trace_id,
         extra_args=[
             f"--field-selector={events_selector}",
             f"--chunk-size={max(1, event_chunk_size)}",
@@ -474,6 +556,7 @@ def fetch_live_snapshot(
             timeout_seconds=timeout_seconds,
             warnings=warnings,
             missing_resources=missing_resources,
+            trace_id=trace_id,
         )
         _add_object(context, "pvc", pvc)
 
@@ -490,6 +573,7 @@ def fetch_live_snapshot(
                     timeout_seconds=timeout_seconds,
                     warnings=warnings,
                     missing_resources=missing_resources,
+                    trace_id=trace_id,
                 )
                 _add_object(context, "pv", pv)
 
@@ -505,6 +589,7 @@ def fetch_live_snapshot(
                     timeout_seconds=timeout_seconds,
                     warnings=warnings,
                     missing_resources=missing_resources,
+                    trace_id=trace_id,
                 )
                 _add_object(context, "storageclass", sc)
 
@@ -520,6 +605,7 @@ def fetch_live_snapshot(
             timeout_seconds=timeout_seconds,
             warnings=warnings,
             missing_resources=missing_resources,
+            trace_id=trace_id,
         )
         _add_object(context, "node", node)
         if node:
@@ -534,6 +620,7 @@ def fetch_live_snapshot(
         timeout_seconds=timeout_seconds,
         warnings=warnings,
         missing_resources=missing_resources,
+        trace_id=trace_id,
     )
     for resource, owner_obj in owner_chain:
         _add_object(context, resource, owner_obj)
@@ -553,6 +640,7 @@ def fetch_live_snapshot(
             timeout_seconds=timeout_seconds,
             warnings=warnings,
             missing_resources=missing_resources,
+            trace_id=trace_id,
         )
         _add_object(context, "serviceaccount", sa_obj)
 
@@ -570,6 +658,7 @@ def fetch_live_snapshot(
             timeout_seconds=timeout_seconds,
             warnings=warnings,
             missing_resources=missing_resources,
+            trace_id=trace_id,
         )
         _add_object(context, "secret", secret_obj)
 
@@ -595,6 +684,7 @@ def fetch_live_snapshot(
     }
 
     live_metadata = {
+        "trace_id": trace_id,
         "event_count": len(events),
         "fetch_warning_count": len(warnings),
         "fetched_object_counts": fetched_object_counts,
@@ -608,5 +698,17 @@ def fetch_live_snapshot(
             "rbac_missing_total": len(rbac_missing),
         },
     }
+
+    _log_structured(
+        logging.INFO,
+        "live.pipeline.complete",
+        trace_id,
+        pod_name=pod_name,
+        namespace=namespace,
+        event_count=len(events),
+        fetched_object_total=live_metadata["fetched_object_total"],
+        missing_total=live_metadata["completeness"]["missing_total"],
+        warning_count=len(warnings),
+    )
 
     return pod, events, normalize_context(context), warnings, live_metadata

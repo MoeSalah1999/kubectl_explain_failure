@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import shutil
 import subprocess
@@ -67,6 +68,8 @@ def _build_provenance_metadata(
         provenance["missing_kinds_by_reason"] = dict(
             live_metadata.get("missing_kinds_by_reason", {})
         )
+        if live_metadata.get("trace_id"):
+            provenance["trace_id"] = live_metadata["trace_id"]
 
     return provenance
 
@@ -111,26 +114,29 @@ def _emit_live_fatal_error(
     output_format: str,
     namespace: str,
     pod_name: str,
+    trace_id: str | None,
 ) -> None:
     if output_format in {"json", "yaml"}:
-        output_result(
-            {
-                "source": "live",
-                "error": message,
-                "root_cause": "Live introspection failed",
-                "confidence": 0.0,
-                "blocking": False,
-                "evidence": [],
-                "likely_causes": [],
-                "suggested_checks": [
-                    f"kubectl get pod {pod_name} -n {namespace}",
-                    f"kubectl get events -n {namespace}",
-                ],
-            },
-            output_format,
-        )
+        error_payload = {
+            "source": "live",
+            "error": message,
+            "root_cause": "Live introspection failed",
+            "confidence": 0.0,
+            "blocking": False,
+            "evidence": [],
+            "likely_causes": [],
+            "suggested_checks": [
+                f"kubectl get pod {pod_name} -n {namespace}",
+                f"kubectl get events -n {namespace}",
+            ],
+        }
+        if trace_id:
+            error_payload["trace_id"] = trace_id
+
+        output_result(error_payload, output_format)
     else:
-        print(f"[ERROR] {message}")
+        suffix = f" [trace_id={trace_id}]" if trace_id else ""
+        print(f"[ERROR] {message}{suffix}")
 
 
 def main():
@@ -181,6 +187,11 @@ def main():
         default=0.25,
         help="Initial retry backoff in seconds for live mode",
     )
+    parser.add_argument(
+        "--trace-id",
+        default=None,
+        help="Optional trace identifier to correlate live fetch logs",
+    )
 
     parser.add_argument(
         "--format",
@@ -209,6 +220,9 @@ def main():
 
     args = parser.parse_args()
 
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+
     live_warnings: list[str] = []
     live_metadata: dict | None = None
 
@@ -235,6 +249,7 @@ def main():
                 event_chunk_size=args.event_chunk_size,
                 retry_count=args.retries,
                 retry_backoff_seconds=args.retry_backoff,
+                trace_id=args.trace_id,
             )
         except (LiveIntrospectionError, subprocess.TimeoutExpired, OSError) as exc:
             _emit_live_fatal_error(
@@ -242,6 +257,7 @@ def main():
                 output_format=args.format,
                 namespace=args.namespace,
                 pod_name=pod_name,
+                trace_id=args.trace_id,
             )
             raise SystemExit(2) from exc
 

@@ -23,7 +23,7 @@ Kubernetes gives you:
 
 You still have to manually answer:
 
-> “What is the most likely reason this Pod is failing?”
+> "What is the most likely reason this Pod is failing?"
 
 This tool answers that question using:
 
@@ -74,10 +74,10 @@ Supported first-class objects include:
 
 ### Rules can declare:
 
-> “requires = {
+> "requires = {
     "objects": ["pvc", "pv"],
     "optional": ["storageclass"]
-}”
+}"
 
 The engine normalizes legacy flat context into this object-graph model automatically.
 Object state always has precedence over raw Events.
@@ -163,9 +163,9 @@ Final confidence is computed as:
 
 > confidence =
       rule_confidence
-      × evidence_quality
-      × data_completeness
-      × conflict_penalty
+      * evidence_quality
+      * data_completeness
+      * conflict_penalty
 
 
 This makes confidence:
@@ -310,6 +310,33 @@ This ensures you can import the package as:
 
 and run tests or scripts directly.
 
+## Installation (Packaged)
+
+Install the packaged CLI/plugin entrypoint:
+
+- `python -m pip install kubectl-explain-failure`
+
+This installs the console script:
+
+- `kubectl-explain-failure`
+
+For local packaged testing from source:
+
+- `python -m pip install .`
+
+# Versioning and Changelog
+
+- Versioning uses Semantic Versioning.
+- Current release version is `0.1.0`.
+- Release history is tracked in `CHANGELOG.md`.
+
+## Release checklist
+
+- Bump `version` in `pyproject.toml`
+- Add release notes under a new version in `CHANGELOG.md`
+- Tag release in git
+- Publish package build
+
 # Usage
 ## Snapshot mode (file inputs):
 python -m kubectl_explain_failure \
@@ -337,6 +364,7 @@ python -m kubectl_explain_failure \
 - `--timeout`
 - `--event-limit`, `--event-chunk-size`
 - `--retries`, `--retry-backoff`
+- `--trace-id` (correlate structured live-fetch logs across components)
 
 ### Kubectl plugin wrapper:
 The `kubectl-explain-failure` plugin forwards directly to the live CLI path.
@@ -357,6 +385,22 @@ Example:
 - metadata
 
 Output is fully deterministic for identical inputs.
+
+# CI and Live Test Gating
+
+GitHub Actions workflow is defined at:
+
+- `.github/workflows/ci.yml`
+
+It provides:
+
+- Matrix quality/test job across OS and Python versions
+- Gated live integration job (manual dispatch only)
+
+## Running gated live job
+
+- Trigger workflow with `run_live=true`
+- Configure required repository secrets for live-cluster pod targets and kube access
 
 # Testing
 
@@ -519,6 +563,7 @@ This is a **diagnostic explainer**, not a fixer.
 - Additional provider implementations behind the live adapter interface
 
 License: MIT
+
 
 
 
