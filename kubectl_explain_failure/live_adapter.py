@@ -22,6 +22,18 @@ def _resource_for_owner_kind(kind: str) -> str | None:
     return mapping.get(kind)
 
 
+def _classify_fetch_error(exc: Exception) -> str:
+    if isinstance(exc, subprocess.TimeoutExpired):
+        return "timeout"
+
+    msg = str(exc).lower()
+    if "forbidden" in msg or "cannot list resource" in msg or "cannot get resource" in msg:
+        return "rbac_forbidden"
+    if "not found" in msg or "notfound" in msg:
+        return "not_found"
+    return "other"
+
+
 def _kubectl_get_json(
     kind: str,
     name: str | None = None,
@@ -81,6 +93,7 @@ def _safe_get_json(
     kubeconfig: str | None,
     timeout_seconds: int,
     warnings: list[str],
+    missing_resources: list[dict[str, Any]],
     extra_args: list[str] | None = None,
 ) -> dict[str, Any] | None:
     try:
@@ -95,6 +108,15 @@ def _safe_get_json(
         )
     except (LiveIntrospectionError, subprocess.TimeoutExpired) as exc:
         warnings.append(str(exc))
+        missing_resources.append(
+            {
+                "kind": kind,
+                "name": name,
+                "namespace": namespace,
+                "reason": _classify_fetch_error(exc),
+                "error": str(exc),
+            }
+        )
         return None
 
 
@@ -236,6 +258,7 @@ def _resolve_owner_chain(
     kubeconfig: str | None,
     timeout_seconds: int,
     warnings: list[str],
+    missing_resources: list[dict[str, Any]],
 ) -> list[tuple[str, dict[str, Any]]]:
     resolved: list[tuple[str, dict[str, Any]]] = []
     visited: set[tuple[str, str]] = set()
@@ -275,6 +298,7 @@ def _resolve_owner_chain(
             kubeconfig=kubeconfig,
             timeout_seconds=timeout_seconds,
             warnings=warnings,
+            missing_resources=missing_resources,
         )
         if not owner_obj:
             break
@@ -294,8 +318,9 @@ def fetch_live_snapshot(
     timeout_seconds: int = 10,
     event_limit: int = 200,
     event_chunk_size: int = 200,
-) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, Any], list[str]]:
+) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, Any], list[str], dict[str, Any]]:
     warnings: list[str] = []
+    missing_resources: list[dict[str, Any]] = []
 
     pod = _kubectl_get_json(
         "pod",
@@ -315,6 +340,7 @@ def fetch_live_snapshot(
         kubeconfig=kubeconfig,
         timeout_seconds=timeout_seconds,
         warnings=warnings,
+        missing_resources=missing_resources,
         extra_args=[
             f"--field-selector={events_selector}",
             f"--chunk-size={max(1, event_chunk_size)}",
@@ -342,6 +368,7 @@ def fetch_live_snapshot(
             kubeconfig=kubeconfig,
             timeout_seconds=timeout_seconds,
             warnings=warnings,
+            missing_resources=missing_resources,
         )
         _add_object(context, "pvc", pvc)
 
@@ -356,6 +383,7 @@ def fetch_live_snapshot(
                     kubeconfig=kubeconfig,
                     timeout_seconds=timeout_seconds,
                     warnings=warnings,
+                    missing_resources=missing_resources,
                 )
                 _add_object(context, "pv", pv)
 
@@ -369,6 +397,7 @@ def fetch_live_snapshot(
                     kubeconfig=kubeconfig,
                     timeout_seconds=timeout_seconds,
                     warnings=warnings,
+                    missing_resources=missing_resources,
                 )
                 _add_object(context, "storageclass", sc)
 
@@ -382,6 +411,7 @@ def fetch_live_snapshot(
             kubeconfig=kubeconfig,
             timeout_seconds=timeout_seconds,
             warnings=warnings,
+            missing_resources=missing_resources,
         )
         _add_object(context, "node", node)
         if node:
@@ -394,6 +424,7 @@ def fetch_live_snapshot(
         kubeconfig=kubeconfig,
         timeout_seconds=timeout_seconds,
         warnings=warnings,
+        missing_resources=missing_resources,
     )
     for resource, owner_obj in owner_chain:
         _add_object(context, resource, owner_obj)
@@ -411,6 +442,7 @@ def fetch_live_snapshot(
             kubeconfig=kubeconfig,
             timeout_seconds=timeout_seconds,
             warnings=warnings,
+            missing_resources=missing_resources,
         )
         _add_object(context, "serviceaccount", sa_obj)
 
@@ -426,7 +458,19 @@ def fetch_live_snapshot(
             kubeconfig=kubeconfig,
             timeout_seconds=timeout_seconds,
             warnings=warnings,
+            missing_resources=missing_resources,
         )
         _add_object(context, "secret", secret_obj)
 
-    return pod, events, normalize_context(context), warnings
+    rbac_missing = [m for m in missing_resources if m.get("reason") == "rbac_forbidden"]
+
+    live_metadata = {
+        "missing_resources": missing_resources,
+        "missing_due_to_rbac": rbac_missing,
+        "completeness": {
+            "missing_total": len(missing_resources),
+            "rbac_missing_total": len(rbac_missing),
+        },
+    }
+
+    return pod, events, normalize_context(context), warnings, live_metadata

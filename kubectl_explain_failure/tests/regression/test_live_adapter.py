@@ -76,7 +76,7 @@ def test_fetch_live_snapshot_discovers_dependency_objects(monkeypatch):
 
     monkeypatch.setattr(live_adapter, "_kubectl_get_json", fake_get)
 
-    pod, events, context, warnings = live_adapter.fetch_live_snapshot(
+    pod, events, context, warnings, live_metadata = live_adapter.fetch_live_snapshot(
         pod_name="mypod",
         namespace="default",
         timeout_seconds=5,
@@ -85,6 +85,7 @@ def test_fetch_live_snapshot_discovers_dependency_objects(monkeypatch):
     assert pod["metadata"]["name"] == "mypod"
     assert events and events[0]["reason"] == "FailedScheduling"
     assert warnings == []
+    assert live_metadata["completeness"]["missing_total"] == 0
 
     objects = context["objects"]
     assert "pvc-a" in objects["pvc"]
@@ -132,7 +133,7 @@ def test_fetch_live_snapshot_keeps_partial_context_on_fetch_failures(monkeypatch
 
     monkeypatch.setattr(live_adapter, "_kubectl_get_json", fake_get)
 
-    pod, events, context, warnings = live_adapter.fetch_live_snapshot(
+    pod, events, context, warnings, live_metadata = live_adapter.fetch_live_snapshot(
         pod_name="mypod",
         namespace="default",
         timeout_seconds=5,
@@ -142,6 +143,7 @@ def test_fetch_live_snapshot_keeps_partial_context_on_fetch_failures(monkeypatch
     assert events == []
     assert "node" in context["objects"]
     assert warnings
+    assert live_metadata["completeness"]["missing_total"] >= 1
 
 
 def test_fetch_live_snapshot_owner_chain_partial_failure_still_keeps_first_owner(monkeypatch):
@@ -175,7 +177,7 @@ def test_fetch_live_snapshot_owner_chain_partial_failure_still_keeps_first_owner
 
     monkeypatch.setattr(live_adapter, "_kubectl_get_json", fake_get)
 
-    _, _, context, warnings = live_adapter.fetch_live_snapshot(
+    _, _, context, warnings, live_metadata = live_adapter.fetch_live_snapshot(
         pod_name="mypod",
         namespace="default",
         timeout_seconds=5,
@@ -186,6 +188,7 @@ def test_fetch_live_snapshot_owner_chain_partial_failure_still_keeps_first_owner
     assert "owner" in context
     assert context["owner"]["metadata"]["name"] == "rs-a"
     assert warnings
+    assert any(m["reason"] == "rbac_forbidden" for m in live_metadata["missing_resources"])
 
 
 def test_fetch_live_snapshot_sorts_and_limits_events_for_timeline(monkeypatch):
@@ -214,7 +217,7 @@ def test_fetch_live_snapshot_sorts_and_limits_events_for_timeline(monkeypatch):
 
     monkeypatch.setattr(live_adapter, "_kubectl_get_json", fake_get)
 
-    _, fetched_events, _, _ = live_adapter.fetch_live_snapshot(
+    _, fetched_events, _, _, _ = live_adapter.fetch_live_snapshot(
         pod_name="mypod",
         namespace="default",
         timeout_seconds=5,
@@ -222,5 +225,4 @@ def test_fetch_live_snapshot_sorts_and_limits_events_for_timeline(monkeypatch):
         event_chunk_size=50,
     )
 
-    # Keep most recent 2 events and return them oldest->newest for timeline duration math.
     assert [e["reason"] for e in fetched_events] == ["A", "D"]

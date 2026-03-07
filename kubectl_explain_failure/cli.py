@@ -9,19 +9,36 @@ from kubectl_explain_failure.model import load_json, normalize_events
 from kubectl_explain_failure.output import output_result
 
 
+def _apply_live_completeness_penalty(result: dict, live_metadata: dict) -> None:
+    confidence = float(result.get("confidence", 0.0))
+    rbac_missing = len(live_metadata.get("missing_due_to_rbac", []))
+
+    if rbac_missing <= 0:
+        return
+
+    # Penalize confidence when RBAC blocks context needed for full diagnosis.
+    penalty = min(0.35, 0.05 * rbac_missing)
+    adjusted = max(0.0, min(1.0, confidence * (1.0 - penalty)))
+
+    result["confidence"] = adjusted
+    result.setdefault("confidence_adjustments", []).append(
+        {
+            "reason": "rbac_missing_context",
+            "penalty_factor": round(penalty, 4),
+            "rbac_missing_total": rbac_missing,
+        }
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Explain Kubernetes Pod failures")
 
-    # Live-style positional usage:
-    # kubectl explain-failure pod <name> --live
     parser.add_argument("resource", nargs="?", help="Live mode resource (pod|pods)")
     parser.add_argument("name", nargs="?", help="Live mode pod name")
 
-    # Snapshot mode inputs
     parser.add_argument("--pod", help="Path to Pod JSON (snapshot mode)")
     parser.add_argument("--events", help="Path to Events JSON (snapshot mode)")
 
-    # Live mode controls
     parser.add_argument("--live", action="store_true", help="Fetch data from a live cluster")
     parser.add_argument("--pod-name", help="Pod name for live mode")
     parser.add_argument("--namespace", default="default", help="Kubernetes namespace for live mode")
@@ -78,6 +95,7 @@ def main():
     args = parser.parse_args()
 
     live_warnings: list[str] = []
+    live_metadata: dict | None = None
 
     if args.live:
         if args.resource and args.resource not in {"pod", "pods"}:
@@ -89,7 +107,7 @@ def main():
                 "Live mode requires pod name: use 'pod <name> --live' or '--pod-name <name> --live'"
             )
 
-        pod, events, context, live_warnings = fetch_live_snapshot(
+        pod, events, context, live_warnings, live_metadata = fetch_live_snapshot(
             pod_name=pod_name,
             namespace=args.namespace,
             kube_context=args.kube_context,
@@ -136,6 +154,10 @@ def main():
     result["source"] = "live" if args.live else "snapshot"
     if live_warnings:
         result["live_warnings"] = live_warnings
+
+    if live_metadata:
+        _apply_live_completeness_penalty(result, live_metadata)
+        result["live_metadata"] = live_metadata
 
     if not rules:
         print("[WARNING] No rules loaded, check your rules/ and plugins/ folders")
