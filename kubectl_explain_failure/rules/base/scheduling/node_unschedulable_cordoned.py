@@ -102,6 +102,11 @@ class NodeUnschedulableCordonedRule(FailureRule):
                     role="scheduler_root",
                     blocking=True,
                 ),
+                Cause(
+                    code="POD_PENDING_NO_SCHEDULABLE_NODE",
+                    message="Pod remains pending because nodes are unschedulable",
+                    role="workload_symptom",
+                ),
             ]
         )
 
