@@ -196,6 +196,7 @@ Confidence is always bounded to [0,1].
 - FailedScheduling
 - AffinityUnsatisfiable
 - TopologySpreadUnsatisfiable
+- PodTopologySpreadSkewTooHigh
 - NodeSelectorMismatch
 - InsufficientResources
 - UnschedulableTaint
