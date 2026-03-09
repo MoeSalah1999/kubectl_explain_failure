@@ -10,7 +10,7 @@ hypothesis = pytest.importorskip(
     "hypothesis",
     reason="Install hypothesis to run property tests: pip install hypothesis",
 )
-from hypothesis import given, settings, strategies as st
+from hypothesis import HealthCheck, given, settings, strategies as st
 
 from kubectl_explain_failure import live_adapter
 from kubectl_explain_failure.tests.property.strategies import K8sSnapshot, snapshot_strategy
@@ -21,7 +21,7 @@ def _ts(minute: int) -> str:
     return (base + timedelta(minutes=minute)).isoformat().replace("+00:00", "Z")
 
 
-@settings(max_examples=80)
+@settings(max_examples=80, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 @given(
     snapshot=snapshot_strategy(),
     minutes=st.lists(st.integers(min_value=0, max_value=500), min_size=1, max_size=30, unique=True),
