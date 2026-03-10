@@ -220,6 +220,7 @@ Confidence is always bounded to [0,1].
 - NodePIDPressure
 - NodeDiskPressure
 - EvictedRule
+- EphemeralStorageExceeded
 - Compound:
     - NodeNotReadyEvicted
     - PVCBoundThenNodePressure
@@ -256,6 +257,7 @@ Confidence is always bounded to [0,1].
 - ContainerRuntimePermissionDenied
 - CrashLoopBackoff
 - OOMKilled containers
+- ReadOnlyRootFilesystemWriteAttempt
 - Compound:
     - CrashLoopOOMKilled
     - CrashLoopLivenessProbe
