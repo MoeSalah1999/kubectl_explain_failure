@@ -183,6 +183,7 @@ Confidence is always bounded to [0,1].
 ## Admission & Policy
 
 - AdmissionWebhookDenied
+- ImagePolicyWebhookRejected
 - PrivilegedNotAllowed
 - SecurityContextViolation
 - LimitRangeViolation
@@ -206,6 +207,7 @@ Confidence is always bounded to [0,1].
 - HostPortConflict
 - PreemptedByHigherPriority
 - RuntimeClassNotFound
+- RegistryRateLimited
 - Compound:
     - SchedulingFlapping
     - PendingUnschedulable
@@ -247,6 +249,7 @@ Confidence is always bounded to [0,1].
 - ImagePullError
 - ImagePullBackOff
 - ImagePullSecretMissing
+- ImageArchitectureMismatch
 - InvalidEntrypoint
 - ContainerCreateConfigError
 - CrashLoopBackoff
@@ -257,6 +260,7 @@ Confidence is always bounded to [0,1].
     - CrashLoopAfterConfigChange
     - ImagePullSecretMissingCompound
     - ImageUpdatedThenCrashLoop
+    - ImageTagMutableDrift
     - RapidRestartEscalation
 
 ## Probes
