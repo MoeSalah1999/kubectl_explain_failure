@@ -252,6 +252,8 @@ Confidence is always bounded to [0,1].
 - ImageArchitectureMismatch
 - InvalidEntrypoint
 - ContainerCreateConfigError
+- ContainerRuntimeStartFailure
+- ContainerRuntimePermissionDenied
 - CrashLoopBackoff
 - OOMKilled containers
 - Compound:
