@@ -258,6 +258,8 @@ Confidence is always bounded to [0,1].
 - CrashLoopBackoff
 - OOMKilled containers
 - ReadOnlyRootFilesystemWriteAttempt
+- PreStopHookFailure
+- TerminationGracePeriodExceeded
 - Compound:
     - CrashLoopOOMKilled
     - CrashLoopLivenessProbe
