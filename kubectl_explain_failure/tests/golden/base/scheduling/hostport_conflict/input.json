@@ -22,7 +22,8 @@
     {
       "type": "Warning",
       "reason": "FailedScheduling",
-      "message": "0/3 nodes are available: 1 node(s) had port conflicts"
+      "message": "0/3 nodes are available: 1 node(s) had port conflicts",
+      "lastTimestamp": "2026-03-10T12:00:00Z"
     }
   ]
 }

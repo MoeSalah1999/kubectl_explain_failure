@@ -39,9 +39,9 @@ class PodTopologySpreadSkewTooHighRule(FailureRule):
 
     name = "PodTopologySpreadSkewTooHigh"
     category = "Scheduling"
-    priority = 54
+    priority = 20
     deterministic = True
-
+    blocks = []
     requires = {
         "pod": True,
     }

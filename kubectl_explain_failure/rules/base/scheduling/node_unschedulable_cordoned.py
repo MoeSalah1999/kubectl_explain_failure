@@ -22,7 +22,7 @@ class NodeUnschedulableCordonedRule(FailureRule):
 
     name = "NodeUnschedulableCordoned"
     category = "Scheduling"
-    priority = 56
+    priority = 17
     deterministic = True
 
     requires = {

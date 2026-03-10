@@ -197,15 +197,20 @@ Confidence is always bounded to [0,1].
 - AffinityUnsatisfiable
 - TopologySpreadUnsatisfiable
 - PodTopologySpreadSkewTooHigh
+- PodOverheadExceededNodeCapacity
 - NodeSelectorMismatch
+- NodeUnschedulableCordoned
+- ExtendedResourceUnavailable
 - InsufficientResources
 - UnschedulableTaint
 - HostPortConflict
 - PreemptedByHigherPriority
+- RuntimeClassNotFound
 - Compound:
     - SchedulingFlapping
     - PendingUnschedulable
     - PriorityPreemptionChain
+    - SchedulingTimeoutExceeded
 
 ## Node & Eviction
 
@@ -267,6 +272,7 @@ Confidence is always bounded to [0,1].
 - CNIPluginFailure
 - Compound:
     - NetworkPolicyBlocked
+    - HostNetworkPortConflict
 
 ## Controllers / Owners
 
