@@ -209,7 +209,6 @@ Confidence is always bounded to [0,1].
 - HostPortConflict
 - PreemptedByHigherPriority
 - RuntimeClassNotFound
-- RegistryRateLimited
 - Compound:
     - SchedulingFlapping
     - PendingUnschedulable
@@ -263,7 +262,8 @@ Confidence is always bounded to [0,1].
 - ContainerRuntimeStartFailure
 - ContainerRuntimePermissionDenied
 - CrashLoopBackoff
-- OOMKilled containers
+- RegistryRateLimited
+- OOMKilled
 - ReadOnlyRootFilesystemWriteAttempt
 - PreStopHookFailure
 - TerminationGracePeriodExceeded
