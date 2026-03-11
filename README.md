@@ -285,6 +285,7 @@ Confidence is always bounded to [0,1].
 
 - DNSResolutionFailure
 - CNIPluginFailure
+- CNIIPExhaustion
 - ServiceEndpointsEmpty
 - ServiceNotFound
 - Compound:
