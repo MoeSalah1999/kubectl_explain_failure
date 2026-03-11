@@ -233,6 +233,7 @@ Confidence is always bounded to [0,1].
 - PVReleasedOrFailed
 - PVCMountFailed
 - FailedMount
+- FilesystemResizePending
 - PVCZoneMismatch
 - StorageClassProvisionerMissing
 - ReadWriteOnceMultiNodeConflict
