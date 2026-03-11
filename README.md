@@ -299,7 +299,11 @@ Confidence is always bounded to [0,1].
 - DeploymentProgressDeadlineExceeded
 - StatefulSetUpdateBlocked
 - HeadlessServiceMissingForStatefulSet
+- DeploymentReplicaMismatch
+- PodDisruptionBudgetBlocking
+- DaemonSetNodeSelectorMismatch
 - Compound:
+    - HPAUnableToScale
     - OwnerBlockedPod
 
 ## Multi-Container / Init
