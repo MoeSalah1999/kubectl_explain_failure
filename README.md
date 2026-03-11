@@ -191,6 +191,8 @@ Confidence is always bounded to [0,1].
 - RBACForbidden
 - ServiceAccountMissing
 - ServiceAccountRBAC
+- ExpiredServiceAccountToken
+- TokenProjectionFailure
 
 ## Scheduling & Placement
 
