@@ -228,12 +228,14 @@ Confidence is always bounded to [0,1].
 
 ## Storage & Volume
 
+- AccessModeMismatch
 - PVCNotBound
 - PVReleasedOrFailed
 - PVCMountFailed
 - FailedMount
 - PVCZoneMismatch
 - StorageClassProvisionerMissing
+- ReadWriteOnceMultiNodeConflict
 - ConfigMapNotFound
 - VolumeAttachmentTimeout
 - CSIPluginNotRegistered
