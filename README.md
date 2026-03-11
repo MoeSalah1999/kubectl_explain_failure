@@ -297,6 +297,7 @@ Confidence is always bounded to [0,1].
 - ReplicaSetUnavailable
 - DeploymentProgressDeadlineExceeded
 - StatefulSetUpdateBlocked
+- HeadlessServiceMissingForStatefulSet
 - Compound:
     - OwnerBlockedPod
 
