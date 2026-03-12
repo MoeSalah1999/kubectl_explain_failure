@@ -193,6 +193,7 @@ Confidence is always bounded to [0,1].
 - ServiceAccountRBAC
 - ExpiredServiceAccountToken
 - TokenProjectionFailure
+- EtcdObjectSizeLimitExceeded
 
 ## Scheduling & Placement
 
@@ -307,6 +308,8 @@ Confidence is always bounded to [0,1].
 - DeploymentReplicaMismatch
 - PodDisruptionBudgetBlocking
 - DaemonSetNodeSelectorMismatch
+- ImmutableFieldUpdateRejected
+- CRDConversionWebhookFailure
 - Compound:
     - HPAUnableToScale
     - OwnerBlockedPod
