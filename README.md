@@ -223,9 +223,11 @@ Confidence is always bounded to [0,1].
 - EvictedRule
 - EphemeralStorageExceeded
 - Compound:
+    - CrashLoopAfterNodeDrain
     - NodeNotReadyEvicted
     - PVCBoundThenNodePressure
     - PVCBoundNodeDiskPressureMount
+    - ConfigChangedButPodNotRestarted
 
 ## Storage & Volume
 
@@ -291,6 +293,7 @@ Confidence is always bounded to [0,1].
 - ServiceEndpointsEmpty
 - ServiceNotFound
 - Compound:
+    - IntermittentNetworkFlapping
     - NetworkPolicyBlocked
     - HostNetworkPortConflict
 
@@ -307,6 +310,7 @@ Confidence is always bounded to [0,1].
 - Compound:
     - HPAUnableToScale
     - OwnerBlockedPod
+    - RollingUpdateStuckMidway
 
 ## Multi-Container / Init
 
