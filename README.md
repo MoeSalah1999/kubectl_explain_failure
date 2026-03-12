@@ -226,6 +226,7 @@ Confidence is always bounded to [0,1].
 - Evicted
 - EphemeralStorageExceeded
 - Compound:
+    - ConflictingNodeConditions
     - CrashLoopAfterNodeDrain
     - NodeNotReadyEvicted
     - PVCBoundThenNodePressure
@@ -332,6 +333,7 @@ Confidence is always bounded to [0,1].
 ## Engine-Level / Resolution
 
 - Compound:
+    - RootCauseAmbiguity
     - ConflictingSignalsResolution
 
 

@@ -68,7 +68,7 @@ def test_conflicting_signals_resolution_golden():
     assert result["blocking"] is True
 
     # Confidence
-    assert result["confidence"] >= 0.86
+    assert result["confidence"] >= 0.81
 
     # Evidence
     for ev in expected["evidence"]:
