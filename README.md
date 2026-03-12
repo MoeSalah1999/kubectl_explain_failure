@@ -209,7 +209,9 @@ Confidence is always bounded to [0,1].
 - HostPortConflict
 - PreemptedByHigherPriority
 - RuntimeClassNotFound
+- RegistryRateLimited
 - Compound:
+    - HostNetworkPortConflict
     - SchedulingFlapping
     - PendingUnschedulable
     - PriorityPreemptionChain
@@ -220,7 +222,7 @@ Confidence is always bounded to [0,1].
 - NodeMemoryPressure
 - NodePIDPressure
 - NodeDiskPressure
-- EvictedRule
+- Evicted
 - EphemeralStorageExceeded
 - Compound:
     - CrashLoopAfterNodeDrain
@@ -228,6 +230,7 @@ Confidence is always bounded to [0,1].
     - PVCBoundThenNodePressure
     - PVCBoundNodeDiskPressureMount
     - ConfigChangedButPodNotRestarted
+    - ClusterResourceStarvationCascade
 
 ## Storage & Volume
 
@@ -240,7 +243,6 @@ Confidence is always bounded to [0,1].
 - PVCZoneMismatch
 - StorageClassProvisionerMissing
 - ReadWriteOnceMultiNodeConflict
-- ConfigMapNotFound
 - VolumeAttachmentTimeout
 - CSIPluginNotRegistered
 - Compound:
@@ -264,7 +266,6 @@ Confidence is always bounded to [0,1].
 - ContainerRuntimeStartFailure
 - ContainerRuntimePermissionDenied
 - CrashLoopBackoff
-- RegistryRateLimited
 - OOMKilled
 - ReadOnlyRootFilesystemWriteAttempt
 - PreStopHookFailure
@@ -283,6 +284,7 @@ Confidence is always bounded to [0,1].
 - ReadinessProbeFailure
 - StartupProbeFailure
 - Compound:
+    - ProbeTooAggressiveCausingRestarts
     - RepeatedProbeFailureEscalation
 
 ## Networking
@@ -291,11 +293,9 @@ Confidence is always bounded to [0,1].
 - CNIPluginFailure
 - CNIIPExhaustion
 - ServiceEndpointsEmpty
-- ServiceNotFound
 - Compound:
     - IntermittentNetworkFlapping
     - NetworkPolicyBlocked
-    - HostNetworkPortConflict
 
 ## Controllers / Owners
 
@@ -311,6 +311,11 @@ Confidence is always bounded to [0,1].
     - HPAUnableToScale
     - OwnerBlockedPod
     - RollingUpdateStuckMidway
+
+## Configuration / Dependency
+
+- ConfigMapNotFound
+- ServiceNotFound
 
 ## Multi-Container / Init
 
