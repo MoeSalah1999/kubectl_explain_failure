@@ -1,0 +1,30 @@
+{
+  "root_cause": "Pod runtime overhead causes effective resource requirements to exceed node capacity",
+  "blocking": true,
+  "evidence": [
+    "Pod.spec.overhead defined"
+  ],
+  "causes": [
+    {
+      "code": "POD_RUNTIME_OVERHEAD_DEFINED",
+      "message": "Pod runtime overhead added to container resource requests",
+      "role": "scheduling_context"
+    },
+    {
+      "code": "EFFECTIVE_RESOURCE_EXCEEDS_NODE_CAPACITY",
+      "message": "Effective resource requirements exceed available node capacity",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_PENDING_INSUFFICIENT_CAPACITY",
+      "message": "Scheduler cannot place Pod due to effective resource requirements",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:overhead-pod": [
+      "Pod.spec.overhead defined"
+    ]
+  }
+}

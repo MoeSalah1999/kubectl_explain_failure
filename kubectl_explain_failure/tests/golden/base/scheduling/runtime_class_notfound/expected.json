@@ -1,0 +1,32 @@
+{
+  "root_cause": "Pod references a RuntimeClass that does not exist",
+  "blocking": true,
+  "evidence": [
+    "Pod.spec.runtimeClassName=gvisor",
+    "Referenced RuntimeClass object missing from cluster"
+  ],
+  "causes": [
+    {
+      "code": "RUNTIMECLASS_REFERENCED",
+      "message": "Pod specifies a runtimeClassName",
+      "role": "scheduling_context"
+    },
+    {
+      "code": "RUNTIMECLASS_NOT_FOUND",
+      "message": "Referenced RuntimeClass does not exist in the cluster",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_SANDBOX_CREATION_FAILED",
+      "message": "Container runtime cannot create Pod sandbox without a valid RuntimeClass",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:runtimeclass-pod": [
+      "runtimeClassName=gvisor",
+      "RuntimeClass resource not found"
+    ]
+  }
+}

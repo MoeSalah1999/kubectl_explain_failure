@@ -86,12 +86,12 @@ class RuntimeClassNotFoundRule(FailureRule):
                 Cause(
                     code="RUNTIMECLASS_REFERENCED",
                     message="Pod specifies a runtimeClassName",
-                    role="scheduler_context",
+                    role="scheduling_context",
                 ),
                 Cause(
                     code="RUNTIMECLASS_NOT_FOUND",
                     message="Referenced RuntimeClass does not exist in the cluster",
-                    role="scheduler_root",
+                    role="scheduling_root",
                     blocking=True,
                 ),
                 Cause(

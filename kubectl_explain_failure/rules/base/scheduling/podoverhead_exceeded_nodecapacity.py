@@ -39,12 +39,10 @@ class PodOverheadExceededNodeCapacityRule(FailureRule):
         if not overhead:
             return False
 
-        timeline = build_timeline(events)
-
-        failed_sched = timeline.events_within_window(
-            15,
-            reason="FailedScheduling",
-        )
+        failed_sched = [
+            e for e in events
+            if e.get("reason") == "FailedScheduling"
+        ]
 
         if not failed_sched:
             return False
@@ -64,7 +62,7 @@ class PodOverheadExceededNodeCapacityRule(FailureRule):
         spec = pod.get("spec", {})
         overhead = spec.get("overhead", {})
 
-        timeline = build_timeline(events)
+        timeline = context.get("timeline")
 
         failed_sched = timeline.events_within_window(
             15,
@@ -86,12 +84,12 @@ class PodOverheadExceededNodeCapacityRule(FailureRule):
                 Cause(
                     code="POD_RUNTIME_OVERHEAD_DEFINED",
                     message="Pod runtime overhead added to container resource requests",
-                    role="scheduler_context",
+                    role="scheduling_context",
                 ),
                 Cause(
                     code="EFFECTIVE_RESOURCE_EXCEEDS_NODE_CAPACITY",
                     message="Effective resource requirements exceed available node capacity",
-                    role="scheduler_root",
+                    role="scheduling_root",
                     blocking=True,
                 ),
                 Cause(

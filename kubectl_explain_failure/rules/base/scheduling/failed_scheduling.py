@@ -61,6 +61,10 @@ class FailedSchedulingRule(FailureRule):
             "pressure",
             "nodeunder",
             "unschedulable",
+            "runtimeclass",
+            "overhead",
+            "gpu",
+            "nvidia.com/"
         ]
 
         for e in events:

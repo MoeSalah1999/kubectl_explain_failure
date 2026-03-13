@@ -1,0 +1,31 @@
+{
+  "root_cause": "Pod requests an extended resource that no node provides",
+  "blocking": true,
+  "evidence": [
+    "Extended resource requests detected: nvidia.com/gpu",
+    "1 FailedScheduling events observed"
+  ],
+  "causes": [
+    {
+      "code": "EXTENDED_RESOURCE_REQUESTED",
+      "message": "Pod requests vendor-specific extended resource",
+      "role": "scheduling_context"
+    },
+    {
+      "code": "EXTENDED_RESOURCE_NOT_AVAILABLE",
+      "message": "Requested extended resource not present in node allocatable capacity",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_PENDING_RESOURCE_UNAVAILABLE",
+      "message": "Scheduler cannot place Pod due to unavailable extended resource",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:gpu-pod": [
+      "Extended resource requests: nvidia.com/gpu"
+    ]
+  }
+}

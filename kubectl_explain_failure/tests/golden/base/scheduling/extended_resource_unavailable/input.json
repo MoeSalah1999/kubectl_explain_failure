@@ -1,0 +1,34 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "gpu-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "trainer",
+          "image": "ml-image",
+          "resources": {
+            "requests": {
+              "cpu": "1",
+              "memory": "1Gi",
+              "nvidia.com/gpu": "1"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/1 nodes are available: no nodes have nvidia.com/gpu available",
+      "lastTimestamp": "2030-01-01T12:00:00Z",
+      "type": "Warning",
+      "source": {
+        "component": "default-scheduler"
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "runtimeclass-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "runtimeClassName": "gvisor"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedCreatePodSandbox",
+      "message": "Failed to create pod sandbox: RuntimeClass \"gvisor\" not found",
+      "firstTimestamp": "2026-03-13T14:00:00Z"
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "Pod references runtimeClass gvisor but it does not exist",
+      "firstTimestamp": "2026-03-13T14:01:00Z"
+    }
+  ]
+}

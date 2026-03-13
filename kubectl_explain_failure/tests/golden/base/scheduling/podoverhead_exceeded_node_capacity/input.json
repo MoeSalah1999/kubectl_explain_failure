@@ -1,0 +1,37 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "overhead-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "runtimeClassName": "kata",
+      "overhead": {
+        "cpu": "250m",
+        "memory": "128Mi"
+      },
+      "containers": [
+        {
+          "name": "app",
+          "image": "nginx",
+          "resources": {
+            "requests": {
+              "cpu": "500m",
+              "memory": "256Mi"
+            }
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes available: insufficient memory including pod overhead",
+      "lastTimestamp": "2026-03-13T10:00:00Z"
+    }
+  ]
+}

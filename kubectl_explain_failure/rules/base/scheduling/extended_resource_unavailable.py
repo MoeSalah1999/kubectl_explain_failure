@@ -136,12 +136,12 @@ class ExtendedResourceUnavailableRule(FailureRule):
                 Cause(
                     code="EXTENDED_RESOURCE_REQUESTED",
                     message="Pod requests vendor-specific extended resource",
-                    role="scheduler_context",
+                    role="scheduling_context",
                 ),
                 Cause(
                     code="EXTENDED_RESOURCE_NOT_AVAILABLE",
                     message="Requested extended resource not present in node allocatable capacity",
-                    role="scheduler_root",
+                    role="scheduling_root",
                     blocking=True,
                 ),
                 Cause(
