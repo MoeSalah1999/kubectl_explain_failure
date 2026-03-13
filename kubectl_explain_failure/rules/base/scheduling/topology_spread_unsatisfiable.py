@@ -47,8 +47,31 @@ class TopologySpreadUnsatisfiableRule(FailureRule):
         if not tsc or not timeline or not node_objs:
             return False
 
-        # Check scheduling failure events
-        return timeline_has_pattern(timeline, [{"reason": "FailedScheduling"}])
+        # Only care about HARD constraints
+        hard_constraints = [
+            c for c in tsc
+            if c.get("whenUnsatisfiable") == "DoNotSchedule"
+        ]
+
+        if not hard_constraints:
+            return False
+
+        failed_events = timeline.events_within_window(
+            15,
+            reason="FailedScheduling",
+        )
+
+        for e in failed_events:
+            msg = (e.get("message") or "").lower()
+
+            if (
+                "topology spread constraints cannot be satisfied" in msg
+                or "didn't match topology spread" in msg
+                or "unsatisfiable" in msg
+            ):
+                return True
+
+        return False
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")

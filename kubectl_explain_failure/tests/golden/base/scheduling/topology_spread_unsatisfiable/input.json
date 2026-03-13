@@ -21,7 +21,8 @@
   "events": [
     {
       "reason": "FailedScheduling",
-      "message": "0/2 nodes are available: topology spread constraints cannot be satisfied."
+      "message": "0/2 nodes are available: topology spread constraints cannot be satisfied.",
+      "lastTimestamp": "2026-03-13T10:00:00Z"
     }
   ],
   "nodes": {

@@ -1,0 +1,32 @@
+{
+  "root_cause": "Topology spread skew exceeded maxSkew preventing scheduling",
+  "blocking": true,
+  "evidence": [
+    "Pod.spec.topologySpreadConstraints present",
+    "1 FailedScheduling events observed"
+  ],
+  "causes": [
+    {
+      "code": "TOPOLOGY_SPREAD_CONSTRAINT_DEFINED",
+      "message": "Pod defines topology spread constraints",
+      "role": "scheduling_context"
+    },
+    {
+      "code": "TOPOLOGY_SKEW_EXCEEDED",
+      "message": "Existing pod distribution exceeded allowed topology spread skew",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_UNSCHEDULABLE_TOPOLOGY_SKEW",
+      "message": "Scheduler rejected the Pod because topology skew exceeded maxSkew",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:topology-spread-pod": [
+      "Topology spread constraints defined",
+      "Scheduler rejected Pod due to skew > maxSkew"
+    ]
+  }
+}

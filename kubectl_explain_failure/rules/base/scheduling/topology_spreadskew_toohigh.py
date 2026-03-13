@@ -76,10 +76,7 @@ class PodTopologySpreadSkewTooHighRule(FailureRule):
 
         timeline = build_timeline(events)
 
-        failed = timeline.events_within_window(
-            15,
-            reason="FailedScheduling",
-        )
+        failed = [e for e in timeline.events if e.get("reason") == "FailedScheduling"]
 
         for e in failed:
             msg = (e.get("message") or "").lower()
@@ -112,10 +109,7 @@ class PodTopologySpreadSkewTooHighRule(FailureRule):
 
         timeline = build_timeline(events)
 
-        failed = timeline.events_within_window(
-            15,
-            reason="FailedScheduling",
-        )
+        failed = [e for e in timeline.events if e.get("reason") == "FailedScheduling"]
 
         skew_value = None
         max_skew_value = None
@@ -151,12 +145,12 @@ class PodTopologySpreadSkewTooHighRule(FailureRule):
                 Cause(
                     code="TOPOLOGY_SPREAD_CONSTRAINT_DEFINED",
                     message="Pod defines topology spread constraints",
-                    role="scheduler_context",
+                    role="scheduling_context",
                 ),
                 Cause(
                     code="TOPOLOGY_SKEW_EXCEEDED",
                     message="Existing pod distribution exceeded allowed topology spread skew",
-                    role="scheduler_root",
+                    role="scheduling_root",
                     blocking=True,
                 ),
                 Cause(

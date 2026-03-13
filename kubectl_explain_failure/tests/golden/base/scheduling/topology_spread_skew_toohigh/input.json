@@ -1,0 +1,36 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "topology-spread-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "app",
+          "image": "nginx"
+        }
+      ],
+      "topologySpreadConstraints": [
+        {
+          "maxSkew": 1,
+          "topologyKey": "topology.kubernetes.io/zone",
+          "whenUnsatisfiable": "ScheduleAnyway",
+          "labelSelector": {
+            "matchLabels": {
+              "app": "demo"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "topology spread constraint violated: skew 3 exceeds maxSkew 1 for topology key topology.kubernetes.io/zone",
+      "lastTimestamp": "2026-03-13T10:00:00Z"
+    }
+  ]
+}
