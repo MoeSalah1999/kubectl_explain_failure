@@ -60,6 +60,7 @@ class FailedSchedulingRule(FailureRule):
             "taint",
             "pressure",
             "nodeunder",
+            "unschedulable",
         ]
 
         for e in events:

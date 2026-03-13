@@ -56,10 +56,7 @@ class TopologySpreadUnsatisfiableRule(FailureRule):
         if not hard_constraints:
             return False
 
-        failed_events = timeline.events_within_window(
-            15,
-            reason="FailedScheduling",
-        )
+        failed_events = [e for e in timeline.events if e.get("reason") == "FailedScheduling"]
 
         for e in failed_events:
             msg = (e.get("message") or "").lower()

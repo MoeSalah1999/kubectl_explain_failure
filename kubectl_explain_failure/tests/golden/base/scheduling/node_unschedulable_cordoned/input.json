@@ -1,0 +1,33 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "unschedulable-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": null
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/2 nodes are unschedulable: 2 node(s) were unschedulable",
+      "firstTimestamp": "2026-03-13T14:00:00Z"
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "Pod cannot be scheduled because nodes are unschedulable",
+      "firstTimestamp": "2026-03-13T14:01:00Z"
+    }
+  ],
+  "nodes": {
+    "node1": {
+      "metadata": {"name": "node1"},
+      "spec": {"unschedulable": true}
+    },
+    "node2": {
+      "metadata": {"name": "node2"},
+      "spec": {"unschedulable": true}
+    }
+  }
+}

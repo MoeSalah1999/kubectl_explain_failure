@@ -1,0 +1,34 @@
+{
+  "root_cause": "Nodes are cordoned (unschedulable) preventing scheduling",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "2 node(s) marked unschedulable",
+    "Cordoned nodes: node1, node2",
+    "2 FailedScheduling events observed",
+    "0/2 nodes are unschedulable: 2 node(s) were unschedulable",
+    "Pod cannot be scheduled because nodes are unschedulable"
+  ],
+  "causes": [
+    {
+      "code": "NODE_CORDONED",
+      "message": "Node marked unschedulable (cordoned)",
+      "role": "scheduling_context"
+    },
+    {
+      "code": "NODE_UNSCHEDULABLE",
+      "message": "Scheduler cannot place Pod on cordoned nodes",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_PENDING_NO_SCHEDULABLE_NODE",
+      "message": "Pod remains pending because nodes are unschedulable",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": ["Node.spec.unschedulable=True"],
+    "node:node2": ["Node.spec.unschedulable=True"]
+  }
+}

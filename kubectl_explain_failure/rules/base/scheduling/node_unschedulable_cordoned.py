@@ -48,10 +48,7 @@ class NodeUnschedulableCordonedRule(FailureRule):
         timeline = build_timeline(events)
 
         # Scheduler must have attempted scheduling
-        failed_sched = timeline.events_within_window(
-            15,
-            reason="FailedScheduling",
-        )
+        failed_sched = [e for e in timeline.events if e.get("reason") == "FailedScheduling"]
 
         if not failed_sched:
             return False
@@ -75,10 +72,7 @@ class NodeUnschedulableCordonedRule(FailureRule):
 
         timeline = build_timeline(events)
 
-        failed_sched = timeline.events_within_window(
-            15,
-            reason="FailedScheduling",
-        )
+        failed_sched = [e for e in timeline.events if e.get("reason") == "FailedScheduling"]
 
         evidence_msgs = []
 
@@ -94,12 +88,12 @@ class NodeUnschedulableCordonedRule(FailureRule):
                 Cause(
                     code="NODE_CORDONED",
                     message="Node marked unschedulable (cordoned)",
-                    role="scheduler_context",
+                    role="scheduling_context",
                 ),
                 Cause(
                     code="NODE_UNSCHEDULABLE",
                     message="Scheduler cannot place Pod on cordoned nodes",
-                    role="scheduler_root",
+                    role="scheduling_root",
                     blocking=True,
                 ),
                 Cause(
