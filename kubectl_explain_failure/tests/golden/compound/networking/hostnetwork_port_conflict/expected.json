@@ -1,0 +1,32 @@
+{
+  "root_cause": "Pod using hostNetwork cannot start because the requested port is already in use on the node",
+  "blocking": true,
+  "evidence": [
+    "Pod.spec.hostNetwork=True",
+    "Container ports exposed: 8080"
+  ],
+  "causes": [
+    {
+      "code": "HOSTNETWORK_ENABLED",
+      "message": "Pod configured with hostNetwork=true",
+      "role": "runtime_context"
+    },
+    {
+      "code": "NODE_PORT_ALREADY_IN_USE",
+      "message": "Requested port already bound on the node network namespace",
+      "role": "execution_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_SANDBOX_CREATION_FAILED",
+      "message": "Container runtime failed to bind port when starting pod sandbox",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:hostnetwork-port-pod": [
+      "hostNetwork=true",
+      "containerPorts=8080"
+    ]
+  }
+}

@@ -58,11 +58,9 @@ class HostNetworkPortConflictRule(FailureRule):
         if not ports:
             return False
 
-        timeline = context.get("timeline") or build_timeline(events)
+        timeline = context.get("timeline")
 
-        recent = timeline.events_within_window(15)
-
-        for e in recent:
+        for e in timeline.raw_events:
             msg = (e.get("message") or "").lower()
 
             if "address already in use" in msg:
@@ -105,7 +103,7 @@ class HostNetworkPortConflictRule(FailureRule):
                 Cause(
                     code="NODE_PORT_ALREADY_IN_USE",
                     message="Requested port already bound on the node network namespace",
-                    role="runtime_root",
+                    role="execution_root",
                     blocking=True,
                 ),
                 Cause(

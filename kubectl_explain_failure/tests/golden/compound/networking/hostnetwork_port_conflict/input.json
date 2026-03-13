@@ -1,0 +1,36 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "hostnetwork-port-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "hostNetwork": true,
+      "containers": [
+        {
+          "name": "web",
+          "image": "nginx",
+          "ports": [
+            {
+              "containerPort": 8080
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "Failed",
+      "message": "listen tcp 0.0.0.0:8080: bind: address already in use",
+      "lastTimestamp": "2030-01-01T12:00:00Z",
+      "type": "Warning",
+      "source": {
+        "component": "kubelet"
+      }
+    }
+  ]
+}
