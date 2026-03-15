@@ -1,0 +1,20 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "runtime-permission-denied-pod"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "Failed",
+      "message": "OCI runtime create failed: permission denied",
+      "source": {
+        "component": "kubelet"
+      },
+      "eventTime": "2026-03-15T12:00:00Z"
+    }
+  ]
+}

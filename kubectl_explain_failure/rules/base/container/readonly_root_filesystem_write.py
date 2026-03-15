@@ -68,7 +68,7 @@ class ReadOnlyRootFilesystemWriteRule(FailureRule):
                 Cause(
                     code="READ_ONLY_FS_WRITE_ATTEMPT",
                     message="Container attempted to write to a read-only filesystem",
-                    role="container_root",
+                    role="container_health_root",
                     blocking=True,
                 ),
                 Cause(

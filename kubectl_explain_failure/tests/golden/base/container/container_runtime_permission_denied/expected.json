@@ -1,0 +1,39 @@
+{
+  "root_cause": "Container failed to start due to runtime permission denial",
+  "blocking": true,
+  "evidence": [
+    "Failed at 2026-03-15T12:00:00Z"
+  ],
+  "causes": [
+    {
+      "code": "CONTAINER_START_ATTEMPT",
+      "message": "Container attempted to start",
+      "role": "container_context"
+    },
+    {
+      "code": "RUNTIME_PERMISSION_DENIED",
+      "message": "Container runtime denied permission via seccomp or AppArmor",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "CONTAINER_FAILED_TO_START",
+      "message": "Container could not start due to runtime security restrictions",
+      "role": "container_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:runtime-permission-denied-pod": [
+      "Failed"
+    ]
+  },
+  "likely_causes": [
+    "Seccomp profile blocks a required syscall",
+    "AppArmor profile prevents container action",
+    "Pod security context incompatible with container runtime"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod runtime-permission-denied-pod",
+    "Check container seccomp and AppArmor profiles"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "root_cause": "Container attempted to write to a read-only filesystem",
+  "blocking": true,
+  "evidence": [
+    "app: mkdir /data: read-only file system"
+  ],
+  "causes": [
+    {
+      "code": "CRASHLOOP_DETECTED",
+      "message": "Pod is in CrashLoopBackOff due to container failures",
+      "role": "runtime_context"
+    },
+    {
+      "code": "READ_ONLY_FS_WRITE_ATTEMPT",
+      "message": "Container attempted to write to a read-only filesystem",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "CONTAINER_TERMINATED",
+      "message": "Container terminated due to filesystem write failure",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:readonly-rootfs-pod": [
+      "Read-only root filesystem write detected"
+    ]
+  },
+  "likely_causes": [
+    "Pod security policy enforced read-only root filesystem",
+    "Hardening of container image or cluster security context",
+    "Application misconfigured to write to root filesystem"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod readonly-rootfs-pod",
+    "Check container securityContext.readOnlyRootFilesystem",
+    "Check PodSecurityPolicy or OPA/Gatekeeper policies"
+  ]
+}

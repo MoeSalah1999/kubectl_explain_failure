@@ -39,12 +39,9 @@ class ContainerRuntimePermissionDeniedRule(FailureRule):
             kind="Generic",
             phase="Failure",
         ) and any(
-            e.get("reason")
-            and any(
-                term in e["reason"]
-                for term in ["PermissionDenied", "Seccomp", "AppArmor"]
-            )
+            (e.get("message") or "").lower().find(term) != -1
             for e in timeline.events
+            for term in ["permission denied", "seccomp", "apparmor"]
         )
 
     def explain(self, pod, events, context):
@@ -53,10 +50,9 @@ class ContainerRuntimePermissionDeniedRule(FailureRule):
             [
                 e
                 for e in timeline.events
-                if e.get("reason")
-                and any(
-                    term in e["reason"]
-                    for term in ["PermissionDenied", "Seccomp", "AppArmor"]
+                if any(
+                    term in (e.get("message") or "").lower()
+                    for term in ["permission denied", "seccomp", "apparmor"]
                 )
             ]
             if timeline
@@ -73,7 +69,7 @@ class ContainerRuntimePermissionDeniedRule(FailureRule):
                 Cause(
                     code="RUNTIME_PERMISSION_DENIED",
                     message="Container runtime denied permission via seccomp or AppArmor",
-                    role="container_root",
+                    role="container_health_root",
                     blocking=True,
                 ),
                 Cause(
@@ -85,7 +81,10 @@ class ContainerRuntimePermissionDeniedRule(FailureRule):
         )
 
         pod_name = pod.get("metadata", {}).get("name", "unknown")
-        evidence = [f"{e.get('reason')} at {e.get('eventTime')}" for e in events_found]
+        evidence = [
+            f"{(e.get('reason') or '<no-reason>')} at {e.get('eventTime')}"
+            for e in events_found
+        ]
 
         return {
             "rule": self.name,

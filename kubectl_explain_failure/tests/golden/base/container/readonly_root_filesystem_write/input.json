@@ -1,0 +1,39 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "readonly-rootfs-pod"
+    },
+    "status": {
+      "phase": "CrashLoopBackOff",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "state": {
+            "terminated": {
+              "reason": "Error",
+              "message": "mkdir /data: read-only file system"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container",
+      "source": {
+        "component": "kubelet"
+      },
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    },
+    {
+      "reason": "Failed",
+      "message": "mkdir /data: read-only file system",
+      "source": {
+        "component": "kubelet"
+      },
+      "lastTimestamp": "2026-03-15T12:00:10Z"
+    }
+  ]
+}
