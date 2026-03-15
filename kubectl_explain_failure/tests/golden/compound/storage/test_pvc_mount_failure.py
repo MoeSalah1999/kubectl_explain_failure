@@ -53,13 +53,12 @@ def test_pvc_mount_failure_golden():
     assert result["confidence"] >= expected["confidence"]
 
     # Verify causal chain materialization
-    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"], strict=False):
         assert exp_cause["code"] == res_cause["code"]
         assert exp_cause["message"] == res_cause["message"]
         assert exp_cause["role"] == res_cause["role"]
         assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
         assert exp_cause.get("blocking", True) == res_cause.get("blocking", True)
-
 
     # Verify object evidence
     assert "pvc:test-pvc" in result["object_evidence"]

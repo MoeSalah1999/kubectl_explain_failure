@@ -104,7 +104,7 @@ class EphemeralStorageExceededRule(FailureRule):
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
-                f"Check ephemeral-storage requests/limits in Pod spec",
+                "Check ephemeral-storage requests/limits in Pod spec",
                 "Inspect container logs and ephemeral directories (/tmp, emptyDir)",
             ],
         }

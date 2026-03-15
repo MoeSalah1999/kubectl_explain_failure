@@ -41,7 +41,7 @@ class ContainerCreateConfigErrorRule(FailureRule):
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
-        
+
         chain = CausalChain(
             causes=[
                 Cause(

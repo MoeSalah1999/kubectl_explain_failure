@@ -5,7 +5,6 @@ import pytest
 from kubectl_explain_failure.engine import explain_failure
 from kubectl_explain_failure.live_adapter import fetch_live_snapshot
 
-
 RUN_FLAG = os.getenv("KUBECTL_EXPLAIN_FAILURE_RUN_LIVE_INTEGRATION") == "1"
 NAMESPACE = os.getenv("KUBECTL_EXPLAIN_FAILURE_LIVE_NAMESPACE", "default")
 KUBECONFIG = os.getenv("KUBECTL_EXPLAIN_FAILURE_LIVE_KUBECONFIG")
@@ -99,11 +98,7 @@ def test_live_archetype_crashloop_maps_to_container_crash_signal():
     root = result.get("root_cause", "").lower()
     codes = _cause_codes(result)
 
-    assert (
-        "crashloop" in root
-        or "backoff" in root
-        or "CONTAINER_CRASHING" in codes
-    )
+    assert "crashloop" in root or "backoff" in root or "CONTAINER_CRASHING" in codes
 
 
 def test_live_archetype_imagepull_maps_to_image_pull_signal():

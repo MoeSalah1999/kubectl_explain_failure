@@ -1,6 +1,7 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import build_timeline, timeline_has_event
+from kubectl_explain_failure.timeline import timeline_has_event
+
 
 class RegistryRateLimitedRule(FailureRule):
     """
@@ -31,7 +32,9 @@ class RegistryRateLimitedRule(FailureRule):
         timeline = context.get("timeline")
         if not timeline:
             return False
-        return timeline_has_event(timeline, kind="Image", phase="Failure", source="registry")
+        return timeline_has_event(
+            timeline, kind="Image", phase="Failure", source="registry"
+        )
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")

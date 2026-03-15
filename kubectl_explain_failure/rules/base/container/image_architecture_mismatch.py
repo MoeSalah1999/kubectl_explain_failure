@@ -2,6 +2,7 @@ from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import timeline_has_event
 
+
 class ImageArchitectureMismatchRule(FailureRule):
     """
     Detects container failures caused by image/node architecture mismatch.
@@ -11,7 +12,7 @@ class ImageArchitectureMismatchRule(FailureRule):
     - Common in clusters with mixed ARM and AMD nodes
 
     Interpretation:
-    - The container runtime cannot start the container because the image 
+    - The container runtime cannot start the container because the image
         architecture does not match the node's architecture.
     - Typically occurs when an image is built for a different CPU architecture than the node.
 
@@ -36,7 +37,9 @@ class ImageArchitectureMismatchRule(FailureRule):
         timeline = context.get("timeline")
         if not timeline:
             return False
-        return timeline_has_event(timeline, kind="Image", phase="Failure", source="node")
+        return timeline_has_event(
+            timeline, kind="Image", phase="Failure", source="node"
+        )
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
@@ -72,7 +75,9 @@ class ImageArchitectureMismatchRule(FailureRule):
                 f"Pod: {pod_name}",
                 "Node and image architecture mismatch detected in events",
             ],
-            "object_evidence": {f"pod:{pod_name}": ["Architecture mismatch encountered"]},
+            "object_evidence": {
+                f"pod:{pod_name}": ["Architecture mismatch encountered"]
+            },
             "likely_causes": [
                 "Cluster has mixed ARM/AMD nodes",
                 "Image was built for incompatible architecture",

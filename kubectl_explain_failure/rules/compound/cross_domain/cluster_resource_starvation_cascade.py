@@ -1,6 +1,6 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern, timeline_has_event
+from kubectl_explain_failure.timeline import timeline_has_event, timeline_has_pattern
 
 
 class ClusterResourceStarvationCascadeRule(FailureRule):
@@ -155,7 +155,5 @@ class ClusterResourceStarvationCascadeRule(FailureRule):
                 "kubectl top nodes",
                 f"kubectl describe pod {pod_name}",
             ],
-            "object_evidence": {
-                f"node:{node_name}": ["MemoryPressure=True detected"]
-            },
+            "object_evidence": {f"node:{node_name}": ["MemoryPressure=True detected"]},
         }

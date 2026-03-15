@@ -5,7 +5,6 @@ from kubectl_explain_failure.context import build_context
 from kubectl_explain_failure.engine import explain_failure, normalize_context
 from kubectl_explain_failure.timeline import build_timeline
 
-
 BASE_DIR = os.path.dirname(__file__)
 FIXTURE_DIR = os.path.join(BASE_DIR, "topology_spread_skew_toohigh")
 
@@ -75,7 +74,7 @@ def test_pod_topology_spread_skew_too_high_golden():
         assert ev in result["evidence"]
 
     # Causes
-    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"], strict=False):
         assert exp_cause["code"] == res_cause["code"]
         assert exp_cause["message"] == res_cause["message"]
         assert exp_cause["role"] == res_cause["role"]

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
@@ -49,10 +49,7 @@ class ConfigChangedButPodNotRestartedRule(FailureRule):
         if not configmaps:
             return False
 
-        pod_start_ts = (
-            pod.get("status", {})
-            .get("startTime")
-        )
+        pod_start_ts = pod.get("status", {}).get("startTime")
 
         if not pod_start_ts:
             return False
@@ -77,7 +74,9 @@ class ConfigChangedButPodNotRestartedRule(FailureRule):
             # Config updated after pod started
             if config_time > pod_start:
                 # Ensure no rollout events happened
-                rollout = timeline.count(reason="Killing") + timeline.count(reason="Started")
+                rollout = timeline.count(reason="Killing") + timeline.count(
+                    reason="Started"
+                )
 
                 if rollout == 0:
                     context["stale_configmap"] = meta.get("name")
@@ -129,7 +128,7 @@ class ConfigChangedButPodNotRestartedRule(FailureRule):
                 "Application expecting dynamic reload but not implemented",
             ],
             "suggested_checks": [
-                f"kubectl rollout restart deployment",
+                "kubectl rollout restart deployment",
                 f"kubectl describe configmap {cm_name}",
                 f"kubectl describe pod {pod_name}",
             ],

@@ -26,7 +26,7 @@ class AffinityUnsatisfiableRule(FailureRule):
     - Does not include resource-based scheduling failures (CPU/memory pressure)
     - Does not include taint/toleration conflicts
     - Does not include node readiness or infrastructure outages
-"""
+    """
 
     name = "AffinityUnsatisfiable"
     category = "Scheduling"

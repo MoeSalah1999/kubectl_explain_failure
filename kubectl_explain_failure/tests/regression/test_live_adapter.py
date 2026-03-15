@@ -24,7 +24,9 @@ def test_fetch_live_snapshot_discovers_dependency_objects(monkeypatch):
                     "env": [
                         {
                             "name": "PASSWORD",
-                            "valueFrom": {"secretKeyRef": {"name": "env-secret", "key": "pw"}},
+                            "valueFrom": {
+                                "secretKeyRef": {"name": "env-secret", "key": "pw"}
+                            },
                         }
                     ],
                 }
@@ -117,7 +119,9 @@ def test_fetch_live_snapshot_keeps_partial_context_on_fetch_failures(monkeypatch
         },
         "spec": {
             "nodeName": "node-a",
-            "volumes": [{"name": "data", "persistentVolumeClaim": {"claimName": "pvc-a"}}],
+            "volumes": [
+                {"name": "data", "persistentVolumeClaim": {"claimName": "pvc-a"}}
+            ],
         },
         "status": {"phase": "Pending"},
     }
@@ -146,7 +150,9 @@ def test_fetch_live_snapshot_keeps_partial_context_on_fetch_failures(monkeypatch
     assert live_metadata["completeness"]["missing_total"] >= 1
 
 
-def test_fetch_live_snapshot_owner_chain_partial_failure_still_keeps_first_owner(monkeypatch):
+def test_fetch_live_snapshot_owner_chain_partial_failure_still_keeps_first_owner(
+    monkeypatch,
+):
     pod_obj = {
         "metadata": {
             "name": "mypod",
@@ -188,7 +194,9 @@ def test_fetch_live_snapshot_owner_chain_partial_failure_still_keeps_first_owner
     assert "owner" in context
     assert context["owner"]["metadata"]["name"] == "rs-a"
     assert warnings
-    assert any(m["reason"] == "rbac_forbidden" for m in live_metadata["missing_resources"])
+    assert any(
+        m["reason"] == "rbac_forbidden" for m in live_metadata["missing_resources"]
+    )
 
 
 def test_fetch_live_snapshot_sorts_and_limits_events_for_timeline(monkeypatch):

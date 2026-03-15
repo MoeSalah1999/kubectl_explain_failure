@@ -61,7 +61,9 @@ class AccessModeMismatchRule(FailureRule):
             supported_modes = pv.get("spec", {}).get("accessModes", [])
 
             # mismatch if none of the requested modes exist in PV
-            if requested_modes and not any(m in supported_modes for m in requested_modes):
+            if requested_modes and not any(
+                m in supported_modes for m in requested_modes
+            ):
                 # timeline evidence strengthens detection
                 if timeline and timeline_has_pattern(
                     timeline,
@@ -89,11 +91,6 @@ class AccessModeMismatchRule(FailureRule):
 
         requested_modes = pvc.get("spec", {}).get("accessModes", [])
         supported_modes = pv.get("spec", {}).get("accessModes", [])
-
-        root_msg = (
-            f"PVC requests access modes {requested_modes} "
-            f"but PV '{pv_name}' supports {supported_modes}"
-        )
 
         chain = CausalChain(
             causes=[

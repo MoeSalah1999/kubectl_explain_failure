@@ -40,7 +40,7 @@ def test_pending_unschedulable_golden():
             },
         )()
     )
-    
+
     context["pv"] = {"metadata": {"name": "pv1"}}
     context["storageclass"] = {"metadata": {"name": "sc1"}}
     context["serviceaccount"] = {"metadata": {"name": "default"}}
@@ -70,13 +70,12 @@ def test_pending_unschedulable_golden():
         assert ev in result["evidence"]
 
     # Causes
-    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"], strict=False):
         assert exp_cause["code"] == res_cause["code"]
         assert exp_cause["message"] == res_cause["message"]
         assert exp_cause["role"] == res_cause["role"]
         assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
         assert exp_cause.get("blocking", True) == res_cause.get("blocking", True)
-
 
     # Object evidence
     assert "object_evidence" in result

@@ -100,7 +100,5 @@ class VolumeAttachmentTimeoutRule(FailureRule):
                 "Node not acknowledging volume attachment",
                 "Kubernetes controller processing delay",
             ],
-            "suggested_checks": [
-                f"kubectl describe pvc {name}" for name in pvc_names
-            ],
+            "suggested_checks": [f"kubectl describe pvc {name}" for name in pvc_names],
         }

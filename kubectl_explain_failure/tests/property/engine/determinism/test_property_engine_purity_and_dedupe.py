@@ -6,7 +6,8 @@ hypothesis = pytest.importorskip(
     "hypothesis",
     reason="Install hypothesis to run property tests: pip install hypothesis",
 )
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from kubectl_explain_failure.engine import explain_failure
 from kubectl_explain_failure.rules.base.container.crashloop_backoff import (
@@ -17,7 +18,10 @@ from kubectl_explain_failure.rules.base.scheduling.failed_scheduling import (
 )
 from kubectl_explain_failure.rules.base.storage.pvc_not_bound import PVCNotBoundRule
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.tests.property.strategies import K8sSnapshot, snapshot_strategy
+from kubectl_explain_failure.tests.property.strategies import (
+    K8sSnapshot,
+    snapshot_strategy,
+)
 
 
 class _OverlapRuleA(FailureRule):

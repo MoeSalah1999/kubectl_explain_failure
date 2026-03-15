@@ -27,6 +27,7 @@ class ImagePullSecretMissingCompoundRule(FailureRule):
     - Does not include network issues unrelated to image secrets
     - Does not include registry errors not caused by secrets
     """
+
     name = "ImagePullSecretMissingCompound"
     category = "Compound"
     priority = 60
@@ -69,7 +70,7 @@ class ImagePullSecretMissingCompoundRule(FailureRule):
                 Cause(
                     code="IMAGE_PULL_BACKOFF",
                     message="Pod entered ImagePullBackOff due to authentication failure",
-                    role="workload_symptom"
+                    role="workload_symptom",
                 ),
             ]
         )

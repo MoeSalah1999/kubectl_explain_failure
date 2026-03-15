@@ -29,6 +29,7 @@ class NodeNotReadyEvictedRule(FailureRule):
     - Does not include voluntary Pod deletion
     - Does not include scheduling failures unrelated to Node readiness
     """
+
     name = "NodeNotReadyEvicted"
     category = "Compound"
     priority = 59

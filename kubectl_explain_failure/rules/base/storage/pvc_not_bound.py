@@ -55,7 +55,6 @@ class PVCNotBoundRule(FailureRule):
         return context.get("pvc_unbound", False)
 
     def explain(self, pod, events, context):
-        pod_name = pod.get("metadata", {}).get("name", "<pod>")
         pvc = context.get("blocking_pvc")
 
         if not pvc:
@@ -99,9 +98,7 @@ class PVCNotBoundRule(FailureRule):
                 f"PVC {pvc_name} phase: {phase}",
                 "PVC not in Bound state",
             ],
-            "object_evidence": {
-                f"pvc:{pvc_name}, phase:{phase}": ["PVC not Bound"]
-            },
+            "object_evidence": {f"pvc:{pvc_name}, phase:{phase}": ["PVC not Bound"]},
             "likely_causes": [
                 "No PersistentVolume matches the PVC",
                 "StorageClass provisioning failed",

@@ -4,7 +4,6 @@ import pytest
 
 from kubectl_explain_failure.live_adapter import fetch_live_snapshot
 
-
 RUN_FLAG = os.getenv("KUBECTL_EXPLAIN_FAILURE_RUN_LIVE_INTEGRATION") == "1"
 POD_NAME = os.getenv("KUBECTL_EXPLAIN_FAILURE_LIVE_POD")
 NAMESPACE = os.getenv("KUBECTL_EXPLAIN_FAILURE_LIVE_NAMESPACE", "default")

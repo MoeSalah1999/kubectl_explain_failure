@@ -11,8 +11,8 @@ class InsufficientResourcesRule(FailureRule):
     - Scheduler reports inability to place Pod due to resource constraints
 
     Interpretation:
-    The Pod specifies CPU, memory, or ephemeral storage requests that cannot 
-    be satisfied by any available node in the cluster. The scheduler fails 
+    The Pod specifies CPU, memory, or ephemeral storage requests that cannot
+    be satisfied by any available node in the cluster. The scheduler fails
     placement, leaving the Pod in a Pending state.
 
     Scope:

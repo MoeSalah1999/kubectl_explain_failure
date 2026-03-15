@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Optional
-
+from typing import Any
 
 # All roles allowed to be blocking
 BLOCKING_ROOT_ROLES = {
@@ -16,7 +15,7 @@ BLOCKING_ROOT_ROLES = {
     "controller_root",
     "container_health_root",
     "scheduling_root",
-    "volume_root"
+    "volume_root",
 }
 
 
@@ -29,7 +28,7 @@ class Cause:
     code: str
     message: str
     blocking: bool = False
-    role: Optional[str] = None
+    role: str | None = None
 
     def __post_init__(self):
         # Ensure blocking causes always have a valid role
@@ -72,6 +71,7 @@ class CausalChain:
     def is_blocking(self) -> bool:
         return any(c.blocking for c in self.causes)
 
+
 @dataclass
 class Resolution:
     """
@@ -92,7 +92,7 @@ def build_chain(exp: dict[str, Any]) -> CausalChain:
     if "causes" in exp and isinstance(exp["causes"], CausalChain):
         exp["causes"]._validate_blocking_invariant()
         return exp["causes"]
-    
+
     chain = CausalChain()
 
     root = exp.get("root_cause")

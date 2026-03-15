@@ -36,7 +36,9 @@ def test_cli_live_output_includes_provenance_metadata(monkeypatch):
     live_metadata = {
         "missing_kinds": ["secret"],
         "missing_kinds_by_reason": {"rbac_forbidden": ["secret"]},
-        "missing_due_to_rbac": [{"kind": "secret", "name": "s1", "reason": "rbac_forbidden"}],
+        "missing_due_to_rbac": [
+            {"kind": "secret", "name": "s1", "reason": "rbac_forbidden"}
+        ],
         "completeness": {"missing_total": 1, "rbac_missing_total": 1},
     }
 
@@ -86,6 +88,8 @@ def test_cli_live_output_includes_provenance_metadata(monkeypatch):
     assert result["provenance"]["source"] == "live"
     assert result["provenance"]["fetched_object_counts"] == {"pvc": 1, "node": 1}
     assert result["provenance"]["missing_kinds"] == ["secret"]
-    assert result["provenance"]["missing_kinds_by_reason"] == {"rbac_forbidden": ["secret"]}
+    assert result["provenance"]["missing_kinds_by_reason"] == {
+        "rbac_forbidden": ["secret"]
+    }
     assert result["provenance"]["fetch_warning_count"] == 1
     assert result["provenance"]["fetch_warnings"] == warnings

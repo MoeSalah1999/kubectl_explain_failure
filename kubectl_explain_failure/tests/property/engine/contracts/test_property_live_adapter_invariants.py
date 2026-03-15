@@ -7,7 +7,8 @@ hypothesis = pytest.importorskip(
     "hypothesis",
     reason="Install hypothesis to run property tests: pip install hypothesis",
 )
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from kubectl_explain_failure import live_adapter
 
@@ -99,7 +100,9 @@ def test_property_live_adapter_metadata_counts_are_consistent(reasons):
         "spec": {
             "nodeName": "node-a",
             "serviceAccountName": "sa-a",
-            "volumes": [{"name": "data", "persistentVolumeClaim": {"claimName": "pvc-a"}}],
+            "volumes": [
+                {"name": "data", "persistentVolumeClaim": {"claimName": "pvc-a"}}
+            ],
         },
         "status": {"phase": "Pending"},
     }
@@ -145,4 +148,6 @@ def test_property_live_adapter_metadata_counts_are_consistent(reasons):
         assert set(kinds) == observed
 
     rbac_missing = [m for m in missing if m.get("reason") == "rbac_forbidden"]
-    assert metadata.get("completeness", {}).get("rbac_missing_total") == len(rbac_missing)
+    assert metadata.get("completeness", {}).get("rbac_missing_total") == len(
+        rbac_missing
+    )

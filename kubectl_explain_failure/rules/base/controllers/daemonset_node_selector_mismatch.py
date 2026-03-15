@@ -1,3 +1,5 @@
+from typing import Any
+
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import timeline_has_event
@@ -45,11 +47,10 @@ class DaemonSetNodeSelectorMismatchRule(FailureRule):
         return timeline_has_event(timeline, kind="Scheduling", phase="Failure")
 
     def explain(self, pod, events, context):
-        node_objs = context.get("objects", {}).get("node", {})
-        timeline = context.get("timeline")
-
         owners = pod.get("metadata", {}).get("ownerReferences", [])
-        ds_owner = next((o for o in owners if o.get("kind") == "DaemonSet"), {})
+        ds_owner: dict[str, Any] = next(
+            (o for o in owners if o.get("kind") == "DaemonSet"), {}
+        )
         ds_name = ds_owner.get("name", "<unknown>")
 
         chain = CausalChain(
@@ -81,7 +82,11 @@ class DaemonSetNodeSelectorMismatchRule(FailureRule):
                 f"DaemonSet: {ds_name}",
                 "FailedScheduling events in timeline",
             ],
-            "object_evidence": {f"pod:{pod.get('metadata', {}).get('name', '<pod>')}": ["DaemonSet nodeSelector mismatch"]},
+            "object_evidence": {
+                f"pod:{pod.get('metadata', {}).get('name', '<pod>')}": [
+                    "DaemonSet nodeSelector mismatch"
+                ]
+            },
             "likely_causes": [
                 "Node labels modified after DaemonSet creation",
                 "DaemonSet nodeSelector incompatible with existing nodes",

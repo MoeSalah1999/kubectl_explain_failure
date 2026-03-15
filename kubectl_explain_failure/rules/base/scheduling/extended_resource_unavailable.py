@@ -105,8 +105,6 @@ class ExtendedResourceUnavailableRule(FailureRule):
     def explain(self, pod, events, context):
         extended = self._collect_extended_requests(pod)
 
-        nodes = context.get("objects", {}).get("node", {})
-
         timeline = build_timeline(events)
 
         sched_events = timeline.events_within_window(

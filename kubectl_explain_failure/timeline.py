@@ -90,7 +90,7 @@ class Timeline:
 
     def repeated(self, reason: str, threshold: int) -> bool:
         return self.count(reason=reason) >= threshold
-    
+
     def _reference_time(self) -> datetime:
         """
         Returns the reference time used for window calculations.
@@ -120,7 +120,7 @@ class Timeline:
 
         # Fallback safety
         return datetime.now(timezone.utc)
-    
+
     def events_within_window(
         self,
         minutes: int,
@@ -137,11 +137,7 @@ class Timeline:
         result = []
 
         for e in self.events:
-            ts = (
-                e.get("eventTime")
-                or e.get("lastTimestamp")
-                or e.get("firstTimestamp")
-            )
+            ts = e.get("eventTime") or e.get("lastTimestamp") or e.get("firstTimestamp")
             if not ts:
                 continue
 
@@ -248,6 +244,7 @@ def timeline_has_pattern(
 
 # Structured timeline helpers
 
+
 def timeline_has_event(
     timeline: "Timeline | list[dict[str, Any]]",
     *,
@@ -277,9 +274,11 @@ def timeline_has_event(
 
     return False
 
+
 # ----------------------------
 # Temporal stability helper
 # ----------------------------
+
 
 def event_frequency(
     timeline: "Timeline | list[dict[str, Any]]",

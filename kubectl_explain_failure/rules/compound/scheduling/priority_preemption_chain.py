@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class PriorityPreemptionChainRule(FailureRule):
@@ -32,6 +31,7 @@ class PriorityPreemptionChainRule(FailureRule):
     - Does not include controller-driven Pod deletions
     - Does not include container runtime crashes
     """
+
     name = "PriorityPreemptionChain"
     category = "Compound"
     priority = 60
@@ -51,16 +51,12 @@ class PriorityPreemptionChainRule(FailureRule):
             return False
 
         # --- Must contain recent preemption signal ---
-        recent_preemptions = timeline.events_within_window(
-            10, reason="Preempted"
-        )
+        recent_preemptions = timeline.events_within_window(10, reason="Preempted")
         if not recent_preemptions:
             return False
 
         # --- Must contain recent scheduling activity ---
-        recent_scheduling = timeline.events_within_window(
-            10, reason="Scheduled"
-        )
+        recent_scheduling = timeline.events_within_window(10, reason="Scheduled")
         if not recent_scheduling:
             return False
 

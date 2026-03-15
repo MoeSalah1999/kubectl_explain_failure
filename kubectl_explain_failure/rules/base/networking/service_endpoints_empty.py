@@ -95,8 +95,7 @@ class ServiceEndpointsEmptyRule(FailureRule):
             endpoints_list = slice_obj.get("endpoints", [])
 
             ready = any(
-                ep.get("conditions", {}).get("ready") is True
-                for ep in endpoints_list
+                ep.get("conditions", {}).get("ready") is True for ep in endpoints_list
             )
 
             if not ready:
@@ -162,7 +161,7 @@ class ServiceEndpointsEmptyRule(FailureRule):
             "suggested_checks": [
                 f"kubectl describe service {svc_name}",
                 f"kubectl get endpoints {svc_name}",
-                f"kubectl get pods -l <service-selector>",
+                "kubectl get pods -l <service-selector>",
                 f"kubectl describe pod {pod_name}",
             ],
             "blocking": True,

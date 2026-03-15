@@ -73,8 +73,7 @@ class PVCBoundThenNodePressureRule(FailureRule):
         scheduling_blocked = False
         if timeline and hasattr(timeline, "events_within_window"):
             recent_failures = timeline.events_within_window(
-                minutes=60,
-                reason="FailedScheduling"
+                minutes=60, reason="FailedScheduling"
             )
             if recent_failures:
                 scheduling_blocked = True
@@ -93,8 +92,12 @@ class PVCBoundThenNodePressureRule(FailureRule):
         pvc_objs = context.get("objects", {}).get("pvc", {})
         node_objs = context.get("objects", {}).get("node", {})
 
-        pvc_names = [p.get("metadata", {}).get("name", "<pvc>") for p in pvc_objs.values()]
-        node_names = [n.get("metadata", {}).get("name", "<node>") for n in node_objs.values()]
+        pvc_names = [
+            p.get("metadata", {}).get("name", "<pvc>") for p in pvc_objs.values()
+        ]
+        node_names = [
+            n.get("metadata", {}).get("name", "<node>") for n in node_objs.values()
+        ]
 
         chain = CausalChain(
             causes=[

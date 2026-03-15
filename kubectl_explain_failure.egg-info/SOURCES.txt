@@ -7,9 +7,11 @@ kubectl_explain_failure/causality.py
 kubectl_explain_failure/cli.py
 kubectl_explain_failure/context.py
 kubectl_explain_failure/engine.py
+kubectl_explain_failure/live_adapter.py
 kubectl_explain_failure/loader.py
 kubectl_explain_failure/model.py
 kubectl_explain_failure/output.py
+kubectl_explain_failure/plugin.py
 kubectl_explain_failure/relations.py
 kubectl_explain_failure/run_explain.py
 kubectl_explain_failure/snapshot.py
@@ -17,4 +19,6 @@ kubectl_explain_failure/timeline.py
 kubectl_explain_failure.egg-info/PKG-INFO
 kubectl_explain_failure.egg-info/SOURCES.txt
 kubectl_explain_failure.egg-info/dependency_links.txt
+kubectl_explain_failure.egg-info/entry_points.txt
+kubectl_explain_failure.egg-info/requires.txt
 kubectl_explain_failure.egg-info/top_level.txt

@@ -145,7 +145,9 @@ class PVCRecoveredButAppStillFailingRule(FailureRule):
             ],
             "object_evidence": {
                 f"pod:{pod_name}": ["Pod running but container unstable"],
-                f"pvc:{pvc_name}": ["PVC Bound successfully before application failures"],
+                f"pvc:{pvc_name}": [
+                    "PVC Bound successfully before application failures"
+                ],
             },
             "suggested_checks": [
                 f"kubectl logs {pod_name}",

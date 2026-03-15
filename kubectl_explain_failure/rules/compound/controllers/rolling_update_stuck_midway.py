@@ -117,8 +117,6 @@ class RollingUpdateStuckMidwayRule(FailureRule):
             ]
         )
 
-        pod_name = pod.get("metadata", {}).get("name", "<pod>")
-
         return {
             "root_cause": "Deployment rolling update stalled midway",
             "confidence": 0.91,
@@ -142,7 +140,7 @@ class RollingUpdateStuckMidwayRule(FailureRule):
             "suggested_checks": [
                 f"kubectl rollout status deployment {deploy_name}",
                 f"kubectl describe deployment {deploy_name}",
-                f"kubectl get pods -l app=<label> -o wide",
+                "kubectl get pods -l app=<label> -o wide",
             ],
             "blocking": True,
         }

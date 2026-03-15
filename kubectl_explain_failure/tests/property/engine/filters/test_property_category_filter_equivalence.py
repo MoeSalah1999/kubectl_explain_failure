@@ -4,7 +4,8 @@ hypothesis = pytest.importorskip(
     "hypothesis",
     reason="Install hypothesis to run property tests: pip install hypothesis",
 )
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from kubectl_explain_failure.engine import explain_failure
 from kubectl_explain_failure.rules.base.container.crashloop_backoff import (
@@ -14,7 +15,10 @@ from kubectl_explain_failure.rules.base.scheduling.failed_scheduling import (
     FailedSchedulingRule,
 )
 from kubectl_explain_failure.rules.base.storage.pvc_not_bound import PVCNotBoundRule
-from kubectl_explain_failure.tests.property.strategies import K8sSnapshot, snapshot_strategy
+from kubectl_explain_failure.tests.property.strategies import (
+    K8sSnapshot,
+    snapshot_strategy,
+)
 
 RULES = [PVCNotBoundRule(), FailedSchedulingRule(), CrashLoopBackOffRule()]
 KNOWN_CATEGORIES = {"PersistentVolumeClaim", "Scheduling", "Container"}
@@ -23,7 +27,9 @@ UNKNOWN_CATEGORIES = ["__UNKNOWN_A__", "__UNKNOWN_B__", "__UNKNOWN_C__"]
 
 @given(
     snapshot=snapshot_strategy(),
-    enabled_unknown=st.lists(st.sampled_from(UNKNOWN_CATEGORIES), min_size=1, unique=True, max_size=3),
+    enabled_unknown=st.lists(
+        st.sampled_from(UNKNOWN_CATEGORIES), min_size=1, unique=True, max_size=3
+    ),
 )
 def test_property_enabling_only_unknown_categories_returns_unknown(
     snapshot: K8sSnapshot,

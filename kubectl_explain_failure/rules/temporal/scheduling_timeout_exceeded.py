@@ -24,9 +24,7 @@ class SchedulingTimeoutExceededRule(FailureRule):
     priority = 60
     deterministic = False
     blocks = []
-    requires = {
-        "context": ["timeline"]
-    }
+    requires = {"context": ["timeline"]}
 
     # Configurable parameters
     failed_scheduling_reason = "FailedScheduling"
@@ -54,13 +52,20 @@ class SchedulingTimeoutExceededRule(FailureRule):
             reason=self.failed_scheduling_reason,
         )
 
-        duration_seconds = 0
+        duration_seconds = 0.0
         if recent_events:
-            first_ts = recent_events[0].get("firstTimestamp") or recent_events[0].get("lastTimestamp")
-            last_ts = recent_events[-1].get("lastTimestamp") or recent_events[-1].get("firstTimestamp")
+            first_ts = recent_events[0].get("firstTimestamp") or recent_events[0].get(
+                "lastTimestamp"
+            )
+            last_ts = recent_events[-1].get("lastTimestamp") or recent_events[-1].get(
+                "firstTimestamp"
+            )
             if first_ts and last_ts:
                 from kubectl_explain_failure.timeline import parse_time
-                duration_seconds = (parse_time(last_ts) - parse_time(first_ts)).total_seconds()
+
+                duration_seconds = (
+                    parse_time(last_ts) - parse_time(first_ts)
+                ).total_seconds()
 
         chain = CausalChain(
             causes=[
@@ -105,7 +110,7 @@ class SchedulingTimeoutExceededRule(FailureRule):
             ],
             "suggested_checks": [
                 "kubectl get nodes -o wide",
-                "kubectl describe pod {0}".format(pod.get("metadata", {}).get("name", "<pod>")),
+                f"kubectl describe pod {pod.get('metadata', {}).get('name', '<pod>')}",
                 "Check node resources, taints, and affinity constraints",
             ],
         }

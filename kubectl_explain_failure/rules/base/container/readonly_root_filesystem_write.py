@@ -50,7 +50,6 @@ class ReadOnlyRootFilesystemWriteRule(FailureRule):
             state = cs.get("state", {})
             term = state.get("terminated")
             if term:
-                reason = term.get("reason", "")
                 msg = term.get("message", "").lower()
                 if "read-only file system" in msg:
                     return True
@@ -96,18 +95,19 @@ class ReadOnlyRootFilesystemWriteRule(FailureRule):
             "confidence": 0.95,
             "causes": chain,
             "blocking": True,
-            "evidence": evidence or ["Event log indicates read-only filesystem write attempt"],
+            "evidence": evidence
+            or ["Event log indicates read-only filesystem write attempt"],
             "object_evidence": {
                 f"pod:{pod_name}": ["Read-only root filesystem write detected"]
             },
             "likely_causes": [
                 "Pod security policy enforced read-only root filesystem",
                 "Hardening of container image or cluster security context",
-                "Application misconfigured to write to root filesystem"
+                "Application misconfigured to write to root filesystem",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
                 "Check container securityContext.readOnlyRootFilesystem",
-                "Check PodSecurityPolicy or OPA/Gatekeeper policies"
+                "Check PodSecurityPolicy or OPA/Gatekeeper policies",
             ],
         }

@@ -49,7 +49,7 @@ class PVCMountFailedRule(FailureRule):
         if pvc_unbound:
             return False
         return timeline_has_pattern(timeline, [{"reason": "FailedMount"}])
-    
+
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<pod>")
         pvc_objs = context.get("objects", {}).get("pvc", {})

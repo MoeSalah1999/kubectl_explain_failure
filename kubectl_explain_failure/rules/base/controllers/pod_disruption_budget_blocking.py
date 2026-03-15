@@ -86,7 +86,7 @@ class PodDisruptionBudgetBlockingRule(FailureRule):
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
-                f"kubectl get pdb --all-namespaces",
+                "kubectl get pdb --all-namespaces",
             ],
             "blocking": True,
         }

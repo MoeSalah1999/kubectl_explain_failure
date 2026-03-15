@@ -1,4 +1,5 @@
 import re
+
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 
@@ -12,8 +13,8 @@ class ImagePullRule(FailureRule):
     - Container state.waiting.reason == "ErrImagePull"
 
     Interpretation:
-    The Pod references a container image, but the Kubelet cannot pull it 
-    from the registry due to missing image, authentication errors, or network issues. 
+    The Pod references a container image, but the Kubelet cannot pull it
+    from the registry due to missing image, authentication errors, or network issues.
     Containers remain in a waiting state, preventing Pod startup.
 
     Scope:

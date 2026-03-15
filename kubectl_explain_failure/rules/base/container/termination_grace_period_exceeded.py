@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_event
 
 
 class TerminationGracePeriodExceededRule(FailureRule):
@@ -38,9 +37,7 @@ class TerminationGracePeriodExceededRule(FailureRule):
 
         # Look for repeated Terminating events in timeline
         terminating_events = [
-            e
-            for e in events
-            if "terminating" in (e.get("message") or "").lower()
+            e for e in events if "terminating" in (e.get("message") or "").lower()
         ]
 
         # Require at least 2 events to consider it repeated
@@ -53,11 +50,15 @@ class TerminationGracePeriodExceededRule(FailureRule):
             grace = c.get("terminationGracePeriodSeconds", 30)
             # Check last vs first event timestamps
             if len(terminating_events) >= 2:
-                first_ts = terminating_events[0].get("lastTimestamp") or terminating_events[0].get("eventTime")
-                last_ts = terminating_events[-1].get("lastTimestamp") or terminating_events[-1].get("eventTime")
+                first_ts = terminating_events[0].get(
+                    "lastTimestamp"
+                ) or terminating_events[0].get("eventTime")
+                last_ts = terminating_events[-1].get(
+                    "lastTimestamp"
+                ) or terminating_events[-1].get("eventTime")
                 if first_ts and last_ts:
-                    from datetime import datetime, timezone
-                    fmt = "%Y-%m-%dT%H:%M:%SZ"
+                    from datetime import datetime
+
                     try:
                         start = datetime.fromisoformat(first_ts.replace("Z", "+00:00"))
                         end = datetime.fromisoformat(last_ts.replace("Z", "+00:00"))
@@ -99,8 +100,8 @@ class TerminationGracePeriodExceededRule(FailureRule):
             "causes": chain,
             "blocking": True,
             "evidence": [
-                f"Pod.status.containerStatuses indicate repeated terminating events",
-                f"Pod.spec.containers terminationGracePeriodSeconds checked",
+                "Pod.status.containerStatuses indicate repeated terminating events",
+                "Pod.spec.containers terminationGracePeriodSeconds checked",
             ],
             "object_evidence": {
                 f"pod:{pod_name}": ["Container stuck Terminating beyond grace period"]

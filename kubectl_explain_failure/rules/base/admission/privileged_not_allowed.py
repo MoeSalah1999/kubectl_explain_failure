@@ -27,6 +27,7 @@ class PrivilegedNotAllowedRule(FailureRule):
         custom admission webhooks, or deprecated PodSecurityPolicy.
       - Does not inspect container specs directly — relies on event evidence.
     """
+
     name = "PrivilegedNotAllowed"
     category = "Admission"
     priority = 30

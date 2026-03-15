@@ -72,7 +72,6 @@ class HostNetworkPortConflictRule(FailureRule):
         return False
 
     def explain(self, pod, events, context):
-        spec = pod.get("spec", {})
         ports = self._collect_container_ports(pod)
 
         timeline = context.get("timeline") or build_timeline(events)

@@ -6,7 +6,8 @@ hypothesis = pytest.importorskip(
     "hypothesis",
     reason="Install hypothesis to run property tests: pip install hypothesis",
 )
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from kubectl_explain_failure.engine import explain_failure
 from kubectl_explain_failure.rules.base.container.crashloop_backoff import (
@@ -63,7 +64,10 @@ def test_property_output_contract_and_confidence_bounds(snapshot: K8sSnapshot):
     assert 0.0 <= float(result["confidence"]) <= 1.0
 
 
-@given(snapshot=pvc_scheduler_snapshot_strategy(), rotation=st.integers(min_value=0, max_value=50))
+@given(
+    snapshot=pvc_scheduler_snapshot_strategy(),
+    rotation=st.integers(min_value=0, max_value=50),
+)
 def test_property_pvc_hard_blocker_survives_event_reordering(
     snapshot: K8sSnapshot, rotation: int
 ):
@@ -187,7 +191,9 @@ def test_property_timestamped_failedscheduling_order_invariance(
 
 
 @given(snapshot=malformed_snapshot_strategy())
-def test_property_malformed_or_minimal_events_do_not_break_engine(snapshot: K8sSnapshot):
+def test_property_malformed_or_minimal_events_do_not_break_engine(
+    snapshot: K8sSnapshot,
+):
     pod, events, context = snapshot.as_engine_input()
     result = explain_failure(
         pod,

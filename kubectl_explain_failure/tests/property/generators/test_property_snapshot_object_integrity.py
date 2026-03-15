@@ -1,5 +1,3 @@
-import copy
-
 import pytest
 
 hypothesis = pytest.importorskip(

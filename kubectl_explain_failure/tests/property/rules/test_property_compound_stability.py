@@ -6,7 +6,8 @@ hypothesis = pytest.importorskip(
     "hypothesis",
     reason="Install hypothesis to run property tests: pip install hypothesis",
 )
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from kubectl_explain_failure.engine import explain_failure
 from kubectl_explain_failure.rules.base.container.crashloop_backoff import (
@@ -23,7 +24,10 @@ from kubectl_explain_failure.tests.property.strategies import (
 RULES = [CrashLoopOOMKilledRule(), CrashLoopBackOffRule()]
 
 
-@given(snapshot=crashloop_oom_snapshot_strategy(), rotation=st.integers(min_value=0, max_value=50))
+@given(
+    snapshot=crashloop_oom_snapshot_strategy(),
+    rotation=st.integers(min_value=0, max_value=50),
+)
 def test_property_crashloop_oom_compound_is_order_stable(
     snapshot: K8sSnapshot,
     rotation: int,

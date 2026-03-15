@@ -4,14 +4,9 @@ from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import build_timeline
 
+SKEW_REGEX = re.compile(r"skew.*?(\d+).*?maxskew.*?(\d+)", re.IGNORECASE)
 
-SKEW_REGEX = re.compile(
-    r"skew.*?(\d+).*?maxskew.*?(\d+)", re.IGNORECASE
-)
-
-TOPOLOGY_KEY_REGEX = re.compile(
-    r"topology.*?key.*?([a-zA-Z0-9\.\-\/]+)", re.IGNORECASE
-)
+TOPOLOGY_KEY_REGEX = re.compile(r"topology.*?key.*?([a-zA-Z0-9\.\-\/]+)", re.IGNORECASE)
 
 
 class PodTopologySpreadSkewTooHighRule(FailureRule):

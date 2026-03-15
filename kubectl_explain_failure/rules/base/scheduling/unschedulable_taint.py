@@ -1,6 +1,6 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_event, event_frequency
+from kubectl_explain_failure.timeline import event_frequency, timeline_has_event
 
 
 class UnschedulableTaintRule(FailureRule):
@@ -13,8 +13,8 @@ class UnschedulableTaintRule(FailureRule):
     - Pod lacks tolerations matching node taints
 
     Interpretation:
-    One or more nodes in the cluster have taints that the Pod does not 
-    tolerate. The scheduler cannot place the Pod onto any available node, 
+    One or more nodes in the cluster have taints that the Pod does not
+    tolerate. The scheduler cannot place the Pod onto any available node,
     resulting in repeated FailedScheduling events and a Pending state.
 
     Scope:
@@ -79,7 +79,7 @@ class UnschedulableTaintRule(FailureRule):
             causes=[
                 Cause(
                     code="POD_TOLERATIONS_DEFINED",
-                    message=f"Pod declares tolerations",
+                    message="Pod declares tolerations",
                     role="workload_context",
                 ),
                 Cause(

@@ -73,13 +73,12 @@ def test_pvc_bound_node_diskpressure_mount_golden():
     assert result["evidence"] == expected["evidence"]
 
     # ---- Causal chain materialization ----
-    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"], strict=False):
         assert exp_cause["code"] == res_cause["code"]
         assert exp_cause["message"] == res_cause["message"]
         assert exp_cause["role"] == res_cause["role"]
         assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
         assert exp_cause.get("blocking", True) == res_cause.get("blocking", True)
-
 
     # ---- Object evidence passthrough ----
     assert result["object_evidence"] == expected["object_evidence"]

@@ -8,9 +8,11 @@ from kubectl_explain_failure.timeline import build_timeline
 BASE_DIR = os.path.dirname(__file__)
 FIXTURE_DIR = os.path.join(BASE_DIR, "failed_mount")
 
+
 def load_json(name: str):
     with open(os.path.join(FIXTURE_DIR, name)) as f:
         return json.load(f)
+
 
 def test_failed_mount_golden():
     data = load_json("input.json")
@@ -73,7 +75,7 @@ def test_failed_mount_golden():
         assert ev in result["evidence"]
 
     # Causes
-    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"], strict=False):
         assert exp_cause["code"] == res_cause["code"]
         assert exp_cause["message"] == res_cause["message"]
         assert exp_cause["role"] == res_cause["role"]

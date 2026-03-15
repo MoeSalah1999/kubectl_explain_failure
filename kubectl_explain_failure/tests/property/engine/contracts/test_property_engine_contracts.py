@@ -4,7 +4,8 @@ hypothesis = pytest.importorskip(
     "hypothesis",
     reason="Install hypothesis to run property tests: pip install hypothesis",
 )
-from hypothesis import HealthCheck, given, settings, strategies as st
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
 from kubectl_explain_failure.engine import explain_failure
 from kubectl_explain_failure.rules.base_rule import FailureRule
@@ -101,4 +102,3 @@ def test_property_rejects_out_of_range_confidence(
             context={},
             rules=[_OutOfRangeConfidenceRule(bad_confidence)],
         )
-

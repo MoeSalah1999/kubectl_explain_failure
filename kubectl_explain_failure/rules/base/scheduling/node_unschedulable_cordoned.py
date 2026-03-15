@@ -48,7 +48,9 @@ class NodeUnschedulableCordonedRule(FailureRule):
         timeline = build_timeline(events)
 
         # Scheduler must have attempted scheduling
-        failed_sched = [e for e in timeline.events if e.get("reason") == "FailedScheduling"]
+        failed_sched = [
+            e for e in timeline.events if e.get("reason") == "FailedScheduling"
+        ]
 
         if not failed_sched:
             return False
@@ -72,7 +74,9 @@ class NodeUnschedulableCordonedRule(FailureRule):
 
         timeline = build_timeline(events)
 
-        failed_sched = [e for e in timeline.events if e.get("reason") == "FailedScheduling"]
+        failed_sched = [
+            e for e in timeline.events if e.get("reason") == "FailedScheduling"
+        ]
 
         evidence_msgs = []
 
@@ -103,8 +107,6 @@ class NodeUnschedulableCordonedRule(FailureRule):
                 ),
             ]
         )
-
-        pod_name = pod.get("metadata", {}).get("name", "unknown")
 
         return {
             "rule": self.name,

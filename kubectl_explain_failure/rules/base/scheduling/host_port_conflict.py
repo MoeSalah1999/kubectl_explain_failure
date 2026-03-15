@@ -35,7 +35,7 @@ class HostPortConflictRule(FailureRule):
         "pod": True,
         "context": ["timeline"],
     }
-    
+
     def _pod_requests_hostport(self, pod) -> bool:
         spec = pod.get("spec", {})
         containers = spec.get("containers", []) or []
@@ -51,16 +51,17 @@ class HostPortConflictRule(FailureRule):
         timeline = context.get("timeline")
         if not timeline:
             return False
-        
+
         # Only evaluate hostPort conflict if pod actually requests one
         if not self._pod_requests_hostport(pod):
             return False
-        
+
         entries = timeline.events_within_window(15, reason="FailedScheduling")
         # Fallback for tests or clusters where events lack timestamps
         if not entries:
             entries = [
-                e for e in getattr(timeline, "events", [])
+                e
+                for e in getattr(timeline, "events", [])
                 if str(e.get("reason", "")).lower() == "failedscheduling"
             ]
 

@@ -2,6 +2,7 @@ from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import Timeline
 
+
 class ExpiredServiceAccountTokenRule(FailureRule):
     """
     Detects CrashLoopBackOffs caused by expired ServiceAccount tokens.

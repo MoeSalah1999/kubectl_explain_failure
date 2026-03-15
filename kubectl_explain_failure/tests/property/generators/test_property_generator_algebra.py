@@ -63,7 +63,9 @@ def _result_digest(result: dict) -> dict:
     return digest
 
 
-@given(snapshot=snapshot_strategy(), noise_a=unrelated_noise(), noise_b=unrelated_noise())
+@given(
+    snapshot=snapshot_strategy(), noise_a=unrelated_noise(), noise_b=unrelated_noise()
+)
 def test_property_inject_is_associative_for_noise_merges(
     snapshot: K8sSnapshot,
     noise_a: dict,

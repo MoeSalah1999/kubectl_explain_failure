@@ -51,7 +51,7 @@ def test_pvc_bound_then_crashloop_golden():
     pvc_obj = data["pvc"]
     context["objects"] = context.get("objects", {})
     context["objects"]["pvc"] = {pvc_obj["metadata"]["name"]: pvc_obj}
-    
+
     if events:
         context["timeline"] = build_timeline(events)
 
@@ -73,7 +73,7 @@ def test_pvc_bound_then_crashloop_golden():
         assert ev in result["evidence"]
 
     # Causes
-    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"], strict=False):
         assert exp_cause["code"] == res_cause["code"]
         assert exp_cause["message"] == res_cause["message"]
         assert exp_cause["role"] == res_cause["role"]

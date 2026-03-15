@@ -28,6 +28,7 @@ class NodeMemoryPressureRule(FailureRule):
     - Does not model kubelet eviction thresholds explicitly
     - Does not diagnose application-level memory leaks
     """
+
     name = "NodeMemoryPressure"
     category = "Node"
     priority = 22  # Same tier as DiskPressure-level node signals
@@ -48,8 +49,7 @@ class NodeMemoryPressureRule(FailureRule):
             node
             for node in node_objs.values()
             if any(
-                cond.get("type") == "MemoryPressure"
-                and cond.get("status") == "True"
+                cond.get("type") == "MemoryPressure" and cond.get("status") == "True"
                 for cond in node.get("status", {}).get("conditions", [])
             )
         ]

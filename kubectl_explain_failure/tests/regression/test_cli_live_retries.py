@@ -29,7 +29,10 @@ def test_cli_live_passes_retry_parameters_to_live_adapter(monkeypatch):
             [],
             {"objects": {}},
             [],
-            {"missing_due_to_rbac": [], "completeness": {"missing_total": 0, "rbac_missing_total": 0}},
+            {
+                "missing_due_to_rbac": [],
+                "completeness": {"missing_total": 0, "rbac_missing_total": 0},
+            },
         )
 
     def fake_explain_failure(*args, **kwargs):

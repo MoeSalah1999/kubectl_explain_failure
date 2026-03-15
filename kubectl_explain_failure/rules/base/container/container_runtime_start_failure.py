@@ -35,10 +35,7 @@ class ContainerRuntimeStartFailureRule(FailureRule):
             return False
 
         return timeline_has_event(
-            timeline,
-            kind="Generic",
-            phase="Failure",
-            source="kubelet"
+            timeline, kind="Generic", phase="Failure", source="kubelet"
         ) and any(
             "failed to create containerd task" in (e.get("message") or "")
             for e in (timeline.events if timeline else [])
@@ -46,10 +43,15 @@ class ContainerRuntimeStartFailureRule(FailureRule):
 
     def explain(self, pod, events, context):
         timeline = context.get("timeline")
-        evidence_events = [
-            e for e in timeline.events
-            if "failed to create containerd task" in (e.get("message") or "")
-        ] if timeline else []
+        evidence_events = (
+            [
+                e
+                for e in timeline.events
+                if "failed to create containerd task" in (e.get("message") or "")
+            ]
+            if timeline
+            else []
+        )
 
         chain = CausalChain(
             causes=[
@@ -87,11 +89,11 @@ class ContainerRuntimeStartFailureRule(FailureRule):
             "likely_causes": [
                 "Container runtime (containerd/cri-o) misconfiguration",
                 "Insufficient node resources for runtime",
-                "Container runtime daemon failure"
+                "Container runtime daemon failure",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
                 "Check kubelet logs for container runtime errors",
-                "Verify containerd/cri-o service status on node"
+                "Verify containerd/cri-o service status on node",
             ],
         }

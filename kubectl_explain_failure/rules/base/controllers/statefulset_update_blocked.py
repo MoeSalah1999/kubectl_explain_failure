@@ -27,6 +27,7 @@ class StatefulSetUpdateBlockedRule(FailureRule):
     - Does not detect image pull errors or runtime issues
     - Does not indicate infrastructure failure; may reflect intentional rollout configuration
     """
+
     name = "StatefulSetUpdateBlocked"
     category = "Controller"
     priority = 40

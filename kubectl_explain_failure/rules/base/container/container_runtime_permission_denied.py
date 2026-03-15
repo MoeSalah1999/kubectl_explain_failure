@@ -39,16 +39,29 @@ class ContainerRuntimePermissionDeniedRule(FailureRule):
             kind="Generic",
             phase="Failure",
         ) and any(
-            e.get("reason") and any(term in e["reason"] for term in ["PermissionDenied", "Seccomp", "AppArmor"])
+            e.get("reason")
+            and any(
+                term in e["reason"]
+                for term in ["PermissionDenied", "Seccomp", "AppArmor"]
+            )
             for e in timeline.events
         )
 
     def explain(self, pod, events, context):
         timeline = context.get("timeline")
-        events_found = [
-            e for e in timeline.events
-            if e.get("reason") and any(term in e["reason"] for term in ["PermissionDenied", "Seccomp", "AppArmor"])
-        ] if timeline else []
+        events_found = (
+            [
+                e
+                for e in timeline.events
+                if e.get("reason")
+                and any(
+                    term in e["reason"]
+                    for term in ["PermissionDenied", "Seccomp", "AppArmor"]
+                )
+            ]
+            if timeline
+            else []
+        )
 
         chain = CausalChain(
             causes=[

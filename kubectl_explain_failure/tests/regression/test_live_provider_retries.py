@@ -3,7 +3,10 @@ from __future__ import annotations
 import pytest
 
 from kubectl_explain_failure import live_adapter
-from kubectl_explain_failure.live_adapter import KubectlLiveDataProvider, LiveIntrospectionError
+from kubectl_explain_failure.live_adapter import (
+    KubectlLiveDataProvider,
+    LiveIntrospectionError,
+)
 
 
 def test_kubectl_provider_retries_transient_errors(monkeypatch):

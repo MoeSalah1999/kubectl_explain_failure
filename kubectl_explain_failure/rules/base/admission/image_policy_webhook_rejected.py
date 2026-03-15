@@ -2,6 +2,7 @@ from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import timeline_has_event
 
+
 class ImagePolicyWebhookRejectedRule(FailureRule):
     """
     Detects container failures caused by image policy webhook rejection at runtime.
@@ -39,7 +40,9 @@ class ImagePolicyWebhookRejectedRule(FailureRule):
         if not timeline:
             return False
         # Look specifically for webhook rejection events
-        return timeline_has_event(timeline, kind="Image", phase="Failure", source="image-policy-webhook")
+        return timeline_has_event(
+            timeline, kind="Image", phase="Failure", source="image-policy-webhook"
+        )
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")

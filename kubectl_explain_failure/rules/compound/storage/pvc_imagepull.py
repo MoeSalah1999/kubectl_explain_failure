@@ -31,6 +31,7 @@ class PVCThenImagePullFailRule(FailureRule):
     - Does not include scheduling failures
     - Does not include runtime crashes after successful image pull
     """
+
     name = "PVC Pending then ImagePullFail"
     category = "Compound"
     priority = 50
@@ -51,7 +52,7 @@ class PVCThenImagePullFailRule(FailureRule):
     def explain(self, pod, events, context):
         pvc = context["blocking_pvc"]
         pvc_name = pvc["metadata"]["name"]
-        
+
         chain = CausalChain(
             causes=[
                 Cause(

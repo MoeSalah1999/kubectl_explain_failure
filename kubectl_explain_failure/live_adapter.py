@@ -28,8 +28,7 @@ class LiveDataProvider(Protocol):
         kubeconfig: str | None = None,
         timeout_seconds: int = 10,
         extra_args: list[str] | None = None,
-    ) -> dict[str, Any]:
-        ...
+    ) -> dict[str, Any]: ...
 
 
 def _log_structured(
@@ -137,7 +136,11 @@ def _classify_fetch_error(exc: Exception) -> str:
         return "timeout"
 
     msg = str(exc).lower()
-    if "forbidden" in msg or "cannot list resource" in msg or "cannot get resource" in msg:
+    if (
+        "forbidden" in msg
+        or "cannot list resource" in msg
+        or "cannot get resource" in msg
+    ):
         return "rbac_forbidden"
     if "not found" in msg or "notfound" in msg:
         return "not_found"
@@ -181,9 +184,7 @@ def _kubectl_get_json(
             timeout=max(1, timeout_seconds),
         )
     except FileNotFoundError as exc:
-        raise LiveIntrospectionError(
-            "kubectl binary was not found in PATH"
-        ) from exc
+        raise LiveIntrospectionError("kubectl binary was not found in PATH") from exc
 
     if proc.returncode != 0:
         stderr = (proc.stderr or "").strip()
@@ -331,7 +332,9 @@ def _extract_secret_names_from_pod(pod: dict[str, Any]) -> list[str]:
     return sorted(names)
 
 
-def _extract_secret_names_from_serviceaccount(sa_obj: dict[str, Any] | None) -> list[str]:
+def _extract_secret_names_from_serviceaccount(
+    sa_obj: dict[str, Any] | None,
+) -> list[str]:
     if not sa_obj:
         return []
 
@@ -377,10 +380,12 @@ def _sort_and_limit_events(
     if event_limit <= 0:
         return []
 
-    ordered = sorted(
-        events,
-        key=lambda e: (_event_timestamp_value(e) is None, _event_timestamp_value(e)),
-    )
+    def _sort_key(event: dict[str, Any]) -> tuple[bool, datetime]:
+        ts = _event_timestamp_value(event)
+        fallback = datetime.min.replace(tzinfo=timezone.utc)
+        return (ts is None, ts or fallback)
+
+    ordered = sorted(events, key=_sort_key)
 
     if len(ordered) <= event_limit:
         return ordered
@@ -464,7 +469,9 @@ def fetch_live_snapshot(
     retry_backoff_seconds: float = 0.25,
     provider: LiveDataProvider | None = None,
     trace_id: str | None = None,
-) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, Any], list[str], dict[str, Any]]:
+) -> tuple[
+    dict[str, Any], list[dict[str, Any]], dict[str, Any], list[str], dict[str, Any]
+]:
     trace_id = trace_id or uuid.uuid4().hex
     provider = provider or KubectlLiveDataProvider(
         max_retries=retry_count,
@@ -663,17 +670,23 @@ def fetch_live_snapshot(
         _add_object(context, "secret", secret_obj)
 
     rbac_missing = [m for m in missing_resources if m.get("reason") == "rbac_forbidden"]
-    missing_kinds = sorted({m.get("kind") for m in missing_resources if m.get("kind")})
+    missing_kinds_set: set[str] = set()
+    for m in missing_resources:
+        kind = m.get("kind")
+        if isinstance(kind, str):
+            missing_kinds_set.add(kind)
+    missing_kinds = sorted(missing_kinds_set)
 
     missing_kinds_by_reason: dict[str, list[str]] = {}
     for reason in ("rbac_forbidden", "not_found", "timeout", "other"):
-        kinds = sorted(
-            {
-                m.get("kind")
-                for m in missing_resources
-                if m.get("reason") == reason and m.get("kind")
-            }
-        )
+        kinds_set: set[str] = set()
+        for m in missing_resources:
+            if m.get("reason") != reason:
+                continue
+            kind = m.get("kind")
+            if isinstance(kind, str):
+                kinds_set.add(kind)
+        kinds = sorted(kinds_set)
         if kinds:
             missing_kinds_by_reason[reason] = kinds
 
@@ -683,7 +696,7 @@ def fetch_live_snapshot(
         if isinstance(mapping, dict)
     }
 
-    live_metadata = {
+    live_metadata: dict[str, Any] = {
         "trace_id": trace_id,
         "event_count": len(events),
         "fetch_warning_count": len(warnings),

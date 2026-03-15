@@ -11,8 +11,8 @@ class NodeSelectorMismatchRule(FailureRule):
     - No cluster node satisfies all specified label constraints
 
     Interpretation:
-    The Pod declares strict node label requirements via nodeSelector, 
-    but no available node in the cluster matches all required labels. 
+    The Pod declares strict node label requirements via nodeSelector,
+    but no available node in the cluster matches all required labels.
     The scheduler cannot place the Pod, leaving it in a Pending state.
 
     Scope:

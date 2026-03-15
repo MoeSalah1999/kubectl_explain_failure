@@ -55,6 +55,7 @@ class ResourceQuotaExceededRule(FailureRule):
                 return True
 
         return False
+
     def explain(self, pod, events, context):
         namespace = pod.get("metadata", {}).get("namespace", "default")
         pod_name = pod.get("metadata", {}).get("name")

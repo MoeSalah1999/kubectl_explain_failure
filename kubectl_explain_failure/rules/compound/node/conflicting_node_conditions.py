@@ -124,9 +124,7 @@ class ConflictingNodeConditionsRule(FailureRule):
                 "Multiple node pressure conditions detected",
             ],
             "object_evidence": {
-                f"node:{node_name}": [
-                    f"Pressure conditions active: {pressure_list}"
-                ]
+                f"node:{node_name}": [f"Pressure conditions active: {pressure_list}"]
             },
             "likely_causes": [
                 "Node resource exhaustion",

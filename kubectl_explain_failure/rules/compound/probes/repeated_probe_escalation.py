@@ -79,7 +79,7 @@ class RepeatedProbeFailureEscalationRule(FailureRule):
             return False
 
         return True
-    
+
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
 

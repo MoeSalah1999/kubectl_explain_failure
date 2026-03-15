@@ -64,7 +64,7 @@ class FailedSchedulingRule(FailureRule):
             "runtimeclass",
             "overhead",
             "gpu",
-            "nvidia.com/"
+            "nvidia.com/",
         ]
 
         for e in events:

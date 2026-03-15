@@ -16,7 +16,10 @@ from kubectl_explain_failure.rules.base.scheduling.failed_scheduling import (
     FailedSchedulingRule,
 )
 from kubectl_explain_failure.rules.base.storage.pvc_not_bound import PVCNotBoundRule
-from kubectl_explain_failure.tests.property.strategies import K8sSnapshot, snapshot_strategy
+from kubectl_explain_failure.tests.property.strategies import (
+    K8sSnapshot,
+    snapshot_strategy,
+)
 
 RULES = [PVCNotBoundRule(), FailedSchedulingRule(), CrashLoopBackOffRule()]
 

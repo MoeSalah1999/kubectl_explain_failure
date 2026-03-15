@@ -69,7 +69,7 @@ class DeploymentProgressDeadlineExceededRule(FailureRule):
                 ),
             ]
         )
-        
+
         return {
             "rule": self.name,
             "root_cause": "Deployment rollout failed due to ProgressDeadlineExceeded",

@@ -28,6 +28,7 @@ class CrashLoopLivenessProbeCompoundRule(FailureRule):
     - Does not include CrashLoops caused by configuration changes
     - Does not include transient startup failures unrelated to liveness probes
     """
+
     name = "CrashLoopLivenessProbe"
     category = "Compound"
     priority = 59

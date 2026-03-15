@@ -40,7 +40,9 @@ class CNIIPExhaustionRule(FailureRule):
             return False
 
         # At least one CNIPluginFailure event
-        if not timeline_has_event(timeline, kind="Networking", phase="Failure", source="cni"):
+        if not timeline_has_event(
+            timeline, kind="Networking", phase="Failure", source="cni"
+        ):
             return False
 
         # Optional: check multiple pods failing on the same node
@@ -49,8 +51,11 @@ class CNIIPExhaustionRule(FailureRule):
             return False
 
         node_events = [
-            e for e in timeline.events
-            if e.get("source") == "cni" and e.get("reason") == "CNIPluginFailure" and e.get("involvedObject", {}).get("nodeName") == node_name
+            e
+            for e in timeline.events
+            if e.get("source") == "cni"
+            and e.get("reason") == "CNIPluginFailure"
+            and e.get("involvedObject", {}).get("nodeName") == node_name
         ]
         return len(node_events) >= 2  # threshold: at least 2 pods affected
 

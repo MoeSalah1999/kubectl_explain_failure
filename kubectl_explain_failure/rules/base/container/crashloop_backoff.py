@@ -24,6 +24,7 @@ class CrashLoopBackOffRule(FailureRule):
       - Does not include ImagePullBackOff errors
       - Does not include PodSecurity or admission failures
     """
+
     name = "CrashLoopBackOff"
     category = "Container"
     priority = 15

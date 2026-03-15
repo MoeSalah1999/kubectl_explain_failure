@@ -10,10 +10,14 @@ hypothesis = pytest.importorskip(
     "hypothesis",
     reason="Install hypothesis to run property tests: pip install hypothesis",
 )
-from hypothesis import HealthCheck, given, settings, strategies as st
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
 from kubectl_explain_failure import live_adapter
-from kubectl_explain_failure.tests.property.strategies import K8sSnapshot, snapshot_strategy
+from kubectl_explain_failure.tests.property.strategies import (
+    K8sSnapshot,
+    snapshot_strategy,
+)
 
 
 def _ts(minute: int) -> str:
@@ -24,7 +28,9 @@ def _ts(minute: int) -> str:
 @settings(max_examples=80, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 @given(
     snapshot=snapshot_strategy(),
-    minutes=st.lists(st.integers(min_value=0, max_value=500), min_size=1, max_size=30, unique=True),
+    minutes=st.lists(
+        st.integers(min_value=0, max_value=500), min_size=1, max_size=30, unique=True
+    ),
     event_limit=st.integers(min_value=1, max_value=15),
 )
 def test_property_live_adapter_event_output_is_chronological_and_capped(
@@ -90,7 +96,11 @@ def test_property_live_adapter_metadata_totals_are_self_consistent_with_generate
     }
 
     for v in pod_obj.get("spec", {}).get("volumes", []):
-        claim_name = v.get("persistentVolumeClaim", {}).get("claimName") if isinstance(v, dict) else None
+        claim_name = (
+            v.get("persistentVolumeClaim", {}).get("claimName")
+            if isinstance(v, dict)
+            else None
+        )
         if not claim_name:
             continue
 
@@ -126,7 +136,9 @@ def test_property_live_adapter_metadata_totals_are_self_consistent_with_generate
     fetched_counts = metadata.get("fetched_object_counts", {})
     assert metadata.get("fetched_object_total") == sum(fetched_counts.values())
     assert metadata.get("event_count") == len(snapshot.events)
-    assert metadata.get("fetch_warning_count") == len(metadata.get("missing_resources", []))
+    assert metadata.get("fetch_warning_count") == len(
+        metadata.get("missing_resources", [])
+    )
 
     assert snapshot.pod == baseline.pod
     assert snapshot.events == baseline.events

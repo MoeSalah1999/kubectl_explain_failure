@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import build_timeline
 
 
 class PodOverheadExceededNodeCapacityRule(FailureRule):
@@ -39,10 +38,7 @@ class PodOverheadExceededNodeCapacityRule(FailureRule):
         if not overhead:
             return False
 
-        failed_sched = [
-            e for e in events
-            if e.get("reason") == "FailedScheduling"
-        ]
+        failed_sched = [e for e in events if e.get("reason") == "FailedScheduling"]
 
         if not failed_sched:
             return False

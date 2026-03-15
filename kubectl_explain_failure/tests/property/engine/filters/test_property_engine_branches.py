@@ -6,7 +6,8 @@ hypothesis = pytest.importorskip(
     "hypothesis",
     reason="Install hypothesis to run property tests: pip install hypothesis",
 )
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from kubectl_explain_failure.engine import explain_failure
 from kubectl_explain_failure.rules.base.container.crashloop_backoff import (
@@ -81,7 +82,10 @@ def test_property_single_deterministic_rule_short_circuits_aggregation(
     assert len(result["causes"]) >= 1
 
 
-@given(snapshot=pvc_scheduler_snapshot_strategy(), rotation=st.integers(min_value=0, max_value=50))
+@given(
+    snapshot=pvc_scheduler_snapshot_strategy(),
+    rotation=st.integers(min_value=0, max_value=50),
+)
 def test_property_enabled_categories_restricts_to_scheduling(
     snapshot: K8sSnapshot,
     rotation: int,
@@ -114,7 +118,10 @@ def test_property_enabled_categories_restricts_to_scheduling(
         assert result["resolution"]["winner"] == "FailedScheduling"
 
 
-@given(snapshot=pvc_scheduler_snapshot_strategy(), rotation=st.integers(min_value=0, max_value=50))
+@given(
+    snapshot=pvc_scheduler_snapshot_strategy(),
+    rotation=st.integers(min_value=0, max_value=50),
+)
 def test_property_disabled_categories_excludes_pvc_rules(
     snapshot: K8sSnapshot,
     rotation: int,

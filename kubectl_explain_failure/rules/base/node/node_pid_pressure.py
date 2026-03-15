@@ -24,15 +24,14 @@ class NodePIDPressureRule(FailureRule):
             node
             for node in node_objs.values()
             if any(
-                cond.get("type") == "PIDPressure"
-                and cond.get("status") == "True"
+                cond.get("type") == "PIDPressure" and cond.get("status") == "True"
                 for cond in node.get("status", {}).get("conditions", [])
             )
         ]
 
         if not pressured_nodes:
             return False
-        
+
         pod_node = pod.get("spec", {}).get("nodeName")
 
         if pod_node:
@@ -40,8 +39,7 @@ class NodePIDPressureRule(FailureRule):
                 name
                 for name, node in node_objs.items()
                 if any(
-                    cond.get("type") == "PIDPressure"
-                    and cond.get("status") == "True"
+                    cond.get("type") == "PIDPressure" and cond.get("status") == "True"
                     for cond in node.get("status", {}).get("conditions", [])
                 )
             ]

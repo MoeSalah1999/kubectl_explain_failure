@@ -11,9 +11,9 @@ class PreemptedByHigherPriorityRule(FailureRule):
     - Scheduler has evicted the Pod to admit a higher-priority workload
 
     Interpretation:
-    A higher-priority Pod required scheduling onto a node lacking sufficient 
-    free resources. The scheduler invoked preemption logic and selected this 
-    lower-priority Pod as a victim. The Pod was terminated and marked as 
+    A higher-priority Pod required scheduling onto a node lacking sufficient
+    free resources. The scheduler invoked preemption logic and selected this
+    lower-priority Pod as a victim. The Pod was terminated and marked as
     Preempted, preventing continued execution.
 
     Scope:

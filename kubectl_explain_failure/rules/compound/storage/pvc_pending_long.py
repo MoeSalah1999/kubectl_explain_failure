@@ -32,6 +32,7 @@ class PVCPendingTooLongRule(FailureRule):
     - Does not include mount failures after successful binding
     - Does not include container runtime crashes
     """
+
     name = "PVCPendingTooLong"
     category = "PersistentVolumeClaim"
     priority = 23

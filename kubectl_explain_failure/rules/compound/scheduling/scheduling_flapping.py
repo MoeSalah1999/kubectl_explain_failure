@@ -57,13 +57,10 @@ class SchedulingFlappingRule(FailureRule):
             return False
 
         # Only look at recent scheduling activity
-        recent = timeline.events_within_window(
-            self.MAX_DURATION_SECONDS // 60
-        )
+        recent = timeline.events_within_window(self.MAX_DURATION_SECONDS // 60)
 
         scheduling_events = [
-            e for e in recent
-            if e.get("reason") in ("Scheduled", "FailedScheduling")
+            e for e in recent if e.get("reason") in ("Scheduled", "FailedScheduling")
         ]
 
         if len(scheduling_events) < self.MIN_ALTERNATIONS:

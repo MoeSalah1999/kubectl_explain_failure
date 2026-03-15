@@ -11,7 +11,7 @@ class ImagePullBackOffRule(FailureRule):
     - Container state.waiting.reason == "ImagePullBackOff"
 
     Interpretation:
-    The container image could not be pulled (missing, invalid, or unreachable), 
+    The container image could not be pulled (missing, invalid, or unreachable),
     causing the Kubelet to apply exponential restart backoff. The Pod cannot start.
 
     Scope:
@@ -66,7 +66,8 @@ class ImagePullBackOffRule(FailureRule):
         failing_containers = [
             cs.get("name")
             for cs in pod.get("status", {}).get("containerStatuses", [])
-            if cs.get("state", {}).get("waiting", {}).get("reason") == "ImagePullBackOff"
+            if cs.get("state", {}).get("waiting", {}).get("reason")
+            == "ImagePullBackOff"
         ]
 
         chain = CausalChain(

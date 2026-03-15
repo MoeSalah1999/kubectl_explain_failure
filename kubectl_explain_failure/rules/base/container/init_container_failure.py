@@ -20,6 +20,7 @@ class InitContainerFailureRule(FailureRule):
     - Deterministic (event & state-based)
     - Supersedes simpler InitContainerNonZeroExit signals
     """
+
     name = "InitContainerFailure"
     category = "Compound"
     priority = 61

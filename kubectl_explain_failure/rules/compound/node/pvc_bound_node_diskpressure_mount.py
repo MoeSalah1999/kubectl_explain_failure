@@ -31,6 +31,7 @@ class PVCBoundNodeDiskPressureMountRule(FailureRule):
     - Does not include CSI driver misconfiguration unrelated to disk pressure
     - Does not include scheduling failures unrelated to volume mount
     """
+
     name = "PVCBoundNodeDiskPressureMount"
     category = "Compound"
     priority = 62
@@ -74,8 +75,7 @@ class PVCBoundNodeDiskPressureMountRule(FailureRule):
         mount_failed = False
         if hasattr(timeline, "events_within_window"):
             recent_mount_failures = timeline.events_within_window(
-                minutes=60,  # configurable lookback
-                reason="FailedMount"
+                minutes=60, reason="FailedMount"  # configurable lookback
             )
             if recent_mount_failures:
                 mount_failed = True

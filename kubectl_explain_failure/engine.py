@@ -1,6 +1,7 @@
 import os
-from typing import Any
 from datetime import datetime, timezone
+from typing import Any
+
 from kubectl_explain_failure.causality import (
     CausalChain,
     Resolution,
@@ -11,7 +12,10 @@ from kubectl_explain_failure.loader import load_plugins, load_rules
 from kubectl_explain_failure.model import get_pod_name, get_pod_phase
 from kubectl_explain_failure.relations import build_relations
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import build_timeline, timeline_has_pattern, timeline_has_event
+from kubectl_explain_failure.timeline import (
+    build_timeline,
+    timeline_has_event,
+)
 
 _DEFAULT_RULES = None
 
@@ -106,7 +110,6 @@ def normalize_context(context: dict[str, Any]) -> dict[str, Any]:
         # leave context["node"] as the original single Node object
         pass
 
-    
     # ----------------------------
     # Canonical PVC state (object-graph based)
     # ----------------------------
@@ -218,19 +221,14 @@ def dominance_key(item: tuple[dict[str, Any], FailureRule, CausalChain]) -> tupl
     return (
         # 1. Deterministic rules dominate non-deterministic
         0 if getattr(rule, "deterministic", False) else 1,
-
         # 2. Compound dominates non-compound
         0 if _norm_category(rule) == "compound" else 1,
-
         # 3. Blocking dominates non-blocking
         0 if exp.get("blocking") else 1,
-
         # 4. Higher priority wins
         -getattr(rule, "priority", 0),
-
         # 5. Higher confidence wins
         -exp.get("confidence", 0.0),
-
         # 6. Stable tie-breaker
         rule.name,
     )
@@ -277,9 +275,11 @@ def score_explanations(
 
     return best_root_cause, combined_confidence
 
+
 # ----------------------------
 # Heuristic engine
 # ----------------------------
+
 
 def explain_failure(
     pod: dict[str, Any],
@@ -328,15 +328,18 @@ def explain_failure(
         # Detect execution mode automatically
         try:
             # Extract newest event timestamp
-            timestamps = [
-                e.get("lastTimestamp") or e.get("eventTime") or e.get("firstTimestamp")
-                for e in events
-                if e.get("lastTimestamp") or e.get("eventTime") or e.get("firstTimestamp")
-            ]
+            timestamps: list[str] = []
+            for e in events:
+                ts = (
+                    e.get("lastTimestamp")
+                    or e.get("eventTime")
+                    or e.get("firstTimestamp")
+                )
+                if isinstance(ts, str):
+                    timestamps.append(ts)
 
             parsed = [
-                datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                for ts in timestamps
+                datetime.fromisoformat(ts.replace("Z", "+00:00")) for ts in timestamps
             ]
 
             newest = max(parsed) if parsed else None
@@ -369,9 +372,11 @@ def explain_failure(
         phase="Failure",
     ):
         if verbose:
-            print(f"[DEBUG] Structured timeline failure signal detected for pod {pod_name}")
+            print(
+                f"[DEBUG] Structured timeline failure signal detected for pod {pod_name}"
+            )
             print(f"[DEBUG] Timeline shows BackOff pattern for pod {pod_name}")
-            
+
     owners = pod.get("metadata", {}).get("ownerReferences", [])
     if owners:
         context["owners"] = owners
@@ -521,15 +526,12 @@ def explain_failure(
                     f"{rule.name}.explain() missing required fields: {missing}"
                 )
 
-            if not isinstance(exp.get("confidence"), (float, int)):
-                raise ValueError(
-                    f"{rule.name}.confidence must be numeric"
-                )
+            confidence_val = exp.get("confidence")
+            if not isinstance(confidence_val, (float, int)):
+                raise ValueError(f"{rule.name}.confidence must be numeric")
 
-            if exp.get("confidence") < 0.0 or exp.get("confidence") > 1.0:
-                raise ValueError(
-                    f"{rule.name}.confidence must be within [0,1]"
-                )
+            if confidence_val < 0.0 or confidence_val > 1.0:
+                raise ValueError(f"{rule.name}.confidence must be within [0,1]")
 
             # ---- Explain() contract enforcement ----
             if not isinstance(exp, dict):
@@ -629,7 +631,7 @@ def explain_failure(
         penalty = 1.0 - (0.05 * (total_matches - 1))
         penalty = max(0.75, penalty)  # never degrade below 0.75
 
-        for exp, rule, _ in filtered_explanations:
+        for exp, _rule, _ in filtered_explanations:
             exp["confidence"] = compose_confidence(
                 rule_confidence=exp.get("confidence", 0.0),
                 conflict_penalty=penalty,
@@ -868,9 +870,7 @@ def explain_failure(
     winner_exp, winner_rule, winner_chain = sorted_explanations[0]
     winner_rule_name = winner_rule.name
     merged_suppressed_rules = [
-        r.name
-        for _, r, _ in filtered_explanations
-        if r.name != winner_rule_name
+        r.name for _, r, _ in filtered_explanations if r.name != winner_rule_name
     ] + suppression_map.get(winner_rule_name, [])
 
     merged_suppressed_rules = [
@@ -948,5 +948,3 @@ def explain_failure(
     merged["confidence"] = min(1.0, max(0.0, merged["confidence"]))
 
     return merged
-
-

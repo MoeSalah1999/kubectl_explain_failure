@@ -32,7 +32,7 @@ class RBACForbiddenRule(FailureRule):
     name = "RBACForbidden"
     category = "Admission"
     priority = 28
-    deterministic = True 
+    deterministic = True
     requires = {
         "pod": True,
         "context": ["timeline"],
@@ -98,7 +98,6 @@ class RBACForbiddenRule(FailureRule):
                 ),
             ]
         )
-
 
         return {
             "rule": self.name,

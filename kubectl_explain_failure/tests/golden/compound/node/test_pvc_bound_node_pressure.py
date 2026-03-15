@@ -17,7 +17,7 @@ def test_pvc_bound_then_node_pressure_golden():
     data = load_json("input.json")
     expected = load_json("expected.json")
 
-    pod = data["objects"]["pod"]  
+    pod = data["objects"]["pod"]
     events = data.get("events", [])
 
     context = build_context(
@@ -56,7 +56,7 @@ def test_pvc_bound_then_node_pressure_golden():
     assert result["confidence"] >= expected["confidence"]
 
     # Causal chain
-    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"], strict=False):
         assert exp_cause["code"] == res_cause["code"]
         assert exp_cause["message"] == res_cause["message"]
         assert exp_cause["role"] == res_cause["role"]

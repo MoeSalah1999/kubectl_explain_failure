@@ -1,6 +1,7 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 
+
 class CSIPluginNotRegisteredRule(FailureRule):
     """
     Detects pods failing due to missing CSI driver on a node.

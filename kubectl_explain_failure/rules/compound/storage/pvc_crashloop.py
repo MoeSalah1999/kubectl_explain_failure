@@ -55,27 +55,49 @@ class PVCThenCrashLoopRule(FailureRule):
         if not timeline:
             return False
 
+        def _get_ts(event: dict) -> str | None:
+            return (
+                event.get("eventTime")
+                or event.get("lastTimestamp")
+                or event.get("firstTimestamp")
+            )
+
         pvc_transitions = []
-        for pvc_name, pvc in pvcs.items():
+        for pvc_name, _pvc in pvcs.items():
             pending_events = [
-                e for e in timeline.events_within_window(60, reason="PersistentVolumeClaimPending")
+                e
+                for e in timeline.events_within_window(
+                    60, reason="PersistentVolumeClaimPending"
+                )
                 if e.get("involvedObject", {}).get("name") == pvc_name
             ]
             bound_events = [
-                e for e in timeline.events_within_window(60, reason="PersistentVolumeClaimBound")
+                e
+                for e in timeline.events_within_window(
+                    60, reason="PersistentVolumeClaimBound"
+                )
                 if e.get("involvedObject", {}).get("name") == pvc_name
             ]
 
             if pending_events and bound_events:
                 # Use parse_time() to compare timestamps safely
-                bound_ts = min(
-                    parse_time(e.get("eventTime") or e.get("lastTimestamp") or e.get("firstTimestamp"))
-                    for e in bound_events
-                )
+                bound_times = []
+                for e in bound_events:
+                    ts = _get_ts(e)
+                    if ts:
+                        bound_times.append(parse_time(ts))
+                if not bound_times:
+                    continue
+                bound_ts = min(bound_times)
 
-                crash_events = timeline.events_within_window(60, reason="CrashLoopBackOff")
+                crash_events = timeline.events_within_window(
+                    60, reason="CrashLoopBackOff"
+                )
                 for e in crash_events:
-                    crash_ts = parse_time(e.get("eventTime") or e.get("lastTimestamp") or e.get("firstTimestamp"))
+                    ts = _get_ts(e)
+                    if not ts:
+                        continue
+                    crash_ts = parse_time(ts)
                     if crash_ts <= bound_ts:
                         pvc_transitions.append(pvc_name)
                         break
@@ -118,7 +140,9 @@ class PVCThenCrashLoopRule(FailureRule):
             ],
             "object_evidence": {
                 **{f"pvc:{name}": ["Bound PVC after Pending"] for name in pvc_names},
-                f"pod:{pod_name}": ["Container in CrashLoopBackOff or not ready after PVC Bound"],
+                f"pod:{pod_name}": [
+                    "Container in CrashLoopBackOff or not ready after PVC Bound"
+                ],
             },
             "suggested_checks": [
                 f"kubectl describe pvc {', '.join(pvc_names)}",

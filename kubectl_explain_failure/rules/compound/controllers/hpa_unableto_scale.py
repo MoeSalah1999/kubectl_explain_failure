@@ -38,21 +38,26 @@ class HPAUnableToScaleRule(FailureRule):
         # Check if any Pod is stuck pending
         pods = objects.get("pod", {})
         pending_pods = [
-            p for p in pods.values()
-            if p.get("status", {}).get("phase") == "Pending"
+            p for p in pods.values() if p.get("status", {}).get("phase") == "Pending"
         ]
         if not pending_pods:
             return False
 
         # Check if timeline shows metrics unavailable or HPA unable to scale
-        metrics_blocked = timeline_has_event(timeline, kind="Generic", phase="Failure", source="metrics-server")
+        metrics_blocked = timeline_has_event(
+            timeline, kind="Generic", phase="Failure", source="metrics-server"
+        )
         return metrics_blocked
 
     def explain(self, pod, events, context):
         objects = context.get("objects", {})
         hpa_name = next(iter(objects.get("hpa", {"<unknown>": {}})), "<unknown>")
         pods = objects.get("pod", {})
-        pending_pods = [p.get("metadata", {}).get("name", "<pod>") for p in pods.values() if p.get("status", {}).get("phase") == "Pending"]
+        pending_pods = [
+            p.get("metadata", {}).get("name", "<pod>")
+            for p in pods.values()
+            if p.get("status", {}).get("phase") == "Pending"
+        ]
 
         root_cause_msg = f"HPA '{hpa_name}' unable to scale due to metrics unavailability or pods pending"
         chain = CausalChain(
@@ -94,7 +99,7 @@ class HPAUnableToScaleRule(FailureRule):
             "suggested_checks": [
                 f"kubectl describe hpa {hpa_name}",
                 "kubectl get --raw /apis/metrics.k8s.io/v1beta1/",
-                f"kubectl get pods --field-selector=status.phase=Pending",
+                "kubectl get pods --field-selector=status.phase=Pending",
             ],
             "blocking": True,
         }

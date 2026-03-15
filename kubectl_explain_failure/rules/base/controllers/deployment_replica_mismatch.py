@@ -34,7 +34,7 @@ class DeploymentReplicaMismatchRule(FailureRule):
         if not deployments:
             return False
 
-        for dep_name, dep in deployments.items():
+        for _dep_name, dep in deployments.items():
             status = dep.get("status", {})
             desired = status.get("replicas", 0)
             available = status.get("availableReplicas", 0)
@@ -59,7 +59,9 @@ class DeploymentReplicaMismatchRule(FailureRule):
         desired = status.get("replicas", 0)
         available = status.get("availableReplicas", 0)
 
-        root_msg = f"Deployment '{dep_name}' has {available}/{desired} available replicas"
+        root_msg = (
+            f"Deployment '{dep_name}' has {available}/{desired} available replicas"
+        )
         chain = CausalChain(
             causes=[
                 Cause(
@@ -80,7 +82,6 @@ class DeploymentReplicaMismatchRule(FailureRule):
                 ),
             ]
         )
-
 
         return {
             "root_cause": root_msg,

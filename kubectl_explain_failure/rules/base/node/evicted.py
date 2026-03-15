@@ -25,6 +25,7 @@ class EvictedRule(FailureRule):
     - Does not detect NodeNotReady conditions (handled by compound rules)
     - Does not model scheduler rescheduling behavior
     """
+
     name = "Evicted"
     category = "Node"
     priority = 21  # Lower than compound rules like NodeNotReadyEvicted
@@ -41,7 +42,7 @@ class EvictedRule(FailureRule):
 
         # Eviction is a raw reason emitted by kubelet
         return timeline.count(reason="Evicted") > 0
-    
+
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
         node_name = pod.get("spec", {}).get("nodeName", "<unknown>")

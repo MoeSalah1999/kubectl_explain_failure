@@ -8,10 +8,14 @@ hypothesis = pytest.importorskip(
     "hypothesis",
     reason="Install hypothesis to run property tests: pip install hypothesis",
 )
-from hypothesis import given, settings, strategies as st
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
 from kubectl_explain_failure import live_adapter
-from kubectl_explain_failure.live_adapter import KubectlLiveDataProvider, LiveIntrospectionError
+from kubectl_explain_failure.live_adapter import (
+    KubectlLiveDataProvider,
+    LiveIntrospectionError,
+)
 
 
 @settings(max_examples=80)
@@ -28,7 +32,9 @@ def test_property_provider_retry_limit_contract(retry_count: int, fail_count: in
             raise LiveIntrospectionError("unable to connect to the server")
         return {"kind": "Pod", "metadata": {"name": "mypod"}}
 
-    with patch.object(live_adapter, "_kubectl_get_json", side_effect=fake_kubectl_get_json):
+    with patch.object(
+        live_adapter, "_kubectl_get_json", side_effect=fake_kubectl_get_json
+    ):
         with patch.object(live_adapter.time, "sleep", side_effect=lambda *_: None):
             provider = KubectlLiveDataProvider(
                 max_retries=retry_count,
@@ -57,14 +63,18 @@ def test_property_provider_retry_limit_contract(retry_count: int, fail_count: in
         ]
     ),
 )
-def test_property_provider_non_retryable_errors_do_not_retry(retry_count: int, message: str):
+def test_property_provider_non_retryable_errors_do_not_retry(
+    retry_count: int, message: str
+):
     calls = {"count": 0}
 
     def fake_kubectl_get_json(*args, **kwargs):
         calls["count"] += 1
         raise LiveIntrospectionError(message)
 
-    with patch.object(live_adapter, "_kubectl_get_json", side_effect=fake_kubectl_get_json):
+    with patch.object(
+        live_adapter, "_kubectl_get_json", side_effect=fake_kubectl_get_json
+    ):
         with patch.object(live_adapter.time, "sleep", side_effect=lambda *_: None):
             provider = KubectlLiveDataProvider(
                 max_retries=retry_count,

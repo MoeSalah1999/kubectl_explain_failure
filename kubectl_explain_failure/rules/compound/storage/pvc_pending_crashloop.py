@@ -1,6 +1,7 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 
+
 class PVCPendingThenCrashLoopRule(FailureRule):
     """
     Detects Pods that experience CrashLoopBackOff following
@@ -31,6 +32,7 @@ class PVCPendingThenCrashLoopRule(FailureRule):
     - Does not include image pull failures
     - Does not include scheduling failures
     """
+
     name = "PVCPendingThenCrashLoop"
     category = "Compound"
     priority = 50
@@ -51,7 +53,9 @@ class PVCPendingThenCrashLoopRule(FailureRule):
         pvc_pending = pvc.get("status", {}).get("phase") == "Pending"
 
         # Use events_within_window for CrashLoop/FailedMount detection
-        failed_mount_events = timeline.events_within_window(minutes=30, reason="FailedMount")
+        failed_mount_events = timeline.events_within_window(
+            minutes=30, reason="FailedMount"
+        )
         backoff_events = timeline.events_within_window(minutes=30, reason="BackOff")
 
         crash_events_present = bool(failed_mount_events) and bool(backoff_events)
@@ -61,7 +65,7 @@ class PVCPendingThenCrashLoopRule(FailureRule):
     def explain(self, pod, events, context):
         pvc = context.get("blocking_pvc")
         pvc_name = pvc["metadata"]["name"] if pvc else "unknown"
-        
+
         chain = CausalChain(
             causes=[
                 Cause(

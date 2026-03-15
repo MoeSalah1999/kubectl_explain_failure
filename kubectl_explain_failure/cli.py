@@ -6,7 +6,10 @@ import subprocess
 
 from kubectl_explain_failure.context import build_context
 from kubectl_explain_failure.engine import explain_failure
-from kubectl_explain_failure.live_adapter import LiveIntrospectionError, fetch_live_snapshot
+from kubectl_explain_failure.live_adapter import (
+    LiveIntrospectionError,
+    fetch_live_snapshot,
+)
 from kubectl_explain_failure.loader import load_plugins, load_rules
 from kubectl_explain_failure.model import load_json, normalize_events
 from kubectl_explain_failure.output import output_result
@@ -74,7 +77,9 @@ def _build_provenance_metadata(
     return provenance
 
 
-def _validate_live_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+def _validate_live_args(
+    parser: argparse.ArgumentParser, args: argparse.Namespace
+) -> None:
     if shutil.which("kubectl") is None:
         parser.error("Live mode requires kubectl in PATH")
 
@@ -82,27 +87,18 @@ def _validate_live_args(parser: argparse.ArgumentParser, args: argparse.Namespac
         parser.error(f"kubeconfig file not found: {args.kubeconfig}")
 
     if args.timeout <= 0 or args.timeout > MAX_TIMEOUT_SECONDS:
-        parser.error(
-            f"--timeout must be between 1 and {MAX_TIMEOUT_SECONDS} seconds"
-        )
+        parser.error(f"--timeout must be between 1 and {MAX_TIMEOUT_SECONDS} seconds")
 
     if args.event_limit < 1 or args.event_limit > MAX_EVENT_LIMIT:
-        parser.error(
-            f"--event-limit must be between 1 and {MAX_EVENT_LIMIT}"
-        )
+        parser.error(f"--event-limit must be between 1 and {MAX_EVENT_LIMIT}")
 
     if args.event_chunk_size < 1 or args.event_chunk_size > MAX_EVENT_CHUNK_SIZE:
-        parser.error(
-            f"--event-chunk-size must be between 1 and {MAX_EVENT_CHUNK_SIZE}"
-        )
+        parser.error(f"--event-chunk-size must be between 1 and {MAX_EVENT_CHUNK_SIZE}")
 
     if args.retries < 0 or args.retries > MAX_RETRIES:
         parser.error(f"--retries must be between 0 and {MAX_RETRIES}")
 
-    if (
-        args.retry_backoff <= 0.0
-        or args.retry_backoff > MAX_RETRY_BACKOFF_SECONDS
-    ):
+    if args.retry_backoff <= 0.0 or args.retry_backoff > MAX_RETRY_BACKOFF_SECONDS:
         parser.error(
             f"--retry-backoff must be between 0 and {MAX_RETRY_BACKOFF_SECONDS} seconds"
         )
@@ -148,9 +144,13 @@ def main():
     parser.add_argument("--pod", help="Path to Pod JSON (snapshot mode)")
     parser.add_argument("--events", help="Path to Events JSON (snapshot mode)")
 
-    parser.add_argument("--live", action="store_true", help="Fetch data from a live cluster")
+    parser.add_argument(
+        "--live", action="store_true", help="Fetch data from a live cluster"
+    )
     parser.add_argument("--pod-name", help="Pod name for live mode")
-    parser.add_argument("--namespace", default="default", help="Kubernetes namespace for live mode")
+    parser.add_argument(
+        "--namespace", default="default", help="Kubernetes namespace for live mode"
+    )
     parser.add_argument(
         "--context",
         dest="kube_context",

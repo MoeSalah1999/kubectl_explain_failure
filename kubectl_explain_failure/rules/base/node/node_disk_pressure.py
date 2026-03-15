@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_event
 
 
 class NodeDiskPressureRule(FailureRule):
@@ -53,10 +52,7 @@ class NodeDiskPressureRule(FailureRule):
         disk_pressure_nodes = []
         for node in node_objs.values():
             for cond in node.get("status", {}).get("conditions", []):
-                if (
-                    cond.get("type") == "DiskPressure"
-                    and cond.get("status") == "True"
-                ):
+                if cond.get("type") == "DiskPressure" and cond.get("status") == "True":
                     disk_pressure_nodes.append(node)
                     break
 
@@ -93,16 +89,12 @@ class NodeDiskPressureRule(FailureRule):
         for node in node_objs.values():
             conditions = node.get("status", {}).get("conditions", [])
             for cond in conditions:
-                if (
-                    cond.get("type") == "DiskPressure"
-                    and cond.get("status") == "True"
-                ):
+                if cond.get("type") == "DiskPressure" and cond.get("status") == "True":
                     affected_nodes.append(node)
                     break
 
         node_names = [
-            n.get("metadata", {}).get("name", "unknown-node")
-            for n in affected_nodes
+            n.get("metadata", {}).get("name", "unknown-node") for n in affected_nodes
         ]
 
         pod_phase = pod.get("status", {}).get("phase")
@@ -147,9 +139,7 @@ class NodeDiskPressureRule(FailureRule):
         object_evidence = {}
         for name in node_names:
             key = f"node:{name}"
-            object_evidence[key] = [
-                "Node condition DiskPressure=True"
-            ]
+            object_evidence[key] = ["Node condition DiskPressure=True"]
 
         return {
             "root_cause": "Node disk pressure",

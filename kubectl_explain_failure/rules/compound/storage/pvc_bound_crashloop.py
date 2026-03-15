@@ -1,6 +1,6 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern, parse_time, Timeline
+from kubectl_explain_failure.timeline import Timeline, parse_time, timeline_has_pattern
 
 
 class PVCBoundThenCrashLoopRule(FailureRule):
@@ -49,17 +49,22 @@ class PVCBoundThenCrashLoopRule(FailureRule):
             return False
 
         pvc_transitions = []
-        for pvc_name, pvc in pvc_objs.items():
+        for pvc_name, _pvc in pvc_objs.items():
             # Support dict events for testing
             pvc_events = [
-                e for e in timeline_obj.events
-                if (getattr(e, "involvedObject", {}).get("name") 
-                    if hasattr(e, "involvedObject") else e.get("involvedObject", {}).get("name")) == pvc_name
+                e
+                for e in timeline_obj.events
+                if (
+                    getattr(e, "involvedObject", {}).get("name")
+                    if hasattr(e, "involvedObject")
+                    else e.get("involvedObject", {}).get("name")
+                )
+                == pvc_name
             ]
 
             pattern = [
                 {"reason": "PersistentVolumeClaimPending"},
-                {"reason": "PersistentVolumeClaimBound"}
+                {"reason": "PersistentVolumeClaimBound"},
             ]
             if timeline_has_pattern(pvc_events, pattern):
                 pvc_transitions.append(pvc_name)
@@ -69,33 +74,51 @@ class PVCBoundThenCrashLoopRule(FailureRule):
 
         # Find first PVC Bound event and first container crash event
         container_crash_event = next(
-            (e for e in timeline_obj.events if e.get("reason") == "CrashLoopBackOff"), None
+            (e for e in timeline_obj.events if e.get("reason") == "CrashLoopBackOff"),
+            None,
         )
 
-        for pvc_name, pvc in pvc_objs.items():
+        for pvc_name, _pvc in pvc_objs.items():
             pvc_events = [
-                e for e in timeline_obj.events
-                if (getattr(e, "involvedObject", {}).get("name")
-                    if hasattr(e, "involvedObject") else e.get("involvedObject", {}).get("name")) == pvc_name
+                e
+                for e in timeline_obj.events
+                if (
+                    getattr(e, "involvedObject", {}).get("name")
+                    if hasattr(e, "involvedObject")
+                    else e.get("involvedObject", {}).get("name")
+                )
+                == pvc_name
             ]
-            pvc_bound_event = next((e for e in pvc_events if e.get("reason") == "PersistentVolumeClaimBound"), None)
+            pvc_bound_event = next(
+                (
+                    e
+                    for e in pvc_events
+                    if e.get("reason") == "PersistentVolumeClaimBound"
+                ),
+                None,
+            )
 
             # Only match if CrashLoopBackOff happened AFTER PVC Bound → app still failing post-recovery
             if container_crash_event and pvc_bound_event:
-                crash_ts = parse_time(
+                crash_ts_raw = (
                     container_crash_event.get("eventTime")
                     or container_crash_event.get("lastTimestamp")
                     or container_crash_event.get("firstTimestamp")
                 )
-                bound_ts = parse_time(
+                bound_ts_raw = (
                     pvc_bound_event.get("eventTime")
                     or pvc_bound_event.get("lastTimestamp")
                     or pvc_bound_event.get("firstTimestamp")
                 )
+                if not crash_ts_raw or not bound_ts_raw:
+                    continue
+                crash_ts = parse_time(crash_ts_raw)
+                bound_ts = parse_time(bound_ts_raw)
                 if crash_ts > bound_ts:
                     return True
 
         return False
+
     def explain(self, pod, events, context):
         pvc_objs = context.get("objects", {}).get("pvc", {})
         pvc_names = [p["metadata"]["name"] for p in pvc_objs.values()]
@@ -138,7 +161,9 @@ class PVCBoundThenCrashLoopRule(FailureRule):
             ],
             "object_evidence": {
                 **{f"pvc:{name}": ["Bound PVC after Pending"] for name in pvc_names},
-                f"pod:{pod_name}": ["Container in CrashLoopBackOff or not ready after PVC Bound"],
+                f"pod:{pod_name}": [
+                    "Container in CrashLoopBackOff or not ready after PVC Bound"
+                ],
             },
             "suggested_checks": [
                 f"kubectl logs {pod_name}",

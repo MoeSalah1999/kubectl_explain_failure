@@ -26,6 +26,7 @@ class CrashLoopOOMKilledRule(FailureRule):
     - Does not include CrashLoops caused by application logic errors
     - Does not include transient startup failures unrelated to OOMKilled
     """
+
     name = "CrashLoopOOMKilled"
     category = "Compound"
     priority = 55
@@ -41,7 +42,7 @@ class CrashLoopOOMKilledRule(FailureRule):
         timeline = context.get("timeline")
         if not timeline:
             return False
-            
+
         # Detect repeated BackOff via timeline (consistent with other rules)
         crashloop = timeline_has_pattern(timeline, r"BackOff")
 

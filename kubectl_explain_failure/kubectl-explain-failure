@@ -2,6 +2,5 @@
 
 from kubectl_explain_failure.plugin import main
 
-
 if __name__ == "__main__":
     main()

@@ -86,7 +86,6 @@ class ReadWriteOnceMultiNodeConflictRule(FailureRule):
         pvc_objs = objects.get("pvc", {})
 
         pvc_name = next(iter(pvc_objs), "<unknown>")
-        pvc = pvc_objs.get(pvc_name, {})
 
         chain = CausalChain(
             causes=[

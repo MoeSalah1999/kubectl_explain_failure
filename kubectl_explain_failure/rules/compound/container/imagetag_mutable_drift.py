@@ -2,6 +2,7 @@ from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import timeline_has_pattern
 
+
 class ImageTagMutableDriftRule(FailureRule):
     """
     Detects production-impacting failures caused by image tag drift.

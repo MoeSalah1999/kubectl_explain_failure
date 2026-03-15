@@ -1,5 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
-from kubectl_explain_failure.model import get_pod_phase, has_event
+from kubectl_explain_failure.model import get_pod_phase
 from kubectl_explain_failure.rules.base_rule import FailureRule
 
 
@@ -33,7 +33,7 @@ class PendingUnschedulableRule(FailureRule):
     """
 
     name = "PendingUnschedulable"
-    category = "Compound" 
+    category = "Compound"
     priority = 15
     blocks = []
     requires = {"context": ["timeline"]}
@@ -45,7 +45,7 @@ class PendingUnschedulableRule(FailureRule):
 
         # Only match if no higher-priority rule already indicates root cause
         suppressed = context.get("suppressed_rules", [])
-        for r in [ "PVCBoundNodeDiskPressureMount", "NodeDiskPressure"]:
+        for r in ["PVCBoundNodeDiskPressureMount", "NodeDiskPressure"]:
             if r in suppressed:
                 return False
 
@@ -61,7 +61,9 @@ class PendingUnschedulableRule(FailureRule):
 
         # Node conditions
         node_conditions = context.get("node_conditions", {})
-        node_pressure = node_conditions.get("DiskPressure", False) or node_conditions.get("MemoryPressure", False)
+        node_pressure = node_conditions.get(
+            "DiskPressure", False
+        ) or node_conditions.get("MemoryPressure", False)
 
         # Match compound unschedulable if no PVC is blocking
         blocking_pvc = context.get("blocking_pvc")

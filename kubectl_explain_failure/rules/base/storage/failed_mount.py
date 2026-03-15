@@ -48,7 +48,6 @@ class FailedMountRule(FailureRule):
         objects = context.get("objects", {})
         pvc_objs = objects.get("pvc", {})
         pvc_name = next(iter(pvc_objs), "<unknown>")
-        pvc = pvc_objs.get(pvc_name, {})
 
         # Determine root cause: PVC unbound vs storage backend
         if context.get("pvc_unbound"):

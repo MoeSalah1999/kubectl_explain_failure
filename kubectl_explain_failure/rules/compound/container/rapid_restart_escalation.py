@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import build_timeline
 
 
 class RapidRestartEscalationRule(FailureRule):
@@ -28,6 +27,7 @@ class RapidRestartEscalationRule(FailureRule):
     - Does not include isolated or transient restarts below threshold
     - Does not identify the underlying crash reason (handled by other rules)
     """
+
     name = "RapidRestartEscalation"
     category = "Compound"
     priority = 52
@@ -104,6 +104,8 @@ class RapidRestartEscalationRule(FailureRule):
                 "Check container resource requests/limits",
             ],
             "object_evidence": {
-                f"pod:{pod_name}": ["Multiple BackOff events detected within recent timeline"]
+                f"pod:{pod_name}": [
+                    "Multiple BackOff events detected within recent timeline"
+                ]
             },
         }

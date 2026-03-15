@@ -52,7 +52,7 @@ def test_node_disk_pressure_golden():
         context["timeline"] = build_timeline(events)
 
     # Add harmless objects to boost completeness
-    
+
     context["pv"] = {"metadata": {"name": "pv1"}}
     context["storageclass"] = {"metadata": {"name": "sc1"}}
     context["serviceaccount"] = {"metadata": {"name": "default"}}
@@ -76,7 +76,7 @@ def test_node_disk_pressure_golden():
         assert ev in result["evidence"]
 
     # Causes check
-    for exp_cause, res_cause in zip(expected["causes"], result["causes"]):
+    for exp_cause, res_cause in zip(expected["causes"], result["causes"], strict=False):
         assert exp_cause["code"] == res_cause["code"]
         assert exp_cause["message"] == res_cause["message"]
         assert exp_cause["role"] == res_cause["role"]

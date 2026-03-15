@@ -81,7 +81,9 @@ class FilesystemResizePendingRule(FailureRule):
         pvc_name = next(iter(pvc_objs), "<unknown>")
         pvc = pvc_objs.get(pvc_name, {})
 
-        requested = pvc.get("spec", {}).get("resources", {}).get("requests", {}).get("storage")
+        requested = (
+            pvc.get("spec", {}).get("resources", {}).get("requests", {}).get("storage")
+        )
 
         chain = CausalChain(
             causes=[

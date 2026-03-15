@@ -38,7 +38,9 @@ def test_fetch_live_snapshot_uses_custom_provider_for_discovery_pipeline():
         },
         ("events", None): {
             "kind": "List",
-            "items": [{"reason": "FailedScheduling", "lastTimestamp": "2024-01-01T00:00:00Z"}],
+            "items": [
+                {"reason": "FailedScheduling", "lastTimestamp": "2024-01-01T00:00:00Z"}
+            ],
         },
         ("pvc", "pvc-a"): {
             "metadata": {"name": "pvc-a"},

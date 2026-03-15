@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class TopologySpreadUnsatisfiableRule(FailureRule):
@@ -13,10 +12,10 @@ class TopologySpreadUnsatisfiableRule(FailureRule):
     - Scheduler reports inability to satisfy topology skew requirements
 
     Interpretation:
-    The Pod declares topology spread constraints requiring balanced 
-    distribution across topology domains (e.g., zones or nodes). 
-    The scheduler cannot find a placement that satisfies maxSkew and 
-    topologyKey rules given the current cluster state, leaving the Pod 
+    The Pod declares topology spread constraints requiring balanced
+    distribution across topology domains (e.g., zones or nodes).
+    The scheduler cannot find a placement that satisfies maxSkew and
+    topologyKey rules given the current cluster state, leaving the Pod
     in a Pending state.
 
     Scope:
@@ -49,14 +48,15 @@ class TopologySpreadUnsatisfiableRule(FailureRule):
 
         # Only care about HARD constraints
         hard_constraints = [
-            c for c in tsc
-            if c.get("whenUnsatisfiable") == "DoNotSchedule"
+            c for c in tsc if c.get("whenUnsatisfiable") == "DoNotSchedule"
         ]
 
         if not hard_constraints:
             return False
 
-        failed_events = [e for e in timeline.events if e.get("reason") == "FailedScheduling"]
+        failed_events = [
+            e for e in timeline.events if e.get("reason") == "FailedScheduling"
+        ]
 
         for e in failed_events:
             msg = (e.get("message") or "").lower()

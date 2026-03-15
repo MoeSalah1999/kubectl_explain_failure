@@ -19,6 +19,7 @@ class OOMKilledRule(FailureRule):
     - Phases: Running, Failed
     - Deterministic (state-based)
     """
+
     name = "OOMKilled"
     category = "Container"
     priority = 16
@@ -70,9 +71,7 @@ class OOMKilledRule(FailureRule):
             terminated = last_state.get("terminated")
             if terminated and terminated.get("reason") == "OOMKilled":
                 name = cs.get("name")
-                evidence.append(
-                    f"Container '{name}' terminated: reason=OOMKilled"
-                )
+                evidence.append(f"Container '{name}' terminated: reason=OOMKilled")
                 object_evidence[f"pod:{pod_name}"] = [
                     f"Container '{name}' terminated due to OOMKilled"
                 ]

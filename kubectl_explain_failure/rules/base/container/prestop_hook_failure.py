@@ -76,9 +76,7 @@ class PreStopHookFailureRule(FailureRule):
                 f"Pod: {pod_name}",
                 "Detected PreStop hook failure in container events",
             ],
-            "object_evidence": {
-                f"pod:{pod_name}": ["PreStop hook failed"]
-            },
+            "object_evidence": {f"pod:{pod_name}": ["PreStop hook failed"]},
             "likely_causes": [
                 "PreStop hook command exited with non-zero status",
                 "Hook command timed out",

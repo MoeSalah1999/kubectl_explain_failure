@@ -33,14 +33,14 @@ class K8sSnapshot:
     events: list[dict[str, Any]]
     context: dict[str, Any]
 
-    def clone(self) -> "K8sSnapshot":
+    def clone(self) -> K8sSnapshot:
         return K8sSnapshot(
             pod=copy.deepcopy(self.pod),
             events=copy.deepcopy(self.events),
             context=copy.deepcopy(self.context),
         )
 
-    def inject(self, noise: dict[str, Any]) -> "K8sSnapshot":
+    def inject(self, noise: dict[str, Any]) -> K8sSnapshot:
         injected = self.clone()
 
         noise_events = noise.get("events", [])
@@ -94,9 +94,7 @@ def event_strategy(draw) -> dict[str, Any]:
         event["lastTimestamp"] = draw(_timestamp_z())
 
     if draw(st.booleans()):
-        event["source"] = {
-            "component": draw(st.sampled_from(["scheduler", "kubelet"]))
-        }
+        event["source"] = {"component": draw(st.sampled_from(["scheduler", "kubelet"]))}
 
     return event
 
@@ -154,9 +152,7 @@ def pod_strategy(draw, pvc_names: list[str] | None = None) -> dict[str, Any]:
     }
 
     if draw(st.booleans()):
-        waiting_reason = draw(
-            st.sampled_from(["CrashLoopBackOff", "ImagePullBackOff"])
-        )
+        waiting_reason = draw(st.sampled_from(["CrashLoopBackOff", "ImagePullBackOff"]))
         pod["status"]["containerStatuses"] = [
             {
                 "name": "app",
@@ -280,9 +276,9 @@ def pvc_scheduler_snapshot_strategy(draw) -> K8sSnapshot:
             max_size=8,
         )
     )
-    events = [
-        {"reason": "FailedScheduling", "message": "0/3 nodes are available"}
-    ] + [{"reason": r, "message": f"{r} event"} for r in extra_noise]
+    events = [{"reason": "FailedScheduling", "message": "0/3 nodes are available"}] + [
+        {"reason": r, "message": f"{r} event"} for r in extra_noise
+    ]
 
     context = {
         "pvc": copy.deepcopy(pvc_obj),
@@ -345,6 +341,7 @@ def unrelated_noise(draw) -> dict[str, Any]:
         }
 
     return noise
+
 
 @st.composite
 def crashloop_oom_snapshot_strategy(draw) -> K8sSnapshot:
