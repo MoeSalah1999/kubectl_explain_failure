@@ -1,0 +1,38 @@
+{
+  "root_cause": "Pod failed due to image/node architecture mismatch",
+  "blocking": true,
+  "evidence": [
+    "Pod: arch-mismatch-pod",
+    "Node and image architecture mismatch detected in events"
+  ],
+  "causes": [
+    {
+      "code": "CLUSTER_NODE_DIVERSITY",
+      "message": "Cluster has mixed ARM/AMD nodes",
+      "role": "configuration_context"
+    },
+    {
+      "code": "IMAGE_ARCH_MISMATCH",
+      "message": "Pod image architecture does not match node architecture",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_START_BLOCKED",
+      "message": "Pod cannot start due to image architecture mismatch",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:arch-mismatch-pod": [
+      "Architecture mismatch encountered"
+    ]
+  },
+  "likely_causes": [
+    "Cluster has mixed ARM/AMD nodes",
+    "Image was built for incompatible architecture"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod arch-mismatch-pod"
+  ]
+}

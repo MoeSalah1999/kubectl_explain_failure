@@ -58,7 +58,7 @@ class ContainerRuntimeStartFailureRule(FailureRule):
                 Cause(
                     code="CONTAINER_RUNTIME_SIGNAL",
                     message="Kubelet detected container runtime start failure",
-                    role="container_root",
+                    role="container_health_root",
                     blocking=True,
                 ),
                 Cause(

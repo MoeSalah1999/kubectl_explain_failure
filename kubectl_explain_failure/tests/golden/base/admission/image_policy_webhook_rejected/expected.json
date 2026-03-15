@@ -1,0 +1,38 @@
+{
+  "root_cause": "Pod image rejected by runtime policy webhook",
+  "blocking": true,
+  "evidence": [
+    "Pod: policy-rejected-pod",
+    "Event source indicates image-policy-webhook rejection"
+  ],
+  "causes": [
+    {
+      "code": "POLICY_EVALUATION",
+      "message": "Image policy was evaluated by webhook",
+      "role": "admission_context"
+    },
+    {
+      "code": "WEBHOOK_REJECTED",
+      "message": "Image policy webhook rejected the pod image",
+      "role": "admission_root",
+      "blocking": true
+    },
+    {
+      "code": "IMAGE_PULL_FAILED",
+      "message": "Pod failed to pull image due to policy enforcement",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:policy-rejected-pod": [
+      "Image rejected by webhook"
+    ]
+  },
+  "likely_causes": [
+    "Image does not meet cluster policy requirements",
+    "Unauthorized image registry or signature"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod policy-rejected-pod"
+  ]
+}

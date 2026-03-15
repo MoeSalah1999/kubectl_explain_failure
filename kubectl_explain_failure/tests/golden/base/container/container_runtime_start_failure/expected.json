@@ -1,0 +1,40 @@
+{
+  "root_cause": "Container runtime failed to start container",
+  "blocking": true,
+  "evidence": [
+    "Error: failed to create containerd task: failed to create shim task"
+  ],
+  "causes": [
+    {
+      "code": "CONTAINER_RUNTIME_SIGNAL",
+      "message": "Kubelet detected container runtime start failure",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "CONTAINER_FAILED_TO_START",
+      "message": "Container could not be created by container runtime",
+      "role": "container_symptom"
+    },
+    {
+      "code": "POD_STARTUP_FAILED",
+      "message": "Pod could not start due to container runtime failure",
+      "role": "workload_effect"
+    }
+  ],
+  "object_evidence": {
+    "pod:runtime-start-failure-pod": [
+      "Error: failed to create containerd task: failed to create shim task"
+    ]
+  },
+  "likely_causes": [
+    "Container runtime (containerd/cri-o) misconfiguration",
+    "Insufficient node resources for runtime",
+    "Container runtime daemon failure"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod runtime-start-failure-pod",
+    "Check kubelet logs for container runtime errors",
+    "Verify containerd/cri-o service status on node"
+  ]
+}
