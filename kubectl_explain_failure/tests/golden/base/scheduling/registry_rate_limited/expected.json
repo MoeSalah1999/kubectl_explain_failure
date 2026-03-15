@@ -1,0 +1,38 @@
+{
+  "root_cause": "Pod failed due to registry rate limiting (HTTP 429)",
+  "blocking": true,
+  "evidence": [
+    "Pod: rate-limited-pod",
+    "Event reason contains TooManyRequests / HTTP 429"
+  ],
+  "causes": [
+    {
+      "code": "SCHEDULER_BLOCKED_BY_REGISTRY",
+      "message": "Pod scheduling blocked due to registry throttling",
+      "role": "scheduling_context"
+    },
+    {
+      "code": "REGISTRY_429",
+      "message": "Registry returned HTTP 429 TooManyRequests",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
+      "code": "IMAGE_PULL_FAILED",
+      "message": "Pod failed to pull image due to rate limiting",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:rate-limited-pod": [
+      "Registry rate limit encountered"
+    ]
+  },
+  "likely_causes": [
+    "Registry throttling",
+    "Excessive concurrent pulls"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod rate-limited-pod"
+  ]
+}
