@@ -24,7 +24,7 @@ class EphemeralStorageExceededRule(FailureRule):
     category = "Node"
     priority = 60
     deterministic = True
-    blocks = []
+    blocks = ["Evicted"]
     requires = {
         "objects": ["pod"],
     }

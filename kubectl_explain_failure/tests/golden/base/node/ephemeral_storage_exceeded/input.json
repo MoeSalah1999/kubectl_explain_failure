@@ -1,0 +1,22 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "ephemeral-storage-pod"
+    },
+    "status": {
+      "phase": "Failed",
+      "reason": "Evicted",
+      "message": "The node was low on resource: ephemeral-storage. Container app was using 2Gi, which exceeds the request of 1Gi."
+    }
+  },
+  "events": [
+    {
+      "reason": "Evicted",
+      "message": "The node was low on resource: ephemeral-storage",
+      "source": {
+        "component": "kubelet"
+      },
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    }
+  ]
+}

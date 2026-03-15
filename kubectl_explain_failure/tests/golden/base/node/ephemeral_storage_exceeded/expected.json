@@ -1,0 +1,40 @@
+{
+  "root_cause": "Pod evicted due to ephemeral storage exhaustion",
+  "blocking": true,
+  "evidence": [
+    "Pod.status.reason=Evicted",
+    "Pod.status.message=The node was low on resource: ephemeral-storage. Container app was using 2Gi, which exceeds the request of 1Gi."
+  ],
+  "causes": [
+    {
+      "code": "POD_SCHEDULED",
+      "message": "Pod was scheduled and running",
+      "role": "runtime_context"
+    },
+    {
+      "code": "EPHEMERAL_STORAGE_EXCEEDED",
+      "message": "Pod consumed more ephemeral storage than allocated",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_EVICTED",
+      "message": "Pod eviction due to ephemeral-storage exceeded",
+      "role": "runtime_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:ephemeral-storage-pod": [
+      "Evicted due to ephemeral-storage"
+    ]
+  },
+  "likely_causes": [
+    "Pod disk usage exceeded ephemeral-storage limits",
+    "Container image layers or logs filled /tmp or emptyDir"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod ephemeral-storage-pod",
+    "Check ephemeral-storage requests/limits in Pod spec",
+    "Inspect container logs and ephemeral directories (/tmp, emptyDir)"
+  ]
+}
