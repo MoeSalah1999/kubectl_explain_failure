@@ -70,7 +70,7 @@ class ImageTagMutableDriftRule(FailureRule):
             "blocking": True,
             "evidence": [
                 f"Pod: {pod_name}",
-                "Event pattern: Pulling → Pulled → BackOff detected",
+                "Event pattern: Pulling > Pulled > BackOff detected",
             ],
             "object_evidence": {f"pod:{pod_name}": ["Image tag drift detected"]},
             "likely_causes": [

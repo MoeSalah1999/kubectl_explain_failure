@@ -3,7 +3,9 @@
   "blocking": true,
   "evidence": [
     "FailedScheduling events count: 3",
-    "Duration: 9.0 minutes"
+    "Duration: 9.5 minutes",
+    "Pod timeout-pod remains Pending", 
+    "FailedScheduling or node pressure events observed"
   ],
   "causes": [
     {
@@ -13,7 +15,7 @@
     },
     {
       "code": "SCHEDULER_TIMEOUT_EXCEEDED",
-      "message": "FailedScheduling events persisted for 9.0 minutes",
+      "message": "FailedScheduling events persisted for 9.5 minutes",
       "role": "scheduling_root",
       "blocking": true
     },
@@ -25,7 +27,7 @@
   ],
   "object_evidence": {
     "pod:timeout-pod": [
-      "3 FailedScheduling events over 9.0 minutes"
+      "3 FailedScheduling events over 9.5 minutes"
     ]
   },
   "likely_causes": [

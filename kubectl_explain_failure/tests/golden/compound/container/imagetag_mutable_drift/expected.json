@@ -1,0 +1,38 @@
+{
+  "root_cause": "Pod failed due to mutable image tag change",
+  "blocking": true,
+  "evidence": [
+    "Pod: mutable-tag-pod",
+    "Event pattern: Pulling > Pulled > BackOff detected"
+  ],
+  "causes": [
+    {
+      "code": "IMAGE_UPDATED",
+      "message": "Container image with same tag was updated",
+      "role": "controller_context"
+    },
+    {
+      "code": "IMAGE_DIGEST_CHANGED",
+      "message": "Pod crash occurred after new image digest deployed",
+      "role": "workload_root",
+      "blocking": true
+    },
+    {
+      "code": "CRASHLOOP_STARTED",
+      "message": "Pod entered CrashLoopBackOff due to image drift",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:mutable-tag-pod": [
+      "Image tag drift detected"
+    ]
+  },
+  "likely_causes": [
+    "Mutable image tag used in production",
+    "Image digest updated unexpectedly"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod mutable-tag-pod"
+  ]
+}

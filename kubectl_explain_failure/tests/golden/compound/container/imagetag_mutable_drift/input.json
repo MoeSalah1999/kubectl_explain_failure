@@ -1,0 +1,37 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "mutable-tag-pod"
+    },
+    "status": {
+      "phase": "CrashLoopBackOff",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Pulling",
+      "message": "Pulling image \"example/app:latest\"",
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    },
+    {
+      "reason": "Pulled",
+      "message": "Successfully pulled image \"example/app:latest\"",
+      "lastTimestamp": "2026-03-15T12:01:00Z"
+    },
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container",
+      "lastTimestamp": "2026-03-15T12:02:00Z"
+    }
+  ]
+}
