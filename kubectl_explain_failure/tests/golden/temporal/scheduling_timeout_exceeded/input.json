@@ -1,0 +1,30 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "timeout-pod"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: insufficient cpu",
+      "firstTimestamp": "2026-03-15T10:00:00Z",
+      "lastTimestamp": "2026-03-15T10:00:30Z"
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: insufficient memory",
+      "firstTimestamp": "2026-03-15T10:05:00Z",
+      "lastTimestamp": "2026-03-15T10:05:30Z"
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: too many pods",
+      "firstTimestamp": "2026-03-15T10:09:00Z",
+      "lastTimestamp": "2026-03-15T10:09:30Z"
+    }
+  ]
+}

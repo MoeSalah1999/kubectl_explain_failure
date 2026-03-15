@@ -1,0 +1,41 @@
+{
+  "root_cause": "Pod repeatedly failed scheduling for prolonged duration",
+  "blocking": true,
+  "evidence": [
+    "FailedScheduling events count: 3",
+    "Duration: 9.0 minutes"
+  ],
+  "causes": [
+    {
+      "code": "REPEATED_FAILED_SCHEDULING",
+      "message": "Pod has failed scheduling 3 times",
+      "role": "temporal_context"
+    },
+    {
+      "code": "SCHEDULER_TIMEOUT_EXCEEDED",
+      "message": "FailedScheduling events persisted for 9.0 minutes",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_PENDING_CLUSTER_STARVATION",
+      "message": "The Pod may be unschedulable due to cluster starvation or deadlock",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:timeout-pod": [
+      "3 FailedScheduling events over 9.0 minutes"
+    ]
+  },
+  "likely_causes": [
+    "Cluster nodes are fully utilized",
+    "Unsatisfiable scheduling constraints (affinity/taints/resources)",
+    "Pod scheduling deadlock or starvation"
+  ],
+  "suggested_checks": [
+    "kubectl get nodes -o wide",
+    "kubectl describe pod timeout-pod",
+    "Check node resources, taints, and affinity constraints"
+  ]
+}

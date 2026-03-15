@@ -72,7 +72,7 @@ class SchedulingTimeoutExceededRule(FailureRule):
                 Cause(
                     code="SCHEDULER_TIMEOUT_EXCEEDED",
                     message=f"FailedScheduling events persisted for {duration_seconds/60:.1f} minutes",
-                    role="temporal_root",
+                    role="scheduling_root",
                     blocking=True,
                 ),
                 Cause(
