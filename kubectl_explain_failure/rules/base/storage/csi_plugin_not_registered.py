@@ -70,18 +70,18 @@ class CSIPluginNotRegisteredRule(FailureRule):
                 Cause(
                     code="STORAGECLASS_PRESENT",
                     message="StorageClass exists with a provisioner",
-                    role="storage_context",
+                    role="volume_context",
                 ),
                 Cause(
                     code="NODE_MISSING_CSI_DRIVER",
                     message="All nodes are missing the required CSI driver",
-                    role="node_root",
+                    role="infrastructure_root",
                     blocking=True,
                 ),
                 Cause(
                     code="PVC_PROVISIONING_BLOCKED",
                     message="PVCs cannot be provisioned due to missing CSI driver",
-                    role="pvc_symptom",
+                    role="workload_symptom",
                 ),
             ]
         )

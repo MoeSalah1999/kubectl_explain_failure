@@ -1,0 +1,38 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "rwo-conflict-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "objects": {
+    "pvc": {
+      "data-pvc": {
+        "metadata": {
+          "name": "data-pvc"
+        },
+        "spec": {
+          "accessModes": ["ReadWriteOnce"]
+        },
+        "status": {
+          "phase": "Bound"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/1 nodes are available: pod has unbound immediate PersistentVolumeClaims",
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "Multi-attach error for volume \"pvc-123\": Volume is already exclusively attached to one node",
+      "lastTimestamp": "2026-03-15T12:01:00Z"
+    }
+  ]
+}

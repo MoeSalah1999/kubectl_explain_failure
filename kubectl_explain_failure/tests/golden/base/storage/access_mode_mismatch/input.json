@@ -1,0 +1,43 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "accessmode-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "objects": {
+    "pvc": {
+      "data-pvc": {
+        "metadata": {
+          "name": "data-pvc"
+        },
+        "spec": {
+          "accessModes": ["ReadWriteMany"]
+        },
+        "status": {
+          "phase": "Pending"
+        }
+      }
+    },
+    "pv": {
+      "pv-rwo": {
+        "metadata": {
+          "name": "pv-rwo"
+        },
+        "spec": {
+          "accessModes": ["ReadWriteOnce"]
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/1 nodes are available: pod has unbound immediate PersistentVolumeClaims",
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    }
+  ]
+}

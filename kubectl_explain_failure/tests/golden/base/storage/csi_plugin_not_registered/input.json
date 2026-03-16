@@ -1,0 +1,57 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "csi-missing-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "volumes": [
+        {
+          "name": "data",
+          "persistentVolumeClaim": {
+            "claimName": "data-pvc"
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "objects": {
+    "pvc": {
+      "data-pvc": {
+        "metadata": {
+          "name": "data-pvc"
+        },
+        "spec": {
+          "storageClassName": "sc-gp2"
+        },
+        "status": {
+          "phase": "Bound"
+        }
+      }
+    },
+    "storageclass": {
+      "sc-gp2": {
+        "metadata": {
+          "name": "sc-gp2"
+        },
+        "provisioner": "ebs.csi.aws.com"
+      }
+    },
+    "node": {
+      "node-a": {
+        "metadata": {
+          "name": "node-a"
+        },
+        "status": {
+          "drivers": [
+            "csi.cephfs.com"
+          ]
+        }
+      }
+    }
+  },
+  "events": []
+}

@@ -1,0 +1,43 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "resize-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "objects": {
+    "pvc": {
+      "data-pvc": {
+        "metadata": {
+          "name": "data-pvc"
+        },
+        "spec": {
+          "resources": {
+            "requests": {
+              "storage": "20Gi"
+            }
+          }
+        },
+        "status": {
+          "phase": "Bound",
+          "conditions": [
+            {
+              "type": "FileSystemResizePending",
+              "status": "True"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedMount",
+      "message": "MountVolume.SetUp failed for volume 'data'",
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    }
+  ]
+}

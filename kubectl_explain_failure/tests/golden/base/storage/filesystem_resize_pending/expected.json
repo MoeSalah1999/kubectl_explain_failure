@@ -1,0 +1,43 @@
+{
+  "root_cause": "PersistentVolume filesystem resize pending",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "PVC data-pvc has FileSystemResizePending condition",
+    "Filesystem expansion required before volume mount"
+  ],
+  "causes": [
+    {
+      "code": "PVC_RESIZE_REQUESTED",
+      "message": "PVC 'data-pvc' storage expansion requested",
+      "role": "volume_context"
+    },
+    {
+      "code": "FILESYSTEM_RESIZE_PENDING",
+      "message": "Filesystem resize must complete before volume can mount",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "VOLUME_MOUNT_BLOCKED",
+      "message": "Pod cannot mount the resized volume until filesystem expansion completes",
+      "role": "volume_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pvc:data-pvc": [
+      "Condition FileSystemResizePending=True",
+      "Requested storage expansion to 20Gi"
+    ]
+  },
+  "likely_causes": [
+    "PVC resized but filesystem expansion not yet performed",
+    "Node filesystem resize operation pending",
+    "Storage driver requires remount for expansion"
+  ],
+  "suggested_checks": [
+    "kubectl describe pvc data-pvc",
+    "kubectl describe pod resize-pod",
+    "Verify filesystem resize support in storage driver"
+  ]
+}

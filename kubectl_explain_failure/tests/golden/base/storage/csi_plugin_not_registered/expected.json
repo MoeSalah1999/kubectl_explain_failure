@@ -1,0 +1,43 @@
+{
+  "root_cause": "PVCs cannot be scheduled due to missing CSI driver on nodes",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "StorageClasses: sc-gp2",
+    "Nodes: node-a",
+    "PVCs: data-pvc"
+  ],
+  "causes": [
+    {
+      "code": "STORAGECLASS_PRESENT",
+      "message": "StorageClass exists with a provisioner",
+      "role": "volume_context"
+    },
+    {
+      "code": "NODE_MISSING_CSI_DRIVER",
+      "message": "All nodes are missing the required CSI driver",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "PVC_PROVISIONING_BLOCKED",
+      "message": "PVCs cannot be provisioned due to missing CSI driver",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pvc:data-pvc": [
+      "Requires CSI driver not found on any node"
+    ]
+  },
+  "likely_causes": [
+    "Node(s) missing CSI driver installation",
+    "Cluster misconfiguration of storage plugins",
+    "PVCs requesting StorageClass that cannot be satisfied"
+  ],
+  "suggested_checks": [
+    "kubectl get nodes -o json | jq '.items[].status.drivers'",
+    "kubectl describe storageclass <name>",
+    "kubectl describe pvc <name>"
+  ]
+}

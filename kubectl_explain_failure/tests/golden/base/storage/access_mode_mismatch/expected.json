@@ -1,0 +1,45 @@
+{
+  "root_cause": "PersistentVolume access mode mismatch",
+  "blocking": true,
+  "confidence": 0.96,
+  "evidence": [
+    "PVC data-pvc accessModes=['ReadWriteMany']",
+    "PV pv-rwo accessModes=['ReadWriteOnce']"
+  ],
+  "causes": [
+    {
+      "code": "PVC_REQUESTS_ACCESS_MODE",
+      "message": "PVC 'data-pvc' requests access modes ['ReadWriteMany']",
+      "role": "volume_context"
+    },
+    {
+      "code": "PV_ACCESS_MODE_INCOMPATIBLE",
+      "message": "PV 'pv-rwo' only supports ['ReadWriteOnce']",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "PVC_CANNOT_BIND",
+      "message": "PVC cannot bind to a compatible PersistentVolume",
+      "role": "volume_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pvc:data-pvc": [
+      "Access mode incompatible with available PV"
+    ],
+    "pv:pv-rwo": [
+      "Access modes do not satisfy PVC request"
+    ]
+  },
+  "likely_causes": [
+    "PVC requests RWX but PV only supports RWO",
+    "Incorrect storage class configuration",
+    "Cluster storage backend does not support requested access mode"
+  ],
+  "suggested_checks": [
+    "kubectl get pvc data-pvc -o yaml",
+    "kubectl get pv pv-rwo -o yaml",
+    "Verify accessModes compatibility between PVC and PV"
+  ]
+}

@@ -55,6 +55,15 @@ class PVCMountFailureRule(FailureRule):
         if not pvc_objs:
             return False
 
+        # Exclude filesystem resize pending PVCs (more specific root cause)
+        for pvc in pvc_objs.values():
+            conditions = pvc.get("status", {}).get("conditions", [])
+            if any(
+                c.get("type") == "FileSystemResizePending" and c.get("status") == "True"
+                for c in conditions
+            ):
+                return False
+
         # All PVCs must be Bound
         all_bound = all(
             p.get("status", {}).get("phase") == "Bound" for p in pvc_objs.values()

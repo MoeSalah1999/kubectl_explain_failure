@@ -1,0 +1,43 @@
+{
+  "root_cause": "ReadWriteOnce volume already attached to another node",
+  "blocking": true,
+  "confidence": 0.96,
+  "evidence": [
+    "PVC data-pvc accessMode=ReadWriteOnce",
+    "Scheduler event indicates volume already attached"
+  ],
+  "causes": [
+    {
+      "code": "PVC_RWO_VOLUME",
+      "message": "PVC 'data-pvc' uses ReadWriteOnce access mode",
+      "role": "volume_context"
+    },
+    {
+      "code": "RWO_ALREADY_ATTACHED",
+      "message": "Volume already attached to another node",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_CANNOT_SCHEDULE_WITH_VOLUME",
+      "message": "Scheduler cannot place Pod because volume cannot attach to multiple nodes",
+      "role": "volume_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pvc:data-pvc": [
+      "Volume uses ReadWriteOnce access mode",
+      "Multi-node attachment attempted"
+    ]
+  },
+  "likely_causes": [
+    "Another Pod is already using the volume on a different node",
+    "StatefulSet Pod rescheduled while previous Pod still terminating",
+    "Storage backend does not support multi-node attachment"
+  ],
+  "suggested_checks": [
+    "kubectl describe pvc data-pvc",
+    "kubectl get pods -A -o wide | grep <volume>",
+    "kubectl describe pod rwo-conflict-pod"
+  ]
+}
