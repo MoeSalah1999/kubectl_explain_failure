@@ -1,0 +1,38 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "hpa-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "pods": {
+    "hpa-pod": {
+      "metadata": {
+        "name": "hpa-pod"
+      },
+      "status": {
+        "phase": "Pending"
+      }
+    }
+  },
+  "hpa": {
+    "web-hpa": {
+      "metadata": {
+        "name": "web-hpa"
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "Failed",
+      "message": "failed to get cpu utilization: unable to fetch metrics",
+      "source": {
+        "component": "metrics-server"
+      },
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    }
+  ]
+}

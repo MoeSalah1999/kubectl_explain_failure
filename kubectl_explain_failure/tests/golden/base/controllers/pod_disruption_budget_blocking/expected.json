@@ -1,0 +1,40 @@
+{
+  "root_cause": "Eviction blocked by PodDisruptionBudget",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "Pod pdb-blocked-pod is under a PDB",
+    "Event: Eviction denied due to disruption budget"
+  ],
+  "causes": [
+    {
+      "code": "POD_PRESENT",
+      "message": "Pod 'pdb-blocked-pod' exists",
+      "role": "workload_context"
+    },
+    {
+      "code": "PDB_BLOCKING",
+      "message": "Eviction denied due to PodDisruptionBudget",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "PDB_SYMPTOM",
+      "message": "Pod cannot be evicted, controller update may be blocked",
+      "role": "controller_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:pdb-blocked-pod": [
+      "Eviction blocked by PDB"
+    ]
+  },
+  "likely_causes": [
+    "PodDisruptionBudget preventing eviction",
+    "Controller update may be blocked"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod pdb-blocked-pod",
+    "kubectl get pdb --all-namespaces"
+  ]
+}

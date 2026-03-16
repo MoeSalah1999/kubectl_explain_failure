@@ -1,0 +1,43 @@
+{
+  "root_cause": "HPA 'web-hpa' unable to scale due to metrics unavailability or pods pending",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "HPA object present: web-hpa",
+    "Pending Pods: hpa-pod",
+    "Timeline indicates metrics unavailability"
+  ],
+  "causes": [
+    {
+      "code": "HPA_PRESENT",
+      "message": "HPA 'web-hpa' exists for the workload",
+      "role": "workload_context"
+    },
+    {
+      "code": "METRICS_UNAVAILABLE",
+      "message": "Metrics unavailable or API errors prevent scaling",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "PODS_PENDING",
+      "message": "Pods stuck pending: hpa-pod",
+      "role": "controller_symptom"
+    }
+  ],
+  "object_evidence": {
+    "hpa:web-hpa": [
+      "HPA 'web-hpa' unable to scale due to metrics unavailability or pods pending"
+    ]
+  },
+  "likely_causes": [
+    "Metrics-server not reporting",
+    "API server metrics error",
+    "Pod scheduling blocked by resource constraints"
+  ],
+  "suggested_checks": [
+    "kubectl describe hpa web-hpa",
+    "kubectl get --raw /apis/metrics.k8s.io/v1beta1/",
+    "kubectl get pods --field-selector=status.phase=Pending"
+  ]
+}

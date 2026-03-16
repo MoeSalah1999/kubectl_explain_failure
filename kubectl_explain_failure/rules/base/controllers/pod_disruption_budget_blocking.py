@@ -41,12 +41,13 @@ class PodDisruptionBudgetBlockingRule(FailureRule):
             return False
 
         # Look for Eviction events denied due to PDB
-        return timeline_has_pattern(
-            timeline,
-            [
-                {"reason": "Eviction", "message": "disruption budget"},
-            ],
-        )
+        for e in timeline.events:
+            if e.get("reason") != "Eviction":
+                continue
+            msg = (e.get("message") or "").lower()
+            if "disruption budget" in msg or "poddisruptionbudget" in msg:
+                return True
+        return False
 
     def explain(self, pod, events, context):
         chain = CausalChain(

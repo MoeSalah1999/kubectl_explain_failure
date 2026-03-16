@@ -1,0 +1,24 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "ds-pod",
+      "namespace": "default",
+      "ownerReferences": [
+        {
+          "kind": "DaemonSet",
+          "name": "gpu-daemon"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/1 nodes are available: node(s) didn't match node selector",
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    }
+  ]
+}

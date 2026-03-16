@@ -1,0 +1,18 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "pdb-blocked-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "events": [
+    {
+      "reason": "Eviction",
+      "message": "Cannot evict pod as it would violate the pod's disruption budget",
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    }
+  ]
+}

@@ -43,6 +43,12 @@ class PendingUnschedulableRule(FailureRule):
         if get_pod_phase(pod) != "Pending":
             return False
 
+        # DaemonSet-specific scheduling issues should be handled by
+        # DaemonSetNodeSelectorMismatch (more specific root cause).
+        owners = pod.get("metadata", {}).get("ownerReferences", [])
+        if any(o.get("kind") == "DaemonSet" for o in owners):
+            return False
+
         # Only match if no higher-priority rule already indicates root cause
         suppressed = context.get("suppressed_rules", [])
         for r in ["PVCBoundNodeDiskPressureMount", "NodeDiskPressure"]:

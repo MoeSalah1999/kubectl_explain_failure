@@ -1,0 +1,41 @@
+{
+  "root_cause": "Deployment 'web' has 1/3 available replicas",
+  "blocking": true,
+  "confidence": 0.9,
+  "evidence": [
+    "Deployment 'web' has 1/3 available replicas"
+  ],
+  "causes": [
+    {
+      "code": "DEPLOYMENT_ROLLOUT_IN_PROGRESS",
+      "message": "Deployment rollout has started",
+      "role": "controller_context"
+    },
+    {
+      "code": "REPLICA_COUNT_MISMATCH",
+      "message": "Available replicas are fewer than desired replicas",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "ROLLOUT_INCOMPLETE",
+      "message": "Deployment has not yet made full progress; some Pods are missing or not ready",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "deployment:web": [
+      "Deployment 'web' has 1/3 available replicas"
+    ]
+  },
+  "likely_causes": [
+    "ReplicaSet not yet created",
+    "Pods scheduling slowly",
+    "Cluster resource constraints"
+  ],
+  "suggested_checks": [
+    "kubectl get deployment web -o yaml",
+    "kubectl describe deployment web",
+    "kubectl get rs -n <namespace> | grep <deployment_name>"
+  ]
+}
