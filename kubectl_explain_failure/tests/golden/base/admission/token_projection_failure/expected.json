@@ -1,0 +1,37 @@
+{
+  "root_cause": "Projected service account token failure",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "Pod token-projection-pod has projected service account token",
+    "Event: TokenProjectionFailure"
+  ],
+  "causes": [
+    {
+      "code": "SA_TOKEN_PROJECTED",
+      "message": "Pod requires a projected service account token",
+      "role": "identity_context"
+    },
+    {
+      "code": "TOKEN_PROJECTION_FAILED",
+      "message": "Projected service account token could not be mounted",
+      "role": "identity_root",
+      "blocking": true
+    },
+    {
+      "code": "TOKEN_SYMPTOM",
+      "message": "Pod cannot authenticate with projected credentials",
+      "role": "identity_symptom"
+    }
+  ],
+  "object_evidence": {},
+  "likely_causes": [
+    "Projected token mount failed",
+    "Kubernetes API authentication unavailable"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod token-projection-pod",
+    "Check projected service account token volume",
+    "Check Pod spec for serviceAccountName"
+  ]
+}

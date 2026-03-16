@@ -1,0 +1,18 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "token-projection-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "serviceAccountName": "default"
+    },
+    "status": {}
+  },
+  "events": [
+    {
+      "reason": "TokenProjectionFailure",
+      "message": "Failed to mount projected service account token"
+    }
+  ]
+}

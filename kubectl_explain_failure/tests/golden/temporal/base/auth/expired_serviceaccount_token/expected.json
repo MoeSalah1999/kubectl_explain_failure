@@ -1,0 +1,41 @@
+{
+  "root_cause": "ServiceAccount token expired",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "ServiceAccount 'default' attached to Pod",
+    "Repeated 'Unauthorized' events in timeline",
+    "Pod in CrashLoopBackOff"
+  ],
+  "causes": [
+    {
+      "code": "SERVICEACCOUNT_PRESENT",
+      "message": "Pod uses ServiceAccount 'default'",
+      "role": "identity_context"
+    },
+    {
+      "code": "TOKEN_EXPIRED",
+      "message": "ServiceAccount token expired",
+      "role": "identity_root",
+      "blocking": true
+    },
+    {
+      "code": "CRASHLOOP_BACKOFF",
+      "message": "Pod repeatedly failed to authenticate to API server",
+      "role": "identity_symptom"
+    }
+  ],
+  "object_evidence": {
+    "serviceaccount:default": [
+      "Token expired"
+    ]
+  },
+  "likely_causes": [
+    "ServiceAccount token expired",
+    "Pod unable to authenticate to API server"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod sa-expired-pod",
+    "kubectl get secret -n default default-token-*"
+  ]
+}
