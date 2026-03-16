@@ -48,6 +48,14 @@ class ConflictingNodeConditionsRule(FailureRule):
         "EvictedRule",
     ]
 
+    @staticmethod
+    def _condition_true(value) -> bool:
+        if value is True:
+            return True
+        if isinstance(value, dict):
+            return str(value.get("status", "")).lower() == "true"
+        return False
+
     def matches(self, pod, events, context) -> bool:
         node_conditions = context.get("node_conditions", {})
         if not node_conditions:
@@ -56,7 +64,7 @@ class ConflictingNodeConditionsRule(FailureRule):
         pressures = [
             cond
             for cond in ["MemoryPressure", "DiskPressure", "PIDPressure"]
-            if node_conditions.get(cond) is True
+            if self._condition_true(node_conditions.get(cond))
         ]
 
         if len(pressures) < 2:
@@ -82,7 +90,7 @@ class ConflictingNodeConditionsRule(FailureRule):
         active_pressures = [
             cond
             for cond in ["MemoryPressure", "DiskPressure", "PIDPressure"]
-            if node_conditions.get(cond) is True
+            if self._condition_true(node_conditions.get(cond))
         ]
 
         pressure_list = ", ".join(active_pressures)
@@ -103,7 +111,7 @@ class ConflictingNodeConditionsRule(FailureRule):
                     code="MULTIPLE_NODE_PRESSURES",
                     message=f"Node reports simultaneous pressure conditions: {pressure_list}",
                     blocking=True,
-                    role="node_root",
+                    role="infrastructure_root",
                 ),
                 Cause(
                     code="NODE_RESOURCE_CONTENTION",

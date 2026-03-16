@@ -1,0 +1,33 @@
+{
+  "root_cause": "Expected sidecar container was not injected by mutating webhook",
+  "blocking": false,
+  "confidence": 0.86,
+  "evidence": [
+    "Pod configured for sidecar injection",
+    "Expected sidecar container missing from Pod spec",
+    "Event: CrashLoopBackOff"
+  ],
+  "causes": [
+    {
+      "code": "SIDECAR_INJECTION_EXPECTED",
+      "message": "Pod annotations request automatic sidecar injection",
+      "role": "admission_context"
+    },
+    {
+      "code": "SIDECAR_CONTAINER_MISSING",
+      "message": "Expected sidecar container was not injected by mutating webhook",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "APPLICATION_DEPENDENCY_MISSING",
+      "message": "Application container depends on sidecar functionality",
+      "role": "workload_context"
+    },
+    {
+      "code": "CONTAINER_CRASH_LOOP",
+      "message": "Main container repeatedly crashes due to missing sidecar",
+      "role": "workload_symptom"
+    }
+  ]
+}

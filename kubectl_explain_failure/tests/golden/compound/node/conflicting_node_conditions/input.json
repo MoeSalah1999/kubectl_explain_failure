@@ -1,0 +1,50 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "conflict-pressures-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node-1"
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "events": [
+    {
+      "reason": "Scheduled",
+      "message": "Successfully assigned default/conflict-pressures-pod to node-1",
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    }
+  ],
+  "node": {
+    "metadata": {
+      "name": "node-1"
+    },
+    "status": {
+      "conditions": [
+        {
+          "type": "Ready",
+          "status": "True",
+          "reason": "KubeletReady"
+        },
+        {
+          "type": "MemoryPressure",
+          "status": "True",
+          "reason": "KubeletHasInsufficientMemory"
+        },
+        {
+          "type": "DiskPressure",
+          "status": "True",
+          "reason": "KubeletHasNoDiskSpace"
+        },
+        {
+          "type": "PIDPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientPID"
+        }
+      ]
+    }
+  }
+}

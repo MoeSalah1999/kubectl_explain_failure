@@ -1,0 +1,42 @@
+{
+  "root_cause": "Node 'node-1' is under multiple resource pressure conditions (MemoryPressure, DiskPressure) causing unstable scheduling and eviction behavior",
+  "blocking": true,
+  "confidence": 0.94,
+  "evidence": [
+    "Node conditions: MemoryPressure, DiskPressure",
+    "Multiple node pressure conditions detected"
+  ],
+  "object_evidence": {
+    "node:node-1": [
+      "Pressure conditions active: MemoryPressure, DiskPressure"
+    ]
+  },
+  "causes": [
+    {
+      "code": "NODE_PRESENT",
+      "message": "Pod scheduled on node 'node-1'",
+      "role": "node_context"
+    },
+    {
+      "code": "MULTIPLE_NODE_PRESSURES",
+      "message": "Node reports simultaneous pressure conditions: MemoryPressure, DiskPressure",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "NODE_RESOURCE_CONTENTION",
+      "message": "Node resource contention leads to eviction or scheduling instability",
+      "role": "workload_symptom"
+    }
+  ],
+  "likely_causes": [
+    "Node resource exhaustion",
+    "Disk and memory pressure occurring simultaneously",
+    "Large number of Pods competing for node resources"
+  ],
+  "suggested_checks": [
+    "kubectl describe node node-1",
+    "Check node resource usage (CPU, memory, disk)",
+    "kubectl describe pod conflict-pressures-pod"
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "root_cause": "Init container image pull failure caused incomplete initialization before main container start",
+  "blocking": false,
+  "confidence": 0.86,
+  "evidence": [
+    "Event: ErrImagePull or ImagePullBackOff for init container",
+    "Event: CrashLoopBackOff for main container",
+    "Temporal ordering detected between init failure and main crash"
+  ],
+  "causes": [
+    {
+      "code": "INIT_CONTAINER_PRESENT",
+      "message": "Pod defines one or more init containers",
+      "role": "workload_context"
+    },
+    {
+      "code": "INIT_IMAGE_PULL_FAILURE",
+      "message": "Init container failed to pull required image",
+      "role": "container_symptom"
+    },
+    {
+      "code": "INCOMPLETE_INITIALIZATION",
+      "message": "Init container image pull failure caused incomplete initialization before main container start",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "MAIN_CONTAINER_CRASH_LOOP",
+      "message": "Main container repeatedly crashes after startup",
+      "role": "workload_symptom"
+    }
+  ],
+  "likely_causes": [
+    "Init container image missing or private registry auth failure",
+    "Network connectivity to container registry unavailable",
+    "Incorrect image tag for init container"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod init-pull-crash-pod",
+    "kubectl get pod init-pull-crash-pod -o yaml",
+    "kubectl logs init-pull-crash-pod -c <init-container-name>"
+  ]
+}

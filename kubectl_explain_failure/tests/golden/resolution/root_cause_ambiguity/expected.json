@@ -1,0 +1,37 @@
+{
+  "root_cause": "Multiple competing failure signals detected; root cause cannot be uniquely determined",
+  "blocking": false,
+  "confidence": 0.5,
+  "evidence": [
+    "Pod ambiguous-pod shows multiple failure signals",
+    "Timeline contains competing failure events"
+  ],
+  "causes": [
+    {
+      "code": "MULTIPLE_FAILURE_SIGNALS",
+      "message": "Pod timeline contains multiple independent failure events",
+      "role": "diagnostic_context"
+    },
+    {
+      "code": "ROOT_CAUSE_AMBIGUOUS",
+      "message": "Engine cannot determine a single dominant root cause",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "AMBIGUITY_REPORTED",
+      "message": "Root cause remains ambiguous due to competing signals",
+      "role": "diagnostic_symptom"
+    }
+  ],
+  "likely_causes": [
+    "Multiple subsystems failing simultaneously",
+    "Underlying infrastructure instability",
+    "Application and platform issues occurring together"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod ambiguous-pod",
+    "Inspect Pod events for competing failure reasons",
+    "Investigate image, storage, and node conditions simultaneously"
+  ]
+}

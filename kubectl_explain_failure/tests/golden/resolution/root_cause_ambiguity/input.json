@@ -1,0 +1,23 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "ambiguous-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "events": [
+    {
+      "reason": "ImagePullBackOff",
+      "message": "Back-off pulling image \"registry.example.com/app:latest\"",
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    },
+    {
+      "reason": "CrashLoopBackOff",
+      "message": "Back-off restarting failed container app in pod ambiguous-pod",
+      "lastTimestamp": "2026-03-15T12:05:00Z"
+    }
+  ]
+}

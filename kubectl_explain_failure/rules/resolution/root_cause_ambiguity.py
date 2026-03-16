@@ -76,7 +76,13 @@ class RootCauseAmbiguityRule(FailureRule):
                 Cause(
                     code="ROOT_CAUSE_AMBIGUOUS",
                     message="Engine cannot determine a single dominant root cause",
-                    role="diagnostic_root",
+                    role="configuration_root",
+                    blocking=True,
+                ),
+                Cause(
+                    code="AMBIGUITY_REPORTED",
+                    message="Root cause remains ambiguous due to competing signals",
+                    role="diagnostic_symptom",
                 ),
             ]
         )

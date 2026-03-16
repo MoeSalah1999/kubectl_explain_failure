@@ -1,0 +1,47 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "init-pull-crash-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "initContainers": [
+        {
+          "name": "init-db",
+          "image": "registry.example.com/app/init:badtag"
+        }
+      ],
+      "containers": [
+        {
+          "name": "app",
+          "image": "registry.example.com/app/main:1.2.3"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "ErrImagePull",
+      "message": "Failed to pull image \"registry.example.com/app/init:badtag\"",
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    },
+    {
+      "reason": "CrashLoopBackOff",
+      "message": "Back-off restarting failed container app in pod init-pull-crash-pod",
+      "lastTimestamp": "2026-03-15T12:05:00Z"
+    }
+  ]
+}
