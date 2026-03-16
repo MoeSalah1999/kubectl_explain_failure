@@ -1,0 +1,39 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "svc-empty-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "objects": {
+    "service": {
+      "backend": {
+        "metadata": {
+          "name": "backend"
+        },
+        "spec": {
+          "selector": {
+            "app": "backend"
+          }
+        }
+      }
+    },
+    "endpoints": {
+      "backend": {
+        "metadata": {
+          "name": "backend"
+        },
+        "subsets": []
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed"
+    }
+  ]
+}

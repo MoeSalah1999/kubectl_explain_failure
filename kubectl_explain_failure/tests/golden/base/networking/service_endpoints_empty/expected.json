@@ -1,0 +1,44 @@
+{
+  "root_cause": "Service 'backend' has no ready endpoints",
+  "blocking": true,
+  "confidence": 0.94,
+  "evidence": [
+    "Service backend exists",
+    "No ready endpoints found for the Service"
+  ],
+  "causes": [
+    {
+      "code": "SERVICE_PRESENT",
+      "message": "Service 'backend' exists",
+      "role": "service_context"
+    },
+    {
+      "code": "SERVICE_ENDPOINTS_EMPTY",
+      "message": "Service 'backend' has no ready endpoints",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "SERVICE_ROUTING_FAILURE",
+      "message": "Traffic cannot reach backend Pods through the Service",
+      "role": "service_symptom"
+    }
+  ],
+  "object_evidence": {
+    "service:backend": [
+      "Service selector matches no ready Pods"
+    ]
+  },
+  "likely_causes": [
+    "No Pods match the Service selector",
+    "Matching Pods are not Ready",
+    "Readiness probes failing",
+    "Pods crashed or not yet started"
+  ],
+  "suggested_checks": [
+    "kubectl describe service backend",
+    "kubectl get endpoints backend",
+    "kubectl get pods -l <service-selector>",
+    "kubectl describe pod svc-empty-pod"
+  ]
+}

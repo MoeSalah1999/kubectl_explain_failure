@@ -1,0 +1,41 @@
+{
+  "root_cause": "Referenced Service 'backend' does not exist",
+  "blocking": true,
+  "confidence": 0.93,
+  "evidence": [
+    "Pod references Service 'backend' through environment variables",
+    "Service object not found in namespace"
+  ],
+  "causes": [
+    {
+      "code": "SERVICE_REFERENCE",
+      "message": "Pod expects Service 'backend' via environment configuration",
+      "role": "service_context"
+    },
+    {
+      "code": "SERVICE_NOT_FOUND",
+      "message": "Service 'backend' does not exist in the namespace",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "SERVICE_DISCOVERY_FAILURE",
+      "message": "Application cannot discover or connect to the expected Service",
+      "role": "service_symptom"
+    }
+  ],
+  "object_evidence": {
+    "service:backend": [
+      "Service expected but not present"
+    ]
+  },
+  "likely_causes": [
+    "Service was deleted or never created",
+    "Application configuration references incorrect service name",
+    "Deployment created before Service resource"
+  ],
+  "suggested_checks": [
+    "kubectl get svc | grep backend",
+    "kubectl describe pod svc-missing-pod"
+  ]
+}

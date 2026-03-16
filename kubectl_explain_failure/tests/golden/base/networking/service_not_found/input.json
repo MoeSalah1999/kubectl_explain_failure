@@ -1,0 +1,39 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "svc-missing-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "app",
+          "env": [
+            {
+              "name": "BACKEND_SERVICE_HOST",
+              "value": "10.0.0.1"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "objects": {
+    "service": {
+      "frontend": {
+        "metadata": {
+          "name": "frontend"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "Failed",
+      "message": "Could not resolve backend service in namespace"
+    }
+  ]
+}
