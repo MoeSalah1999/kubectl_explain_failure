@@ -82,7 +82,7 @@ class TerminationGracePeriodExceededRule(FailureRule):
                 Cause(
                     code="TERMINATION_GRACE_EXCEEDED",
                     message="Container failed to terminate within terminationGracePeriodSeconds",
-                    role="container_root",
+                    role="container_health_root",
                     blocking=True,
                 ),
                 Cause(

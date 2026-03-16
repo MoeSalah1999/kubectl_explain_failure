@@ -55,7 +55,7 @@ class PreStopHookFailureRule(FailureRule):
                 Cause(
                     code="PRESTOP_HOOK_FAILED",
                     message="Container PreStop hook execution failed",
-                    role="container_root",
+                    role="container_health_root",
                     blocking=True,
                 ),
                 Cause(

@@ -1,0 +1,42 @@
+{
+  "root_cause": "Container repeatedly stuck Terminating beyond grace period",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "Pod.status.containerStatuses indicate repeated terminating events",
+    "Pod.spec.containers terminationGracePeriodSeconds checked"
+  ],
+  "causes": [
+    {
+      "code": "CONTAINER_RUNNING",
+      "message": "Container was running normally",
+      "role": "container_context"
+    },
+    {
+      "code": "TERMINATION_GRACE_EXCEEDED",
+      "message": "Container failed to terminate within terminationGracePeriodSeconds",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "SIGKILL_ENFORCED",
+      "message": "Kubelet forcibly killed the container after grace timeout",
+      "role": "runtime_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:grace-period-pod": [
+      "Container stuck Terminating beyond grace period"
+    ]
+  },
+  "likely_causes": [
+    "Application shutdown hooks not completing",
+    "Stuck background processes preventing termination",
+    "Pod termination deadline shorter than actual shutdown time"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod grace-period-pod",
+    "Check container terminationGracePeriodSeconds in Pod spec",
+    "Inspect application logs for shutdown hooks or stuck processes"
+  ]
+}

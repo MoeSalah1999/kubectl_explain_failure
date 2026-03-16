@@ -1,0 +1,21 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "prestop-failure-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedPreStopHook",
+      "message": "PreStop hook failed: command exited with status 1",
+      "source": {
+        "component": "PreStopHook"
+      },
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    }
+  ]
+}

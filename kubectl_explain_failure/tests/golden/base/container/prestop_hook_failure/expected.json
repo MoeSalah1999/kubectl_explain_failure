@@ -1,0 +1,41 @@
+{
+  "root_cause": "Pod termination blocked by PreStop hook failure",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "Pod: prestop-failure-pod",
+    "Detected PreStop hook failure in container events"
+  ],
+  "causes": [
+    {
+      "code": "POD_TERMINATION_INITIATED",
+      "message": "Pod termination started",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "PRESTOP_HOOK_FAILED",
+      "message": "Container PreStop hook execution failed",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "CONTAINER_SHUTDOWN_BLOCKED",
+      "message": "Container could not terminate cleanly",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:prestop-failure-pod": [
+      "PreStop hook failed"
+    ]
+  },
+  "likely_causes": [
+    "PreStop hook command exited with non-zero status",
+    "Hook command timed out",
+    "Dependent container processes blocked shutdown"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod prestop-failure-pod",
+    "kubectl logs <pod> -c <container> --previous"
+  ]
+}

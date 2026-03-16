@@ -1,0 +1,38 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "grace-period-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "app",
+          "image": "example/app:1.0",
+          "terminationGracePeriodSeconds": 30
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "events": [
+    {
+      "reason": "Killing",
+      "message": "Pod is terminating: container app is terminating",
+      "source": {
+        "component": "kubelet"
+      },
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    },
+    {
+      "reason": "Killing",
+      "message": "Pod is terminating: container app still terminating",
+      "source": {
+        "component": "kubelet"
+      },
+      "lastTimestamp": "2026-03-15T12:01:00Z"
+    }
+  ]
+}
