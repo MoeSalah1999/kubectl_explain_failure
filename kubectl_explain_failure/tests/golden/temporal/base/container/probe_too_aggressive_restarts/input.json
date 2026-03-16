@@ -1,0 +1,48 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "probe-restart-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "app",
+          "livenessProbe": {
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8080
+            },
+            "initialDelaySeconds": 5
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "restartCount": 3
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Unhealthy",
+      "message": "Liveness probe failed: HTTP probe failed",
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    },
+    {
+      "reason": "Unhealthy",
+      "message": "Liveness probe failed: HTTP probe failed",
+      "lastTimestamp": "2026-03-15T12:01:00Z"
+    },
+    {
+      "reason": "Unhealthy",
+      "message": "Liveness probe failed: HTTP probe failed",
+      "lastTimestamp": "2026-03-15T12:02:00Z"
+    }
+  ]
+}

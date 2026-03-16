@@ -1,0 +1,43 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "starvation-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "nodes": {
+    "node1": {
+      "metadata": {
+        "name": "node1"
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "MemoryPressure",
+            "status": "True"
+          }
+        ]
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/1 nodes are available: insufficient memory",
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "0/1 nodes are available: insufficient memory",
+      "lastTimestamp": "2026-03-15T12:01:00Z"
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "0/1 nodes are available: insufficient memory",
+      "lastTimestamp": "2026-03-15T12:02:00Z"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "rollout-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "deployment": {
+    "web": {
+      "metadata": {
+        "name": "web"
+      },
+      "spec": {
+        "replicas": 3
+      },
+      "status": {
+        "updatedReplicas": 1,
+        "readyReplicas": 1
+      }
+    }
+  },
+  "replicaset": {
+    "web-7c5f8d": {
+      "metadata": {
+        "name": "web-7c5f8d"
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set web-7c5f8d to 1",
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set web-7c5f8d to 1",
+      "lastTimestamp": "2026-03-15T12:12:00Z"
+    }
+  ]
+}

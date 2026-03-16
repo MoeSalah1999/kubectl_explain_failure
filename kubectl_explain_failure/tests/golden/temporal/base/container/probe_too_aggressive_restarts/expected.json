@@ -1,0 +1,38 @@
+{
+  "root_cause": "Liveness probe configuration causes repeated container restarts",
+  "blocking": false,
+  "confidence": 0.91,
+  "evidence": [
+    "Event: Unhealthy (liveness probe failure)",
+    "Pod probe-restart-pod restart count increasing",
+    "Liveness probe initialDelaySeconds=5"
+  ],
+  "causes": [
+    {
+      "code": "LIVENESS_PROBE_CONFIGURED",
+      "message": "Container uses a liveness probe for health checking",
+      "role": "configuration_context"
+    },
+    {
+      "code": "PROBE_TOO_AGGRESSIVE",
+      "message": "Liveness probe initialDelaySeconds=5 is too short",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "CONTAINER_RESTART_LOOP",
+      "message": "Container repeatedly restarted due to failing liveness probe",
+      "role": "workload_symptom"
+    }
+  ],
+  "likely_causes": [
+    "Application startup time longer than probe delay",
+    "Health endpoint not ready immediately",
+    "Probe configured too aggressively"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod probe-restart-pod",
+    "Increase livenessProbe.initialDelaySeconds",
+    "Check container logs for slow startup"
+  ]
+}

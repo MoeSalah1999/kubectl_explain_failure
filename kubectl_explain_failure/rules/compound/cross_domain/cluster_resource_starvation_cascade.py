@@ -38,6 +38,7 @@ class ClusterResourceStarvationCascadeRule(FailureRule):
         "FailedScheduling",
         "InsufficientResources",
         "NodeMemoryPressure",
+        "SchedulingTimeoutExceeded",
         "PendingUnschedulable",
         "SchedulingFlapping",
     ]
@@ -119,7 +120,7 @@ class ClusterResourceStarvationCascadeRule(FailureRule):
                 Cause(
                     code="NODE_MEMORY_PRESSURE",
                     message=f"Node '{node_name}' reports MemoryPressure",
-                    role="node_root",
+                    role="infrastructure_root",
                     blocking=True,
                 ),
                 Cause(

@@ -1,0 +1,48 @@
+{
+  "root_cause": "Cluster resource starvation caused by NodeMemoryPressure",
+  "blocking": true,
+  "confidence": 0.93,
+  "evidence": [
+    "Node condition: MemoryPressure=True",
+    "Repeated scheduler failures detected",
+    "Pod starvation-pod remains Pending"
+  ],
+  "causes": [
+    {
+      "code": "CLUSTER_WORKLOAD_DEMAND",
+      "message": "Cluster scheduling demand exceeds available capacity",
+      "role": "cluster_context"
+    },
+    {
+      "code": "NODE_MEMORY_PRESSURE",
+      "message": "Node 'node1' reports MemoryPressure",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "SCHEDULER_RESOURCE_STARVATION",
+      "message": "Scheduler cannot place Pods due to insufficient resources",
+      "role": "scheduler_intermediate"
+    },
+    {
+      "code": "PODS_PENDING_CLUSTER_STARVATION",
+      "message": "Pods remain Pending due to cluster-wide resource starvation",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "MemoryPressure=True detected"
+    ]
+  },
+  "likely_causes": [
+    "Cluster nodes exhausted available memory",
+    "Too many workloads scheduled on limited nodes",
+    "Resource limits preventing new Pods from scheduling"
+  ],
+  "suggested_checks": [
+    "kubectl describe nodes",
+    "kubectl top nodes",
+    "kubectl describe pod starvation-pod"
+  ]
+}
