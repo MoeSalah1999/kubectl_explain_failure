@@ -1,0 +1,15 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "etcd-limit-pod",
+      "namespace": "default"
+    },
+    "status": {}
+  },
+  "events": [
+    {
+      "reason": "FailedCreate",
+      "message": "Request entity too large: etcd object size exceeds limit"
+    }
+  ]
+}

@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class ImmutableFieldUpdateRejectedRule(FailureRule):
@@ -52,11 +51,13 @@ class ImmutableFieldUpdateRejectedRule(FailureRule):
         if not timeline:
             return False
 
-        return (
-            timeline_has_pattern(timeline, r"field is immutable")
-            or timeline_has_pattern(timeline, r"immutable field")
-            or timeline_has_pattern(timeline, r"cannot.*immutable")
-        )
+        # Immutable field errors are reported in event messages
+        patterns = ("field is immutable", "immutable field", "cannot")
+        for e in events:
+            msg = (e.get("message") or "").lower()
+            if any(p in msg for p in patterns) and "immutable" in msg:
+                return True
+        return False
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<pod>")

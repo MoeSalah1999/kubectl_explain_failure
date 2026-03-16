@@ -1,0 +1,24 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "crd-conversion-pod",
+      "namespace": "default",
+      "ownerReferences": [
+        {
+          "kind": "CustomResource",
+          "name": "my-cr"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "events": [
+    {
+      "reason": "Failed",
+      "message": "failed calling webhook \"conversion\": conversion webhook failed",
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    }
+  ]
+}

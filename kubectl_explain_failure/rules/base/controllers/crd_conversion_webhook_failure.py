@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class CRDConversionWebhookFailureRule(FailureRule):
@@ -42,12 +41,18 @@ class CRDConversionWebhookFailureRule(FailureRule):
         if not timeline:
             return False
 
-        # Detect typical CRD conversion webhook errors
-        return (
-            timeline_has_pattern(timeline, r"conversion webhook")
-            or timeline_has_pattern(timeline, r"failed calling webhook.*convert")
-            or timeline_has_pattern(timeline, r"conversion webhook.*failed")
-        )
+        # Detect typical CRD conversion webhook errors in event messages
+        for e in events:
+            msg = (e.get("message") or "").lower()
+            if (
+                "conversion webhook" in msg
+                or "failed calling webhook" in msg
+                and "convert" in msg
+                or "conversion webhook" in msg
+                and "failed" in msg
+            ):
+                return True
+        return False
 
     def explain(self, pod, events, context):
         owners = context.get("owners", [])

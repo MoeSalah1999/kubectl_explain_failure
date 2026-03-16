@@ -1,0 +1,37 @@
+{
+  "root_cause": "Kubernetes object exceeds etcd size limit",
+  "blocking": true,
+  "confidence": 0.94,
+  "evidence": [
+    "Event indicates request entity too large",
+    "etcd rejected object due to size limit"
+  ],
+  "causes": [
+    {
+      "code": "API_REQUEST_ATTEMPTED",
+      "message": "Kubernetes API attempted to persist object",
+      "role": "admission_context"
+    },
+    {
+      "code": "ETCD_OBJECT_SIZE_LIMIT",
+      "message": "Object exceeds maximum size allowed by etcd",
+      "role": "admission_root",
+      "blocking": true
+    },
+    {
+      "code": "OBJECT_REJECTED_BY_API",
+      "message": "API server rejected the object due to size limit",
+      "role": "admission_symptom"
+    }
+  ],
+  "likely_causes": [
+    "ConfigMap or Secret contains very large data",
+    "Annotations exceed Kubernetes size limits",
+    "Application embedded large binary content in manifest"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod etcd-limit-pod",
+    "Inspect ConfigMaps or Secrets referenced by the Pod",
+    "Check annotation sizes in the object manifest"
+  ]
+}

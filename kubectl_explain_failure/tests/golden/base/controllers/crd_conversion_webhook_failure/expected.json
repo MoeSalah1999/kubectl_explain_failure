@@ -1,0 +1,37 @@
+{
+  "root_cause": "CRD conversion webhook failed during resource version conversion",
+  "blocking": true,
+  "confidence": 0.92,
+  "evidence": [
+    "Event indicates CRD conversion webhook failure"
+  ],
+  "causes": [
+    {
+      "code": "CUSTOM_RESOURCE_OWNER_PRESENT",
+      "message": "Pod managed by CustomResource controller backed by a CustomResourceDefinition",
+      "role": "controller_context"
+    },
+    {
+      "code": "CRD_CONVERSION_WEBHOOK_FAILED",
+      "message": "CRD conversion webhook failed during resource version conversion",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "CONTROLLER_RECONCILIATION_FAILED",
+      "message": "Controller cannot reconcile resource due to CRD conversion failure",
+      "role": "controller_symptom"
+    }
+  ],
+  "likely_causes": [
+    "Conversion webhook service unavailable",
+    "Webhook TLS certificate invalid or expired",
+    "Webhook endpoint misconfigured",
+    "CRD conversion strategy misconfigured"
+  ],
+  "suggested_checks": [
+    "kubectl get crd -o yaml | grep conversion",
+    "Check conversion webhook service endpoints",
+    "kubectl describe pod crd-conversion-pod"
+  ]
+}

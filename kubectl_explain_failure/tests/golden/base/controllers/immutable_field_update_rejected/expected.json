@@ -1,0 +1,37 @@
+{
+  "root_cause": "Controller attempted to modify immutable Kubernetes field",
+  "blocking": true,
+  "confidence": 0.94,
+  "evidence": [
+    "Event indicates immutable field update rejection"
+  ],
+  "causes": [
+    {
+      "code": "CONTROLLER_RECONCILIATION_ATTEMPTED",
+      "message": "Controller attempted to reconcile the workload",
+      "role": "controller_context"
+    },
+    {
+      "code": "IMMUTABLE_FIELD_UPDATE_REJECTED",
+      "message": "Kubernetes rejected update to immutable object field",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "CONTROLLER_UPDATE_FAILED",
+      "message": "Controller reconciliation failed due to immutable field change",
+      "role": "controller_symptom"
+    }
+  ],
+  "likely_causes": [
+    "Deployment selector modified after creation",
+    "StatefulSet volumeClaimTemplates changed",
+    "Service clusterIP modified",
+    "PVC storageClassName changed after creation"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod immutable-field-pod",
+    "Inspect controller manifest for immutable field changes",
+    "Compare applied manifest with existing resource"
+  ]
+}

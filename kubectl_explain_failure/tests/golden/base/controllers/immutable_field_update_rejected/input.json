@@ -1,0 +1,18 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "immutable-field-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedUpdate",
+      "message": "spec.selector: Invalid value: field is immutable",
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    }
+  ]
+}

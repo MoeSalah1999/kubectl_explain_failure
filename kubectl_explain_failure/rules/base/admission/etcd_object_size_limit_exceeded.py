@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class EtcdObjectSizeLimitExceededRule(FailureRule):
@@ -50,11 +49,19 @@ class EtcdObjectSizeLimitExceededRule(FailureRule):
         if not timeline:
             return False
 
-        return (
-            timeline_has_pattern(timeline, "request is too large")
-            or timeline_has_pattern(timeline, "Request entity too large")
-            or timeline_has_pattern(timeline, "object size exceeds limit")
+        # Prefer matching actual event messages (real-world API errors are in message)
+        patterns = (
+            "request is too large",
+            "request entity too large",
+            "object size exceeds limit",
         )
+
+        for e in events:
+            msg = (e.get("message") or "").lower()
+            if any(p in msg for p in patterns):
+                return True
+
+        return False
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<pod>")
