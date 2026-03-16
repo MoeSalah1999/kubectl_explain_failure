@@ -46,7 +46,7 @@ class NormalizedEvent:
             return "Scheduling"
         if "pull" in reason:
             return "Image"
-        if "mount" in reason:
+        if "mount" in reason or "attach" in reason:
             return "Volume"
         return "Generic"
 

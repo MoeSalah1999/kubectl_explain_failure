@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_event
 
 
 class VolumeAttachmentTimeoutRule(FailureRule):
@@ -33,6 +32,23 @@ class VolumeAttachmentTimeoutRule(FailureRule):
         "context": ["timeline"],
     }
 
+    def _has_attach_event(self, timeline) -> bool:
+        for e in timeline.events:
+            reason = (e.get("reason") or "").lower()
+            if "attach" in reason:
+                return True
+
+            source = e.get("source")
+            if isinstance(source, dict):
+                source = source.get("component")
+            if isinstance(source, str) and source.lower() in {
+                "attachdetach-controller",
+                "attachvolume",
+            }:
+                return True
+
+        return False
+
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         pvc_objects = context.get("objects", {}).get("pvc", {})
@@ -47,12 +63,7 @@ class VolumeAttachmentTimeoutRule(FailureRule):
                 continue
 
             # Look for delayed volume attachment events
-            if timeline_has_event(
-                timeline,
-                kind="Volume",
-                phase="Failure",
-                source="AttachVolume",
-            ):
+            if self._has_attach_event(timeline):
                 return True
 
         return False
@@ -66,12 +77,12 @@ class VolumeAttachmentTimeoutRule(FailureRule):
                 Cause(
                     code="PVC_BOUND",
                     message="PVC is in Bound state",
-                    role="storage_context",
+                    role="volume_context",
                 ),
                 Cause(
                     code="VOLUME_ATTACHMENT_DELAYED",
                     message="Underlying volume attachment is taking too long",
-                    role="storage_root",
+                    role="volume_root",
                     blocking=True,
                 ),
                 Cause(

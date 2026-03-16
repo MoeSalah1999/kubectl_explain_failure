@@ -1,0 +1,31 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "volume-attach-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "pvcs": [
+    {
+      "metadata": {
+        "name": "pvc1"
+      },
+      "status": {
+        "phase": "Bound"
+      }
+    }
+  ],
+  "events": [
+    {
+      "reason": "FailedAttachVolume",
+      "message": "AttachVolume.Attach failed for volume \"pvc-123\"",
+      "source": {
+        "component": "attachdetach-controller"
+      },
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    }
+  ]
+}

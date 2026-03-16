@@ -1,0 +1,40 @@
+{
+  "root_cause": "PVC is Bound but volume attachment is delayed",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "PVCs: pvc1",
+    "Timeline indicates volume attachment delays"
+  ],
+  "causes": [
+    {
+      "code": "PVC_BOUND",
+      "message": "PVC is in Bound state",
+      "role": "volume_context"
+    },
+    {
+      "code": "VOLUME_ATTACHMENT_DELAYED",
+      "message": "Underlying volume attachment is taking too long",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_SCHEDULE_BLOCKED",
+      "message": "Pod cannot start due to pending volume attachment",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pvc:pvc1": [
+      "Volume attachment delayed"
+    ]
+  },
+  "likely_causes": [
+    "Storage backend latency or failure",
+    "Node not acknowledging volume attachment",
+    "Kubernetes controller processing delay"
+  ],
+  "suggested_checks": [
+    "kubectl describe pvc pvc1"
+  ]
+}
