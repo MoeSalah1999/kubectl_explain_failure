@@ -1,0 +1,43 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "sts-pod",
+      "namespace": "default",
+      "ownerReferences": [
+        {
+          "kind": "StatefulSet",
+          "name": "web"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "statefulsets": {
+    "web": {
+      "metadata": {
+        "name": "web"
+      },
+      "spec": {
+        "serviceName": "web"
+      }
+    }
+  },
+  "services": {
+    "api": {
+      "metadata": {
+        "name": "api"
+      },
+      "spec": {
+        "clusterIP": "None"
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "pod has unbound immediate PersistentVolumeClaims"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "cni-ip-exhaustion-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node1"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "CNIPluginFailure",
+      "message": "Failed to allocate IP address: no available IPs",
+      "source": {
+        "component": "cni"
+      },
+      "involvedObject": {
+        "nodeName": "node1"
+      },
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    },
+    {
+      "reason": "CNIPluginFailure",
+      "message": "Failed to allocate IP address: IP pool exhausted",
+      "source": {
+        "component": "cni"
+      },
+      "involvedObject": {
+        "nodeName": "node1"
+      },
+      "lastTimestamp": "2026-03-15T12:01:00Z"
+    }
+  ]
+}

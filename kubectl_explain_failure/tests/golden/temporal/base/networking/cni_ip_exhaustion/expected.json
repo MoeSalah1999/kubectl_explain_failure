@@ -1,0 +1,39 @@
+{
+  "root_cause": "CNI IP exhaustion on node",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "CNIPluginFailure events on node node1"
+  ],
+  "causes": [
+    {
+      "code": "NODE_PRESENT",
+      "message": "Node 'node1' hosting Pods is detected",
+      "role": "workload_context"
+    },
+    {
+      "code": "CNI_IP_EXHAUSTION",
+      "message": "Node has exhausted available IPs for Pods",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "CNI_PLUGIN_FAILURE_SYMPTOM",
+      "message": "Pods cannot be scheduled or attached to network due to CNI failure",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "No available IPs"
+    ]
+  },
+  "likely_causes": [
+    "CNI IP pool exhausted",
+    "Misconfigured network plugin"
+  ],
+  "suggested_checks": [
+    "kubectl get nodes node1 -o yaml",
+    "kubectl describe pod <pod> | grep -i cni"
+  ]
+}

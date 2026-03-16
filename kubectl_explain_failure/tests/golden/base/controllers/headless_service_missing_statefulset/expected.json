@@ -1,0 +1,42 @@
+{
+  "root_cause": "Governing Service 'web' for StatefulSet is missing",
+  "blocking": true,
+  "confidence": 0.93,
+  "evidence": [
+    "Pod sts-pod owned by StatefulSet web",
+    "StatefulSet expects Service web"
+  ],
+  "causes": [
+    {
+      "code": "STATEFULSET_PRESENT",
+      "message": "Pod belongs to StatefulSet 'web'",
+      "role": "workload_context"
+    },
+    {
+      "code": "STATEFULSET_SERVICE_MISSING",
+      "message": "Governing Service 'web' for StatefulSet is missing",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "STATEFULSET_NETWORK_IDENTITY_BROKEN",
+      "message": "StatefulSet Pods cannot obtain stable DNS identities",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "statefulset:web": [
+      "serviceName=web"
+    ]
+  },
+  "likely_causes": [
+    "Headless Service not created",
+    "Service created with ClusterIP instead of None",
+    "Service deleted after StatefulSet creation"
+  ],
+  "suggested_checks": [
+    "kubectl describe statefulset web",
+    "kubectl get svc web",
+    "kubectl describe pod sts-pod"
+  ]
+}

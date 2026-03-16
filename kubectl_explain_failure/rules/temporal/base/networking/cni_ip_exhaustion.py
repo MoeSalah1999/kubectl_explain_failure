@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_event
 
 
 class CNIIPExhaustionRule(FailureRule):
@@ -39,10 +38,16 @@ class CNIIPExhaustionRule(FailureRule):
         if not timeline:
             return False
 
-        # At least one CNIPluginFailure event
-        if not timeline_has_event(
-            timeline, kind="Networking", phase="Failure", source="cni"
-        ):
+        # At least one CNIPluginFailure event (prefer raw event fields)
+        def is_cni_event(e: dict) -> bool:
+            if e.get("reason") != "CNIPluginFailure":
+                return False
+            src = e.get("source")
+            if isinstance(src, dict):
+                src = src.get("component")
+            return (src or "").lower() == "cni"
+
+        if not any(is_cni_event(e) for e in events):
             return False
 
         # Optional: check multiple pods failing on the same node
@@ -53,7 +58,13 @@ class CNIIPExhaustionRule(FailureRule):
         node_events = [
             e
             for e in timeline.events
-            if e.get("source") == "cni"
+            if (
+                e.get("source") == "cni"
+                or (
+                    isinstance(e.get("source"), dict)
+                    and e.get("source", {}).get("component") == "cni"
+                )
+            )
             and e.get("reason") == "CNIPluginFailure"
             and e.get("involvedObject", {}).get("nodeName") == node_name
         ]
