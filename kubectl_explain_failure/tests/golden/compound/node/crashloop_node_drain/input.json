@@ -1,0 +1,33 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "crashloop-drain-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "node": {
+    "metadata": {
+      "name": "node1"
+    }
+  },
+  "events": [
+    {
+      "reason": "NodeNotReady",
+      "message": "Node node1 is not ready",
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    },
+    {
+      "reason": "Scheduled",
+      "message": "Successfully assigned default/crashloop-drain-pod to node2",
+      "lastTimestamp": "2026-03-15T12:01:00Z"
+    },
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container",
+      "lastTimestamp": "2026-03-15T12:02:00Z"
+    }
+  ]
+}

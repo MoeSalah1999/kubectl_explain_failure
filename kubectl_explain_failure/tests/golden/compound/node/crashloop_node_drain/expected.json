@@ -1,0 +1,37 @@
+{
+  "root_cause": "Pod crashes after node drain due to node-specific dependency",
+  "blocking": false,
+  "confidence": 0.94,
+  "evidence": [
+    "Pod crashloop-drain-pod restarted after node drain",
+    "Timeline shows scheduling followed by CrashLoopBackOff"
+  ],
+  "causes": [
+    {
+      "code": "NODE_DRAINED",
+      "message": "Node 'node1' became unavailable or was drained",
+      "role": "node_context"
+    },
+    {
+      "code": "POD_RESCHEDULED",
+      "message": "Pod was rescheduled onto a different node",
+      "role": "scheduling_transition"
+    },
+    {
+      "code": "NODE_DEPENDENCY_MISSING",
+      "message": "New node lacks configuration required by the workload",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "CRASHLOOP_BACKOFF",
+      "message": "Container repeatedly crashes after rescheduling",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "Node became unavailable or drained before crash loop"
+    ]
+  }
+}

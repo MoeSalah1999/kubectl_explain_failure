@@ -1,0 +1,39 @@
+{
+  "root_cause": "Intermittent network connectivity causing readiness probe flapping",
+  "blocking": false,
+  "confidence": 0.78,
+  "evidence": [
+    "Pod flap-pod shows repeated readiness probe failures",
+    "Readiness probe failures occur intermittently"
+  ],
+  "causes": [
+    {
+      "code": "READINESS_PROBE_CHECKING",
+      "message": "Readiness probe continuously checks container availability",
+      "role": "probe_context"
+    },
+    {
+      "code": "NETWORK_CONNECTIVITY_FLAPPING",
+      "message": "Intermittent network connectivity to required dependency",
+      "role": "network_root",
+      "blocking": false
+    },
+    {
+      "code": "READINESS_FLAPPING",
+      "message": "Container repeatedly alternates between ready and not-ready states",
+      "role": "workload_symptom"
+    }
+  ],
+  "likely_causes": [
+    "Intermittent connectivity to backend service",
+    "DNS instability",
+    "Network policy intermittently blocking traffic",
+    "Upstream service temporarily unavailable"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod flap-pod",
+    "kubectl logs flap-pod",
+    "Check service endpoints of dependent services",
+    "Verify DNS resolution from the container"
+  ]
+}

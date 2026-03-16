@@ -1,0 +1,42 @@
+{
+  "root_cause": "ConfigMap updated but Pod was not restarted",
+  "blocking": false,
+  "confidence": 0.82,
+  "evidence": [
+    "ConfigMap app-config changed after Pod start",
+    "Pod stale-config-pod still running original instance"
+  ],
+  "causes": [
+    {
+      "code": "CONFIGMAP_UPDATED",
+      "message": "ConfigMap 'app-config' changed after Pod start",
+      "role": "configuration_context"
+    },
+    {
+      "code": "NO_CONTROLLER_ROLLOUT",
+      "message": "Controller did not trigger Pod restart after configuration change",
+      "role": "controller_root",
+      "blocking": false
+    },
+    {
+      "code": "STALE_CONFIGURATION_RUNNING",
+      "message": "Application continues running with outdated configuration",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "configmap:app-config": [
+      "ConfigMap updated but workload not restarted"
+    ]
+  },
+  "likely_causes": [
+    "Controller rollout not triggered",
+    "Manual configuration change without restart",
+    "Application expecting dynamic reload but not implemented"
+  ],
+  "suggested_checks": [
+    "kubectl rollout restart deployment",
+    "kubectl describe configmap app-config",
+    "kubectl describe pod stale-config-pod"
+  ]
+}

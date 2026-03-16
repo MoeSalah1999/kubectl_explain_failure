@@ -1,0 +1,38 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "flap-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "events": [
+    {
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: connection refused",
+      "lastTimestamp": "2026-03-15T12:00:00Z"
+    },
+    {
+      "reason": "Ready",
+      "message": "Readiness probe succeeded",
+      "lastTimestamp": "2026-03-15T12:01:00Z"
+    },
+    {
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: timeout",
+      "lastTimestamp": "2026-03-15T12:02:00Z"
+    },
+    {
+      "reason": "Ready",
+      "message": "Readiness probe succeeded",
+      "lastTimestamp": "2026-03-15T12:03:00Z"
+    },
+    {
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: connection reset",
+      "lastTimestamp": "2026-03-15T12:04:00Z"
+    }
+  ]
+}

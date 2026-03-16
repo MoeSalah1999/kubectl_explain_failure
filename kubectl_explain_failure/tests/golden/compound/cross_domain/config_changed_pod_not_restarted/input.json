@@ -1,0 +1,21 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "stale-config-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Running",
+      "startTime": "2026-03-15T11:00:00Z"
+    }
+  },
+  "configmap": {
+    "app-config": {
+      "metadata": {
+        "name": "app-config",
+        "creationTimestamp": "2026-03-15T12:00:00Z"
+      }
+    }
+  },
+  "events": []
+}
