@@ -49,8 +49,10 @@ def test_daemonset_node_selector_mismatch_golden():
     # Required node objects for this rule
     context["node"] = {
         "node1": {
-            "metadata": {"name": "node1"},
-            "metadata": {"labels": {"node-type": "gpu"}}
+            "metadata": {
+                "name": "node1",
+                "labels": {"node-type": "gpu"},
+            },
         }
     }
 
