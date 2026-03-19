@@ -1,0 +1,33 @@
+{
+  "root_cause": "Mutating admission webhook timed out during pod creation",
+  "blocking": true,
+  "confidence": 0.93,
+  "evidence": [
+    "Admission event indicates mutating webhook timeout",
+    "Pod: mutating-timeout-pod",
+    "Namespace: default"
+  ],
+  "causes": [
+    {
+      "code": "MUTATING_WEBHOOK_CONFIGURED",
+      "message": "Mutating admission webhook is configured for this workload",
+      "role": "cluster_policy_context"
+    },
+    {
+      "code": "MUTATING_WEBHOOK_TIMEOUT",
+      "message": "Mutating webhook did not respond before admission timeout",
+      "role": "admission_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_ADMISSION_BLOCKED",
+      "message": "Pod creation blocked due to mutating webhook timeout",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:mutating-timeout-pod": [
+      "Mutating webhook timed out during admission"
+    ]
+  }
+}

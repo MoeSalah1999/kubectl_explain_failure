@@ -46,6 +46,13 @@ class AdmissionWebhookServiceUnavailableRule(FailureRule):
         "failed calling webhook",
     )
 
+    TIMEOUT_MARKERS = (
+        "context deadline exceeded",
+        "timed out",
+        "timeout",
+        "timeoutseconds",
+    )
+
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
@@ -58,6 +65,10 @@ class AdmissionWebhookServiceUnavailableRule(FailureRule):
             if reason not in {"failedcreate", "failed", "failedadmission"}:
                 continue
             if "webhook" not in msg:
+                continue
+
+            # Avoid classifying timeouts as service unavailability
+            if any(t in msg for t in self.TIMEOUT_MARKERS):
                 continue
 
             if any(m in msg for m in self.UNAVAILABLE_MARKERS):

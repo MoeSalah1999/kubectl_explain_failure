@@ -1,0 +1,17 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "validating-timeout-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedCreate",
+      "message": "failed calling webhook \"validate.example.com\": validating webhook \"validate.example.com\" denied the request: context deadline exceeded"
+    }
+  ]
+}

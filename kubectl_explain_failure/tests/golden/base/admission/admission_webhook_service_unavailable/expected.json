@@ -1,0 +1,33 @@
+{
+  "root_cause": "Admission webhook service unavailable during pod creation",
+  "blocking": true,
+  "confidence": 0.92,
+  "evidence": [
+    "Admission event indicates webhook service unavailable",
+    "Pod: webhook-unavailable-pod",
+    "Namespace: default"
+  ],
+  "causes": [
+    {
+      "code": "ADMISSION_WEBHOOK_CONFIGURED",
+      "message": "Admission webhook configured for this workload",
+      "role": "cluster_policy_context"
+    },
+    {
+      "code": "WEBHOOK_SERVICE_UNAVAILABLE",
+      "message": "Admission webhook service was unreachable",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_ADMISSION_BLOCKED",
+      "message": "Pod creation blocked due to webhook service outage",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:webhook-unavailable-pod": [
+      "Admission webhook service unavailable"
+    ]
+  }
+}

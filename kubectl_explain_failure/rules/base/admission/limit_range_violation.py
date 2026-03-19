@@ -46,8 +46,23 @@ class LimitRangeViolationRule(FailureRule):
             if e.get("reason") == "FailedCreate":
                 msg = (e.get("message") or "").lower()
 
-                # More precise signal than just "limit"
-                if "limitrange" in msg or "exceed" in msg:
+                # Ensure this is actually a LimitRange signal, not a generic "exceeded"
+                if "limitrange" in msg or "limit range" in msg:
+                    return True
+
+                limit_context = any(term in msg for term in ["limit", "cpu", "memory"])
+                constraint_signal = any(
+                    term in msg
+                    for term in [
+                        "exceed",
+                        "exceeds",
+                        "maximum",
+                        "minimum",
+                        "must specify",
+                    ]
+                )
+
+                if limit_context and constraint_signal:
                     return True
 
         return False

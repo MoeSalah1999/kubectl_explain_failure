@@ -1,0 +1,33 @@
+{
+  "root_cause": "Validating admission webhook timed out during pod creation",
+  "blocking": true,
+  "confidence": 0.93,
+  "evidence": [
+    "Admission event indicates validating webhook timeout",
+    "Pod: validating-timeout-pod",
+    "Namespace: default"
+  ],
+  "causes": [
+    {
+      "code": "VALIDATING_WEBHOOK_CONFIGURED",
+      "message": "Validating admission webhook is configured for this workload",
+      "role": "cluster_policy_context"
+    },
+    {
+      "code": "VALIDATING_WEBHOOK_TIMEOUT",
+      "message": "Validating webhook did not respond before admission timeout",
+      "role": "admission_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_ADMISSION_BLOCKED",
+      "message": "Pod creation blocked due to validating webhook timeout",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:validating-timeout-pod": [
+      "Validating webhook timed out during admission"
+    ]
+  }
+}
