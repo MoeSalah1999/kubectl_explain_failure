@@ -1,0 +1,33 @@
+{
+  "root_cause": "OPA Gatekeeper constraint violation blocked pod admission",
+  "blocking": true,
+  "confidence": 0.94,
+  "evidence": [
+    "Admission event indicates Gatekeeper/OPA constraint violation",
+    "Pod: opa-violation-pod",
+    "Namespace: default"
+  ],
+  "causes": [
+    {
+      "code": "OPA_GATEKEEPER_ACTIVE",
+      "message": "OPA Gatekeeper admission webhook is enforcing constraints",
+      "role": "policy_context"
+    },
+    {
+      "code": "OPA_CONSTRAINT_VIOLATION",
+      "message": "Pod violates one or more Gatekeeper constraints",
+      "role": "policy_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_ADMISSION_BLOCKED",
+      "message": "Pod creation blocked by policy engine",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:opa-violation-pod": [
+      "Admission rejected by Gatekeeper constraint"
+    ]
+  }
+}

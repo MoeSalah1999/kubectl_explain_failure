@@ -1,0 +1,17 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "opa-violation-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedCreate",
+      "message": "admission webhook \"validation.gatekeeper.sh\" denied the request: [denied by require-label] violation: missing label \"owner\""
+    }
+  ]
+}

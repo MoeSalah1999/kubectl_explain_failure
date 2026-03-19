@@ -30,7 +30,7 @@
   ],
   "object_evidence": {
     "pod:restricted-pod": [
-      "pods \"restricted-pod\" is forbidden: violates PodSecurity \"restricted:latest\": privileged containers are not allowed"
+      "pods \"restricted-pod\" is forbidden: SecurityContext.RunAsNonRoot is required, but container is running as root"
     ]
   }
 }

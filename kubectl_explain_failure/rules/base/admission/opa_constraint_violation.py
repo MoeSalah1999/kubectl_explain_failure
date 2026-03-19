@@ -37,7 +37,7 @@ class OPAConstraintViolationRule(FailureRule):
         "opa",
         "constraint",
         "constrainttemplate",
-        "admission webhook \"validation.gatekeeper.sh\"",
+        'admission webhook "validation.gatekeeper.sh"',
         "denied the request",
         "violations:",
     )

@@ -1,0 +1,33 @@
+{
+  "root_cause": "Pod rejected due to PSA restricted profile violation",
+  "blocking": true,
+  "confidence": 0.96,
+  "evidence": [
+    "Admission event indicates PodSecurity restricted profile violation",
+    "Pod: psa-restricted-pod",
+    "Namespace: team-a"
+  ],
+  "causes": [
+    {
+      "code": "POD_SECURITY_ADMISSION_ACTIVE",
+      "message": "Pod Security Admission is enforcing the restricted profile",
+      "role": "policy_context"
+    },
+    {
+      "code": "PSA_RESTRICTED_VIOLATION",
+      "message": "Pod violates restricted PodSecurity profile requirements",
+      "role": "policy_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_CREATION_BLOCKED",
+      "message": "Pod rejected during admission due to PSA restricted policy",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:psa-restricted-pod": [
+      "PodSecurity restricted admission rejection"
+    ]
+  }
+}

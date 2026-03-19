@@ -1,0 +1,17 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "psa-restricted-pod",
+      "namespace": "team-a"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedCreate",
+      "message": "violates PodSecurity \"restricted:latest\": privileged container \"app\" is not allowed"
+    }
+  ]
+}

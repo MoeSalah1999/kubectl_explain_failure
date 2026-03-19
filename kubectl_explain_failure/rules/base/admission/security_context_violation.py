@@ -46,6 +46,10 @@ class SecurityContextViolationRule(FailureRule):
             message = str(entry.get("message", "")).lower()
             reason = str(entry.get("reason", "")).lower()
 
+            # PSA-specific violations are handled by PSARestrictedViolation
+            if "podsecurity" in message or "violates podsecurity" in message:
+                continue
+
             if "podsecurity" in message:
                 return True
             if "violates podsecurity" in message:
