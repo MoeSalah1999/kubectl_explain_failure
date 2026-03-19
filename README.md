@@ -178,172 +178,216 @@ This makes confidence:
 Confidence is always bounded to [0,1].
 
 
-# Supported failure patterns: (all rules support suppression/resolution semantics):
+# Supported failure patterns
 
-## Admission & Policy
+This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
+`rules/temporal`, and `rules/resolution`.
+
+## Base Rules
+
+### Admission
 
 - AdmissionWebhookDenied
 - AdmissionWebhookServiceUnavailable
 - AdmissionWebhookCABundleMismatch
 - AdmissionWebhookDNSFailure
+- EtcdObjectSizeLimitExceeded
 - ImagePolicyWebhookRejected
-- MutatingWebhookTimeout
-- MutatingWebhookPatchConflict
-- WebhookCertificateExpired
-- ValidatingWebhookTimeout
-- OPAConstraintViolation
-- PSARestrictedViolation
-- PrivilegedNotAllowed
-- SecurityContextViolation
 - LimitRangeViolation
-- ResourceQuotaExceeded
+- MutatingWebhookPatchConflict
+- MutatingWebhookTimeout
+- OPAConstraintViolation
+- PrivilegedNotAllowed
+- PSARestrictedViolation
 - RBACForbidden
+- ResourceQuotaExceeded
+- SecurityContextViolation
 - ServiceAccountMissing
 - ServiceAccountRBAC
-- ExpiredServiceAccountToken
 - TokenProjectionFailure
-- EtcdObjectSizeLimitExceeded
+- ValidatingWebhookTimeout
+- WebhookCertificateExpired
 
-## Scheduling & Placement
+### Container
 
-- FailedScheduling
-- AffinityUnsatisfiable
-- TopologySpreadUnsatisfiable
-- PodTopologySpreadSkewTooHigh
-- PodOverheadExceededNodeCapacity
-- NodeSelectorMismatch
-- NodeUnschedulableCordoned
-- ExtendedResourceUnavailable
-- InsufficientResources
-- UnschedulableTaint
-- HostPortConflict
-- PreemptedByHigherPriority
-- RuntimeClassNotFound
-- RegistryRateLimited
-- Compound:
-    - HostNetworkPortConflict
-    - SchedulingFlapping
-    - PendingUnschedulable
-    - PriorityPreemptionChain
-    - SchedulingTimeoutExceeded
+- ContainerCreateConfigError
+- ContainerRuntimePermissionDenied
+- ContainerRuntimeStartFailure
+- CrashLoopBackOff
+- ImageArchitectureMismatch
+- ImagePullBackOff
+- ImagePullError
+- ImagePullSecretMissing
+- InitContainerFailure
+- InvalidEntrypoint
+- OOMKilled
+- PreStopHookFailure
+- ReadOnlyRootFilesystemWriteAttempt
+- TerminationGracePeriodExceeded
 
-## Node & Eviction
+### Controllers
 
+- CRDConversionWebhookFailure
+- DaemonSetNodeSelectorMismatch
+- DeploymentProgressDeadlineExceeded
+- DeploymentReplicaMismatch
+- HeadlessServiceMissingForStatefulSet
+- ImmutableFieldUpdateRejected
+- PodDisruptionBudgetBlocking
+- ReplicaSetCreateFailure
+- ReplicaSetUnavailable
+- StatefulSetUpdateBlocked
+
+### Networking
+
+- CNIPluginFailure
+- DNSResolutionFailure
+- ServiceEndpointsEmpty
+- ServiceNotFound
+
+### Node
+
+- EphemeralStorageExceeded
+- Evicted
+- NodeDiskPressure
 - NodeMemoryPressure
 - NodePIDPressure
-- NodeDiskPressure
-- Evicted
-- EphemeralStorageExceeded
-- Compound:
-    - ConflictingNodeConditions
-    - CrashLoopAfterNodeDrain
-    - NodeNotReadyEvicted
-    - PVCBoundThenNodePressure
-    - PVCBoundNodeDiskPressureMount
-    - ConfigChangedButPodNotRestarted
-    - ClusterResourceStarvationCascade
 
-## Storage & Volume
-
-- AccessModeMismatch
-- PVCNotBound
-- PVReleasedOrFailed
-- PVCMountFailed
-- FailedMount
-- FilesystemResizePending
-- PVCZoneMismatch
-- StorageClassProvisionerMissing
-- ReadWriteOnceMultiNodeConflict
-- VolumeAttachmentTimeout
-- CSIPluginNotRegistered
-- Compound:
-    - PVCMountFailure
-    - PVCPendingTooLong
-    - DynamicProvisioningTimeout
-    - PVCPendingThenCrashloop
-    - PVCThenCrashloopRule
-    - PVCBoundThenCrashLoop
-    - PVCThenImagePullFailRule
-    - PVCRecoveredButAppStillFailing
-
-## Image & Container Lifecycle
-
-- ImagePullError
-- ImagePullBackOff
-- ImagePullSecretMissing
-- ImageArchitectureMismatch
-- InvalidEntrypoint
-- ContainerCreateConfigError
-- ContainerRuntimeStartFailure
-- ContainerRuntimePermissionDenied
-- CrashLoopBackoff
-- OOMKilled
-- ReadOnlyRootFilesystemWriteAttempt
-- PreStopHookFailure
-- TerminationGracePeriodExceeded
-- Compound:
-    - CrashLoopOOMKilled
-    - CrashLoopLivenessProbe
-    - CrashLoopAfterConfigChange
-    - ImagePullSecretMissingCompound
-    - ImageUpdatedThenCrashLoop
-    - ImageTagMutableDrift
-    - RapidRestartEscalation
-
-## Probes
+### Probes
 
 - ReadinessProbeFailure
 - StartupProbeFailure
-- Compound:
-    - ProbeTooAggressiveCausingRestarts
-    - RepeatedProbeFailureEscalation
 
-## Networking
+### Scheduling
 
-- DNSResolutionFailure
-- CNIPluginFailure
-- CNIIPExhaustion
-- ServiceEndpointsEmpty
-- Compound:
-    - IntermittentNetworkFlapping
-    - NetworkPolicyBlocked
+- AffinityUnsatisfiable
+- ExtendedResourceUnavailable
+- FailedScheduling
+- HostPortConflict
+- InsufficientResources
+- NodeSelectorMismatch
+- NodeUnschedulableCordoned
+- PodOverheadExceededNodeCapacity
+- PodTopologySpreadSkewTooHigh
+- PreemptedByHigherPriority
+- RegistryRateLimited
+- RuntimeClassNotFound
+- TopologySpreadUnsatisfiable
+- UnschedulableTaint
 
-## Controllers / Owners
+### Storage
 
-- ReplicaSetCreateFailure
-- ReplicaSetUnavailable
-- DeploymentProgressDeadlineExceeded
-- StatefulSetUpdateBlocked
-- HeadlessServiceMissingForStatefulSet
-- DeploymentReplicaMismatch
-- PodDisruptionBudgetBlocking
-- DaemonSetNodeSelectorMismatch
-- ImmutableFieldUpdateRejected
-- CRDConversionWebhookFailure
-- Compound:
-    - HPAUnableToScale
-    - OwnerBlockedPod
-    - RollingUpdateStuckMidway
-
-## Configuration / Dependency
-
+- AccessModeMismatch
+- CSIPluginNotRegistered
 - ConfigMapNotFound
-- ServiceNotFound
+- FailedMount
+- FilesystemResizePending
+- PVCMountFailed
+- PVCNotBound
+- PVReleasedOrFailed
+- ReadWriteOnceMultiNodeConflict
+- StorageClassProvisionerMissing
 
-## Multi-Container / Init
+## Compound Rules
 
-- InitContainerFailureRule
-- Compound:
-    - SidecarInjectionFailure
-    - InitContainerBlocksMain
-    - InitContainerImagePullThenMainCrash
-    - MultiContainerPartialFailure
+### Admission
 
-## Engine-Level / Resolution
+- PolicyEngineUnavailable
 
-- Compound:
-    - RootCauseAmbiguity
-    - ConflictingSignalsResolution
+### Container
+
+- CrashLoopAfterConfigChange
+- CrashLoopLivenessProbe
+- CrashLoopOOMKilled
+- ImagePullSecretMissingCompound
+- ImageTagMutableDrift
+- ImageUpdatedThenCrashLoop
+- RapidRestartEscalation
+
+### Controllers
+
+- HPAUnableToScale
+- OwnerBlockedPod
+- RollingUpdateStuckMidway
+- WebhookFailureBlocksDeployment
+
+### Cross-Domain
+
+- ClusterResourceStarvationCascade
+- ConfigChangedButPodNotRestarted
+
+### Multi-Container
+
+- InitContainerBlocksMain
+- MultiContainerPartialFailure
+- SidecarInjectionFailure
+
+### Networking
+
+- HostNetworkPortConflict
+- NetworkPolicyBlocked
+
+### Node
+
+- ConflictingNodeConditions
+- CrashLoopAfterNodeDrain
+- NodeNotReadyEvicted
+- PVCBoundNodeDiskPressureMount
+- PVCBoundThenNodePressure
+
+### Probes
+
+- RepeatedProbeFailureEscalation
+
+### Scheduling
+
+- PendingUnschedulable
+- PriorityPreemptionChain
+- SchedulingFlapping
+
+### Storage
+
+- DynamicProvisioningTimeout
+- PVCBoundThenCrashLoop
+- PVCMountFailure
+- PVCPendingThenCrashLoop
+- PVCPendingTooLong
+- PVCRecoveredButAppStillFailing
+- PVCThenCrashLoop
+- PVCThenImagePullFail
+
+## Temporal Rules
+
+### Admission
+
+- IntermittentAdmissionWebhookFailure
+
+### Auth
+
+- ExpiredServiceAccountToken
+
+### Container
+
+- InitContainerImagePullThenMainCrash
+- ProbeTooAggressiveCausingRestarts
+
+### Networking
+
+- CNIIPExhaustion
+- IntermittentNetworkFlapping
+
+### Scheduling
+
+- SchedulingTimeoutExceeded
+
+### Storage
+
+- VolumeAttachmentTimeout
+
+## Resolution Rules
+
+- ConflictingSignalsResolution
+- RootCauseAmbiguity
 
 
 
