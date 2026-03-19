@@ -4,7 +4,7 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class WebhookCertificateExpiredRule(FailureRule):
     """
-    Detects admission failures caused by expired webhook TLS certificates.
+    Detects admission failures caused by expired or not-yet-valid webhook TLS certificates.
 
     Signals:
     - Event reason in {"FailedCreate", "Failed", "FailedAdmission"}
@@ -12,7 +12,8 @@ class WebhookCertificateExpiredRule(FailureRule):
 
     Interpretation:
     The API server could not establish TLS with the webhook because its
-    certificate is expired or not yet valid. Admission fails before scheduling.
+    certificate is expired or outside its validity window. Admission fails
+    before scheduling.
 
     Scope:
     - Admission webhook connectivity (TLS)
@@ -84,12 +85,12 @@ class WebhookCertificateExpiredRule(FailureRule):
 
         return {
             "rule": self.name,
-            "root_cause": "Admission webhook TLS certificate expired",
+            "root_cause": "Admission webhook TLS certificate expired or not yet valid",
             "confidence": 0.93,
             "blocking": True,
             "causes": chain,
             "evidence": [
-                "Admission event indicates webhook certificate expired",
+                "Admission event indicates webhook certificate validity failure",
                 f"Pod: {pod_name}",
                 f"Namespace: {namespace}",
             ],

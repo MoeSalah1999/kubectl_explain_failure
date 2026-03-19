@@ -1,0 +1,33 @@
+{
+  "root_cause": "Admission webhook CA bundle mismatch blocked pod admission",
+  "blocking": true,
+  "confidence": 0.93,
+  "evidence": [
+    "Admission event indicates webhook CA bundle verification failure",
+    "Pod: cabundle-mismatch-pod",
+    "Namespace: default"
+  ],
+  "causes": [
+    {
+      "code": "WEBHOOK_CA_BUNDLE_CONFIGURED",
+      "message": "Admission webhook CA bundle is configured for TLS verification",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "WEBHOOK_CA_BUNDLE_MISMATCH",
+      "message": "Webhook certificate could not be verified by configured CA bundle",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_ADMISSION_BLOCKED",
+      "message": "Pod creation blocked due to webhook TLS verification failure",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:cabundle-mismatch-pod": [
+      "Webhook TLS verification failed (CA bundle mismatch)"
+    ]
+  }
+}

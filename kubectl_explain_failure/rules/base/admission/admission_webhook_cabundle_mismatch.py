@@ -38,7 +38,6 @@ class AdmissionWebhookCABundleMismatchRule(FailureRule):
         "x509: unknown authority",
         "certificate signed by unknown authority",
         "failed to verify certificate",
-        "tls: bad certificate",
     )
 
     def matches(self, pod, events, context) -> bool:

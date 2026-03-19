@@ -1,0 +1,17 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "mutating-patch-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedCreate",
+      "message": "failed calling webhook \"mutate.example.com\": mutating webhook \"mutate.example.com\" failed to apply patch: json patch conflicts with existing field ownerReferences"
+    }
+  ]
+}

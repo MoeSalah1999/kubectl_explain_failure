@@ -1,0 +1,33 @@
+{
+  "root_cause": "Mutating webhook patch conflict blocked pod admission",
+  "blocking": true,
+  "confidence": 0.93,
+  "evidence": [
+    "Admission event indicates mutating webhook patch conflict",
+    "Pod: mutating-patch-pod",
+    "Namespace: default"
+  ],
+  "causes": [
+    {
+      "code": "MUTATING_WEBHOOK_CONFIGURED",
+      "message": "Mutating admission webhook is configured for this workload",
+      "role": "cluster_policy_context"
+    },
+    {
+      "code": "MUTATING_PATCH_CONFLICT",
+      "message": "Mutating webhook patch could not be applied due to conflict",
+      "role": "admission_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_ADMISSION_BLOCKED",
+      "message": "Pod creation blocked by mutating webhook patch failure",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:mutating-patch-pod": [
+      "Mutating webhook patch could not be applied"
+    ]
+  }
+}

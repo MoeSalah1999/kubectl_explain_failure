@@ -53,6 +53,23 @@ class AdmissionWebhookServiceUnavailableRule(FailureRule):
         "timeoutseconds",
     )
 
+    NON_CONNECTIVITY_MARKERS = (
+        "failed to apply patch",
+        "patch conflict",
+        "conflicts with",
+        "jsonpatch",
+        "json patch",
+        "invalid patch",
+        "certificate has expired",
+        "not yet valid",
+        "unknown authority",
+        "failed to verify certificate",
+        "tls: bad certificate",
+        "no such host",
+        "temporary failure in name resolution",
+        "name resolution failed",
+    )
+
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
@@ -69,6 +86,10 @@ class AdmissionWebhookServiceUnavailableRule(FailureRule):
 
             # Avoid classifying timeouts as service unavailability
             if any(t in msg for t in self.TIMEOUT_MARKERS):
+                continue
+
+            # Avoid classifying patch/TLS verification failures as transport outages
+            if any(m in msg for m in self.NON_CONNECTIVITY_MARKERS):
                 continue
 
             if any(m in msg for m in self.UNAVAILABLE_MARKERS):

@@ -1,0 +1,33 @@
+{
+  "root_cause": "Admission webhook DNS resolution failure blocked pod admission",
+  "blocking": true,
+  "confidence": 0.90,
+  "evidence": [
+    "Admission event indicates webhook DNS resolution failure",
+    "Pod: webhook-dns-pod",
+    "Namespace: default"
+  ],
+  "causes": [
+    {
+      "code": "WEBHOOK_DNS_REQUIRED",
+      "message": "Admission webhook service must be resolvable via DNS",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "WEBHOOK_DNS_FAILURE",
+      "message": "DNS resolution failed for admission webhook service",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_ADMISSION_BLOCKED",
+      "message": "Pod creation blocked due to webhook DNS failure",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:webhook-dns-pod": [
+      "Webhook DNS resolution failure"
+    ]
+  }
+}

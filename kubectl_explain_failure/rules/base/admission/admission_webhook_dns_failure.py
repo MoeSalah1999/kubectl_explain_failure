@@ -17,14 +17,14 @@ class AdmissionWebhookDNSFailureRule(FailureRule):
 
     Scope:
     - Admission webhook connectivity (DNS)
-    - Non-deterministic to avoid conflicts with broader connectivity rules
+    - Deterministic (event-message based)
     - More specific than generic AdmissionWebhookServiceUnavailable
     """
 
     name = "AdmissionWebhookDNSFailure"
     category = "Admission"
     priority = 56
-    deterministic = False
+    deterministic = True
     blocks = ["AdmissionWebhookDenied", "AdmissionWebhookServiceUnavailable"]
     requires = {
         "pod": True,

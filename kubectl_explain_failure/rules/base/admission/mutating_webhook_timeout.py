@@ -37,6 +37,7 @@ class MutatingWebhookTimeoutRule(FailureRule):
         "context deadline exceeded",
         "timed out",
         "timeout",
+        "timeoutseconds",
     )
 
     TYPE_MARKERS = (
@@ -62,10 +63,7 @@ class MutatingWebhookTimeoutRule(FailureRule):
                 # Some API server messages omit type; avoid mislabeling
                 continue
 
-            if (
-                any(m in msg for m in self.TIMEOUT_MARKERS)
-                or "failed calling webhook" in msg
-            ):
+            if any(m in msg for m in self.TIMEOUT_MARKERS):
                 return True
 
         return False

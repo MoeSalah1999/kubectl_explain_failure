@@ -1,0 +1,17 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "webhook-dns-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedCreate",
+      "message": "failed calling webhook \"validate.example.com\": Post \"https://admission-webhook.default.svc:443/validate\": dial tcp: lookup admission-webhook.default.svc on 10.96.0.10:53: no such host"
+    }
+  ]
+}

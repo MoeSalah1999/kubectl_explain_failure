@@ -1,0 +1,33 @@
+{
+  "root_cause": "Admission webhook TLS certificate expired or not yet valid",
+  "blocking": true,
+  "confidence": 0.93,
+  "evidence": [
+    "Admission event indicates webhook certificate validity failure",
+    "Pod: expired-cert-pod",
+    "Namespace: default"
+  ],
+  "causes": [
+    {
+      "code": "WEBHOOK_TLS_REQUIRED",
+      "message": "Admission webhook requires TLS for API server communication",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "WEBHOOK_CERT_EXPIRED",
+      "message": "Webhook TLS certificate has expired or is not yet valid",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_ADMISSION_BLOCKED",
+      "message": "Pod creation blocked due to webhook TLS failure",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:expired-cert-pod": [
+      "Webhook TLS certificate expired or not yet valid"
+    ]
+  }
+}

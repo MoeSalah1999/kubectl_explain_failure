@@ -1,0 +1,17 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "expired-cert-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedCreate",
+      "message": "failed calling webhook \"validate.example.com\": Post \"https://admission-webhook.default.svc:443/validate\": x509: certificate has expired or is not yet valid"
+    }
+  ]
+}

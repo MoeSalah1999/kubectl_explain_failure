@@ -12,7 +12,8 @@ class MutatingWebhookPatchConflictRule(FailureRule):
 
     Interpretation:
     The mutating webhook attempted to modify the admission object, but
-    the patch could not be applied due to a conflict or invalid patch.
+    the patch could not be applied because it conflicted with the current
+    object shape or with another mutation in the admission chain.
     Admission fails before the Pod is scheduled.
 
     Scope:
@@ -34,12 +35,10 @@ class MutatingWebhookPatchConflictRule(FailureRule):
     phases = ["Pending"]
 
     PATCH_MARKERS = (
-        "failed to apply patch",
         "patch conflict",
         "conflicts with",
-        "jsonpatch",
-        "json patch",
-        "invalid patch",
+        "conflict",
+        "cannot apply patch",
     )
 
     TYPE_MARKERS = (
@@ -108,8 +107,8 @@ class MutatingWebhookPatchConflictRule(FailureRule):
             },
             "likely_causes": [
                 "Mutating webhook patch conflicts with other admission mutations",
-                "Webhook produced invalid JSON patch",
                 "Webhook schema expectations no longer match the API object",
+                "Multiple mutating webhooks attempted incompatible field changes",
             ],
             "suggested_checks": [
                 "kubectl get mutatingwebhookconfigurations",
