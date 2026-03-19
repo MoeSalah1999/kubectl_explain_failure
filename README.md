@@ -183,7 +183,10 @@ Confidence is always bounded to [0,1].
 ## Admission & Policy
 
 - AdmissionWebhookDenied
+- AdmissionWebhookServiceUnavailable
 - ImagePolicyWebhookRejected
+- MutatingWebhookTimeout
+- ValidatingWebhookTimeout
 - PrivilegedNotAllowed
 - SecurityContextViolation
 - LimitRangeViolation
