@@ -184,8 +184,12 @@ Confidence is always bounded to [0,1].
 
 - AdmissionWebhookDenied
 - AdmissionWebhookServiceUnavailable
+- AdmissionWebhookCABundleMismatch
+- AdmissionWebhookDNSFailure
 - ImagePolicyWebhookRejected
 - MutatingWebhookTimeout
+- MutatingWebhookPatchConflict
+- WebhookCertificateExpired
 - ValidatingWebhookTimeout
 - OPAConstraintViolation
 - PSARestrictedViolation
