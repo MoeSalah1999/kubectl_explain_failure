@@ -187,6 +187,8 @@ Confidence is always bounded to [0,1].
 - ImagePolicyWebhookRejected
 - MutatingWebhookTimeout
 - ValidatingWebhookTimeout
+- OPAConstraintViolation
+- PSARestrictedViolation
 - PrivilegedNotAllowed
 - SecurityContextViolation
 - LimitRangeViolation
