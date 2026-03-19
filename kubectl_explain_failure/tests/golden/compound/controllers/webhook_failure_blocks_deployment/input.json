@@ -1,0 +1,50 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "webhook-rollout-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "deployment": {
+    "web": {
+      "metadata": {
+        "name": "web",
+        "namespace": "default"
+      },
+      "status": {
+        "replicas": 3,
+        "availableReplicas": 1,
+        "conditions": [
+          {
+            "type": "Progressing",
+            "status": "False",
+            "reason": "ProgressDeadlineExceeded"
+          }
+        ]
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedCreate",
+      "message": "Error creating: webhook \"rollout-guard.example.com\" returned an internal error while evaluating pod creation",
+      "source": {
+        "component": "replicaset-controller"
+      },
+      "firstTimestamp": "2026-03-18T11:00:00Z",
+      "lastTimestamp": "2026-03-18T11:00:00Z"
+    },
+    {
+      "reason": "FailedCreate",
+      "message": "Error creating: webhook \"rollout-guard.example.com\" returned an internal error while evaluating pod creation",
+      "source": {
+        "component": "replicaset-controller"
+      },
+      "firstTimestamp": "2026-03-18T11:03:00Z",
+      "lastTimestamp": "2026-03-18T11:03:00Z"
+    }
+  ]
+}

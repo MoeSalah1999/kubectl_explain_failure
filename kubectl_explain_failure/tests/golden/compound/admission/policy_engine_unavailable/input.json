@@ -1,0 +1,22 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "gatekeeper-blocked-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedCreate",
+      "message": "failed calling webhook \"validation.gatekeeper.sh\": no endpoints available for service \"gatekeeper-webhook-service\"",
+      "source": {
+        "component": "replicaset-controller"
+      },
+      "firstTimestamp": "2026-03-18T09:40:00Z",
+      "lastTimestamp": "2026-03-18T09:40:00Z"
+    }
+  ]
+}

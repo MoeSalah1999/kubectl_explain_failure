@@ -32,14 +32,38 @@ class OPAConstraintViolationRule(FailureRule):
 
     phases = ["Pending"]
 
-    OPA_MARKERS = (
+    # Strong platform identity (must indicate Gatekeeper/OPA)
+    PLATFORM_MARKERS = (
         "gatekeeper",
+        "validation.gatekeeper.sh",
         "opa",
-        "constraint",
-        "constrainttemplate",
-        'admission webhook "validation.gatekeeper.sh"',
+    )
+
+    # MUST indicate an actual rejection / violation
+    VIOLATION_MARKERS = (
         "denied the request",
         "violations:",
+        "violation",
+        "constraint",
+    )
+
+    # MUST NOT be present (these indicate infra failure, not policy failure)
+    AVAILABILITY_MARKERS = (
+        "no endpoints available",
+        "service unavailable",
+        "context deadline exceeded",
+        "timed out",
+        "timeout",
+        "connection refused",
+        "connection reset",
+        "dial tcp",
+        "no such host",
+        "temporary failure in name resolution",
+        "name resolution failed",
+        "certificate has expired",
+        "not yet valid",
+        "unknown authority",
+        "failed to verify certificate",
     )
 
     def matches(self, pod, events, context) -> bool:
@@ -54,9 +78,16 @@ class OPAConstraintViolationRule(FailureRule):
             if reason not in {"failedcreate", "failed", "failedadmission"}:
                 continue
 
-            # Gatekeeper/OPA signals with constraint context
-            has_platform_marker = any(m in msg for m in self.OPA_MARKERS)
-            if has_platform_marker and ("constraint" in msg or "gatekeeper" in msg):
+            # 1. Must be Gatekeeper/OPA-related
+            if not any(marker in msg for marker in self.PLATFORM_MARKERS):
+                continue
+
+            # 2. MUST NOT be infrastructure failure
+            if any(marker in msg for marker in self.AVAILABILITY_MARKERS):
+                continue
+
+            # 3. Must contain explicit rejection semantics
+            if any(marker in msg for marker in self.VIOLATION_MARKERS):
                 return True
 
         return False

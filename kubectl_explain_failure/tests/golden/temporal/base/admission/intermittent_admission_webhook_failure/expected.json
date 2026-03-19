@@ -1,0 +1,43 @@
+{
+  "root_cause": "Intermittent admission webhook failures causing unstable workload creation",
+  "blocking": true,
+  "confidence": 0.87,
+  "evidence": [
+    "Controller events for webhook-flap-pod show alternating webhook failures and SuccessfulCreate events",
+    "Alternating events occurred within 20 minutes",
+    "Admission webhook failures are intermittent rather than constant"
+  ],
+  "causes": [
+    {
+      "code": "ADMISSION_WEBHOOK_EVALUATION_ACTIVE",
+      "message": "Admission webhooks are intermittently evaluating create requests",
+      "role": "admission_context"
+    },
+    {
+      "code": "ADMISSION_WEBHOOK_FLAPPING",
+      "message": "Admission webhook infrastructure alternates between failing and succeeding",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "CREATE_REQUEST_OUTCOME_UNSTABLE",
+      "message": "Controller create attempts intermittently succeed and fail",
+      "role": "admission_intermediate"
+    },
+    {
+      "code": "WORKLOAD_CREATION_UNSTABLE",
+      "message": "Workload creation remains unstable due to admission flapping",
+      "role": "workload_symptom"
+    }
+  ],
+  "likely_causes": [
+    "Webhook backend replicas are intermittently unhealthy",
+    "Admission webhook is overloaded under burst traffic",
+    "Network path to webhook service is unstable"
+  ],
+  "suggested_checks": [
+    "Inspect webhook service latency and error rates",
+    "Check webhook controller pod restarts and readiness",
+    "Review API server admission webhook error logs"
+  ]
+}

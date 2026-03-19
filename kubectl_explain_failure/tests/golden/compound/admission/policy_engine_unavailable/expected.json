@@ -1,0 +1,50 @@
+{
+  "root_cause": "Policy engine unavailable during admission evaluation",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "Admission failure references Gatekeeper or Kyverno webhook",
+    "Webhook failure mode indicates infrastructure unavailability",
+    "Pod: gatekeeper-blocked-pod",
+    "Namespace: default"
+  ],
+  "causes": [
+    {
+      "code": "POLICY_ENGINE_ENFORCEMENT_ACTIVE",
+      "message": "Gatekeeper or Kyverno admission enforcement is configured",
+      "role": "policy_context"
+    },
+    {
+      "code": "POLICY_ENGINE_UNAVAILABLE",
+      "message": "Policy engine webhook infrastructure is unavailable",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "ADMISSION_EVALUATION_BLOCKED",
+      "message": "Admission cannot complete required policy evaluation",
+      "role": "admission_intermediate"
+    },
+    {
+      "code": "POD_CREATION_BLOCKED",
+      "message": "Pod creation is blocked because policy engine checks cannot run",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:gatekeeper-blocked-pod": [
+      "Policy engine webhook unavailable during admission"
+    ]
+  },
+  "likely_causes": [
+    "Gatekeeper or Kyverno webhook service has no healthy endpoints",
+    "Policy engine DNS or network connectivity is failing",
+    "Webhook TLS configuration is invalid or expired"
+  ],
+  "suggested_checks": [
+    "kubectl get validatingwebhookconfigurations",
+    "kubectl get mutatingwebhookconfigurations",
+    "Check Gatekeeper or Kyverno controller/webhook pods",
+    "Inspect webhook service endpoints and TLS configuration"
+  ]
+}
