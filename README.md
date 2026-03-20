@@ -265,13 +265,16 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - FailedScheduling
 - HostPortConflict
 - InsufficientResources
+- NodeAffinityRequiredMismatch
 - NodeSelectorMismatch
 - NodeUnschedulableCordoned
+- PodAntiAffinityDeadlock
 - PodOverheadExceededNodeCapacity
 - PodTopologySpreadSkewTooHigh
 - PreemptedByHigherPriority
 - RegistryRateLimited
 - RuntimeClassNotFound
+- SchedulerExtenderFailure
 - TopologySpreadUnsatisfiable
 - TopologyKeyMissing
 - UnschedulableTaint
