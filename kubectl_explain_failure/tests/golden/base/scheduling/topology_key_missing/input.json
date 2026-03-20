@@ -1,0 +1,39 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "topology-key-missing-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "app",
+          "image": "nginx"
+        }
+      ],
+      "topologySpreadConstraints": [
+        {
+          "maxSkew": 1,
+          "topologyKey": "topology.kubernetes.io/zone",
+          "whenUnsatisfiable": "DoNotSchedule",
+          "labelSelector": {
+            "matchLabels": {
+              "app": "demo"
+            }
+          }
+        }
+      ]
+    },
+    "status": {
+        "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/2 nodes are available: 2 node(s) didn't match Pod's topology spread constraints: missing required label topology.kubernetes.io/zone.",
+      "lastTimestamp": "2026-03-13T10:00:00Z"
+    }
+  ]
+}

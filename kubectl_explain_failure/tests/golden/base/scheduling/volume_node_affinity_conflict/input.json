@@ -1,0 +1,35 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "volume-affinity-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "app",
+          "image": "nginx"
+        }
+      ],
+      "volumes": [
+        {
+          "name": "data",
+          "persistentVolumeClaim": {
+            "claimName": "data-pvc"
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/2 nodes are available: 2 node(s) had volume node affinity conflict.",
+      "lastTimestamp": "2026-03-13T10:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "root_cause": "Topology key missing on nodes prevents scheduling",
+  "confidence": 0.95,
+  "blocking": true,
+  "evidence": [
+    "Pod.spec.topologySpreadConstraints present",
+    "2 nodes evaluated for topology labels",
+    "No nodes contain required topologyKey labels"
+  ],
+  "causes": [
+    {
+      "code": "TOPOLOGY_SPREAD_CONSTRAINT_DEFINED",
+      "message": "Pod defines topology spread constraints",
+      "role": "scheduling_context"
+    },
+    {
+      "code": "TOPOLOGY_KEY_MISSING_ON_NODES",
+      "message": "Required topology key is not present on any node",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_UNSCHEDULABLE_TOPOLOGY_KEY",
+      "message": "Scheduler cannot evaluate topology spread constraints",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:topology-key-missing-pod": [
+      "Topology spread constraints reference missing node labels"
+    ]
+  },
+  "likely_causes": [
+    "Cluster nodes are missing required topology labels",
+    "Incorrect topologyKey configured in Pod spec",
+    "Node labeling not applied (e.g., missing zone/region labels)"
+  ],
+  "suggested_checks": [
+    "kubectl get nodes --show-labels",
+    "kubectl describe pod topology-key-missing-pod",
+    "Verify topologySpreadConstraints topologyKey values"
+  ]
+}

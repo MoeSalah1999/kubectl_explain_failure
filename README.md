@@ -273,7 +273,9 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - RegistryRateLimited
 - RuntimeClassNotFound
 - TopologySpreadUnsatisfiable
+- TopologyKeyMissing
 - UnschedulableTaint
+- VolumeNodeAffinityConflict
 
 ### Storage
 

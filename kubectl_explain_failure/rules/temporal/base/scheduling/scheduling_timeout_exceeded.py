@@ -51,6 +51,7 @@ class SchedulingTimeoutExceededRule(FailureRule):
             self.duration_minutes,
             reason=self.failed_scheduling_reason,
         )
+        pod_name = pod.get("metadata", {}).get("name", "<unknown>")
 
         duration_seconds = 0.0
         if recent_events:
@@ -97,6 +98,8 @@ class SchedulingTimeoutExceededRule(FailureRule):
             "evidence": [
                 f"FailedScheduling events count: {len(recent_events)}",
                 f"Duration: {duration_seconds/60:.1f} minutes",
+                f"Pod {pod_name} remains Pending",
+                "FailedScheduling or node pressure events observed",
             ],
             "object_evidence": {
                 f"pod:{pod.get('metadata', {}).get('name', '<unknown>')}": [

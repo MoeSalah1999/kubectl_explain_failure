@@ -43,40 +43,93 @@ class PendingUnschedulableRule(FailureRule):
         if get_pod_phase(pod) != "Pending":
             return False
 
-        # DaemonSet-specific scheduling issues should be handled by
-        # DaemonSetNodeSelectorMismatch (more specific root cause).
+        # Exclude DaemonSets (handled elsewhere)
         owners = pod.get("metadata", {}).get("ownerReferences", [])
         if any(o.get("kind") == "DaemonSet" for o in owners):
             return False
-
-        # Only match if no higher-priority rule already indicates root cause
-        suppressed = context.get("suppressed_rules", [])
-        for r in ["PVCBoundNodeDiskPressureMount", "NodeDiskPressure"]:
-            if r in suppressed:
-                return False
 
         timeline = context.get("timeline")
         if not timeline:
             return False
 
-        # Check recent FailedScheduling events
+        # --- REQUIRE a real scheduling failure signal ---
         recent_failed_scheduling = timeline.events_within_window(
             15, reason="FailedScheduling"
         )
-        failed_scheduling = len(recent_failed_scheduling) > 0
+        if not recent_failed_scheduling:
+            return False
 
-        # Node conditions
+        # -------------------------------------------------
+        # HARD EXCLUSION: temporal scheduling patterns
+        # -------------------------------------------------
+        # If repeated scheduling failures already indicate a timeout,
+        # defer to SchedulingTimeoutExceeded (temporal rule).
+        if len(recent_failed_scheduling) >= getattr(
+            context.get("rule_config", {}).get("SchedulingTimeoutExceeded", {}),
+            "min_repeats",
+            3,
+        ):
+            return False
+
+        # -------------------------------------------------
+        # HARD EXCLUSION: specific scheduler failure signals
+        # -------------------------------------------------
+        SPECIFIC_MARKERS = (
+            # Volume-related (your current failure)
+            "volume node affinity conflict",
+            # Topology-related
+            "topology spread constraints",
+            "didn't match pod's topology spread constraints",
+            "missing required label",
+            # Affinity / anti-affinity
+            "node(s) didn't match pod affinity",
+            "node(s) didn't match pod anti-affinity",
+            # Node selector
+            "node(s) didn't match node selector",
+            # Taints / tolerations
+            "had taint",
+            "didn't tolerate",
+            # Resource-specific (optional but recommended)
+            "insufficient cpu",
+            "insufficient memory",
+        )
+
+        for e in recent_failed_scheduling:
+            msg = (e.get("message") or "").lower()
+            if any(marker in msg for marker in SPECIFIC_MARKERS):
+                return False
+
+        # -------------------------------------------------
+        # Spec-level exclusions (still useful as fallback)
+        # -------------------------------------------------
+        spec = pod.get("spec", {})
+
+        if spec.get("topologySpreadConstraints"):
+            return False
+
+        if spec.get("affinity"):
+            return False
+
+        if spec.get("nodeSelector"):
+            return False
+
+        if spec.get("tolerations"):
+            return False
+
+        # -------------------------------------------------
+        # Node pressure fallback (true compound case)
+        # -------------------------------------------------
         node_conditions = context.get("node_conditions", {})
         node_pressure = node_conditions.get(
             "DiskPressure", False
         ) or node_conditions.get("MemoryPressure", False)
 
-        # Match compound unschedulable if no PVC is blocking
-        blocking_pvc = context.get("blocking_pvc")
-        if blocking_pvc is None and (failed_scheduling or node_pressure):
-            return True
+        # PVC exclusion (correct)
+        if context.get("blocking_pvc") is not None:
+            return False
 
-        return False
+        # Final condition: ONLY generic unschedulable remains
+        return node_pressure or bool(recent_failed_scheduling)
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")

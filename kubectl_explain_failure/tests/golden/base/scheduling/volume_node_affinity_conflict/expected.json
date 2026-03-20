@@ -1,0 +1,43 @@
+{
+  "root_cause": "Volume node affinity conflict prevents scheduling",
+  "confidence": 0.95,
+  "blocking": true,
+  "evidence": [
+    "Scheduler reports volume node affinity conflict",
+    "PVCs: data-pvc"
+  ],
+  "causes": [
+    {
+      "code": "PVC_BOUND_TO_PV",
+      "message": "PersistentVolumeClaim is bound to a PersistentVolume",
+      "role": "storage_context"
+    },
+    {
+      "code": "PV_NODE_AFFINITY_CONFLICT",
+      "message": "PersistentVolume node affinity does not match available nodes",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_UNSCHEDULABLE_VOLUME_AFFINITY",
+      "message": "Scheduler cannot place Pod due to volume node affinity constraints",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:volume-affinity-pod": [
+      "PersistentVolume node affinity incompatible with node selection"
+    ]
+  },
+  "likely_causes": [
+    "PV is restricted to specific availability zones or nodes",
+    "Cluster nodes do not satisfy PV node affinity",
+    "PVC bound to a PV in a different zone than available nodes"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod volume-affinity-pod",
+    "kubectl get pv -o yaml",
+    "kubectl get nodes --show-labels",
+    "Check PV.spec.nodeAffinity configuration"
+  ]
+}
