@@ -266,6 +266,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - HostPortConflict
 - InsufficientResources
 - NodeAffinityRequiredMismatch
+- NodeFragmentationPreventsPreemption
 - NodeSelectorMismatch
 - NodeUnschedulableCordoned
 - PodAntiAffinityDeadlock
@@ -273,6 +274,9 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - PodTopologySpreadLabelMismatch
 - PodTopologySpreadSkewTooHigh
 - PreemptedByHigherPriority
+- PreemptionIneffectiveDueToAffinity
+- PreemptionIneffectiveDueToPDB
+- PreemptionIneffectiveDueToTopologySpread
 - RegistryRateLimited
 - RuntimeClassNotFound
 - SchedulerExtenderFailure
@@ -347,9 +351,13 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ### Scheduling
 
+- CrossZoneSchedulingConflict
 - PendingUnschedulable
 - PriorityPreemptionChain
+- SchedulerPreemptionLoop
 - SchedulingFlapping
+- UnschedulableDueToPDB
+- VolumeSchedulingDeadlock
 
 ### Storage
 
