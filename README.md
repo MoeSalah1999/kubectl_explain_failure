@@ -392,6 +392,8 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ### Scheduling
 
+- RepeatedSchedulingBackoff
+- SchedulingConstraintOscillation
 - SchedulingTimeoutExceeded
 
 ### Storage
