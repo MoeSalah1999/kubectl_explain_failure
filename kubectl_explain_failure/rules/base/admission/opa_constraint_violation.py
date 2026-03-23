@@ -42,9 +42,9 @@ class OPAConstraintViolationRule(FailureRule):
     # MUST indicate an actual rejection / violation
     VIOLATION_MARKERS = (
         "denied the request",
+        "denied by",
         "violations:",
         "violation",
-        "constraint",
     )
 
     # MUST NOT be present (these indicate infra failure, not policy failure)
@@ -86,7 +86,8 @@ class OPAConstraintViolationRule(FailureRule):
             if any(marker in msg for marker in self.AVAILABILITY_MARKERS):
                 continue
 
-            # 3. Must contain explicit rejection semantics
+            # 3. Must contain explicit rejection semantics, not just mention
+            # Gatekeeper or a constraint object name.
             if any(marker in msg for marker in self.VIOLATION_MARKERS):
                 return True
 

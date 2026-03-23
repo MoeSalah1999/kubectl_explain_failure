@@ -18,7 +18,7 @@ class WebhookFailureBlocksDeploymentRule(FailureRule):
 
     Scope:
     - Controller + admission interaction
-    - Deterministic (object state + event correlation)
+    - Non-deterministic summary (object state + event correlation)
     - Summarizes rollout impact when more specific admission root causes
       are not available
     """
@@ -26,7 +26,7 @@ class WebhookFailureBlocksDeploymentRule(FailureRule):
     name = "WebhookFailureBlocksDeployment"
     category = "Compound"
     priority = 40
-    deterministic = True
+    deterministic = False
     blocks = [
         "DeploymentReplicaMismatch",
         "ReplicaSetCreateFailure",
@@ -47,6 +47,12 @@ class WebhookFailureBlocksDeploymentRule(FailureRule):
         "replicaset-controller",
         "deployment-controller",
     }
+
+    def _source_component(self, event) -> str:
+        source = event.get("source")
+        if isinstance(source, dict):
+            return str(source.get("component", "")).lower()
+        return str(source or "").lower()
 
     def _deployment_stalled(self, deployments) -> bool:
         for dep in deployments.values():
@@ -79,7 +85,7 @@ class WebhookFailureBlocksDeploymentRule(FailureRule):
         for e in timeline.raw_events:
             reason = str(e.get("reason", "")).lower()
             msg = str(e.get("message", "")).lower()
-            source = str((e.get("source") or {}).get("component", "")).lower()
+            source = self._source_component(e)
 
             if reason not in {"failedcreate", "failed", "failedadmission"}:
                 continue
@@ -127,7 +133,7 @@ class WebhookFailureBlocksDeploymentRule(FailureRule):
 
         return {
             "root_cause": "Deployment rollout blocked by admission webhook failures",
-            "confidence": 0.88,
+            "confidence": 0.84,
             "blocking": True,
             "causes": chain,
             "evidence": [

@@ -33,17 +33,16 @@ class AdmissionWebhookServiceUnavailableRule(FailureRule):
 
     phases = ["Pending"]
 
-    UNAVAILABLE_MARKERS = (
+    TRANSPORT_FAILURE_MARKERS = (
         "no endpoints available for service",
         "service unavailable",
         "connection refused",
         "connection reset",
         "dial tcp",
-        "no such host",
         "i/o timeout",
         "tls handshake timeout",
-        'service "',
-        "failed calling webhook",
+        "eof",
+        "unexpected eof",
     )
 
     TIMEOUT_MARKERS = (
@@ -92,7 +91,10 @@ class AdmissionWebhookServiceUnavailableRule(FailureRule):
             if any(m in msg for m in self.NON_CONNECTIVITY_MARKERS):
                 continue
 
-            if any(m in msg for m in self.UNAVAILABLE_MARKERS):
+            # Real API server webhook outage messages include a concrete
+            # transport/connectivity failure, not just the generic wrapper
+            # phrase "failed calling webhook".
+            if any(m in msg for m in self.TRANSPORT_FAILURE_MARKERS):
                 return True
 
         return False

@@ -28,7 +28,7 @@ class TopologyKeyMissingRule(FailureRule):
     category = "Scheduling"
     priority = 22
     deterministic = True
-    blocks = []
+    blocks = ["FailedScheduling", "TopologySpreadUnsatisfiable"]
     requires = {
         "pod": True,
         "context": ["timeline"],
@@ -36,6 +36,26 @@ class TopologyKeyMissingRule(FailureRule):
     }
 
     phases = ["Pending"]
+
+    TOPOLOGY_EVENT_MARKERS = (
+        "topology spread",
+        "topologyspread",
+        "topology spread constraints",
+    )
+
+    MISSING_LABEL_MARKERS = (
+        "missing required label",
+        "missing label",
+        "missing topology key",
+    )
+
+    EXCLUSION_MARKERS = (
+        "maxskew",
+        "skew",
+        "unsatisfiable",
+        "cannot be satisfied",
+        "had topology spread constraint conflict",
+    )
 
     def _nodes_missing_key(self, nodes: dict, topology_keys: list[str]) -> bool:
         """
@@ -53,6 +73,22 @@ class TopologyKeyMissingRule(FailureRule):
                     return False
 
         return True  # all nodes missing keys
+
+    def _event_indicates_missing_topology_label(
+        self,
+        message: str,
+        topology_keys: list[str],
+    ) -> bool:
+        if not any(marker in message for marker in self.TOPOLOGY_EVENT_MARKERS):
+            return False
+
+        if any(marker in message for marker in self.EXCLUSION_MARKERS):
+            return False
+
+        if any(marker in message for marker in self.MISSING_LABEL_MARKERS):
+            return True
+
+        return any(key.lower() in message for key in topology_keys)
 
     def matches(self, pod, events, context) -> bool:
         spec = pod.get("spec", {})
@@ -73,20 +109,25 @@ class TopologyKeyMissingRule(FailureRule):
         if not topology_keys:
             return False
 
-        # Check scheduler failures exist
-        failed = [
-            e for e in timeline.raw_events if e.get("reason") == "FailedScheduling"
-        ]
-
-        if not failed:
-            return False
-
         # Access node objects (object graph)
         nodes = context.get("objects", {}).get("node", {})
 
-        # Core correctness check (NOT string matching)
-        if self._nodes_missing_key(nodes, topology_keys):
-            return True
+        # Real scheduler behavior still surfaces as FailedScheduling, but the
+        # message must indicate a topology-label problem rather than a generic
+        # spread or skew issue.
+        for event in timeline.raw_events:
+            if event.get("reason") != "FailedScheduling":
+                continue
+
+            message = str(event.get("message", "")).lower()
+            if not self._event_indicates_missing_topology_label(
+                message,
+                topology_keys,
+            ):
+                continue
+
+            if self._nodes_missing_key(nodes, topology_keys):
+                return True
 
         return False
 

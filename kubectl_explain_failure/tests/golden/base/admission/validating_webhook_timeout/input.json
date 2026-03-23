@@ -11,7 +11,7 @@
   "events": [
     {
       "reason": "FailedCreate",
-      "message": "failed calling webhook \"validate.example.com\": validating webhook \"validate.example.com\" denied the request: context deadline exceeded"
+      "message": "failed calling webhook \"validate.example.com\": validating webhook \"validate.example.com\" failed to complete within timeoutSeconds"
     }
   ]
 }

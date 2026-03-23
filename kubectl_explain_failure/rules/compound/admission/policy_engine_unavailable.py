@@ -70,6 +70,13 @@ class PolicyEngineUnavailableRule(FailureRule):
         "failed to verify certificate",
     )
 
+    POLICY_DENIAL_MARKERS = (
+        "denied the request",
+        "violations:",
+        "violation",
+        "denied by",
+    )
+
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
@@ -83,6 +90,11 @@ class PolicyEngineUnavailableRule(FailureRule):
                 continue
 
             if not any(marker in msg for marker in self.ENGINE_MARKERS):
+                continue
+
+            if any(marker in msg for marker in self.POLICY_DENIAL_MARKERS) and not any(
+                marker in msg for marker in self.AVAILABILITY_MARKERS
+            ):
                 continue
 
             if any(marker in msg for marker in self.AVAILABILITY_MARKERS):

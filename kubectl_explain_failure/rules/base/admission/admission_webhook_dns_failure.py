@@ -37,6 +37,7 @@ class AdmissionWebhookDNSFailureRule(FailureRule):
         "no such host",
         "temporary failure in name resolution",
         "name resolution failed",
+        "server misbehaving",
     )
 
     def matches(self, pod, events, context) -> bool:

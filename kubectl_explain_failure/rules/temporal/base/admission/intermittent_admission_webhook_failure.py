@@ -54,6 +54,33 @@ class IntermittentAdmissionWebhookFailureRule(FailureRule):
         "kyverno",
     )
 
+    INFRA_FAILURE_MARKERS = (
+        "context deadline exceeded",
+        "timed out",
+        "timeout",
+        "timeoutseconds",
+        "no endpoints available for service",
+        "service unavailable",
+        "connection refused",
+        "connection reset",
+        "dial tcp",
+        "no such host",
+        "temporary failure in name resolution",
+        "name resolution failed",
+        "certificate has expired",
+        "not yet valid",
+        "unknown authority",
+        "failed to verify certificate",
+        "tls handshake timeout",
+    )
+
+    POLICY_DENIAL_MARKERS = (
+        "denied the request",
+        "violations:",
+        "violation",
+        "denied by",
+    )
+
     FLAP_WINDOW_MINUTES = 20
 
     def _source_component(self, event) -> str:
@@ -70,7 +97,11 @@ class IntermittentAdmissionWebhookFailureRule(FailureRule):
             return False
         if source and source not in self.CONTROLLER_SOURCES:
             return False
-        return any(marker in msg for marker in self.FAILURE_MARKERS)
+        if not any(marker in msg for marker in self.FAILURE_MARKERS):
+            return False
+        if any(marker in msg for marker in self.POLICY_DENIAL_MARKERS):
+            return False
+        return any(marker in msg for marker in self.INFRA_FAILURE_MARKERS)
 
     def _is_success(self, event) -> bool:
         source = self._source_component(event)
@@ -84,16 +115,22 @@ class IntermittentAdmissionWebhookFailureRule(FailureRule):
             return False
 
         ordered = timeline.events_within_window(self.FLAP_WINDOW_MINUTES)
-        failure_indexes = [
-            idx for idx, event in enumerate(ordered) if self._is_webhook_failure(event)
+        relevant = [
+            ("F" if self._is_webhook_failure(event) else "S")
+            for event in ordered
+            if self._is_webhook_failure(event) or self._is_success(event)
         ]
-        if len(failure_indexes) < 2:
+
+        if relevant.count("F") < 2 or relevant.count("S") < 2:
             return False
 
-        # Require a successful create between two failures, indicating flapping.
-        for first, second in zip(failure_indexes, failure_indexes[1:], strict=False):
-            if any(self._is_success(event) for event in ordered[first + 1 : second]):
-                return True
+        pattern = ["F", "S", "F", "S"]
+        idx = 0
+        for state in relevant:
+            if state == pattern[idx]:
+                idx += 1
+                if idx == len(pattern):
+                    return True
 
         return False
 

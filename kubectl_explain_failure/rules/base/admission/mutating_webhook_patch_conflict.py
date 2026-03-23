@@ -34,11 +34,18 @@ class MutatingWebhookPatchConflictRule(FailureRule):
 
     phases = ["Pending"]
 
-    PATCH_MARKERS = (
+    PATCH_CONTEXT_MARKERS = (
+        "patch",
+        "json patch",
+        "jsonpatch",
+    )
+
+    PATCH_FAILURE_MARKERS = (
         "patch conflict",
-        "conflicts with",
-        "conflict",
+        "conflicts with existing field",
         "cannot apply patch",
+        "failed to apply patch",
+        "operation does not apply",
     )
 
     TYPE_MARKERS = (
@@ -61,7 +68,9 @@ class MutatingWebhookPatchConflictRule(FailureRule):
                 continue
             if not any(t in msg for t in self.TYPE_MARKERS):
                 continue
-            if any(m in msg for m in self.PATCH_MARKERS):
+            if not any(m in msg for m in self.PATCH_CONTEXT_MARKERS):
+                continue
+            if any(m in msg for m in self.PATCH_FAILURE_MARKERS):
                 return True
 
         return False

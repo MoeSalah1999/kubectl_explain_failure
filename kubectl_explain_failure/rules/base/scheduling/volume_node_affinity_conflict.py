@@ -23,7 +23,7 @@ class VolumeNodeAffinityConflictRule(FailureRule):
     category = "Scheduling"
     priority = 26
     deterministic = True
-    blocks = []
+    blocks = ["FailedScheduling"]
     requires = {
         "pod": True,
         "context": ["timeline"],
@@ -36,9 +36,47 @@ class VolumeNodeAffinityConflictRule(FailureRule):
         "node(s) had volume node affinity conflict",
     )
 
+    def _referenced_pvc_names(self, pod) -> list[str]:
+        pvc_names = []
+        volumes = pod.get("spec", {}).get("volumes", [])
+
+        for volume in volumes:
+            claim = volume.get("persistentVolumeClaim")
+            if claim and claim.get("claimName"):
+                pvc_names.append(claim["claimName"])
+
+        return pvc_names
+
+    def _known_pvcs_are_bound(self, context, pvc_names: list[str]) -> bool:
+        if not pvc_names:
+            return False
+
+        pvc_objects = context.get("objects", {}).get("pvc", {})
+        if not pvc_objects:
+            return True
+
+        saw_referenced_pvc = False
+        for name in pvc_names:
+            pvc = pvc_objects.get(name)
+            if not pvc:
+                continue
+
+            saw_referenced_pvc = True
+            if pvc.get("status", {}).get("phase") != "Bound":
+                return False
+
+        return True if saw_referenced_pvc else True
+
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
+            return False
+
+        pvc_names = self._referenced_pvc_names(pod)
+        if not pvc_names:
+            return False
+
+        if not self._known_pvcs_are_bound(context, pvc_names):
             return False
 
         for e in timeline.raw_events:
@@ -54,15 +92,7 @@ class VolumeNodeAffinityConflictRule(FailureRule):
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "unknown")
-
-        # Attempt to extract PVC names from pod spec (best-effort)
-        pvc_names = []
-        volumes = pod.get("spec", {}).get("volumes", [])
-
-        for v in volumes:
-            claim = v.get("persistentVolumeClaim")
-            if claim and claim.get("claimName"):
-                pvc_names.append(claim["claimName"])
+        pvc_names = self._referenced_pvc_names(pod)
 
         chain = CausalChain(
             causes=[

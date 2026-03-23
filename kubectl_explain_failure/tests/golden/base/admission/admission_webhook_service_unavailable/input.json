@@ -11,7 +11,7 @@
   "events": [
     {
       "reason": "FailedCreate",
-      "message": "failed calling webhook \"validate.example.com\": Post \"https://admission-webhook.default.svc:443/validate\": dial tcp 10.0.0.10:443: connect: connection refused"
+      "message": "failed calling webhook \"validate.example.com\": failed to call webhook: Post \"https://admission-webhook.default.svc:443/validate\": dial tcp 10.0.0.10:443: connect: connection refused"
     }
   ]
 }

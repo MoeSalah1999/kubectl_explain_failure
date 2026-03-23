@@ -30,7 +30,7 @@
   "events": [
     {
       "reason": "FailedCreate",
-      "message": "Error creating: webhook \"rollout-guard.example.com\" returned an internal error while evaluating pod creation",
+      "message": "Error creating: failed calling webhook \"rollout-guard.example.com\": the webhook backend returned an internal server error during pod creation",
       "source": {
         "component": "replicaset-controller"
       },
@@ -39,7 +39,7 @@
     },
     {
       "reason": "FailedCreate",
-      "message": "Error creating: webhook \"rollout-guard.example.com\" returned an internal error while evaluating pod creation",
+      "message": "Error creating: failed calling webhook \"rollout-guard.example.com\": the webhook backend returned an internal server error during pod creation",
       "source": {
         "component": "replicaset-controller"
       },
