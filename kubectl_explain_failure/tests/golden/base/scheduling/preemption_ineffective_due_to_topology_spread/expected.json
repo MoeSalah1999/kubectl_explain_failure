@@ -1,0 +1,54 @@
+{
+  "root_cause": "Preemption is ineffective because topology spread constraints cannot be satisfied",
+  "confidence": 0.94,
+  "blocking": true,
+  "evidence": [
+    "FailedScheduling events include both preemption attempts and topology spread constraint violations",
+    "Multiple scheduling retries within short window",
+    "Scheduler indicates preemption is not helpful",
+    "No successful scheduling observed",
+    "Dominant scheduler message: 0/3 nodes are available: 2 node(s) didn't match pod's topology spread constraints, 1 Insufficient cpu. preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling."
+  ],
+  "causes": [
+    {
+      "code": "TOPOLOGY_SPREAD_CONSTRAINT",
+      "message": "Topology spread constraints restrict valid node placement",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
+      "code": "PREEMPTION_INEFFECTIVE",
+      "message": "Preemption cannot create a placement that satisfies topology constraints",
+      "role": "scheduling_intermediate"
+    },
+    {
+      "code": "SCHEDULER_REJECTION",
+      "message": "Scheduler rejects all nodes due to unsatisfied topology constraints",
+      "role": "scheduling_decision"
+    },
+    {
+      "code": "POD_PENDING",
+      "message": "Pod remains Pending because topology spread constraints stay unsatisfied",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:topology-preemption-pod": [
+      "Topology spread constraints prevent scheduling even with preemption"
+    ]
+  },
+  "likely_causes": [
+    "Topology spread constraints are too strict for current cluster state",
+    "Insufficient nodes across required topology domains",
+    "Uneven pod distribution prevents restoring the required spread",
+    "Preemption cannot change the topology-domain imbalance"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod topology-preemption-pod",
+    "kubectl get nodes --show-labels",
+    "Check topologySpreadConstraints in pod spec",
+    "Verify topologyKey labels exist on nodes",
+    "Evaluate maxSkew and whenUnsatisfiable settings",
+    "Inspect the distribution of matching pods across topology domains"
+  ]
+}

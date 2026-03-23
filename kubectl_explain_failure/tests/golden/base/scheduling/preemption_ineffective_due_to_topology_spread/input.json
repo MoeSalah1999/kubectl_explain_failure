@@ -1,0 +1,75 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "topology-preemption-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "topologySpreadConstraints": [
+        {
+          "maxSkew": 1,
+          "topologyKey": "topology.kubernetes.io/zone",
+          "whenUnsatisfiable": "DoNotSchedule",
+          "labelSelector": {
+            "matchLabels": {
+              "app": "web"
+            }
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "nodes": {
+    "node-a": {
+      "metadata": {
+        "name": "node-a",
+        "labels": {
+          "topology.kubernetes.io/zone": "us-east-1a"
+        }
+      }
+    },
+    "node-b": {
+      "metadata": {
+        "name": "node-b",
+        "labels": {
+          "topology.kubernetes.io/zone": "us-east-1a"
+        }
+      }
+    },
+    "node-c": {
+      "metadata": {
+        "name": "node-c",
+        "labels": {
+          "topology.kubernetes.io/zone": "us-east-1b"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: 2 node(s) didn't match pod's topology spread constraints, 1 Insufficient cpu. preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-23T10:00:00Z",
+      "lastTimestamp": "2026-03-23T10:00:30Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: 2 node(s) didn't match pod's topology spread constraints, 1 Insufficient cpu. preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-23T10:01:00Z",
+      "lastTimestamp": "2026-03-23T10:01:30Z"
+    }
+  ]
+}

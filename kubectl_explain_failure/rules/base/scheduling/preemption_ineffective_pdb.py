@@ -137,7 +137,10 @@ class PreemptionIneffectiveDueToPDBRule(FailureRule):
             msgs = [
                 (e.get("message") or "")
                 for e in timeline.events_within_window(15, reason="FailedScheduling")
-                if any(marker in (e.get("message") or "").lower() for marker in self.PDB_MARKERS)
+                if any(
+                    marker in (e.get("message") or "").lower()
+                    for marker in self.PDB_MARKERS
+                )
             ]
             if msgs:
                 representative_msg = max(set(msgs), key=msgs.count)

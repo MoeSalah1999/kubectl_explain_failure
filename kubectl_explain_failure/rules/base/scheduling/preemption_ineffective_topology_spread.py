@@ -4,94 +4,100 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class PreemptionIneffectiveDueToTopologySpreadRule(FailureRule):
     """
-    Detects scheduling failures where:
-
-    - Scheduler attempts preemption
-    - BUT topologySpreadConstraints prevent placement even after preemption
-    - Result: preemption is ineffective, pod remains Pending
+    Detects FailedScheduling loops where topology spread constraints remain
+    unsatisfied even after the scheduler considers preemption.
 
     Real-world interpretation:
-    - Topology constraints (zone/node/hostname spread) are too strict
-    - Even evicting lower-priority pods cannot create a valid placement
-    - Scheduler reports "preemption not helpful" or similar
-
-    Signals:
-    - FailedScheduling events mentioning BOTH:
-        - preemption
-        - topology spread constraint violations
-    - Repeated failures within a short window
-    - No successful scheduling
-    - Sustained duration (not transient)
-
-    Scope:
-    - Scheduler constraint failure (topology-aware)
-    - More specific than generic preemption loop
-
-    Exclusions:
-    - Generic resource shortage (handled elsewhere)
-    - Pure topology mismatch without preemption
+    - The Pod has hard topologySpreadConstraints
+    - Scheduler retries placement and considers preemption
+    - Preemption is not helpful because topology spread rules still cannot
+      be satisfied
     """
 
     name = "PreemptionIneffectiveDueToTopologySpread"
     category = "Scheduling"
-    priority = 90  # higher than generic preemption loop
+    priority = 90
+    deterministic = True
     blocks = [
         "SchedulerPreemptionLoop",
-        "PodTopologySpreadUnsatisfiable",
+        "TopologySpreadUnsatisfiable",
+        "FailedScheduling",
         "InsufficientResources",
     ]
-
     phases = ["Pending"]
-
     requires = {
+        "pod": True,
         "context": ["timeline"],
     }
+
+    PREEMPTION_MARKERS = (
+        "preemption:",
+        "preemption is not helpful",
+        "no preemption victims found for incoming pod",
+        "preempt",
+    )
+
+    TOPOLOGY_MARKERS = (
+        "topology spread",
+        "topology spread constraints",
+        "didn't match pod's topology spread constraints",
+        "didn't match pod topology spread constraints",
+        "cannot satisfy topology spread",
+    )
+
+    def _occurrences(self, event) -> int:
+        count = event.get("count", 1)
+        try:
+            return max(int(count), 1)
+        except Exception:
+            return 1
+
+    def _has_hard_topology_constraints(self, pod) -> bool:
+        constraints = pod.get("spec", {}).get("topologySpreadConstraints", [])
+        return any(
+            constraint.get("whenUnsatisfiable") == "DoNotSchedule"
+            for constraint in constraints
+        )
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
             return False
-
-        # --- 1. Recent FailedScheduling events ---
-        recent = timeline.events_within_window(
-            5,
-            reason="FailedScheduling",
-        )
-
-        if len(recent) < 3:
+        if not self._has_hard_topology_constraints(pod):
             return False
 
-        # --- 2. Detect combined signal: preemption + topology spread ---
+        recent = timeline.events_within_window(15, reason="FailedScheduling")
+        if not recent:
+            return False
+
         matched_events = 0
+        total_failures = 0
+        repeated_signal = False
 
-        for e in recent:
-            msg = (e.get("message") or "").lower()
+        for event in recent:
+            message = str(event.get("message", "")).lower()
+            occurrences = self._occurrences(event)
+            total_failures += occurrences
+            if occurrences >= 2:
+                repeated_signal = True
 
-            has_preemption = (
-                "preempt" in msg or "preemption" in msg or "not helpful" in msg
-            )
-
-            has_topology = (
-                "topology spread" in msg
-                or "didn't match pod topology spread constraints" in msg
-                or "cannot satisfy topology spread" in msg
-            )
+            has_preemption = any(marker in message for marker in self.PREEMPTION_MARKERS)
+            has_topology = any(marker in message for marker in self.TOPOLOGY_MARKERS)
 
             if has_preemption and has_topology:
-                matched_events += 1
+                matched_events += occurrences
 
         if matched_events < 2:
             return False
-
-        # --- 3. Sustained failure duration ---
-        duration = timeline.duration_between(
-            lambda e: e.get("reason") == "FailedScheduling"
-        )
-
-        if duration < 45:  # shorter threshold than loop rule (more specific signal)
+        if total_failures < 3:
             return False
 
-        # --- 4. Ensure no successful scheduling ---
+        duration = timeline.duration_between(
+            lambda event: event.get("reason") == "FailedScheduling"
+        )
+        if duration < 45 and not repeated_signal:
+            return False
+
         if timeline.count(reason="Scheduled") > 0:
             return False
 
@@ -101,16 +107,15 @@ class PreemptionIneffectiveDueToTopologySpreadRule(FailureRule):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
         timeline = context.get("timeline")
 
-        # Extract dominant message for evidence
         dominant_msg = None
         if timeline:
-            msgs = [
-                (e.get("message") or "")
-                for e in timeline.events_within_window(5, reason="FailedScheduling")
-                if e.get("message")
+            messages = [
+                str(event.get("message", ""))
+                for event in timeline.events_within_window(15, reason="FailedScheduling")
+                if event.get("message")
             ]
-            if msgs:
-                dominant_msg = max(set(msgs), key=msgs.count)
+            if messages:
+                dominant_msg = max(set(messages), key=messages.count)
 
         chain = CausalChain(
             causes=[
@@ -127,12 +132,12 @@ class PreemptionIneffectiveDueToTopologySpreadRule(FailureRule):
                 ),
                 Cause(
                     code="SCHEDULER_REJECTION",
-                    message="Scheduler rejects all nodes due to unsatisfiable constraints",
+                    message="Scheduler rejects all nodes due to unsatisfied topology constraints",
                     role="scheduling_decision",
                 ),
                 Cause(
                     code="POD_PENDING",
-                    message="Pod remains Pending due to unsatisfiable topology constraints",
+                    message="Pod remains Pending because topology spread constraints stay unsatisfied",
                     role="workload_symptom",
                 ),
             ]
@@ -155,9 +160,9 @@ class PreemptionIneffectiveDueToTopologySpreadRule(FailureRule):
             ],
             "likely_causes": [
                 "Topology spread constraints are too strict for current cluster state",
-                "Insufficient nodes across required topology domains (zones/hosts)",
-                "Uneven pod distribution preventing rebalancing",
-                "Node labels do not match topology keys",
+                "Insufficient nodes across required topology domains",
+                "Uneven pod distribution prevents restoring the required spread",
+                "Preemption cannot change the topology-domain imbalance",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
@@ -165,7 +170,7 @@ class PreemptionIneffectiveDueToTopologySpreadRule(FailureRule):
                 "Check topologySpreadConstraints in pod spec",
                 "Verify topologyKey labels exist on nodes",
                 "Evaluate maxSkew and whenUnsatisfiable settings",
-                "Check distribution of existing pods across topology domains",
+                "Inspect the distribution of matching pods across topology domains",
             ],
             "blocking": True,
             "object_evidence": {

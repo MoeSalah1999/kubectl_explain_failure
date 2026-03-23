@@ -1,0 +1,84 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "fragmented-preemption-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "app",
+          "image": "nginx",
+          "resources": {
+            "requests": {
+              "cpu": "3000m",
+              "memory": "10Gi"
+            }
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "nodes": {
+    "node1": {
+      "metadata": {
+        "name": "node1"
+      },
+      "status": {
+        "allocatable": {
+          "cpu": "8",
+          "memory": "4Gi"
+        }
+      }
+    },
+    "node2": {
+      "metadata": {
+        "name": "node2"
+      },
+      "status": {
+        "allocatable": {
+          "cpu": "2",
+          "memory": "16Gi"
+        }
+      }
+    },
+    "node3": {
+      "metadata": {
+        "name": "node3"
+      },
+      "status": {
+        "allocatable": {
+          "cpu": "2500m",
+          "memory": "8Gi"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: 2 Insufficient cpu, 1 Insufficient memory. preemption: 0/3 nodes are available: 3 No preemption victims found for incoming pod, 3 Preemption is not helpful for scheduling.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-23T12:00:00Z",
+      "lastTimestamp": "2026-03-23T12:00:30Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: 2 Insufficient cpu, 1 Insufficient memory. preemption: 0/3 nodes are available: 3 No preemption victims found for incoming pod, 3 Preemption is not helpful for scheduling.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-23T12:01:00Z",
+      "lastTimestamp": "2026-03-23T12:01:30Z"
+    }
+  ]
+}

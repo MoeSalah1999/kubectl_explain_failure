@@ -1,0 +1,66 @@
+{
+  "root_cause": "Pod cannot be scheduled due to node resource fragmentation preventing effective preemption",
+  "confidence": 0.94,
+  "blocking": true,
+  "evidence": [
+    "Repeated FailedScheduling events within short time window",
+    "Aggregate cluster capacity exceeds pod request, but no node fits the full request (cpu=3000m, memory=10737418240 bytes)",
+    "Scheduler reports insufficient resources across multiple nodes",
+    "Preemption attempts observed but ineffective",
+    "Sustained scheduling failure duration (>60s)",
+    "No successful scheduling observed",
+    "Dominant scheduler message: 0/3 nodes are available: 2 Insufficient cpu, 1 Insufficient memory. preemption: 0/3 nodes are available: 3 No preemption victims found for incoming pod, 3 Preemption is not helpful for scheduling."
+  ],
+  "causes": [
+    {
+      "code": "CLUSTER_RESOURCE_FRAGMENTATION",
+      "message": "Cluster resources are fragmented across nodes",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
+      "code": "INSUFFICIENT_CONTIGUOUS_RESOURCES",
+      "message": "No single node has sufficient contiguous resources for the Pod",
+      "role": "scheduling_intermediate"
+    },
+    {
+      "code": "PREEMPTION_INEFFECTIVE",
+      "message": "Preemption cannot consolidate fragmented resources",
+      "role": "scheduling_intermediate"
+    },
+    {
+      "code": "SCHEDULER_BINPACKING_FAILURE",
+      "message": "Scheduler cannot place Pod due to per-node bin-packing constraints",
+      "role": "control_loop"
+    }
+  ],
+  "object_evidence": {
+    "pod:fragmented-preemption-pod": [
+      "Pod repeatedly failed scheduling due to fragmented node capacity"
+    ],
+    "node:node1": [
+      "Node cannot satisfy the pod's full resource shape on its own"
+    ],
+    "node:node2": [
+      "Node cannot satisfy the pod's full resource shape on its own"
+    ],
+    "node:node3": [
+      "Node cannot satisfy the pod's full resource shape on its own"
+    ]
+  },
+  "likely_causes": [
+    "Cluster resources are fragmented across nodes",
+    "Pod resource requests are too large for any single node shape",
+    "Existing workload placement leaves unusable resource gaps",
+    "Preemption cannot free a node with the required combined CPU and memory"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod fragmented-preemption-pod",
+    "kubectl describe nodes",
+    "kubectl top nodes",
+    "Check per-node allocatable versus requested resources",
+    "Evaluate pod CPU and memory requests",
+    "Inspect current pod distribution across nodes",
+    "Consider autoscaling or larger node shapes"
+  ]
+}
