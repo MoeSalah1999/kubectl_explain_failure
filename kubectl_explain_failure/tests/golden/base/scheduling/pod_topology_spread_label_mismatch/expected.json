@@ -1,0 +1,52 @@
+{
+  "root_cause": "Topology spread node label mismatch prevents scheduling",
+  "confidence": 0.94,
+  "blocking": true,
+  "evidence": [
+    "FailedScheduling event references topology spread constraint mismatch",
+    "Nodes missing required topology labels: node2",
+    "Topology keys: topology.kubernetes.io/zone"
+  ],
+  "causes": [
+    {
+      "code": "TOPOLOGY_SPREAD_CONSTRAINT_DEFINED",
+      "message": "Pod defines topology spread constraints",
+      "role": "scheduling_context"
+    },
+    {
+      "code": "NODE_TOPOLOGY_LABEL_MISMATCH",
+      "message": "Candidate nodes are inconsistently labeled for the required topology key",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "TOPOLOGY_SPREAD_PLACEMENT_REJECTED",
+      "message": "Scheduler cannot satisfy topology spread constraints on available nodes",
+      "role": "scheduling_intermediate"
+    },
+    {
+      "code": "POD_UNSCHEDULABLE_TOPOLOGY",
+      "message": "Pod remains Pending due to topology spread label mismatch",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:spread-label-mismatch-pod": [
+      "Topology spread constraints cannot be satisfied by current node labels"
+    ],
+    "node:node2": [
+      "Missing required topology label for pod topology spread"
+    ]
+  },
+  "likely_causes": [
+    "Some nodes are missing the topology labels referenced by topologySpreadConstraints",
+    "Node labeling is inconsistent across the cluster",
+    "Topology spread policy expects zones or hostnames that are not uniformly present"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod spread-label-mismatch-pod",
+    "kubectl get nodes --show-labels",
+    "Verify topologySpreadConstraints topologyKey values",
+    "Ensure all candidate nodes carry consistent topology labels"
+  ]
+}

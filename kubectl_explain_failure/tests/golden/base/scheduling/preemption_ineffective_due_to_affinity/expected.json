@@ -1,0 +1,54 @@
+{
+  "root_cause": "Preemption is ineffective because affinity or anti-affinity constraints prevent scheduling",
+  "confidence": 0.9,
+  "blocking": true,
+  "evidence": [
+    "Repeated FailedScheduling events detected",
+    "Scheduler attempted preemption but could not find a valid placement",
+    "Affinity or anti-affinity constraints present in scheduling failures",
+    "No successful scheduling observed",
+    "Dominant scheduler message: 0/3 nodes are available: 3 node(s) didn't match Pod's node affinity/selector. preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling."
+  ],
+  "causes": [
+    {
+      "code": "AFFINITY_CONSTRAINT_CONFLICT",
+      "message": "Pod affinity/anti-affinity rules restrict eligible nodes",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "PREEMPTION_INEFFECTIVE",
+      "message": "Preemption cannot create a schedulable placement due to constraints",
+      "role": "scheduling_intermediate"
+    },
+    {
+      "code": "SCHEDULER_REJECTION",
+      "message": "Scheduler rejects all nodes even after considering preemption",
+      "role": "scheduling_intermediate"
+    },
+    {
+      "code": "POD_UNSCHEDULABLE",
+      "message": "Pod remains Pending due to unsatisfiable affinity constraints",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:affinity-preemption-pod": [
+      "Scheduler preemption attempts failed due to affinity constraints"
+    ]
+  },
+  "likely_causes": [
+    "PodAffinity rules cannot be satisfied by any node",
+    "PodAntiAffinity rules exclude all candidate nodes",
+    "NodeAffinity restricts scheduling to unavailable nodes",
+    "Cluster topology does not satisfy placement constraints"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod affinity-preemption-pod",
+    "kubectl get events --sort-by=.lastTimestamp",
+    "Inspect pod.spec.affinity rules",
+    "Check node labels against nodeAffinity requirements",
+    "Verify pod anti-affinity is not over-constraining placement",
+    "Temporarily relax affinity rules to confirm root cause"
+  ]
+}

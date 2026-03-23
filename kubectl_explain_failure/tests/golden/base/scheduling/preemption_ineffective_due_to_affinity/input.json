@@ -1,0 +1,66 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "affinity-preemption-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "affinity": {
+        "nodeAffinity": {
+          "requiredDuringSchedulingIgnoredDuringExecution": {
+            "nodeSelectorTerms": [
+              {
+                "matchExpressions": [
+                  {
+                    "key": "node-type",
+                    "operator": "In",
+                    "values": [
+                      "gpu"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "nodes": {
+    "node1": {
+      "metadata": {
+        "name": "node1",
+        "labels": {
+          "node-type": "cpu"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: 3 node(s) didn't match Pod's node affinity/selector. preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-22T11:00:00Z",
+      "lastTimestamp": "2026-03-22T11:00:30Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: 3 node(s) didn't match Pod's node affinity/selector. preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-22T11:01:00Z",
+      "lastTimestamp": "2026-03-22T11:01:30Z"
+    }
+  ]
+}

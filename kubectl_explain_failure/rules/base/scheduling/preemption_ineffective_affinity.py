@@ -36,54 +36,76 @@ class PreemptionIneffectiveDueToAffinityRule(FailureRule):
     blocks = [
         "PodUnschedulable",
         "InsufficientResources",
+        "AffinityUnsatisfiable",
+        "FailedScheduling",
         "PriorityPreemptionChain",
     ]
 
     phases = ["Pending"]
 
     requires = {
+        "pod": True,
         "context": ["timeline"],
     }
 
+    PREEMPTION_MARKERS = (
+        "preemption:",
+        "preemption is not helpful",
+        "no preemption victims found for incoming pod",
+        "preempt",
+    )
+
+    AFFINITY_MARKERS = (
+        "affinity",
+        "anti-affinity",
+        "node affinity",
+        "didn't match pod affinity",
+        "didn't satisfy existing pods anti-affinity",
+        "didn't match pod anti-affinity rules",
+        "node(s) didn't match pod affinity",
+    )
+
+    def _occurrences(self, event) -> int:
+        count = event.get("count", 1)
+        try:
+            return max(int(count), 1)
+        except Exception:
+            return 1
+
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
+        affinity = pod.get("spec", {}).get("affinity")
         if not timeline:
+            return False
+        if not affinity:
             return False
 
         # --- 1. Repeated FailedScheduling events ---
-        recent = timeline.events_within_window(5, reason="FailedScheduling")
+        recent = timeline.events_within_window(15, reason="FailedScheduling")
 
-        if len(recent) < 3:
+        if not recent:
             return False
 
         # --- 2. Detect preemption attempts ---
         preemption_hits = 0
         affinity_hits = 0
+        total_failures = 0
+        repeated_signal = False
 
         for e in recent:
             msg = (e.get("message") or "").lower()
+            occurrences = self._occurrences(e)
+            total_failures += occurrences
+            if occurrences >= 2:
+                repeated_signal = True
 
             # Preemption signal
-            if "preempt" in msg:
-                preemption_hits += 1
+            if any(marker in msg for marker in self.PREEMPTION_MARKERS):
+                preemption_hits += occurrences
 
             # Affinity / anti-affinity / node affinity signals
-            if any(
-                keyword in msg
-                for keyword in [
-                    "affinity",
-                    "anti-affinity",
-                    "node affinity",
-                    "didn't match pod affinity",
-                    "didn't satisfy existing pods anti-affinity",
-                ]
-            ):
-                affinity_hits += 1
-
-            # Strong canonical signal (K8s scheduler message)
-            if "preemption is not helpful" in msg:
-                preemption_hits += 2  # strong weight
-                affinity_hits += 2
+            if any(keyword in msg for keyword in self.AFFINITY_MARKERS):
+                affinity_hits += occurrences
 
         if preemption_hits < 2:
             return False
@@ -91,12 +113,15 @@ class PreemptionIneffectiveDueToAffinityRule(FailureRule):
         if affinity_hits < 2:
             return False
 
+        if total_failures < 3:
+            return False
+
         # --- 3. Sustained duration (not a transient blip) ---
         duration = timeline.duration_between(
             lambda e: e.get("reason") == "FailedScheduling"
         )
 
-        if duration < 30:
+        if duration < 30 and not repeated_signal:
             return False
 
         # --- 4. No successful scheduling ---
@@ -113,7 +138,7 @@ class PreemptionIneffectiveDueToAffinityRule(FailureRule):
         if timeline:
             msgs = [
                 (e.get("message") or "")
-                for e in timeline.events_within_window(5, reason="FailedScheduling")
+                for e in timeline.events_within_window(15, reason="FailedScheduling")
             ]
             if msgs:
                 dominant_msg = max(set(msgs), key=msgs.count)

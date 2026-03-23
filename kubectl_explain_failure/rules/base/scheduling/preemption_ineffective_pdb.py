@@ -39,6 +39,7 @@ class PreemptionIneffectiveDueToPDBRule(FailureRule):
     blocks = [
         "InsufficientResources",
         "PodUnschedulable",
+        "FailedScheduling",
     ]
 
     phases = ["Pending"]
@@ -47,36 +48,59 @@ class PreemptionIneffectiveDueToPDBRule(FailureRule):
         "context": ["timeline"],
     }
 
+    PREEMPTION_MARKERS = (
+        "preemption:",
+        "preemption is not helpful",
+        "no preemption victims found for incoming pod",
+        "preempt",
+    )
+
+    PDB_MARKERS = (
+        "poddisruptionbudget",
+        "disruption budget",
+        "cannot evict pod",
+        "would violate",
+        "violating pdb",
+    )
+
+    def _occurrences(self, event) -> int:
+        count = event.get("count", 1)
+        try:
+            return max(int(count), 1)
+        except Exception:
+            return 1
+
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
             return False
 
         # --- 1. Recent FailedScheduling events ---
-        recent_failures = timeline.events_within_window(5, reason="FailedScheduling")
+        recent_failures = timeline.events_within_window(15, reason="FailedScheduling")
 
-        if len(recent_failures) < 3:
+        if not recent_failures:
             return False
 
         # --- 2. Detect PDB-blocked preemption semantics ---
         pdb_blocked = 0
         preemption_present = 0
+        total_failures = 0
+        repeated_signal = False
 
         for e in recent_failures:
             msg = (e.get("message") or "").lower()
+            occurrences = self._occurrences(e)
+            total_failures += occurrences
+            if occurrences >= 2:
+                repeated_signal = True
 
             # preemption attempt signal
-            if "preempt" in msg:
-                preemption_present += 1
+            if any(marker in msg for marker in self.PREEMPTION_MARKERS):
+                preemption_present += occurrences
 
             # PDB / eviction denial signals (real kube messages)
-            if (
-                "disruption budget" in msg
-                or "pdb" in msg
-                or "cannot evict pod" in msg
-                or "would violate" in msg
-            ):
-                pdb_blocked += 1
+            if any(marker in msg for marker in self.PDB_MARKERS):
+                pdb_blocked += occurrences
 
         # Must have BOTH signals
         if preemption_present < 2:
@@ -85,12 +109,15 @@ class PreemptionIneffectiveDueToPDBRule(FailureRule):
         if pdb_blocked < 2:
             return False
 
+        if total_failures < 3:
+            return False
+
         # --- 3. Ensure failure is not transient ---
         duration = timeline.duration_between(
             lambda e: e.get("reason") == "FailedScheduling"
         )
 
-        if duration < 30:
+        if duration < 30 and not repeated_signal:
             return False
 
         # --- 4. No successful scheduling ---
@@ -109,9 +136,8 @@ class PreemptionIneffectiveDueToPDBRule(FailureRule):
         if timeline:
             msgs = [
                 (e.get("message") or "")
-                for e in timeline.events_within_window(5, reason="FailedScheduling")
-                if "disruption" in (e.get("message") or "").lower()
-                or "evict" in (e.get("message") or "").lower()
+                for e in timeline.events_within_window(15, reason="FailedScheduling")
+                if any(marker in (e.get("message") or "").lower() for marker in self.PDB_MARKERS)
             ]
             if msgs:
                 representative_msg = max(set(msgs), key=msgs.count)

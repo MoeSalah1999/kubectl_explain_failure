@@ -1,0 +1,35 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "pdb-preemption-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: 3 Insufficient cpu. preemption: 0/3 nodes are available: 3 cannot evict pod as it would violate the PodDisruptionBudget.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-22T09:00:00Z",
+      "lastTimestamp": "2026-03-22T09:00:30Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: 3 Insufficient cpu. preemption: 0/3 nodes are available: 3 cannot evict pod as it would violate the PodDisruptionBudget.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-22T09:01:00Z",
+      "lastTimestamp": "2026-03-22T09:01:30Z"
+    }
+  ]
+}
