@@ -1,0 +1,63 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "node-affinity-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "affinity": {
+        "nodeAffinity": {
+          "requiredDuringSchedulingIgnoredDuringExecution": {
+            "nodeSelectorTerms": [
+              {
+                "matchExpressions": [
+                  {
+                    "key": "node-type",
+                    "operator": "In",
+                    "values": [
+                      "gpu"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "nodes": {
+    "node1": {
+      "metadata": {
+        "name": "node1",
+        "labels": {
+          "node-type": "cpu"
+        }
+      }
+    },
+    "node2": {
+      "metadata": {
+        "name": "node2",
+        "labels": {
+          "node-type": "memory"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/2 nodes are available: 2 node(s) didn't match Pod's node affinity/selector.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-24T09:00:00Z",
+      "lastTimestamp": "2026-03-24T09:00:25Z"
+    }
+  ]
+}

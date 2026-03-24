@@ -187,7 +187,9 @@ class NodeFragmentationPreventsPreemptionRule(FailureRule):
         if timeline:
             messages = [
                 str(event.get("message", ""))
-                for event in timeline.events_within_window(15, reason="FailedScheduling")
+                for event in timeline.events_within_window(
+                    15, reason="FailedScheduling"
+                )
                 if event.get("message")
             ]
             if messages:

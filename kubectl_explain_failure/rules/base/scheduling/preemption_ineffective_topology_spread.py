@@ -81,7 +81,9 @@ class PreemptionIneffectiveDueToTopologySpreadRule(FailureRule):
             if occurrences >= 2:
                 repeated_signal = True
 
-            has_preemption = any(marker in message for marker in self.PREEMPTION_MARKERS)
+            has_preemption = any(
+                marker in message for marker in self.PREEMPTION_MARKERS
+            )
             has_topology = any(marker in message for marker in self.TOPOLOGY_MARKERS)
 
             if has_preemption and has_topology:
@@ -111,7 +113,9 @@ class PreemptionIneffectiveDueToTopologySpreadRule(FailureRule):
         if timeline:
             messages = [
                 str(event.get("message", ""))
-                for event in timeline.events_within_window(15, reason="FailedScheduling")
+                for event in timeline.events_within_window(
+                    15, reason="FailedScheduling"
+                )
                 if event.get("message")
             ]
             if messages:

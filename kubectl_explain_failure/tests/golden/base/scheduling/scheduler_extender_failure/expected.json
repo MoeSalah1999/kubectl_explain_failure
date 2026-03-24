@@ -1,0 +1,43 @@
+{
+  "root_cause": "Scheduler extender failure prevented pod scheduling",
+  "confidence": 0.95,
+  "blocking": true,
+  "evidence": [
+    "FailedScheduling event references a scheduler extender error",
+    "Dominant scheduler message: 0/3 nodes are available: error selecting node using extender \"gpu-extender\": connection refused."
+  ],
+  "causes": [
+    {
+      "code": "SCHEDULER_EXTENDER_FAILURE",
+      "message": "A scheduler extender returned an error during scheduling",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "SCHEDULER_REJECTION",
+      "message": "The scheduler could not complete node selection because the extender failed",
+      "role": "scheduling_intermediate"
+    },
+    {
+      "code": "POD_PENDING",
+      "message": "Pod remains Pending because scheduling could not complete",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:extender-failure-pod": [
+      "Pod scheduling was blocked by a scheduler extender failure"
+    ]
+  },
+  "likely_causes": [
+    "Scheduler extender service is unavailable or timing out",
+    "Scheduler extender returned an internal error",
+    "Network connectivity to the extender is broken"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod extender-failure-pod",
+    "Check kube-scheduler logs for extender errors",
+    "Verify scheduler extender service health and connectivity",
+    "Review extender timeout and filter configuration"
+  ]
+}

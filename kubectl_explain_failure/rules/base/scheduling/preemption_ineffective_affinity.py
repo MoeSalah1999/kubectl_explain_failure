@@ -37,6 +37,8 @@ class PreemptionIneffectiveDueToAffinityRule(FailureRule):
         "PodUnschedulable",
         "InsufficientResources",
         "AffinityUnsatisfiable",
+        "NodeAffinityRequiredMismatch",
+        "PodAntiAffinityDeadlock",
         "FailedScheduling",
         "PriorityPreemptionChain",
     ]

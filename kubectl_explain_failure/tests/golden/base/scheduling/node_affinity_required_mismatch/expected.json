@@ -1,0 +1,55 @@
+{
+  "root_cause": "Required node affinity does not match any available node",
+  "confidence": 0.96,
+  "blocking": true,
+  "evidence": [
+    "Pod defines required nodeAffinity terms",
+    "No nodes satisfy the required node affinity across 2 evaluated nodes",
+    "Node selector terms evaluated: 1"
+  ],
+  "causes": [
+    {
+      "code": "NODE_AFFINITY_REQUIRED",
+      "message": "Pod declares required node affinity terms",
+      "role": "workload_context"
+    },
+    {
+      "code": "NODE_AFFINITY_REQUIRED_MISMATCH",
+      "message": "No available node satisfies the Pod's required node affinity",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "SCHEDULER_REJECTION",
+      "message": "Scheduler rejects all nodes because node affinity requirements are unsatisfied",
+      "role": "scheduling_intermediate"
+    },
+    {
+      "code": "POD_PENDING",
+      "message": "Pod remains Pending because required node affinity cannot be satisfied",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:node-affinity-pod": [
+      "Required node affinity terms do not match any current node labels"
+    ],
+    "node:node1": [
+      "Node labels do not satisfy the Pod's required node affinity"
+    ],
+    "node:node2": [
+      "Node labels do not satisfy the Pod's required node affinity"
+    ]
+  },
+  "likely_causes": [
+    "Required node affinity targets labels that are absent from all nodes",
+    "Cluster node labels drifted from the Pod's hard placement requirements",
+    "The Pod should use preferred affinity instead of required affinity"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod node-affinity-pod",
+    "kubectl get nodes --show-labels",
+    "Check pod.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution",
+    "Add matching node labels or relax the hard node affinity terms"
+  ]
+}

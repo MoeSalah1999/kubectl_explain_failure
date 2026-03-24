@@ -1,0 +1,50 @@
+{
+  "root_cause": "Required pod anti-affinity creates a scheduling deadlock",
+  "confidence": 0.95,
+  "blocking": true,
+  "evidence": [
+    "Pod defines required podAntiAffinity rules",
+    "FailedScheduling events explicitly reference pod anti-affinity conflicts",
+    "No successful scheduling observed",
+    "Dominant scheduler message: 0/2 nodes are available: 2 node(s) didn't match pod anti-affinity rules."
+  ],
+  "causes": [
+    {
+      "code": "POD_ANTI_AFFINITY_REQUIRED",
+      "message": "Pod declares required pod anti-affinity constraints",
+      "role": "workload_context"
+    },
+    {
+      "code": "POD_ANTI_AFFINITY_DEADLOCK",
+      "message": "Existing Pods occupy all candidate nodes allowed by required anti-affinity",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "SCHEDULER_REJECTION",
+      "message": "Scheduler rejects all nodes because anti-affinity rules remain unsatisfied",
+      "role": "scheduling_intermediate"
+    },
+    {
+      "code": "POD_PENDING",
+      "message": "Pod remains Pending because required pod anti-affinity is unsatisfied",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:anti-affinity-pod": [
+      "Required pod anti-affinity prevents the scheduler from selecting any node"
+    ]
+  },
+  "likely_causes": [
+    "Existing replicas already occupy every eligible topology domain or node",
+    "Required pod anti-affinity is stricter than the available node count",
+    "Pod labels and anti-affinity selectors create an impossible placement"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod anti-affinity-pod",
+    "Check pod.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution",
+    "kubectl get pods -A -o wide --show-labels",
+    "Verify enough nodes or topology domains exist to satisfy required anti-affinity"
+  ]
+}

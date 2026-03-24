@@ -92,6 +92,11 @@ class PendingUnschedulableRule(FailureRule):
             # Resource-specific (optional but recommended)
             "insufficient cpu",
             "insufficient memory",
+            # Scheduler extender / plugin failures
+            "error selecting node using extender",
+            "scheduler extender",
+            "failed to run extender",
+            "extender",
         )
 
         for e in recent_failed_scheduling:

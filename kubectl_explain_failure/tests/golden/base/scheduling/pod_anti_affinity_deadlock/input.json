@@ -1,0 +1,75 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "anti-affinity-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "affinity": {
+        "podAntiAffinity": {
+          "requiredDuringSchedulingIgnoredDuringExecution": [
+            {
+              "labelSelector": {
+                "matchExpressions": [
+                  {
+                    "key": "app",
+                    "operator": "In",
+                    "values": [
+                      "web"
+                    ]
+                  }
+                ]
+              },
+              "topologyKey": "kubernetes.io/hostname"
+            }
+          ]
+        }
+      }
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "nodes": {
+    "node1": {
+      "metadata": {
+        "name": "node1",
+        "labels": {
+          "kubernetes.io/hostname": "node1"
+        }
+      }
+    },
+    "node2": {
+      "metadata": {
+        "name": "node2",
+        "labels": {
+          "kubernetes.io/hostname": "node2"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/2 nodes are available: 2 node(s) didn't match pod anti-affinity rules.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-24T08:00:00Z",
+      "lastTimestamp": "2026-03-24T08:00:20Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/2 nodes are available: 2 node(s) didn't match pod anti-affinity rules.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-24T08:00:45Z",
+      "lastTimestamp": "2026-03-24T08:01:15Z"
+    }
+  ]
+}
