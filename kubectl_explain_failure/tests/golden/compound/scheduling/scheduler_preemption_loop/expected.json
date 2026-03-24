@@ -1,0 +1,48 @@
+{
+  "root_cause": "Pod is stuck in a scheduler preemption loop without a feasible placement",
+  "confidence": 0.93,
+  "blocking": true,
+  "evidence": [
+    "Repeated FailedScheduling events within short time window",
+    "Preemption attempts detected in scheduler messages",
+    "Sustained scheduling retry duration (>60s)",
+    "No successful scheduling observed",
+    "Dominant scheduler message: 0/4 nodes are available: 4 Insufficient cpu. preemption: 0/4 nodes are available: 4 No preemption victims found for incoming pod, 4 Preemption is not helpful for scheduling."
+  ],
+  "causes": [
+    {
+      "code": "SCHEDULER_PREEMPTION_THRASHING",
+      "message": "Scheduler repeatedly retries preemption without achieving a feasible placement",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
+      "code": "PREEMPTION_RETRY_LOOP",
+      "message": "Preemption attempts repeat without converging on a schedulable node",
+      "role": "control_loop"
+    },
+    {
+      "code": "POD_STARVATION",
+      "message": "Pod remains Pending due to repeated unsuccessful scheduling retries",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:preemption-loop-pod": [
+      "Pod repeatedly failed scheduling with generic preemption retry behavior"
+    ]
+  },
+  "likely_causes": [
+    "Cluster capacity remains too constrained for the pod even after preemption attempts",
+    "Preemption candidates do not free a usable node shape",
+    "Higher-priority workload pressure keeps the scheduler retrying without progress"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod preemption-loop-pod",
+    "kubectl get events --sort-by=.lastTimestamp",
+    "kubectl describe nodes",
+    "Inspect scheduler logs for repeated preemption retries",
+    "Evaluate resource requests versus current node capacity",
+    "Check whether a more specific blocker such as PDB or affinity is present"
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "root_cause": "Pod cannot be scheduled because PodDisruptionBudgets prevent preemption",
+  "confidence": 0.95,
+  "blocking": true,
+  "evidence": [
+    "Repeated FailedScheduling events detected",
+    "Scheduler messages explicitly indicate PodDisruptionBudget-protected victims",
+    "Preemption attempts fail due to policy restrictions",
+    "Sustained scheduling failure (>90s)",
+    "No successful scheduling observed",
+    "Dominant scheduler message: 0/3 nodes are available: 3 Insufficient cpu. preemption: 0/3 nodes are available: 3 cannot evict pod as it would violate the PodDisruptionBudget."
+  ],
+  "causes": [
+    {
+      "code": "PDB_CONSTRAINT",
+      "message": "PodDisruptionBudget constraints prevent eviction of existing Pods",
+      "role": "policy_root",
+      "blocking": true
+    },
+    {
+      "code": "PREEMPTION_BLOCKED_BY_PDB",
+      "message": "Scheduler cannot preempt Pods because doing so would violate a PodDisruptionBudget",
+      "role": "scheduling_intermediate"
+    },
+    {
+      "code": "SCHEDULER_RETRY_LOOP",
+      "message": "Scheduler repeatedly retries placement but remains blocked by PDB protections",
+      "role": "control_loop"
+    },
+    {
+      "code": "POD_PENDING",
+      "message": "Pod remains unscheduled due to PodDisruptionBudget constraints",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:pdb-unschedulable-pod": [
+      "Scheduling is blocked because preemption would violate a PodDisruptionBudget"
+    ]
+  },
+  "likely_causes": [
+    "PodDisruptionBudget is too restrictive for current replica count",
+    "All feasible victim Pods are protected by a PodDisruptionBudget",
+    "Cluster capacity is tight enough that placement depends on evicting protected workloads"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod pdb-unschedulable-pod",
+    "kubectl get pdb -o wide",
+    "kubectl describe pdb",
+    "Check minAvailable and maxUnavailable values",
+    "Inspect replica counts of workloads protected by the PDB",
+    "Consider whether the PDB is stricter than current cluster capacity can support"
+  ]
+}

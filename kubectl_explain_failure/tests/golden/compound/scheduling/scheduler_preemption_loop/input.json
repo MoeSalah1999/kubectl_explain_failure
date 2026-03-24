@@ -1,0 +1,35 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "preemption-loop-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/4 nodes are available: 4 Insufficient cpu. preemption: 0/4 nodes are available: 4 No preemption victims found for incoming pod, 4 Preemption is not helpful for scheduling.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-24T11:00:00Z",
+      "lastTimestamp": "2026-03-24T11:00:20Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/4 nodes are available: 4 Insufficient cpu. preemption: 0/4 nodes are available: 4 No preemption victims found for incoming pod, 4 Preemption is not helpful for scheduling.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-24T11:01:10Z",
+      "lastTimestamp": "2026-03-24T11:01:30Z"
+    }
+  ]
+}

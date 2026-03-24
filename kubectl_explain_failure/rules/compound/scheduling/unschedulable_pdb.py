@@ -4,80 +4,110 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class UnschedulableDueToPDBRule(FailureRule):
     """
-    Detects Pods that cannot be scheduled because PodDisruptionBudgets (PDBs)
-    prevent preemption from freeing capacity.
+    Detects Pending Pods that remain unschedulable because the scheduler
+    cannot preempt protected Pods without violating a PodDisruptionBudget.
 
-    Real-world behavior:
-    - Scheduler attempts preemption to place Pod
-    - Victim Pods are protected by PDBs
-    - Preemption fails → scheduling fails repeatedly
-    - Pod remains Pending despite available theoretical capacity
-
-    Signals:
-    - Repeated FailedScheduling events
-    - Messages referencing PDB or inability to preempt
-    - Sustained failure duration
-    - No successful scheduling
-
-    Distinction:
-    - Stronger than generic preemption failure
-    - Explicitly tied to PDB constraints
+    Real-world interpretation:
+    - The scheduler attempts preemption to place the Pod
+    - Candidate victims are protected by a PDB
+    - Scheduling keeps failing over time
+    - The Pod remains Pending despite preemption attempts
     """
 
     name = "UnschedulableDueToPDB"
     category = "Compound"
     priority = 90
+    deterministic = True
     blocks = [
         "SchedulerPreemptionLoop",
+        "PreemptionIneffectiveDueToPDB",
         "InsufficientResources",
         "PodUnschedulable",
         "PriorityPreemptionChain",
+        "FailedScheduling",
     ]
-
     phases = ["Pending"]
-
     requires = {
         "context": ["timeline"],
     }
+
+    PREEMPTION_MARKERS = (
+        "preemption:",
+        "preemption is not helpful",
+        "no preemption victims found for incoming pod",
+        "preempt",
+    )
+
+    PDB_MARKERS = (
+        "poddisruptionbudget",
+        "would violate the poddisruptionbudget",
+        "would violate poddisruptionbudget",
+        "would violate the pdb",
+        "cannot evict pod as it would violate",
+        "cannot evict pod",
+        "disruption budget",
+    )
+
+    MIN_TOTAL_FAILURES = 5
+    MIN_DURATION_SECONDS = 90
+
+    def _occurrences(self, event) -> int:
+        count = event.get("count", 1)
+        try:
+            return max(int(count), 1)
+        except Exception:
+            return 1
+
+    def _source_component(self, event) -> str:
+        source = event.get("source")
+        if isinstance(source, dict):
+            return str(source.get("component", "")).lower()
+        return str(source or "").lower()
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
             return False
 
-        # --- 1. Repeated FailedScheduling events in short window ---
-        recent_failures = timeline.events_within_window(5, reason="FailedScheduling")
-
-        if len(recent_failures) < 4:
+        recent_failures = timeline.events_within_window(15, reason="FailedScheduling")
+        if not recent_failures:
             return False
 
-        # --- 2. Detect explicit PDB / preemption-blocked signals ---
-        pdb_signals = 0
+        pdb_hits = 0
+        preemption_hits = 0
+        total_failures = 0
+        repeated_signal = False
 
-        for e in recent_failures:
-            msg = (e.get("message") or "").lower()
+        for event in recent_failures:
+            message = str(event.get("message", "")).lower()
+            source = self._source_component(event)
+            occurrences = self._occurrences(event)
 
-            if (
-                "poddisruptionbudget" in msg
-                or "pdb" in msg
-                or ("preempt" in msg and "not" in msg and "help" in msg)
-                or "cannot evict" in msg
-                or "would violate" in msg
-            ):
-                pdb_signals += 1
+            if source and "scheduler" not in source:
+                continue
 
-        if pdb_signals < 2:
+            total_failures += occurrences
+            if occurrences >= 2:
+                repeated_signal = True
+
+            if any(marker in message for marker in self.PREEMPTION_MARKERS):
+                preemption_hits += occurrences
+            if any(marker in message for marker in self.PDB_MARKERS):
+                pdb_hits += occurrences
+
+        if preemption_hits < 2:
+            return False
+        if pdb_hits < 2:
+            return False
+        if total_failures < self.MIN_TOTAL_FAILURES:
             return False
 
-        # --- 3. Sustained duration (avoid transient scheduler noise) ---
         duration = timeline.duration_between(
-            lambda e: e.get("reason") == "FailedScheduling"
+            lambda event: event.get("reason") == "FailedScheduling"
         )
-
-        if duration < 45:
+        if duration < self.MIN_DURATION_SECONDS and not repeated_signal:
             return False
 
-        # --- 4. No successful scheduling ---
         if timeline.count(reason="Scheduled") > 0:
             return False
 
@@ -87,15 +117,17 @@ class UnschedulableDueToPDBRule(FailureRule):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
         timeline = context.get("timeline")
 
-        # Extract dominant failure message
         dominant_msg = None
         if timeline:
-            msgs = [
-                (e.get("message") or "")
-                for e in timeline.events_within_window(5, reason="FailedScheduling")
+            messages = [
+                str(event.get("message", ""))
+                for event in timeline.events_within_window(
+                    15, reason="FailedScheduling"
+                )
+                if event.get("message")
             ]
-            if msgs:
-                dominant_msg = max(set(msgs), key=msgs.count)
+            if messages:
+                dominant_msg = max(set(messages), key=messages.count)
 
         chain = CausalChain(
             causes=[
@@ -107,17 +139,17 @@ class UnschedulableDueToPDBRule(FailureRule):
                 ),
                 Cause(
                     code="PREEMPTION_BLOCKED_BY_PDB",
-                    message="Scheduler cannot preempt Pods due to PDB protection",
+                    message="Scheduler cannot preempt Pods because doing so would violate a PodDisruptionBudget",
                     role="scheduling_intermediate",
                 ),
                 Cause(
-                    code="SCHEDULING_ATTEMPTS_FAIL",
-                    message="Scheduler repeatedly fails to find feasible node",
+                    code="SCHEDULER_RETRY_LOOP",
+                    message="Scheduler repeatedly retries placement but remains blocked by PDB protections",
                     role="control_loop",
                 ),
                 Cause(
                     code="POD_PENDING",
-                    message="Pod remains unscheduled due to PDB constraints",
+                    message="Pod remains unscheduled due to PodDisruptionBudget constraints",
                     role="workload_symptom",
                 ),
             ]
@@ -129,9 +161,9 @@ class UnschedulableDueToPDBRule(FailureRule):
             "causes": chain,
             "evidence": [
                 "Repeated FailedScheduling events detected",
-                "Scheduler messages indicate PDB or eviction constraints",
+                "Scheduler messages explicitly indicate PodDisruptionBudget-protected victims",
                 "Preemption attempts fail due to policy restrictions",
-                "Sustained scheduling failure (>45s)",
+                "Sustained scheduling failure (>90s)",
                 "No successful scheduling observed",
                 *(
                     ["Dominant scheduler message: " + dominant_msg]
@@ -140,24 +172,22 @@ class UnschedulableDueToPDBRule(FailureRule):
                 ),
             ],
             "likely_causes": [
-                "PodDisruptionBudget too restrictive (minAvailable too high)",
-                "All candidate victim Pods are protected by PDBs",
-                "Cluster operating near capacity with strict availability guarantees",
-                "Workload replicas insufficient to allow disruption",
+                "PodDisruptionBudget is too restrictive for current replica count",
+                "All feasible victim Pods are protected by a PodDisruptionBudget",
+                "Cluster capacity is tight enough that placement depends on evicting protected workloads",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
-                "kubectl get pdb",
+                "kubectl get pdb -o wide",
                 "kubectl describe pdb",
-                "kubectl get events --sort-by=.lastTimestamp",
-                "Check minAvailable / maxUnavailable in PDBs",
-                "Evaluate whether PDB constraints are overly strict",
-                "Inspect replica counts for protected workloads",
+                "Check minAvailable and maxUnavailable values",
+                "Inspect replica counts of workloads protected by the PDB",
+                "Consider whether the PDB is stricter than current cluster capacity can support",
             ],
             "blocking": True,
             "object_evidence": {
                 f"pod:{pod_name}": [
-                    "Scheduling blocked by PodDisruptionBudget constraints"
+                    "Scheduling is blocked because preemption would violate a PodDisruptionBudget"
                 ]
             },
         }

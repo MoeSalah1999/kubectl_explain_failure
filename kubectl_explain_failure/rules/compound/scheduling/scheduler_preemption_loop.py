@@ -4,33 +4,16 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class SchedulerPreemptionLoopRule(FailureRule):
     """
-    Detects Pods stuck in a scheduler preemption loop where:
-
-    - The Pod is repeatedly considered for scheduling
-    - The scheduler attempts preemption but fails to make progress
-    - The Pod remains Pending due to starvation
+    Detects Pods stuck in repeated scheduler preemption attempts without
+    progress, when no more specific blocker like PDB, affinity, or topology
+    explains the failure.
 
     Real-world interpretation:
-    This occurs when:
-    - Cluster is resource-constrained
-    - Preemption candidates are insufficient or protected (PDBs)
-    - Higher-priority Pods continuously block placement
-    - Scheduler repeatedly retries without convergence
-
-    Signals:
-    - Repeated FailedScheduling events (with preemption hints)
-    - High frequency within short time window
-    - Sustained duration (scheduler retry loop)
-    - No successful Scheduled event
-
-    Scope:
-    - Scheduler behavior (preemption + retry loop)
-    - Compound rule (captures systemic scheduling failure)
-    - Non-deterministic but high confidence when sustained
-
-    Exclusions:
-    - Single scheduling failure (covered by simpler rules)
-    - Immediate preemption success (handled by PriorityPreemptionChain)
+    - Scheduler repeatedly evaluates the Pod
+    - Preemption is attempted or considered
+    - The Pod remains Pending through multiple retries
+    - Messages indicate generic preemption churn rather than a concrete,
+      more specific root cause
     """
 
     name = "SchedulerPreemptionLoop"
@@ -40,44 +23,87 @@ class SchedulerPreemptionLoopRule(FailureRule):
         "InsufficientResources",
         "PodUnschedulable",
         "PriorityPreemptionChain",
+        "FailedScheduling",
     ]
-
     phases = ["Pending"]
-
     requires = {
         "context": ["timeline"],
     }
+
+    PREEMPTION_MARKERS = (
+        "preemption:",
+        "preemption is not helpful",
+        "no preemption victims found for incoming pod",
+        "preempt",
+    )
+
+    SPECIFIC_BLOCKER_MARKERS = (
+        "poddisruptionbudget",
+        "would violate",
+        "cannot evict pod",
+        "didn't match pod affinity",
+        "didn't match pod anti-affinity rules",
+        "node affinity",
+        "topology spread",
+        "topology spread constraints",
+        "volume node affinity conflict",
+    )
+
+    def _occurrences(self, event) -> int:
+        count = event.get("count", 1)
+        try:
+            return max(int(count), 1)
+        except Exception:
+            return 1
+
+    def _source_component(self, event) -> str:
+        source = event.get("source")
+        if isinstance(source, dict):
+            return str(source.get("component", "")).lower()
+        return str(source or "").lower()
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
             return False
 
-        # --- 1. Repeated FailedScheduling in short window ---
-        recent_failures = timeline.events_within_window(5, reason="FailedScheduling")
-
-        if len(recent_failures) < 5:
+        recent_failures = timeline.events_within_window(15, reason="FailedScheduling")
+        if not recent_failures:
             return False
 
-        # --- 2. Ensure failures contain preemption semantics ---
-        preemption_signals = 0
-        for e in recent_failures:
-            msg = (e.get("message") or "").lower()
-            if "preempt" in msg:
-                preemption_signals += 1
+        preemption_hits = 0
+        total_failures = 0
+        repeated_signal = False
 
-        if preemption_signals < 3:
+        for event in recent_failures:
+            message = str(event.get("message", "")).lower()
+            source = self._source_component(event)
+            occurrences = self._occurrences(event)
+
+            if source and "scheduler" not in source:
+                continue
+
+            total_failures += occurrences
+            if occurrences >= 2:
+                repeated_signal = True
+
+            if any(marker in message for marker in self.SPECIFIC_BLOCKER_MARKERS):
+                return False
+
+            if any(marker in message for marker in self.PREEMPTION_MARKERS):
+                preemption_hits += occurrences
+
+        if preemption_hits < 3:
+            return False
+        if total_failures < 4:
             return False
 
-        # --- 3. Sustained retry loop (duration check) ---
         duration = timeline.duration_between(
-            lambda e: e.get("reason") == "FailedScheduling"
+            lambda event: event.get("reason") == "FailedScheduling"
         )
-
-        if duration < 60:  # less than 1 minute → too transient
+        if duration < 60 and not repeated_signal:
             return False
 
-        # --- 4. No successful scheduling ---
         if timeline.count(reason="Scheduled") > 0:
             return False
 
@@ -85,47 +111,43 @@ class SchedulerPreemptionLoopRule(FailureRule):
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
-
         timeline = context.get("timeline")
 
-        # Extract dominant failure message (best-effort signal)
         dominant_msg = None
         if timeline:
-            msgs = [
-                (e.get("message") or "")
-                for e in timeline.events_within_window(5, reason="FailedScheduling")
+            messages = [
+                str(event.get("message", ""))
+                for event in timeline.events_within_window(
+                    15, reason="FailedScheduling"
+                )
+                if event.get("message")
             ]
-            if msgs:
-                dominant_msg = max(set(msgs), key=msgs.count)
+            if messages:
+                dominant_msg = max(set(messages), key=messages.count)
 
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="SCHEDULER_RESOURCE_CONTENTION",
-                    message="Cluster resources insufficient for stable scheduling",
+                    code="SCHEDULER_PREEMPTION_THRASHING",
+                    message="Scheduler repeatedly retries preemption without achieving a feasible placement",
                     role="scheduling_root",
                     blocking=True,
                 ),
                 Cause(
-                    code="PREEMPTION_INSUFFICIENT",
-                    message="Scheduler preemption attempts cannot free suitable capacity",
-                    role="scheduling_intermediate",
-                ),
-                Cause(
-                    code="SCHEDULER_RETRY_LOOP",
-                    message="Scheduler repeatedly retries scheduling without convergence",
+                    code="PREEMPTION_RETRY_LOOP",
+                    message="Preemption attempts repeat without converging on a schedulable node",
                     role="control_loop",
                 ),
                 Cause(
                     code="POD_STARVATION",
-                    message="Pod remains Pending due to continuous scheduling failure",
+                    message="Pod remains Pending due to repeated unsuccessful scheduling retries",
                     role="workload_symptom",
                 ),
             ]
         )
 
         return {
-            "root_cause": "Pod is stuck in a scheduler preemption loop due to resource contention",
+            "root_cause": "Pod is stuck in a scheduler preemption loop without a feasible placement",
             "confidence": 0.93,
             "causes": chain,
             "evidence": [
@@ -140,23 +162,22 @@ class SchedulerPreemptionLoopRule(FailureRule):
                 ),
             ],
             "likely_causes": [
-                "Insufficient cluster capacity for requested resources",
-                "PodDisruptionBudgets preventing effective preemption",
-                "High-priority workloads continuously occupying resources",
-                "Fragmented resources preventing bin-packing",
+                "Cluster capacity remains too constrained for the pod even after preemption attempts",
+                "Preemption candidates do not free a usable node shape",
+                "Higher-priority workload pressure keeps the scheduler retrying without progress",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
                 "kubectl get events --sort-by=.lastTimestamp",
                 "kubectl describe nodes",
-                "Check PodDisruptionBudgets (kubectl get pdb)",
-                "Evaluate resource requests vs cluster capacity",
-                "Inspect PriorityClass usage across workloads",
+                "Inspect scheduler logs for repeated preemption retries",
+                "Evaluate resource requests versus current node capacity",
+                "Check whether a more specific blocker such as PDB or affinity is present",
             ],
             "blocking": True,
             "object_evidence": {
                 f"pod:{pod_name}": [
-                    "Pod repeatedly failed scheduling with preemption attempts"
+                    "Pod repeatedly failed scheduling with generic preemption retry behavior"
                 ]
             },
         }
