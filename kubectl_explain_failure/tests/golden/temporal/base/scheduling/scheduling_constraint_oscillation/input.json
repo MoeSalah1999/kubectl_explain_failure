@@ -1,0 +1,75 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "constraint-oscillation-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "nodes": {
+    "node-a": {
+      "metadata": {
+        "name": "node-a"
+      }
+    },
+    "node-b": {
+      "metadata": {
+        "name": "node-b"
+      }
+    },
+    "node-c": {
+      "metadata": {
+        "name": "node-c"
+      }
+    },
+    "node-d": {
+      "metadata": {
+        "name": "node-d"
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/4 nodes are available: 4 node(s) didn't match Pod's node selector.",
+      "count": 1,
+      "source": {
+        "component": "default-scheduler"
+      },
+      "firstTimestamp": "2026-03-25T11:00:00Z",
+      "lastTimestamp": "2026-03-25T11:00:10Z"
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "0/4 nodes are available: 4 node(s) didn't match pod topology spread constraints.",
+      "count": 1,
+      "source": {
+        "component": "default-scheduler"
+      },
+      "firstTimestamp": "2026-03-25T11:02:00Z",
+      "lastTimestamp": "2026-03-25T11:02:10Z"
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "0/4 nodes are available: 4 node(s) didn't match Pod's node selector.",
+      "count": 1,
+      "source": {
+        "component": "default-scheduler"
+      },
+      "firstTimestamp": "2026-03-25T11:04:00Z",
+      "lastTimestamp": "2026-03-25T11:04:10Z"
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "0/4 nodes are available: 4 node(s) didn't match pod topology spread constraints.",
+      "count": 1,
+      "source": {
+        "component": "default-scheduler"
+      },
+      "firstTimestamp": "2026-03-25T11:06:00Z",
+      "lastTimestamp": "2026-03-25T11:06:10Z"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "root_cause": "Scheduling constraints oscillated across retries instead of converging on a stable blocker",
+  "blocking": true,
+  "confidence": 0.84,
+  "evidence": [
+    "FailedScheduling categories alternated as: affinity -> topology -> affinity -> topology",
+    "Oscillation persisted for 6.0 minutes",
+    "Multiple distinct scheduling constraint families were observed",
+    "No successful scheduling observed",
+    "Dominant scheduler message: 0/4 nodes are available: 4 node(s) didn't match Pod's node selector."
+  ],
+  "causes": [
+    {
+      "code": "SCHEDULING_FAILURE_PATTERN_OBSERVED",
+      "message": "Scheduler emitted alternating FailedScheduling categories: affinity -> topology -> affinity -> topology",
+      "role": "temporal_context"
+    },
+    {
+      "code": "SCHEDULING_CONSTRAINT_OSCILLATION",
+      "message": "Different scheduling constraint families alternated across retries without converging",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
+      "code": "PLACEMENT_FEASIBILITY_UNSTABLE",
+      "message": "Placement feasibility shifted between competing constraint classes instead of converging",
+      "role": "control_loop"
+    },
+    {
+      "code": "POD_PENDING",
+      "message": "Pod remains Pending while scheduler encounters changing constraint failures",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:constraint-oscillation-pod": [
+      "Scheduler alternated between different scheduling constraint families over time"
+    ]
+  },
+  "likely_causes": [
+    "Different schedulability constraints are surfacing as cluster state changes between retries",
+    "Capacity and placement policy are both contributing to an unstable scheduling outcome",
+    "The pod is affected by multiple competing scheduling blockers rather than one stable cause"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod constraint-oscillation-pod",
+    "kubectl get events --sort-by=.lastTimestamp",
+    "Inspect affinity, topology, taints, and resource requests together",
+    "Check whether cluster state is changing between scheduler retries"
+  ]
+}

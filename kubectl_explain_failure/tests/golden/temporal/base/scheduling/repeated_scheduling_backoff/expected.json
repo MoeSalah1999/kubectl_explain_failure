@@ -1,0 +1,51 @@
+{
+  "root_cause": "Scheduler repeatedly backed off while retrying the same unresolved scheduling constraint",
+  "blocking": true,
+  "confidence": 0.82,
+  "evidence": [
+    "FailedScheduling retries observed 6 times within 10 minutes",
+    "Dominant scheduling blocker category remained stable: generic",
+    "Sustained retry duration: 6.0 minutes",
+    "No successful scheduling observed",
+    "Dominant scheduler message: 0/3 nodes are available: 3 node(s) were unschedulable."
+  ],
+  "causes": [
+    {
+      "code": "REPEATED_SCHEDULER_RETRIES",
+      "message": "Scheduler retried FailedScheduling 6 times within 10 minutes",
+      "role": "temporal_context"
+    },
+    {
+      "code": "SCHEDULING_BACKOFF_LOOP",
+      "message": "Scheduler repeatedly retried the same generic scheduling blocker without progress",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
+      "code": "PERSISTENT_SCHEDULING_REJECTION",
+      "message": "The same scheduling constraint kept re-queueing the Pod without progress",
+      "role": "control_loop"
+    },
+    {
+      "code": "POD_PENDING",
+      "message": "Pod remains Pending while scheduler retries the same unresolved placement decision",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:scheduler-backoff-pod": [
+      "Scheduler repeatedly retried the same generic scheduling failure"
+    ]
+  },
+  "likely_causes": [
+    "A single scheduling blocker remained unresolved across multiple scheduler retries",
+    "Autoscaling or capacity changes did not arrive quickly enough to satisfy the Pod",
+    "The scheduler kept re-queueing the Pod without any meaningful state change"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod scheduler-backoff-pod",
+    "kubectl get events --sort-by=.lastTimestamp",
+    "Check whether the dominant scheduling blocker is capacity, affinity, taints, or storage",
+    "Inspect whether cluster autoscaler or provisioning is making progress"
+  ]
+}

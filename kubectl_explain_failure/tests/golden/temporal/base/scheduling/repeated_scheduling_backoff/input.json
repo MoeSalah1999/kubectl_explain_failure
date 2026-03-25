@@ -1,0 +1,60 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "scheduler-backoff-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "nodes": {
+    "node-a": {
+      "metadata": {
+        "name": "node-a"
+      }
+    },
+    "node-b": {
+      "metadata": {
+        "name": "node-b"
+      }
+    },
+    "node-c": {
+      "metadata": {
+        "name": "node-c"
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: 3 node(s) were unschedulable.",
+      "count": 2,
+      "source": {
+        "component": "default-scheduler"
+      },
+      "firstTimestamp": "2026-03-25T10:00:00Z",
+      "lastTimestamp": "2026-03-25T10:00:20Z"
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: 3 node(s) were unschedulable.",
+      "count": 2,
+      "source": {
+        "component": "default-scheduler"
+      },
+      "firstTimestamp": "2026-03-25T10:03:00Z",
+      "lastTimestamp": "2026-03-25T10:03:20Z"
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: 3 node(s) were unschedulable.",
+      "count": 2,
+      "source": {
+        "component": "default-scheduler"
+      },
+      "firstTimestamp": "2026-03-25T10:06:00Z",
+      "lastTimestamp": "2026-03-25T10:06:20Z"
+    }
+  ]
+}
