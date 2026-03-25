@@ -1,0 +1,79 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "memory-thrash-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node1"
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "node": {
+    "metadata": {
+      "name": "node1"
+    },
+    "status": {
+      "conditions": [
+        {
+          "type": "Ready",
+          "status": "True",
+          "reason": "KubeletReady",
+          "message": "kubelet is posting ready status",
+          "lastTransitionTime": "2026-03-25T10:16:00Z"
+        },
+        {
+          "type": "MemoryPressure",
+          "status": "True",
+          "reason": "KubeletHasInsufficientMemory",
+          "message": "kubelet has insufficient memory available",
+          "lastTransitionTime": "2026-03-25T10:16:00Z"
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "NodeReady",
+      "message": "Node node1 status is now: NodeReady",
+      "source": {
+        "component": "node-controller"
+      },
+      "firstTimestamp": "2026-03-25T10:07:00Z",
+      "lastTimestamp": "2026-03-25T10:07:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "NodeHasInsufficientMemory",
+      "message": "Node node1 status is now: NodeHasInsufficientMemory",
+      "source": {
+        "component": "node-controller"
+      },
+      "firstTimestamp": "2026-03-25T10:10:00Z",
+      "lastTimestamp": "2026-03-25T10:10:00Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "NodeReady",
+      "message": "Node node1 status is now: NodeReady",
+      "source": {
+        "component": "node-controller"
+      },
+      "firstTimestamp": "2026-03-25T10:13:00Z",
+      "lastTimestamp": "2026-03-25T10:13:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "NodeHasInsufficientMemory",
+      "message": "Node node1 status is now: NodeHasInsufficientMemory",
+      "source": {
+        "component": "node-controller"
+      },
+      "firstTimestamp": "2026-03-25T10:16:00Z",
+      "lastTimestamp": "2026-03-25T10:16:00Z"
+    }
+  ]
+}

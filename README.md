@@ -400,6 +400,11 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - CNIIPExhaustion
 - IntermittentNetworkFlapping
 
+### Node
+
+- NodeConditionOscillation
+- NodeFlapping
+
 ### Scheduling
 
 - RepeatedSchedulingBackoff

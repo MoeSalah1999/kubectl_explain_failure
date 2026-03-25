@@ -1,0 +1,50 @@
+{
+  "root_cause": "Node readiness is flapping and causing workload instability",
+  "confidence": 0.84,
+  "blocking": true,
+  "evidence": [
+    "Node readiness transitions observed: ready -> notready -> ready -> notready",
+    "Node flapping persisted for 9.0 minutes",
+    "Current Ready condition is False (reason=KubeletNotReady)",
+    "Observed 4 NodeReady/NodeNotReady events within 20 minutes"
+  ],
+  "causes": [
+    {
+      "code": "NODE_READY_STATE_OSCILLATION_OBSERVED",
+      "message": "Timeline shows repeated node readiness transitions: ready -> notready -> ready -> notready",
+      "role": "temporal_context"
+    },
+    {
+      "code": "NODE_FLAPPING",
+      "message": "Node repeatedly alternated between Ready and NotReady states",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "WORKLOAD_UNSTABLE_DUE_TO_NODE_FLAPPING",
+      "message": "Workloads are unstable because the assigned node does not remain healthy long enough to converge",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "Ready condition=False reason=KubeletNotReady",
+      "Repeated NodeReady and NodeNotReady transitions observed"
+    ],
+    "pod:worker-api-pod": [
+      "Pod is assigned to a node whose readiness repeatedly changed"
+    ]
+  },
+  "likely_causes": [
+    "Intermittent node connectivity or host instability is repeatedly breaking kubelet health",
+    "Node control-plane communication is repeatedly recovering and failing",
+    "Underlying node resource or infrastructure instability is causing readiness oscillation",
+    "The node is repeatedly crossing health thresholds faster than workloads can stabilize"
+  ],
+  "suggested_checks": [
+    "kubectl describe node node1",
+    "Inspect recent NodeReady and NodeNotReady events in order",
+    "Check kubelet logs and node health metrics around each transition",
+    "kubectl describe pod worker-api-pod"
+  ]
+}

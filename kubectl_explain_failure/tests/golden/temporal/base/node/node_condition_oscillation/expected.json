@@ -1,0 +1,50 @@
+{
+  "root_cause": "Node condition oscillated between Ready and MemoryPressure states",
+  "confidence": 0.85,
+  "blocking": true,
+  "evidence": [
+    "Node condition transitions observed: NodeReady -> MemoryPressure -> NodeReady -> MemoryPressure",
+    "MemoryPressure oscillation persisted for 9.0 minutes",
+    "Current MemoryPressure condition status is True",
+    "Observed 4 node condition transition events within 20 minutes"
+  ],
+  "causes": [
+    {
+      "code": "NODE_CONDITION_OSCILLATION_OBSERVED",
+      "message": "Timeline shows repeated transitions between NodeReady and MemoryPressure",
+      "role": "temporal_context"
+    },
+    {
+      "code": "NODE_CONDITION_OSCILLATION",
+      "message": "Node repeatedly crossed the MemoryPressure threshold and recovered",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "WORKLOAD_UNSTABLE_DUE_TO_NODE_CONDITION_THRASHING",
+      "message": "Workloads are unstable because node health signals do not converge on a stable operating state",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "MemoryPressure condition status=True",
+      "Repeated NodeReady and MemoryPressure transitions observed"
+    ],
+    "pod:memory-thrash-pod": [
+      "Pod is assigned to a node whose health condition repeatedly oscillated"
+    ]
+  },
+  "likely_causes": [
+    "Node resource pressure is repeatedly crossing the recovery threshold",
+    "Competing workloads or system daemons are causing unstable node pressure recovery",
+    "The node recovers briefly and then re-enters pressure before workloads can stabilize",
+    "Underlying host instability is causing repeated pressure and recovery cycles"
+  ],
+  "suggested_checks": [
+    "kubectl describe node node1",
+    "Inspect recent node condition transition events in order",
+    "Check node resource usage trends around each pressure transition",
+    "kubectl describe pod memory-thrash-pod"
+  ]
+}
