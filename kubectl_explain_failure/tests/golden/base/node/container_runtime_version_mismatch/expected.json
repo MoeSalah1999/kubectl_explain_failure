@@ -1,0 +1,50 @@
+{
+  "root_cause": "Container runtime version or CRI API mismatch on node",
+  "blocking": true,
+  "confidence": 0.96,
+  "evidence": [
+    "Node Ready condition indicates container runtime API/version incompatibility",
+    "Affected node(s): node1",
+    "Ready condition reason: KubeletNotReady",
+    "Timeline contains kubelet runtime signal showing CRI API/version mismatch",
+    "Pod is assigned to node node1"
+  ],
+  "causes": [
+    {
+      "code": "CRI_API_INCOMPATIBILITY_DETECTED",
+      "message": "Kubelet reached the runtime endpoint but encountered an unsupported CRI API/version",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "CONTAINER_RUNTIME_VERSION_MISMATCH",
+      "message": "Node container runtime version or CRI API is incompatible with kubelet expectations",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "KUBELET_RUNTIME_OPERATIONS_FAIL",
+      "message": "Kubelet cannot create pod sandboxes or manage workloads due to runtime API mismatch",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "Node runtime reports CRI API/version mismatch (Ready reason=KubeletNotReady)"
+    ],
+    "pod:runtime-version-mismatch-pod": [
+      "Pod is blocked because kubelet and the node container runtime are version-incompatible"
+    ]
+  },
+  "likely_causes": [
+    "Kubelet was upgraded but containerd/cri-o was left on an incompatible CRI version",
+    "Runtime exposes an unsupported CRI API version for this kubelet release",
+    "Node upgrade left kubelet and runtime components out of sync",
+    "Runtime plugin or CRI shim version is incompatible with kubelet expectations"
+  ],
+  "suggested_checks": [
+    "kubectl describe node node1",
+    "Check kubelet and container runtime versions on the node",
+    "Inspect kubelet logs for CRI API/version compatibility errors",
+    "kubectl describe pod runtime-version-mismatch-pod"
+  ]
+}

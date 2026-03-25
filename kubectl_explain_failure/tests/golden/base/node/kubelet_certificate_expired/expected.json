@@ -1,0 +1,51 @@
+{
+  "root_cause": "Kubelet certificate expired or not yet valid",
+  "blocking": true,
+  "confidence": 0.96,
+  "evidence": [
+    "Node Ready condition is False",
+    "Ready condition reason: KubeletNotReady",
+    "Affected node(s): node1",
+    "Certificate validity error is present in kubelet/node status signal",
+    "Pod is assigned to node node1",
+    "Timeline contains kubelet or node-controller event showing x509 certificate validity failure"
+  ],
+  "causes": [
+    {
+      "code": "KUBELET_CERTIFICATE_INVALID",
+      "message": "Kubelet certificate is expired or not yet valid for API communication",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "KUBELET_CERTIFICATE_EXPIRED",
+      "message": "Kubelet cannot maintain node status because its certificate validity has failed",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "NODE_CONTROL_PLANE_LINK_DEGRADED",
+      "message": "Node health reporting and workload management are impaired by kubelet certificate failure",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "Ready condition=False reason=KubeletNotReady with certificate validity failure"
+    ],
+    "pod:node-agent-affected-pod": [
+      "Pod is affected by kubelet certificate expiry on its node"
+    ]
+  },
+  "likely_causes": [
+    "Kubelet client certificate expired",
+    "Certificate rotation failed or stalled",
+    "Node clock skew makes the certificate appear not yet valid",
+    "Kubelet cannot authenticate to the API server due to x509 validity failure"
+  ],
+  "suggested_checks": [
+    "kubectl describe node node1",
+    "Check kubelet certificate expiration and rotation status on the node",
+    "Inspect kubelet logs for x509 or certificate rotation errors",
+    "kubectl describe pod node-agent-affected-pod"
+  ]
+}

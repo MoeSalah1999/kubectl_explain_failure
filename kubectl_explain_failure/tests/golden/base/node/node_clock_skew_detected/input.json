@@ -1,0 +1,41 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "time-skew-affected-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node1"
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "node": {
+    "metadata": {
+      "name": "node1"
+    },
+    "status": {
+      "conditions": [
+        {
+          "type": "Ready",
+          "status": "False",
+          "reason": "KubeletNotReady",
+          "message": "failed to update node status: x509: certificate is not yet valid: current time 2026-03-25T12:00:00Z is before 2026-03-25T12:05:00Z"
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "NodeNotReady",
+      "message": "Node node1 status is now: NodeNotReady. Error updating node status: x509: certificate is not yet valid: current time 2026-03-25T12:00:00Z is before 2026-03-25T12:05:00Z",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-25T12:00:30Z",
+      "lastTimestamp": "2026-03-25T12:00:30Z"
+    }
+  ]
+}

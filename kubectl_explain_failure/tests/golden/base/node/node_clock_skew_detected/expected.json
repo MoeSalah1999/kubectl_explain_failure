@@ -1,0 +1,51 @@
+{
+  "root_cause": "Node clock skew detected",
+  "blocking": true,
+  "confidence": 0.96,
+  "evidence": [
+    "Node Ready condition is False",
+    "Ready condition reason: KubeletNotReady",
+    "Affected node(s): node1",
+    "Kubelet certificate validity failure shows current node time is outside the certificate validity window",
+    "Pod is assigned to node node1",
+    "Timeline contains kubelet or node-controller event indicating certificate is not yet valid due to node time skew"
+  ],
+  "causes": [
+    {
+      "code": "NODE_TIME_OUT_OF_SYNC",
+      "message": "Node clock is out of sync with control-plane certificate validity",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "NODE_CLOCK_SKEW_DETECTED",
+      "message": "Node clock skew breaks kubelet certificate validation and API communication",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "KUBELET_NODE_STATUS_UPDATES_FAIL",
+      "message": "Kubelet cannot reliably update node status while node time is invalid",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "Ready condition=False reason=KubeletNotReady with time-validity failure"
+    ],
+    "pod:time-skew-affected-pod": [
+      "Pod is affected because kubelet certificate validation is failing due to node clock skew"
+    ]
+  },
+  "likely_causes": [
+    "NTP or chrony is not synchronizing node time",
+    "Node clock drift makes kubelet certificates appear not yet valid",
+    "Virtual machine host time drift propagated to the node",
+    "Time synchronization service is stopped or misconfigured"
+  ],
+  "suggested_checks": [
+    "kubectl describe node node1",
+    "Check node time synchronization status (NTP/chrony/systemd-timesyncd)",
+    "Inspect kubelet logs for certificate not-yet-valid errors",
+    "kubectl describe pod time-skew-affected-pod"
+  ]
+}

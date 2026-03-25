@@ -248,10 +248,13 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 ### Node
 
 - ContainerRuntimeUnavailable
+- ContainerRuntimeVersionMismatch
 - EphemeralStorageExceeded
 - Evicted
+- KubeletCertificateExpired
 - KubeletNotResponding
 - NodeDiskPressure
+- NodeClockSkewDetected
 - NodeMemoryPressure
 - NodeNotReady
 - NodePIDPressure

@@ -1,0 +1,41 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "runtime-version-mismatch-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node1"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "node": {
+    "metadata": {
+      "name": "node1"
+    },
+    "status": {
+      "conditions": [
+        {
+          "type": "Ready",
+          "status": "False",
+          "reason": "KubeletNotReady",
+          "message": "failed to get runtime status: rpc error: code = Unimplemented desc = unknown service runtime.v1.RuntimeService"
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedCreatePodSandBox",
+      "message": "Failed to create pod sandbox: rpc error: code = Unimplemented desc = unknown service runtime.v1.RuntimeService",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-25T12:40:00Z",
+      "lastTimestamp": "2026-03-25T12:40:15Z"
+    }
+  ]
+}
