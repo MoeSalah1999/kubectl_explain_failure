@@ -303,6 +303,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - PVReleasedOrFailed
 - ReadWriteOnceMultiNodeConflict
 - StorageClassProvisionerMissing
+- VolumeMountPermissionDenied
 
 ## Compound Rules
 

@@ -39,6 +39,13 @@ class PVCMountFailureRule(FailureRule):
     # This compound rule supersedes simpler FailedMount signals
     blocks = ["FailedMount"]
 
+    PERMISSION_DENIED_MARKERS = (
+        "permission denied",
+        "operation not permitted",
+        "access denied",
+        "not permitted",
+    )
+
     requires = {
         "objects": ["pvc"],
         "context": ["timeline"],  # optional, allows timeline-based checks
@@ -81,7 +88,25 @@ class PVCMountFailureRule(FailureRule):
             for e in events
         )
 
-        return all_bound and (failed_mount_timeline or failed_mount_events)
+        # Explicit permission-denied mount signatures are handled by the
+        # dedicated VolumeMountPermissionDenied rule.
+        event_source = getattr(timeline, "events", None) if timeline else None
+        if not isinstance(event_source, list):
+            event_source = events
+
+        permission_denied = any(
+            any(
+                marker in str(e.get("message", "")).lower()
+                for marker in self.PERMISSION_DENIED_MARKERS
+            )
+            for e in event_source
+        )
+
+        return (
+            all_bound
+            and (failed_mount_timeline or failed_mount_events)
+            and not permission_denied
+        )
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")

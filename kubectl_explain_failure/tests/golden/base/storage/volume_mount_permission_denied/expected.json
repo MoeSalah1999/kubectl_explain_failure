@@ -1,0 +1,52 @@
+{
+  "root_cause": "Volume mount failed due to permission denied on the node",
+  "confidence": 0.93,
+  "blocking": true,
+  "evidence": [
+    "FailedMount or MountVolume event contains permission denied",
+    "Pod is assigned to node node1",
+    "PVC data-pvc is Bound"
+  ],
+  "causes": [
+    {
+      "code": "VOLUME_MOUNT_ATTEMPTED",
+      "message": "Kubelet attempted to set up and mount a volume for the Pod",
+      "role": "volume_context"
+    },
+    {
+      "code": "VOLUME_MOUNT_PERMISSION_DENIED",
+      "message": "Node-side volume setup or mount failed with permission denied",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_STARTUP_BLOCKED_BY_VOLUME_PERMISSION",
+      "message": "Pod cannot complete volume setup and start normally",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:secure-volume-pod": [
+      "Kubelet reported volume mount permission denial",
+      "MountVolume.SetUp failed for volume \"data\": mkdir /var/lib/kubelet/pods/1111-2222/volumes/kubernetes.io~csi/data/mount: permission denied"
+    ],
+    "node:node1": [
+      "Volume setup or mount on the node failed with permission denied"
+    ],
+    "pvc:data-pvc": [
+      "PVC is Bound but mount/setup was denied"
+    ]
+  },
+  "likely_causes": [
+    "NFS export or backing filesystem denied the node mount operation",
+    "Volume path ownership or mode on the node is incompatible with kubelet setup",
+    "CSI driver mount target directory permissions are incorrect",
+    "SELinux or node-side security policy blocked the mount or chmod/chown step"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod secure-volume-pod",
+    "Inspect kubelet logs on the node for mount permission errors",
+    "Verify node-side mount path ownership, permissions, and security policy",
+    "Check backing storage export permissions and fsGroup or securityContext settings"
+  ]
+}
