@@ -1,0 +1,96 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "volume-deadlock-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "volumes": [
+        {
+          "name": "data",
+          "persistentVolumeClaim": {
+            "claimName": "data-pvc"
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "nodes": {
+    "node-a": {
+      "metadata": {
+        "name": "node-a",
+        "labels": {
+          "topology.kubernetes.io/zone": "us-east-1a"
+        }
+      }
+    },
+    "node-b": {
+      "metadata": {
+        "name": "node-b",
+        "labels": {
+          "topology.kubernetes.io/zone": "us-east-1b"
+        }
+      }
+    }
+  },
+  "pvcs": {
+    "data-pvc": {
+      "metadata": {
+        "name": "data-pvc",
+        "namespace": "default"
+      },
+      "spec": {
+        "storageClassName": "wffc-sc"
+      },
+      "status": {
+        "phase": "Pending"
+      }
+    }
+  },
+  "storageclasses": {
+    "wffc-sc": {
+      "metadata": {
+        "name": "wffc-sc"
+      },
+      "provisioner": "ebs.csi.aws.com",
+      "volumeBindingMode": "WaitForFirstConsumer"
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/2 nodes are available: 2 node(s) didn't find available persistent volumes to bind.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-25T10:00:00Z",
+      "lastTimestamp": "2026-03-25T10:00:20Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "WaitForFirstConsumer",
+      "message": "waiting for first consumer to be created before binding",
+      "source": {
+        "component": "persistentvolume-controller"
+      },
+      "firstTimestamp": "2026-03-25T10:00:30Z",
+      "lastTimestamp": "2026-03-25T10:00:30Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/2 nodes are available: 2 node(s) didn't find available persistent volumes to bind.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-25T10:01:10Z",
+      "lastTimestamp": "2026-03-25T10:01:40Z"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "root_cause": "Pod is stuck due to circular dependency between scheduling and WaitForFirstConsumer volume binding",
+  "confidence": 0.94,
+  "blocking": true,
+  "evidence": [
+    "Referenced PVCs remain Pending under WaitForFirstConsumer binding",
+    "Scheduler messages indicate volumes could not be bound for scheduling",
+    "PVC binding progress is stalled waiting for a consumer or compatible volume",
+    "Sustained scheduling failure (>60s)",
+    "No successful scheduling observed",
+    "Dominant scheduler message: 0/2 nodes are available: 2 node(s) didn't find available persistent volumes to bind."
+  ],
+  "causes": [
+    {
+      "code": "WAIT_FOR_FIRST_CONSUMER_VOLUME_BINDING",
+      "message": "PVC requires WaitForFirstConsumer topology-aware binding",
+      "role": "volume_context"
+    },
+    {
+      "code": "VOLUME_SCHEDULING_DEADLOCK",
+      "message": "Volume binding and scheduler placement cannot make forward progress together",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "SCHEDULER_VOLUME_BINDING_LOOP",
+      "message": "Scheduler repeatedly retries placement while PVC binding remains unresolved",
+      "role": "control_loop"
+    },
+    {
+      "code": "POD_PENDING",
+      "message": "Pod remains Pending because topology-aware volume binding never resolves",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:volume-deadlock-pod": [
+      "Pod cannot be scheduled because topology-aware volume binding is unresolved"
+    ],
+    "pvc:data-pvc": [
+      "PVC remains Pending under a WaitForFirstConsumer StorageClass"
+    ]
+  },
+  "likely_causes": [
+    "StorageClass uses WaitForFirstConsumer and no feasible node-volume pairing exists",
+    "Available volumes cannot satisfy topology or capacity requirements for any candidate node",
+    "PVC binding and pod placement are waiting on each other without progress"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod volume-deadlock-pod",
+    "kubectl get pvc -o wide",
+    "kubectl describe pvc",
+    "kubectl get storageclass -o yaml",
+    "Check volumeBindingMode on the referenced StorageClass",
+    "Inspect PV availability and topology constraints"
+  ]
+}

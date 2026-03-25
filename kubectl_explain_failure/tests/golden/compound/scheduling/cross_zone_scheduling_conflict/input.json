@@ -1,0 +1,90 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "cross-zone-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "affinity": {
+        "nodeAffinity": {
+          "requiredDuringSchedulingIgnoredDuringExecution": {
+            "nodeSelectorTerms": [
+              {
+                "matchExpressions": [
+                  {
+                    "key": "topology.kubernetes.io/zone",
+                    "operator": "In",
+                    "values": [
+                      "us-east-1a"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "nodes": {
+    "node-a1": {
+      "metadata": {
+        "name": "node-a1",
+        "labels": {
+          "topology.kubernetes.io/zone": "us-east-1a"
+        }
+      }
+    },
+    "node-a2": {
+      "metadata": {
+        "name": "node-a2",
+        "labels": {
+          "topology.kubernetes.io/zone": "us-east-1a"
+        }
+      }
+    },
+    "node-b1": {
+      "metadata": {
+        "name": "node-b1",
+        "labels": {
+          "topology.kubernetes.io/zone": "us-east-1b"
+        }
+      }
+    },
+    "node-b2": {
+      "metadata": {
+        "name": "node-b2",
+        "labels": {
+          "topology.kubernetes.io/zone": "us-east-1b"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/4 nodes are available: 2 Insufficient cpu, 2 node(s) didn't match Pod's node affinity/selector.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-25T11:00:00Z",
+      "lastTimestamp": "2026-03-25T11:00:20Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/4 nodes are available: 2 Insufficient cpu, 2 node(s) didn't match Pod's node affinity/selector.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "count": 2,
+      "firstTimestamp": "2026-03-25T11:01:00Z",
+      "lastTimestamp": "2026-03-25T11:01:20Z"
+    }
+  ]
+}

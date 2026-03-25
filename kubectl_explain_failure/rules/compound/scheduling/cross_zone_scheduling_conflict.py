@@ -4,88 +4,152 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class CrossZoneSchedulingConflictRule(FailureRule):
     """
-    Detects Pods that cannot be scheduled due to cross-zone / topology constraints.
+    Detects Pods that remain Pending because placement is constrained to a
+    topology zone that lacks feasible capacity while other zones remain
+    available but filtered out.
 
     Real-world interpretation:
-    - Pod has nodeAffinity / topologySpreadConstraints / anti-affinity
-    - Required zone(s) lack capacity or compatible nodes
-    - Scheduler repeatedly fails despite cluster having resources elsewhere
-
-    Typical scheduler messages include:
-    - "node(s) didn't match node affinity"
-    - "didn't satisfy existing pods anti-affinity rules"
-    - "topology spread constraints"
-    - zone/region mismatch signals
-
-    Signals:
-    - Repeated FailedScheduling events
-    - Zone / topology-related constraint messages
-    - Sustained scheduling failure duration
-    - No successful scheduling
-
-    Scope:
-    - Advanced scheduler placement constraints
-    - Compound rule (multi-factor scheduling failure)
+    - The cluster spans multiple zones
+    - The Pod has hard zone-aware placement constraints
+    - Scheduler events show both filtered nodes and capacity pressure
+    - Capacity may exist elsewhere, but not in the permitted zone
     """
 
     name = "CrossZoneSchedulingConflict"
     category = "Compound"
     priority = 82
+    deterministic = True
     blocks = [
         "PodUnschedulable",
+        "FailedScheduling",
+        "InsufficientResources",
+        "AffinityUnsatisfiable",
+        "NodeAffinityRequiredMismatch",
+        "PodTopologySpreadLabelMismatch",
         "TopologySpreadUnsatisfiable",
-        "NodeAffinityMismatch",
+        "TopologyKeyMissing",
     ]
-
     phases = ["Pending"]
-
     requires = {
+        "pod": True,
         "context": ["timeline"],
+        "objects": ["node"],
     }
+
+    ZONE_KEYS = (
+        "topology.kubernetes.io/zone",
+        "failure-domain.beta.kubernetes.io/zone",
+    )
+
+    EXCLUSION_MARKERS = (
+        "missing required label",
+        "volume node affinity conflict",
+        "already attached",
+        "multi-attach",
+    )
+
+    def _occurrences(self, event) -> int:
+        count = event.get("count", 1)
+        try:
+            return max(int(count), 1)
+        except Exception:
+            return 1
+
+    def _cluster_zones(self, nodes: dict) -> dict[str, list[str]]:
+        zones: dict[str, list[str]] = {}
+        for node_name, node in nodes.items():
+            labels = node.get("metadata", {}).get("labels", {}) or {}
+            zone = None
+            for key in self.ZONE_KEYS:
+                if labels.get(key):
+                    zone = labels[key]
+                    break
+            if zone:
+                zones.setdefault(zone, []).append(node_name)
+        return zones
+
+    def _required_zones_from_node_affinity(self, pod: dict) -> set[str]:
+        affinity = pod.get("spec", {}).get("affinity", {}) or {}
+        node_affinity = affinity.get("nodeAffinity", {}) or {}
+        required = node_affinity.get(
+            "requiredDuringSchedulingIgnoredDuringExecution", {}
+        )
+        zones: set[str] = set()
+
+        for term in required.get("nodeSelectorTerms", []) or []:
+            for expression in term.get("matchExpressions", []) or []:
+                if expression.get("key") not in self.ZONE_KEYS:
+                    continue
+                if expression.get("operator") == "In":
+                    zones.update(expression.get("values", []) or [])
+
+        return zones
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
-        if not timeline:
+        nodes = context.get("objects", {}).get("node", {})
+        if not timeline or not nodes:
             return False
 
-        # --- 1. Repeated scheduling failures in short window ---
-        recent_failures = timeline.events_within_window(5, reason="FailedScheduling")
-
-        if len(recent_failures) < 4:
+        cluster_zones = self._cluster_zones(nodes)
+        if len(cluster_zones) < 2:
             return False
 
-        # --- 2. Detect topology / zone-related constraint signals ---
-        topology_signals = 0
+        required_zones = self._required_zones_from_node_affinity(pod)
+        if not required_zones:
+            return False
+        if required_zones and not any(zone in cluster_zones for zone in required_zones):
+            return False
+        if required_zones and not any(
+            zone not in required_zones for zone in cluster_zones
+        ):
+            return False
 
-        for e in recent_failures:
-            msg = (e.get("message") or "").lower()
+        recent_failures = timeline.events_within_window(15, reason="FailedScheduling")
+        if not recent_failures:
+            return False
 
-            if any(
-                keyword in msg
-                for keyword in [
-                    "node affinity",
-                    "didn't match node affinity",
-                    "match node selector",
-                    "topology spread",
-                    "anti-affinity",
-                    "zone",
-                    "topology",
-                ]
+        topology_hits = 0
+        contention_hits = 0
+        total_failures = 0
+        repeated_signal = False
+
+        for event in recent_failures:
+            message = str(event.get("message", "")).lower()
+            occurrences = self._occurrences(event)
+            total_failures += occurrences
+            if occurrences >= 2:
+                repeated_signal = True
+
+            if any(marker in message for marker in self.EXCLUSION_MARKERS):
+                return False
+
+            if (
+                "node affinity" in message
+                or any(key in message for key in self.ZONE_KEYS)
+                or "zone" in message
             ):
-                topology_signals += 1
+                topology_hits += occurrences
 
-        if topology_signals < 3:
+            if (
+                "insufficient" in message
+                or "didn't match pod's node affinity/selector" in message
+            ):
+                contention_hits += occurrences
+
+        if topology_hits < 2:
+            return False
+        if contention_hits < 2:
+            return False
+        if total_failures < 3:
             return False
 
-        # --- 3. Sustained failure duration ---
         duration = timeline.duration_between(
-            lambda e: e.get("reason") == "FailedScheduling"
+            lambda event: event.get("reason") == "FailedScheduling"
         )
-
-        if duration < 45:  # avoid transient imbalance
+        if duration < 45 and not repeated_signal:
             return False
 
-        # --- 4. No successful scheduling ---
         if timeline.count(reason="Scheduled") > 0:
             return False
 
@@ -93,51 +157,56 @@ class CrossZoneSchedulingConflictRule(FailureRule):
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
+        nodes = context.get("objects", {}).get("node", {})
+        cluster_zones = self._cluster_zones(nodes)
         timeline = context.get("timeline")
 
-        # Extract dominant scheduler message for clarity
         dominant_msg = None
         if timeline:
-            msgs = [
-                (e.get("message") or "")
-                for e in timeline.events_within_window(5, reason="FailedScheduling")
+            messages = [
+                str(event.get("message", ""))
+                for event in timeline.events_within_window(
+                    15, reason="FailedScheduling"
+                )
+                if event.get("message")
             ]
-            if msgs:
-                dominant_msg = max(set(msgs), key=msgs.count)
+            if messages:
+                dominant_msg = max(set(messages), key=messages.count)
 
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="TOPOLOGY_CONSTRAINT_ENFORCED",
-                    message="Pod enforces strict topology or zone placement constraints",
+                    code="ZONE_AWARE_PLACEMENT_CONSTRAINT",
+                    message="Pod declares hard zone-aware placement constraints",
                     role="configuration_root",
                     blocking=True,
                 ),
                 Cause(
-                    code="ZONE_CAPACITY_OR_MATCH_FAILURE",
-                    message="Required zone lacks capacity or compatible nodes",
+                    code="TARGET_ZONE_INSUFFICIENT_CAPACITY",
+                    message="Eligible nodes in the required zone do not provide a feasible placement",
                     role="scheduling_intermediate",
                 ),
                 Cause(
-                    code="SCHEDULER_FILTER_EXCLUSION",
-                    message="Scheduler filters out nodes due to affinity or topology constraints",
+                    code="CROSS_ZONE_FILTER_CONFLICT",
+                    message="Nodes in other zones are filtered out even though the cluster spans multiple zones",
                     role="scheduling_decision",
                 ),
                 Cause(
-                    code="POD_UNSCHEDULABLE_IN_TARGET_ZONE",
-                    message="Pod remains Pending due to unsatisfied cross-zone constraints",
+                    code="POD_PENDING",
+                    message="Pod remains Pending because zone-aware constraints conflict with available capacity",
                     role="workload_symptom",
                 ),
             ]
         )
 
         return {
-            "root_cause": "Pod cannot be scheduled due to cross-zone or topology placement constraints",
+            "root_cause": "Pod cannot be scheduled because required zone placement conflicts with available capacity",
             "confidence": 0.91,
             "causes": chain,
             "evidence": [
-                "Repeated FailedScheduling events within short time window",
-                "Scheduler messages indicate topology/zone constraint violations",
+                f"Cluster spans multiple zones: {', '.join(sorted(cluster_zones))}",
+                "Pod defines zone-aware placement constraints",
+                "Scheduler messages indicate both zone filtering and capacity pressure",
                 "Sustained scheduling failure duration (>45s)",
                 "No successful scheduling observed",
                 *(
@@ -147,24 +216,21 @@ class CrossZoneSchedulingConflictRule(FailureRule):
                 ),
             ],
             "likely_causes": [
-                "Node affinity restricts Pod to unavailable zones",
-                "Topology spread constraints cannot be satisfied",
-                "Pod anti-affinity prevents placement in available zones",
-                "Uneven resource distribution across zones",
-                "Cluster capacity exists but not in required topology domain",
+                "Node affinity or topology rules restrict the pod to a zone without enough free capacity",
+                "Capacity exists in other zones, but hard placement constraints exclude them",
+                "Zone-aware placement policy is stricter than current cross-zone resource distribution",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
                 "kubectl get nodes --show-labels",
-                "Check node labels for topology.kubernetes.io/zone",
-                "Review pod affinity/anti-affinity rules",
-                "Inspect topologySpreadConstraints in pod spec",
-                "Evaluate per-zone resource availability",
+                "Check topology.kubernetes.io/zone labels on nodes",
+                "Review pod affinity, anti-affinity, and topologySpreadConstraints",
+                "Compare resource availability across zones",
             ],
             "blocking": True,
             "object_evidence": {
                 f"pod:{pod_name}": [
-                    "Pod repeatedly failed scheduling due to topology/zone constraints"
+                    "Pod repeatedly failed scheduling due to zone-aware placement constraints"
                 ]
             },
         }

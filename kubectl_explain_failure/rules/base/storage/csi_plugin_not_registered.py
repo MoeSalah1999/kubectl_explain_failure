@@ -38,6 +38,12 @@ class CSIPluginNotRegisteredRule(FailureRule):
         if not storageclasses or not nodes:
             return False
 
+        # Absence of node driver inventory is not evidence of a missing CSI
+        # plugin. Only evaluate this rule when the snapshot explicitly includes
+        # per-node driver registration data.
+        if not any("drivers" in node.get("status", {}) for node in nodes.values()):
+            return False
+
         # Check if any PVC in the pod uses a StorageClass with a provisioner
         for pvc in context.get("objects", {}).get("pvc", {}).values():
             sc_name = pvc.get("spec", {}).get("storageClassName")

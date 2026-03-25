@@ -1,0 +1,53 @@
+{
+  "root_cause": "Pod cannot be scheduled because required zone placement conflicts with available capacity",
+  "confidence": 0.91,
+  "blocking": true,
+  "evidence": [
+    "Cluster spans multiple zones: us-east-1a, us-east-1b",
+    "Pod defines zone-aware placement constraints",
+    "Scheduler messages indicate both zone filtering and capacity pressure",
+    "Sustained scheduling failure duration (>45s)",
+    "No successful scheduling observed",
+    "Dominant scheduler message: 0/4 nodes are available: 2 Insufficient cpu, 2 node(s) didn't match Pod's node affinity/selector."
+  ],
+  "causes": [
+    {
+      "code": "ZONE_AWARE_PLACEMENT_CONSTRAINT",
+      "message": "Pod declares hard zone-aware placement constraints",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "TARGET_ZONE_INSUFFICIENT_CAPACITY",
+      "message": "Eligible nodes in the required zone do not provide a feasible placement",
+      "role": "scheduling_intermediate"
+    },
+    {
+      "code": "CROSS_ZONE_FILTER_CONFLICT",
+      "message": "Nodes in other zones are filtered out even though the cluster spans multiple zones",
+      "role": "scheduling_decision"
+    },
+    {
+      "code": "POD_PENDING",
+      "message": "Pod remains Pending because zone-aware constraints conflict with available capacity",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:cross-zone-pod": [
+      "Pod repeatedly failed scheduling due to zone-aware placement constraints"
+    ]
+  },
+  "likely_causes": [
+    "Node affinity or topology rules restrict the pod to a zone without enough free capacity",
+    "Capacity exists in other zones, but hard placement constraints exclude them",
+    "Zone-aware placement policy is stricter than current cross-zone resource distribution"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod cross-zone-pod",
+    "kubectl get nodes --show-labels",
+    "Check topology.kubernetes.io/zone labels on nodes",
+    "Review pod affinity, anti-affinity, and topologySpreadConstraints",
+    "Compare resource availability across zones"
+  ]
+}
