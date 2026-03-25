@@ -1,0 +1,50 @@
+{
+  "root_cause": "Container runtime unavailable on node",
+  "blocking": true,
+  "confidence": 0.96,
+  "evidence": [
+    "Node Ready condition indicates container runtime outage",
+    "Affected node(s): node1",
+    "Ready condition reason: KubeletNotReady",
+    "Timeline contains kubelet/runtime signal that CRI endpoint is unavailable",
+    "Pod is assigned to node node1"
+  ],
+  "causes": [
+    {
+      "code": "CONTAINER_RUNTIME_ENDPOINT_UNREACHABLE",
+      "message": "Kubelet cannot reach the node container runtime service",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "CONTAINER_RUNTIME_UNAVAILABLE",
+      "message": "Node container runtime is unavailable for sandbox and container operations",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "KUBELET_RUNTIME_OPERATIONS_BLOCKED",
+      "message": "Kubelet cannot create pod sandboxes or start workloads while runtime is down",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "Node runtime unavailable (Ready reason=KubeletNotReady)"
+    ],
+    "pod:sandbox-create-pod": [
+      "Pod is blocked because kubelet cannot use the node container runtime"
+    ]
+  },
+  "likely_causes": [
+    "containerd or cri-o service is stopped or crashed",
+    "Kubelet cannot connect to the CRI socket",
+    "Node runtime upgrade or reconfiguration left the runtime unavailable",
+    "Underlying host issues are preventing the runtime daemon from starting"
+  ],
+  "suggested_checks": [
+    "kubectl describe node node1",
+    "Check containerd/cri-o service status on the node",
+    "Inspect kubelet logs for CRI connection errors",
+    "kubectl describe pod sandbox-create-pod"
+  ]
+}

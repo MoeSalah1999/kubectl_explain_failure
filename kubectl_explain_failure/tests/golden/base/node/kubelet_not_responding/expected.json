@@ -1,0 +1,51 @@
+{
+  "root_cause": "Kubelet is not responding on node",
+  "blocking": true,
+  "confidence": 0.96,
+  "evidence": [
+    "Node Ready condition is Unknown",
+    "Ready condition reason indicates kubelet status loss: NodeStatusUnknown",
+    "Affected node(s): node1",
+    "Pod is assigned to node node1",
+    "Timeline contains node-controller or status signal that kubelet stopped reporting"
+  ],
+  "causes": [
+    {
+      "code": "KUBELET_HEARTBEAT_MISSING",
+      "message": "Node Ready condition degraded with reason NodeStatusUnknown",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "KUBELET_NOT_RESPONDING",
+      "message": "Kubelet stopped reporting node status to the control plane",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "WORKLOAD_IMPACTED_BY_KUBELET_CONTROL_LOSS",
+      "message": "Workload is affected because the node agent is no longer responding",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "Ready condition=Unknown reason=NodeStatusUnknown"
+    ],
+    "pod:worker-api-pod": [
+      "Pod is affected by kubelet heartbeat/status loss on its node"
+    ]
+  },
+  "likely_causes": [
+    "Kubelet process is hung, stopped, or crashing",
+    "Node cannot reach the API server to renew heartbeats or leases",
+    "Node is overloaded enough that kubelet health reporting is failing",
+    "Underlying host or VM networking is degraded"
+  ],
+  "suggested_checks": [
+    "kubectl describe node node1",
+    "kubectl get nodes",
+    "Check kubelet service health and logs on the node",
+    "Inspect node heartbeat and lease renewal behavior",
+    "kubectl describe pod worker-api-pod"
+  ]
+}

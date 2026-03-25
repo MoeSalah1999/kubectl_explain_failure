@@ -1,0 +1,41 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "sandbox-create-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node1"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "node": {
+    "metadata": {
+      "name": "node1"
+    },
+    "status": {
+      "conditions": [
+        {
+          "type": "Ready",
+          "status": "False",
+          "reason": "KubeletNotReady",
+          "message": "container runtime is down, PLEG is not healthy: pleg was last seen active 5m ago"
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedCreatePodSandBox",
+      "message": "Failed to create pod sandbox: rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing: dial unix /run/containerd/containerd.sock: connect: connection refused\"",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-25T11:20:00Z",
+      "lastTimestamp": "2026-03-25T11:20:20Z"
+    }
+  ]
+}

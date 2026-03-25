@@ -247,10 +247,13 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ### Node
 
+- ContainerRuntimeUnavailable
 - EphemeralStorageExceeded
 - Evicted
+- KubeletNotResponding
 - NodeDiskPressure
 - NodeMemoryPressure
+- NodeNotReady
 - NodePIDPressure
 
 ### Probes

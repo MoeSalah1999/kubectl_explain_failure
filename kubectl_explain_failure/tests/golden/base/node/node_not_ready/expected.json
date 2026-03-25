@@ -1,0 +1,49 @@
+{
+  "root_cause": "Node is NotReady",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "Node Ready condition is False",
+    "Affected node(s): node1",
+    "Pod is assigned to node node1",
+    "Timeline contains NodeNotReady or equivalent kubelet readiness signal"
+  ],
+  "causes": [
+    {
+      "code": "NODE_READY_CONDITION_DEGRADED",
+      "message": "Node Ready condition is False",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "NODE_NOT_READY",
+      "message": "Node is NotReady due to kubelet or node-level health failure",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "WORKLOAD_IMPACTED_BY_NODE_UNAVAILABILITY",
+      "message": "Workload cannot run or schedule normally while the node is NotReady",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "Node Ready condition=False"
+    ],
+    "pod:api-pod": [
+      "Pod is affected by a NotReady node condition"
+    ]
+  },
+  "likely_causes": [
+    "Kubelet is stopped or unhealthy on the node",
+    "Node heartbeat is failing or delayed",
+    "Node network partition is preventing control-plane communication",
+    "Underlying VM or host health is degraded"
+  ],
+  "suggested_checks": [
+    "kubectl describe node node1",
+    "kubectl get nodes",
+    "Check kubelet status and node heartbeats",
+    "kubectl describe pod api-pod"
+  ]
+}

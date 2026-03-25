@@ -1,0 +1,41 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "worker-api-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node1"
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "node": {
+    "metadata": {
+      "name": "node1"
+    },
+    "status": {
+      "conditions": [
+        {
+          "type": "Ready",
+          "status": "Unknown",
+          "reason": "NodeStatusUnknown",
+          "message": "Kubelet stopped posting node status."
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "NodeNotReady",
+      "message": "Node node1 status is now: NodeNotReady. Kubelet stopped posting node status.",
+      "source": {
+        "component": "node-controller"
+      },
+      "firstTimestamp": "2026-03-25T10:15:00Z",
+      "lastTimestamp": "2026-03-25T10:15:00Z"
+    }
+  ]
+}

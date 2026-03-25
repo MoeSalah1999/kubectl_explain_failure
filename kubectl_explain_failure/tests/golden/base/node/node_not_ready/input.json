@@ -1,0 +1,41 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "api-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node1"
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "node": {
+    "metadata": {
+      "name": "node1"
+    },
+    "status": {
+      "conditions": [
+        {
+          "type": "Ready",
+          "status": "False",
+          "reason": "KubeletNotReady",
+          "message": "container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady"
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "NodeNotReady",
+      "message": "Node is not ready",
+      "source": {
+        "component": "node-controller"
+      },
+      "firstTimestamp": "2026-03-25T09:30:00Z",
+      "lastTimestamp": "2026-03-25T09:30:00Z"
+    }
+  ]
+}
