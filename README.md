@@ -357,7 +357,6 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - SchedulerPreemptionLoop
 - SchedulingFlapping
 - UnschedulableDueToPDB
-- VolumeSchedulingDeadlock
 
 ### Storage
 
@@ -369,6 +368,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - PVCRecoveredButAppStillFailing
 - PVCThenCrashLoop
 - PVCThenImagePullFail
+- VolumeSchedulingDeadlock
 
 ## Temporal Rules
 
