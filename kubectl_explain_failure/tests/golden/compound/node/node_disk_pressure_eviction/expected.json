@@ -1,0 +1,38 @@
+{
+  "root_cause": "Node DiskPressure escalated into kubelet eviction",
+  "confidence": 0.95,
+  "blocking": true,
+  "evidence": [
+    "Node condition DiskPressure=True",
+    "Event: Evicted",
+    "Disk pressure signal observed before eviction",
+    "Eviction event message indicates disk or ephemeral-storage pressure"
+  ],
+  "causes": [
+    {
+      "code": "NODE_DISK_PRESSURE_ACTIVE",
+      "message": "Node reports DiskPressure=True before eviction",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "NODE_DISK_PRESSURE_EVICTION",
+      "message": "Sustained node disk pressure escalated into kubelet eviction",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_EVICTED_DUE_TO_DISK_PRESSURE",
+      "message": "Pod was evicted after node disk pressure crossed eviction thresholds",
+      "role": "workload_termination"
+    }
+  ],
+  "object_evidence": {
+    "node:node-disk-1": [
+      "DiskPressure=True before pod eviction"
+    ],
+    "pod:disk-evicted-pod": [
+      "Evicted after node disk pressure was reported",
+      "The node was low on resource: ephemeral-storage. Threshold quantity: 2147483648, available: 524288Ki. Container app was using 3Gi, request is 500Mi."
+    ]
+  }
+}

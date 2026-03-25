@@ -345,11 +345,13 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ### Node
 
-- ConflictingNodeConditions
-- CrashLoopAfterNodeDrain
-- NodeNotReadyEvicted
-- PVCBoundNodeDiskPressureMount
-- PVCBoundThenNodePressure
+  - ConflictingNodeConditions
+  - CrashLoopAfterNodeDrain
+  - NodeDiskPressureThenEviction
+  - NodeNotReadyEvicted
+  - NodePressureEvictionCascade
+  - PVCBoundNodeDiskPressureMount
+  - PVCBoundThenNodePressure
 
 ### Probes
 

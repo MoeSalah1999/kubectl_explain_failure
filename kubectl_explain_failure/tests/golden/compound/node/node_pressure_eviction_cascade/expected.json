@@ -1,0 +1,37 @@
+{
+  "root_cause": "Node resource pressure escalated into kubelet eviction cascade",
+  "confidence": 0.95,
+  "blocking": true,
+  "evidence": [
+    "Active node pressure conditions: MemoryPressure",
+    "Event: Evicted",
+    "Eviction event message indicates node resource pressure"
+  ],
+  "causes": [
+    {
+      "code": "NODE_PRESSURE_ACTIVE",
+      "message": "Node reports active pressure condition(s): MemoryPressure",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "NODE_PRESSURE_EVICTION_CASCADE",
+      "message": "Sustained node pressure escalated into kubelet-driven eviction",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_EVICTED_DUE_TO_NODE_PRESSURE",
+      "message": "Pod was evicted after node pressure crossed kubelet thresholds",
+      "role": "workload_termination"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "Pressure conditions active: MemoryPressure"
+    ],
+    "pod:pressure-evicted-pod": [
+      "Evicted event observed after node pressure activation",
+      "The node was low on resource: memory. Threshold quantity: 100Mi, available: 42Mi. Container app was using 512Mi, request is 128Mi."
+    ]
+  }
+}

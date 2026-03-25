@@ -1,0 +1,67 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "pressure-evicted-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node1"
+    },
+    "status": {
+      "phase": "Failed"
+    }
+  },
+  "node": {
+    "metadata": {
+      "name": "node1"
+    },
+    "status": {
+      "conditions": [
+        {
+          "type": "Ready",
+          "status": "True",
+          "lastTransitionTime": "2026-03-25T09:00:00Z"
+        },
+        {
+          "type": "MemoryPressure",
+          "status": "True",
+          "reason": "KubeletHasInsufficientMemory",
+          "message": "kubelet has insufficient memory available",
+          "lastTransitionTime": "2026-03-25T10:03:00Z"
+        },
+        {
+          "type": "DiskPressure",
+          "status": "False",
+          "lastTransitionTime": "2026-03-25T09:00:00Z"
+        },
+        {
+          "type": "PIDPressure",
+          "status": "False",
+          "lastTransitionTime": "2026-03-25T09:00:00Z"
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "NodeHasInsufficientMemory",
+      "message": "Node node1 status is now: NodeHasInsufficientMemory",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-25T10:03:10Z",
+      "lastTimestamp": "2026-03-25T10:03:10Z",
+      "count": 1
+    },
+    {
+      "reason": "Evicted",
+      "message": "The node was low on resource: memory. Threshold quantity: 100Mi, available: 42Mi. Container app was using 512Mi, request is 128Mi.",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-25T10:06:00Z",
+      "lastTimestamp": "2026-03-25T10:06:00Z",
+      "count": 1
+    }
+  ]
+}

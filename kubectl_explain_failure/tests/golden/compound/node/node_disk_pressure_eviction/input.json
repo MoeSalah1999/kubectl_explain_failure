@@ -1,0 +1,79 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "disk-evicted-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node-disk-1"
+    },
+    "status": {
+      "phase": "Failed",
+      "reason": "Evicted",
+      "message": "The node was low on resource: ephemeral-storage. Threshold quantity: 2147483648, available: 524288Ki. Container app was using 3Gi, request is 500Mi."
+    }
+  },
+  "node": {
+    "metadata": {
+      "name": "node-disk-1"
+    },
+    "status": {
+      "conditions": [
+        {
+          "type": "Ready",
+          "status": "True",
+          "lastTransitionTime": "2026-03-25T09:45:00Z"
+        },
+        {
+          "type": "DiskPressure",
+          "status": "True",
+          "reason": "KubeletHasDiskPressure",
+          "message": "kubelet has disk pressure",
+          "lastTransitionTime": "2026-03-25T10:02:00Z"
+        },
+        {
+          "type": "MemoryPressure",
+          "status": "False",
+          "lastTransitionTime": "2026-03-25T09:45:00Z"
+        },
+        {
+          "type": "PIDPressure",
+          "status": "False",
+          "lastTransitionTime": "2026-03-25T09:45:00Z"
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "NodeHasDiskPressure",
+      "message": "Node node-disk-1 status is now: NodeHasDiskPressure",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-25T10:02:10Z",
+      "lastTimestamp": "2026-03-25T10:02:10Z",
+      "count": 1
+    },
+    {
+      "reason": "EvictionThresholdMet",
+      "message": "Attempting to reclaim ephemeral-storage on nodefs",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-25T10:04:00Z",
+      "lastTimestamp": "2026-03-25T10:04:00Z",
+      "count": 1
+    },
+    {
+      "reason": "Evicted",
+      "message": "The node was low on resource: ephemeral-storage. Threshold quantity: 2147483648, available: 524288Ki. Container app was using 3Gi, request is 500Mi.",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-25T10:05:30Z",
+      "lastTimestamp": "2026-03-25T10:05:30Z",
+      "count": 1
+    }
+  ]
+}
