@@ -6,7 +6,7 @@ from kubectl_explain_failure.engine import explain_failure, normalize_context
 from kubectl_explain_failure.timeline import build_timeline
 
 BASE_DIR = os.path.dirname(__file__)
-FIXTURE_DIR = os.path.join(BASE_DIR, "unschedulable_due_to_pdb")
+FIXTURE_DIR = os.path.join(BASE_DIR, "unschedulable_pdb")
 
 
 def load_json(name: str):

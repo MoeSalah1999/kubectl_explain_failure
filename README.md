@@ -347,7 +347,9 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
   - ConflictingNodeConditions
   - CrashLoopAfterNodeDrain
+  - KubeletRestartLoop
   - NodeDiskPressureThenEviction
+  - NodeNetworkUnavailableCascade
   - NodeNotReadyEvicted
   - NodePressureEvictionCascade
   - PVCBoundNodeDiskPressureMount

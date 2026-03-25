@@ -1,0 +1,112 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "api-serverless-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node1"
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "node": {
+    "metadata": {
+      "name": "node1"
+    },
+    "status": {
+      "conditions": [
+        {
+          "type": "Ready",
+          "status": "False",
+          "reason": "KubeletNotReady",
+          "message": "PLEG is not healthy: pleg was last seen active 3m12s ago; threshold is 3m0s",
+          "lastTransitionTime": "2026-03-25T10:12:50Z"
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "Starting",
+      "message": "Starting kubelet.",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-25T10:04:00Z",
+      "lastTimestamp": "2026-03-25T10:04:00Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "RegisteredNode",
+      "message": "Registered Node node1 in Controller",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-25T10:04:10Z",
+      "lastTimestamp": "2026-03-25T10:04:10Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "NodeReady",
+      "message": "Node node1 status is now: NodeReady",
+      "source": {
+        "component": "node-controller"
+      },
+      "firstTimestamp": "2026-03-25T10:05:00Z",
+      "lastTimestamp": "2026-03-25T10:05:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "NodeNotReady",
+      "message": "Node node1 status is now: NodeNotReady",
+      "source": {
+        "component": "node-controller"
+      },
+      "firstTimestamp": "2026-03-25T10:08:00Z",
+      "lastTimestamp": "2026-03-25T10:08:00Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Starting",
+      "message": "Starting kubelet.",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-25T10:10:30Z",
+      "lastTimestamp": "2026-03-25T10:10:30Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "RegisteredNode",
+      "message": "Registered Node node1 in Controller",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-25T10:10:40Z",
+      "lastTimestamp": "2026-03-25T10:10:40Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "NodeReady",
+      "message": "Node node1 status is now: NodeReady",
+      "source": {
+        "component": "node-controller"
+      },
+      "firstTimestamp": "2026-03-25T10:11:20Z",
+      "lastTimestamp": "2026-03-25T10:11:20Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "NodeNotReady",
+      "message": "Node node1 status is now: NodeNotReady",
+      "source": {
+        "component": "node-controller"
+      },
+      "firstTimestamp": "2026-03-25T10:12:40Z",
+      "lastTimestamp": "2026-03-25T10:12:40Z"
+    }
+  ]
+}

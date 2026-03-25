@@ -1,0 +1,38 @@
+{
+  "root_cause": "Node network unavailable condition cascaded into pod network setup failure",
+  "confidence": 0.93,
+  "blocking": true,
+  "evidence": [
+    "Node condition NetworkUnavailable=True",
+    "Event: FailedCreatePodSandBox",
+    "Node network unavailable signal observed before pod network failure",
+    "Sandbox or CNI event indicates pod network setup failure"
+  ],
+  "causes": [
+    {
+      "code": "NODE_NETWORK_UNAVAILABLE_ACTIVE",
+      "message": "Node reports NetworkUnavailable=True before pod network setup failed",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "NODE_NETWORK_UNAVAILABLE_CASCADE",
+      "message": "Node-level network unavailability cascaded into kubelet sandbox networking failure",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_NETWORK_SETUP_BLOCKED",
+      "message": "Pod sandbox and network attachment could not complete on the affected node",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "NetworkUnavailable=True before pod sandbox/network failure"
+    ],
+    "pod:route-init-pod": [
+      "Pod network setup failed after node network became unavailable",
+      "Failed to create pod sandbox: CNI failed to set up pod network: network plugin is not ready: cni config uninitialized"
+    ]
+  }
+}

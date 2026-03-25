@@ -1,0 +1,43 @@
+{
+  "root_cause": "Kubelet restart loop is causing node readiness flapping",
+  "confidence": 0.93,
+  "blocking": true,
+  "evidence": [
+    "Node Ready condition currently False (reason=KubeletNotReady)",
+    "Kubelet startup or re-registration signals observed 4 times within 15 minutes",
+    "Node readiness sequence flapped as: start -> ready -> notready -> start -> ready -> notready",
+    "Readiness flapping persisted for 8.7 minutes"
+  ],
+  "causes": [
+    {
+      "code": "REPEATED_KUBELET_STARTUP_SIGNALS",
+      "message": "Timeline contains 4 kubelet startup or re-registration signals",
+      "role": "temporal_context"
+    },
+    {
+      "code": "KUBELET_RESTART_LOOP",
+      "message": "Kubelet repeatedly restarted and destabilized node readiness",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "NODE_READY_FLAPPING",
+      "message": "Node alternated between Ready and NotReady as kubelet restarted",
+      "role": "control_loop"
+    },
+    {
+      "code": "WORKLOAD_IMPACTED_BY_NODE_AGENT_INSTABILITY",
+      "message": "Workload is affected because the node agent is repeatedly restarting",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "Ready condition=False reason=KubeletNotReady",
+      "Kubelet startup and node readiness events repeatedly alternated"
+    ],
+    "pod:api-serverless-pod": [
+      "Pod is assigned to a node with repeated kubelet restart signals"
+    ]
+  }
+}

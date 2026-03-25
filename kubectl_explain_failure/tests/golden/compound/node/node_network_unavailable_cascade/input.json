@@ -1,0 +1,57 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "route-init-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node1"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "node": {
+    "metadata": {
+      "name": "node1"
+    },
+    "status": {
+      "conditions": [
+        {
+          "type": "Ready",
+          "status": "True",
+          "lastTransitionTime": "2026-03-25T09:55:00Z"
+        },
+        {
+          "type": "NetworkUnavailable",
+          "status": "True",
+          "reason": "NoRouteCreated",
+          "message": "RouteController failed to create a route to the node",
+          "lastTransitionTime": "2026-03-25T10:00:00Z"
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "NodeNetworkUnavailable",
+      "message": "Node node1 status is now: NodeNetworkUnavailable. RouteController failed to create a route to the node.",
+      "source": {
+        "component": "node-controller"
+      },
+      "firstTimestamp": "2026-03-25T10:00:10Z",
+      "lastTimestamp": "2026-03-25T10:00:10Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedCreatePodSandBox",
+      "message": "Failed to create pod sandbox: CNI failed to set up pod network: network plugin is not ready: cni config uninitialized",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-25T10:02:00Z",
+      "lastTimestamp": "2026-03-25T10:02:00Z"
+    }
+  ]
+}
