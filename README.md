@@ -310,6 +310,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - VolumeDeviceConflict
 - VolumeExpansionFailed
 - VolumeMountPermissionDenied
+- VolumeSnapshotRestoreFailed
 
 ## Compound Rules
 
@@ -377,11 +378,13 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ### Storage
 
+- CSIPluginCrashLoop
 - DynamicProvisioningTimeout
 - PVCBoundThenCrashLoop
 - PVCMountFailure
 - PVCPendingThenCrashLoop
 - PVCPendingTooLong
+- PVCProvisionThenMountFailure
 - PVCRecoveredButAppStillFailing
 - PVCThenCrashLoop
 - PVCThenImagePullFail
