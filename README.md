@@ -295,6 +295,8 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 - AccessModeMismatch
 - ConfigMapNotFound
+- CSIControllerUnavailable
+- CSIDriverNotFound
 - CSIPluginNotRegistered
 - CSIProvisioningFailed
 - FailedMount
@@ -306,6 +308,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - StorageClassProvisionerMissing
 - VolumeAttachFailed
 - VolumeDeviceConflict
+- VolumeExpansionFailed
 - VolumeMountPermissionDenied
 
 ## Compound Rules
