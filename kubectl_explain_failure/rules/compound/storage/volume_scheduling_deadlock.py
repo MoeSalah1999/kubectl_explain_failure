@@ -4,15 +4,40 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class VolumeSchedulingDeadlockRule(FailureRule):
     """
-    Detects Pods stuck in topology-aware volume scheduling where
-    scheduling and volume binding cannot make forward progress together.
+    Detects Pods that are stuck in a circular dependency between
+    topology-aware volume scheduling and WaitForFirstConsumer
+    PVC binding, preventing forward progress.
 
-    Real-world interpretation:
-    - Pod references one or more Pending PVCs
-    - StorageClass uses WaitForFirstConsumer
-    - Scheduler repeatedly reports that volumes cannot be bound for a node
-    - Binding remains stuck long enough to represent a real deadlock, not
-      a transient provisioning delay
+    Signals:
+    - Pod remains in Pending phase
+    - Referenced PVCs are Pending and use a StorageClass with
+    volumeBindingMode set to WaitForFirstConsumer
+    - Repeated FailedScheduling events indicate volumes cannot be
+    bound for candidate nodes
+    - Binding progress signals are observed but do not resolve
+    - Duration of failure exceeds a sustained threshold (~60s)
+
+    Interpretation:
+    The Pod cannot be scheduled because its placement depends
+    on volumes that cannot yet be bound, and those volumes
+    cannot be bound because no node has been selected to
+    consume them. This creates a deadlock between the scheduler
+    and the volume binding subsystem. The repeated FailedScheduling
+    events and stalled PVC binding indicate a deterministic,
+    non-transient condition rather than a temporary delay.
+
+    Scope:
+    - Volume and scheduler layer (PVC binding + Pod placement)
+    - Deterministic (object state + timeline duration)
+    - Captures sustained, compound deadlocks in topology-aware
+    scheduling for WaitForFirstConsumer volumes
+    - Acts as a temporal escalation rule when PVCs block scheduling
+
+    Exclusions:
+    - Excludes volumes that are already bound or attached
+    - Ignores transient provisioning delays
+    - Ignores volume node affinity conflicts or multi-attach
+    errors that are resolved by normal scheduler operations
     """
 
     name = "VolumeSchedulingDeadlock"

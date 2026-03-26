@@ -388,6 +388,8 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - PVCRecoveredButAppStillFailing
 - PVCThenCrashLoop
 - PVCThenImagePullFail
+- SnapshotRestoreThenMountFailure
+- VolumeExpansionThenCrashLoop
 - VolumeSchedulingDeadlock
 
 ## Temporal Rules
