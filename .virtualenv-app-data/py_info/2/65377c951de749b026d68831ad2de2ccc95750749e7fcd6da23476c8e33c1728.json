@@ -1,0 +1,65 @@
+{
+  "content": {
+    "_creators": null,
+    "architecture": 64,
+    "base_exec_prefix": "C:\\Python314",
+    "base_prefix": "C:\\Python314",
+    "distutils_install": {},
+    "exec_prefix": "C:\\Python314",
+    "executable": "C:\\Python314\\python.exe",
+    "file_system_encoding": "utf-8",
+    "free_threaded": false,
+    "has_venv": true,
+    "implementation": "CPython",
+    "max_size": 9223372036854775807,
+    "original_executable": "C:\\Python314\\python.exe",
+    "os": "nt",
+    "path": [
+      "C:\\Users\\salah\\Desktop\\Kubernetes contributions\\kubectl_explain_failure\\venv\\Lib\\site-packages\\virtualenv\\discovery",
+      "C:\\Python314\\python314.zip",
+      "C:\\Python314\\DLLs",
+      "C:\\Python314\\Lib",
+      "C:\\Python314",
+      "C:\\Python314\\Lib\\site-packages"
+    ],
+    "platform": "win32",
+    "prefix": "C:\\Python314",
+    "real_prefix": null,
+    "stdout_encoding": "utf-8",
+    "sysconfig": {
+      "makefile_filename": "C:\\Python314\\Lib\\config\\Makefile"
+    },
+    "sysconfig_paths": {
+      "data": "{base}",
+      "include": "{installed_base}/Include",
+      "platlib": "{base}/Lib/site-packages",
+      "platstdlib": "{base}/Lib",
+      "purelib": "{base}/Lib/site-packages",
+      "scripts": "{base}/Scripts",
+      "stdlib": "{installed_base}/Lib"
+    },
+    "sysconfig_scheme": "venv",
+    "sysconfig_vars": {
+      "PYTHONFRAMEWORK": null,
+      "base": "C:\\Python314",
+      "installed_base": "C:\\Python314"
+    },
+    "system_executable": "C:\\Python314\\python.exe",
+    "system_stdlib": "C:\\Python314\\Lib",
+    "system_stdlib_platform": "C:\\Python314\\Lib",
+    "tcl_lib": null,
+    "tk_lib": null,
+    "version": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]",
+    "version_info": {
+      "major": 3,
+      "micro": 0,
+      "minor": 14,
+      "releaselevel": "final",
+      "serial": 0
+    },
+    "version_nodot": "314"
+  },
+  "hash": "c078e14b7735c240f0e299a1b3084150245ad468869ea0bfc9aaaeea5591e305",
+  "path": "C:\\Python314\\python.exe",
+  "st_mtime": 1759825048.0
+}

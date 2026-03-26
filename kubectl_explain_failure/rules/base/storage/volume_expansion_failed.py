@@ -4,116 +4,118 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class VolumeExpansionFailedRule(FailureRule):
     """
-    Detects PersistentVolumeClaim (PVC) expansion failures where:
+    Detects explicit PVC expansion failures.
 
-    - A resize request has been issued (PVC spec increased)
-    - The CSI driver or controller fails to complete expansion
-    - The system repeatedly retries expansion without success
-
-    Real-world interpretation:
-    This occurs when:
-    - CSI driver does not support expansion
-    - Underlying storage backend rejects resize (quota, limits)
-    - Filesystem resize fails on node
-    - Volume is in-use and cannot be expanded online (driver limitation)
-    - Controller expansion succeeds but node expansion fails
-
-    Signals:
-    - Repeated VolumeResizeFailed / ExternalExpanding / Resizing failures
-    - Sustained retry duration (controller or kubelet loop)
-    - No successful resize completion signal
-
-    Scope:
-    - CSI / storage lifecycle (post-provisioning)
-    - PVC expansion workflow (controller + node phases)
-    - Blocking when Pod depends on expanded capacity
-
-    Exclusions:
-    - Single transient resize failure
-    - PVC provisioning failures (handled by PVC rules)
+    Real-world behavior:
+    - `ExternalExpanding` is a waiting signal, not a failure
+    - `VolumeResizeFailed` and `FileSystemResizeFailed` are the high-signal
+      failure reasons
+    - `FileSystemResizePending` should be handled by the dedicated pending rule,
+      not by this failure rule
     """
 
     name = "VolumeExpansionFailed"
     category = "Storage"
     priority = 75
+    deterministic = True
 
-    phases = ["Pending", "Running", "ContainerCreating"]
+    phases = ["Pending", "Running"]
 
     requires = {
         "context": ["timeline"],
         "objects": ["pvc"],
+        "optional_objects": ["storageclass"],
     }
+
+    FAILURE_REASONS = {
+        "VolumeResizeFailed",
+        "FileSystemResizeFailed",
+    }
+
+    def _occurrences(self, event: dict) -> int:
+        count = event.get("count", 1)
+        try:
+            return max(int(count), 1)
+        except Exception:
+            return 1
+
+    def _referenced_or_all_pvcs(self, pod: dict, context: dict) -> dict[str, dict]:
+        pvc_objects = context.get("objects", {}).get("pvc", {})
+        referenced = {}
+
+        for volume in pod.get("spec", {}).get("volumes", []) or []:
+            claim = volume.get("persistentVolumeClaim") or {}
+            claim_name = claim.get("claimName")
+            if claim_name and claim_name in pvc_objects:
+                referenced[claim_name] = pvc_objects[claim_name]
+
+        return referenced or pvc_objects
+
+    def _has_filesystem_resize_pending(self, pvc: dict) -> bool:
+        conditions = pvc.get("status", {}).get("conditions", []) or []
+        return any(
+            condition.get("type") == "FileSystemResizePending"
+            and condition.get("status") == "True"
+            for condition in conditions
+        )
+
+    def _matching_events(self, timeline) -> list[dict]:
+        return [
+            event
+            for event in timeline.raw_events
+            if event.get("reason") in self.FAILURE_REASONS
+        ]
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
             return False
 
-        pvc_objects = context.get("objects", {}).get("pvc", {})
-        if not pvc_objects:
+        pvcs = self._referenced_or_all_pvcs(pod, context)
+        if not pvcs:
             return False
 
-        # --- 1. Detect expansion-related failure signals ---
-        expansion_failure_reasons = [
-            "VolumeResizeFailed",
-            "ExternalExpanding",
-            "FileSystemResizeFailed",
-        ]
-
-        recent_failures = []
-        for reason in expansion_failure_reasons:
-            recent_failures.extend(timeline.events_within_window(5, reason=reason))
-
-        if len(recent_failures) < 3:
+        if not any(
+            pvc.get("status", {}).get("phase") == "Bound" for pvc in pvcs.values()
+        ):
             return False
 
-        # --- 2. Ensure volume-related failure context exists ---
-        if not timeline.has(kind="Volume", phase="Failure"):
+        if any(self._has_filesystem_resize_pending(pvc) for pvc in pvcs.values()):
             return False
 
-        # --- 3. Sustained retry duration (controller/node loop) ---
+        matched_events = self._matching_events(timeline)
+        if not matched_events:
+            return False
+
+        total_failures = sum(self._occurrences(event) for event in matched_events)
         duration = timeline.duration_between(
-            lambda e: e.get("reason") in expansion_failure_reasons
+            lambda e: e.get("reason") in self.FAILURE_REASONS
         )
 
-        if duration < 90:  # expansion is slower → allow longer threshold
+        if total_failures < 2 and duration < 90:
             return False
 
-        # --- 4. Ensure no successful expansion completion ---
-        success_signals = [
-            "FileSystemResizeSuccessful",
-            "VolumeResizeSuccessful",
-        ]
-
-        for success in success_signals:
-            if timeline.count(reason=success) > 0:
-                return False
+        if timeline.count(reason="FileSystemResizeSuccessful") > 0:
+            return False
+        if timeline.count(reason="VolumeResizeSuccessful") > 0:
+            return False
 
         return True
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
         timeline = context.get("timeline")
+        pvc_names = sorted(self._referenced_or_all_pvcs(pod, context)) or ["<unknown>"]
+        matched_events = self._matching_events(timeline) if timeline else []
 
-        pvc_objects = context.get("objects", {}).get("pvc", {})
-        pvc_name = next(iter(pvc_objects.keys()), "<unknown>")
-
-        # Extract dominant failure message
         dominant_msg = None
-        if timeline:
-            msgs: list[str] = []
-            for r in [
-                "VolumeResizeFailed",
-                "ExternalExpanding",
-                "FileSystemResizeFailed",
-            ]:
-                msgs.extend(
-                    (e.get("message") or "")
-                    for e in timeline.events_within_window(5, reason=r)
-                )
-
-            if msgs:
-                dominant_msg = max(set(msgs), key=msgs.count)
+        if matched_events:
+            messages = [
+                (event.get("message") or "")
+                for event in matched_events
+                for _ in range(self._occurrences(event))
+            ]
+            dominant_msg = max(set(messages), key=messages.count)
 
         chain = CausalChain(
             causes=[
@@ -125,17 +127,17 @@ class VolumeExpansionFailedRule(FailureRule):
                 ),
                 Cause(
                     code="CSI_EXPANSION_RETRY_LOOP",
-                    message="CSI controller or kubelet repeatedly retries volume expansion",
+                    message="CSI resizer or kubelet repeatedly retries volume expansion",
                     role="control_loop",
                 ),
                 Cause(
                     code="PVC_CAPACITY_NOT_UPDATED",
-                    message="Requested storage capacity not applied to volume",
+                    message="Requested storage capacity was not applied to the volume",
                     role="volume_intermediate",
                 ),
                 Cause(
                     code="WORKLOAD_STORAGE_CONSTRAINT",
-                    message="Workload may be constrained by insufficient storage capacity",
+                    message="Workload may be constrained by unexpanded storage capacity",
                     role="workload_symptom",
                 ),
             ]
@@ -143,13 +145,12 @@ class VolumeExpansionFailedRule(FailureRule):
 
         return {
             "root_cause": "PersistentVolumeClaim expansion is failing due to CSI or storage backend limitations",
-            "confidence": 0.9,
+            "confidence": 0.91,
             "causes": chain,
             "evidence": [
-                "Repeated volume expansion failure events within short time window",
-                "Sustained expansion retry duration (>90s)",
-                "Volume-related failure signals detected",
-                "No successful expansion completion observed",
+                "Explicit volume expansion failure events were observed",
+                "Expansion retries persisted over time",
+                "No successful expansion completion was observed",
                 *(
                     ["Dominant expansion error: " + dominant_msg]
                     if dominant_msg
@@ -158,25 +159,25 @@ class VolumeExpansionFailedRule(FailureRule):
             ],
             "likely_causes": [
                 "CSI driver does not support volume expansion",
-                "Storage backend quota or size limits exceeded",
-                "Filesystem resize failure on node",
-                "Volume cannot be expanded while in use (driver limitation)",
-                "Mismatch between requested and supported storage class capabilities",
+                "Storage backend quota or size limits were exceeded",
+                "Filesystem resize failed on the node",
+                "Volume cannot be expanded online for this driver or volume type",
             ],
             "suggested_checks": [
-                f"kubectl describe pvc {pvc_name}",
+                *[f"kubectl describe pvc {pvc_name}" for pvc_name in pvc_names],
                 f"kubectl describe pod {pod_name}",
                 "kubectl get events --sort-by=.lastTimestamp",
                 "kubectl get storageclass -o yaml",
-                "Check CSI driver logs (controller + node)",
-                "Verify allowVolumeExpansion is enabled on StorageClass",
-                "Check underlying storage provider quotas and limits",
+                "Check CSI resizer and node plugin logs",
             ],
             "blocking": True,
             "object_evidence": {
-                f"pvc:{pvc_name}": [
-                    "PVC expansion repeatedly failed and did not complete"
-                ],
+                **{
+                    f"pvc:{pvc_name}": [
+                        "PVC expansion repeatedly failed and did not complete"
+                    ]
+                    for pvc_name in pvc_names
+                },
                 f"pod:{pod_name}": [
                     "Pod may be impacted by insufficient or unexpanded storage"
                 ],

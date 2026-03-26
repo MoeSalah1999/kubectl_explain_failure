@@ -4,104 +4,105 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class CSIControllerUnavailableRule(FailureRule):
     """
-    Detects failures caused by an unavailable or non-functional CSI controller where:
+    Detects CSI control-plane unavailability.
 
-    - CSI controller (external-provisioner / attacher / resizer) is not responding
-    - Volume operations (provision, attach, mount) fail at control-plane level
-    - Errors persist over time (not transient API glitches)
-
-    Real-world interpretation:
-    This occurs when:
-    - CSI controller pods are down or crash-looping
-    - CSI sidecars (provisioner/attacher) are not running
-    - API calls to CSI driver timeout or fail
-    - Control-plane cannot process volume lifecycle operations
-
-    Signals:
-    - Repeated volume-related failures (ProvisioningFailed, FailedAttachVolume, FailedMount)
-    - Error messages indicating RPC failure / timeout / connection issues
-    - Sustained duration (retry loop)
-    - No successful volume lifecycle events
-
-    Scope:
-    - CSI control-plane failure (cluster-level)
-    - Affects multiple volume lifecycle stages
-    - Blocking failure (prevents Pod startup)
-
-    Exclusions:
-    - Single transient volume failure
-    - Node-local mount issues (handled by FailedMount rules)
-    - PVC unbound (handled by PVC rules)
+    Real-world behavior:
+    - controller-side outages show up most clearly in provisioning, attach,
+      snapshot-restore, or expansion controller operations
+    - generic node-local mount failures should not be enough on their own
+    - explicit "driver not found" messages belong to CSIDriverNotFound
     """
 
     name = "CSIControllerUnavailable"
     category = "Storage"
     priority = 90
+    deterministic = True
 
-    phases = ["Pending", "ContainerCreating"]
+    phases = ["Pending", "Running"]
 
     requires = {
         "context": ["timeline"],
+        "optional_objects": ["pvc", "storageclass"],
     }
+
+    blocks = [
+        "CSIProvisioningFailed",
+        "VolumeAttachFailed",
+        "VolumeExpansionFailed",
+        "VolumeSnapshotRestoreFailed",
+    ]
+
+    CONTROLLER_FAILURE_REASONS = {
+        "ProvisioningFailed",
+        "FailedAttachVolume",
+        "VolumeResizeFailed",
+        "FailedCreate",
+    }
+
+    CONTROLLER_ERROR_MARKERS = (
+        "rpc error",
+        "connection refused",
+        "context deadline exceeded",
+        "deadline exceeded",
+        "transport is closing",
+        "timed out waiting for external provisioner",
+        "timed out waiting for external-attacher",
+        "no such host",
+        "i/o timeout",
+        "unavailable",
+    )
+
+    CONTROLLER_OPERATION_MARKERS = (
+        "createvolume",
+        "controllerpublishvolume",
+        "controllerexpandvolume",
+        "csi",
+    )
+
+    EXCLUSION_MARKERS = (
+        "not found in the list of registered csi drivers",
+        "failed to find plugin",
+        "no such driver",
+        "driver not registered",
+    )
+
+    def _occurrences(self, event: dict) -> int:
+        count = event.get("count", 1)
+        try:
+            return max(int(count), 1)
+        except Exception:
+            return 1
+
+    def _matches_event(self, event: dict) -> bool:
+        if event.get("reason") not in self.CONTROLLER_FAILURE_REASONS:
+            return False
+
+        message = str(event.get("message", "")).lower()
+        if any(marker in message for marker in self.EXCLUSION_MARKERS):
+            return False
+
+        has_error = any(marker in message for marker in self.CONTROLLER_ERROR_MARKERS)
+        has_controller_context = any(
+            marker in message for marker in self.CONTROLLER_OPERATION_MARKERS
+        )
+        return has_error and has_controller_context
+
+    def _matching_events(self, timeline) -> list[dict]:
+        return [event for event in timeline.raw_events if self._matches_event(event)]
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
             return False
 
-        # --- 1. Detect repeated volume lifecycle failures (broad CSI signal) ---
-        failure_reasons = [
-            "ProvisioningFailed",
-            "FailedAttachVolume",
-            "FailedMount",
-        ]
-
-        recent_failures = []
-        for r in failure_reasons:
-            recent_failures.extend(timeline.events_within_window(5, reason=r))
-
-        if len(recent_failures) < 4:
+        matched_events = self._matching_events(timeline)
+        if not matched_events:
             return False
 
-        # --- 2. Ensure failures are truly volume-related ---
-        if not timeline.has(kind="Volume", phase="Failure"):
-            return False
+        total_failures = sum(self._occurrences(event) for event in matched_events)
+        duration = timeline.duration_between(lambda e: self._matches_event(e))
 
-        # --- 3. CSI-specific error signatures (high-signal) ---
-        csi_error_hits = 0
-        for e in recent_failures:
-            msg = (e.get("message") or "").lower()
-
-            if any(
-                kw in msg
-                for kw in [
-                    "rpc error",
-                    "deadline exceeded",
-                    "connection refused",
-                    "timed out",
-                    "csi",
-                    "driver not found",
-                    "no such host",
-                ]
-            ):
-                csi_error_hits += 1
-
-        if csi_error_hits < 2:
-            return False
-
-        # --- 4. Sustained retry duration ---
-        duration = timeline.duration_between(
-            lambda e: e.get("reason") in failure_reasons
-        )
-
-        if duration < 60:
-            return False
-
-        # --- 5. No success signals across lifecycle ---
-        if (
-            timeline.count(reason="SuccessfulAttachVolume") > 0
-            or timeline.count(reason="ProvisioningSucceeded") > 0
-        ):
+        if total_failures < 2 and duration < 60:
             return False
 
         return True
@@ -109,19 +110,16 @@ class CSIControllerUnavailableRule(FailureRule):
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
         timeline = context.get("timeline")
+        matched_events = self._matching_events(timeline) if timeline else []
 
         dominant_msg = None
-        if timeline:
-            msgs = []
-            for r in ["ProvisioningFailed", "FailedAttachVolume", "FailedMount"]:
-                msgs.extend(
-                    [
-                        (e.get("message") or "")
-                        for e in timeline.events_within_window(5, reason=r)
-                    ]
-                )
-            if msgs:
-                dominant_msg = max(set(msgs), key=msgs.count)
+        if matched_events:
+            messages = [
+                (event.get("message") or "")
+                for event in matched_events
+                for _ in range(self._occurrences(event))
+            ]
+            dominant_msg = max(set(messages), key=messages.count)
 
         chain = CausalChain(
             causes=[
@@ -133,54 +131,43 @@ class CSIControllerUnavailableRule(FailureRule):
                 ),
                 Cause(
                     code="CSI_CONTROL_PLANE_FAILURE",
-                    message="CSI control-plane cannot process volume lifecycle operations",
+                    message="CSI control-plane cannot process controller-side volume operations",
                     role="control_loop",
                 ),
                 Cause(
-                    code="VOLUME_OPERATION_FAILURE",
-                    message="Volume provisioning/attach/mount operations repeatedly fail",
-                    role="volume_intermediate",
-                ),
-                Cause(
                     code="POD_BLOCKED_ON_STORAGE",
-                    message="Pod cannot start due to failed CSI-managed volume operations",
+                    message="Pod cannot start because CSI-managed storage operations fail",
                     role="workload_symptom",
                 ),
             ]
         )
 
         return {
-            "root_cause": "CSI controller is unavailable, causing volume operations to fail",
+            "root_cause": "CSI controller is unavailable, causing controller-side volume operations to fail",
             "confidence": 0.94,
             "causes": chain,
             "evidence": [
-                "Repeated volume lifecycle failures (provision/attach/mount)",
-                "CSI-related RPC or timeout errors detected",
-                "Sustained retry duration (>60s)",
-                "No successful volume operations observed",
+                "Controller-side volume lifecycle failures repeat over time",
+                "Events show CSI controller RPC, timeout, or connection failures",
                 *(["Dominant CSI error: " + dominant_msg] if dominant_msg else []),
             ],
             "likely_causes": [
                 "CSI controller pods are down or crash-looping",
-                "CSI sidecar containers (provisioner/attacher) not running",
-                "CSI driver not registered or misconfigured",
-                "Network connectivity issues between controller and nodes",
-                "Cloud provider API failures affecting CSI driver",
+                "CSI sidecars such as the provisioner, attacher, or resizer are not healthy",
+                "Network or DNS issues prevent controller-to-driver communication",
+                "Cloud provider API problems are causing CSI controller calls to fail",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
                 "kubectl get events --sort-by=.lastTimestamp",
-                "kubectl get pods -n kube-system | grep csi",
-                "kubectl describe pods -n kube-system <csi-controller-pod>",
+                "kubectl get pods -n kube-system",
                 "kubectl logs -n kube-system <csi-controller-pod>",
-                "kubectl get csidrivers",
                 "kubectl get volumeattachments",
-                "Check cloud provider disk API health",
             ],
             "blocking": True,
             "object_evidence": {
                 f"pod:{pod_name}": [
-                    "Pod blocked due to CSI controller failing volume operations"
+                    "Pod blocked because CSI controller-side operations are unavailable"
                 ]
             },
         }

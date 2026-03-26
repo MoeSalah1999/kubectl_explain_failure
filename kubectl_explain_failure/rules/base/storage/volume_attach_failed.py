@@ -4,74 +4,80 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class VolumeAttachFailedRule(FailureRule):
     """
-    Detects persistent volume attachment failures where:
+    Detects repeated volume attach failures after a Pod has already been
+    scheduled to a node.
 
-    - The attach/detach controller fails to attach a volume to a node
-    - The Pod cannot proceed to mounting
-    - Failures repeat over time (not transient)
-
-    Real-world interpretation:
-    This occurs when:
-    - Cloud provider cannot attach the disk (quota, API failure, zone mismatch)
-    - Volume is already attached to another node (multi-attach conflict)
-    - Node is not ready / unreachable for attachment
-    - AttachDetach controller is retrying without success
-
-    Signals:
-    - Repeated FailedAttachVolume events
-    - Occurring within a time window (not a single transient failure)
-    - Sustained duration (retry loop)
-    - No successful attach signal
-
-    Scope:
-    - Storage / volume lifecycle (attach phase)
-    - Node-level volume availability
-    - Blocking failure (Pod cannot start)
-
-    Exclusions:
-    - Single attach failure (transient)
-    - Mount failures (handled by FailedMount rules)
+    Real-world behavior:
+    - looks specifically for `FailedAttachVolume`
+    - excludes explicit multi-attach / device-conflict wording, which is a
+      more specific root cause handled elsewhere
+    - tolerates Kubernetes event aggregation via `count`
     """
 
     name = "VolumeAttachFailed"
     category = "Storage"
     priority = 80
 
-    phases = ["Pending", "ContainerCreating"]
+    phases = ["Pending"]
 
     requires = {
         "context": ["timeline"],
     }
+
+    CONFLICT_MARKERS = (
+        "multi-attach error",
+        "already attached",
+        "already exclusively attached",
+        "exclusively attached",
+        "device is busy",
+        "device or resource busy",
+        "mount point busy",
+        "volume mode",
+        "raw block",
+        "block device",
+    )
+
+    def _occurrences(self, event: dict) -> int:
+        count = event.get("count", 1)
+        try:
+            return max(int(count), 1)
+        except Exception:
+            return 1
+
+    def _is_generic_attach_failure(self, event: dict) -> bool:
+        if event.get("reason") != "FailedAttachVolume":
+            return False
+
+        message = str(event.get("message", "")).lower()
+        return not any(marker in message for marker in self.CONFLICT_MARKERS)
+
+    def _matching_events(self, timeline) -> list[dict]:
+        return [
+            event
+            for event in timeline.raw_events
+            if self._is_generic_attach_failure(event)
+        ]
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
             return False
 
-        # --- 1. Repeated attach failures in recent window ---
-        recent_failures = timeline.events_within_window(
-            5,
-            reason="FailedAttachVolume",
-        )
-
-        if len(recent_failures) < 3:
+        if not pod.get("spec", {}).get("nodeName") and not any(
+            event.get("reason") == "Scheduled" for event in timeline.raw_events
+        ):
             return False
 
-        # --- 2. Ensure this is a volume-related failure (structured signal) ---
-        if not timeline.has(kind="Volume", phase="Failure"):
+        matched_events = self._matching_events(timeline)
+        if not matched_events:
             return False
 
-        # --- 3. Sustained retry duration (avoid transient attach blips) ---
+        total_failures = sum(self._occurrences(event) for event in matched_events)
         duration = timeline.duration_between(
-            lambda e: e.get("reason") == "FailedAttachVolume"
+            lambda e: self._is_generic_attach_failure(e)
         )
 
-        if duration < 60:  # less than 1 minute → transient
-            return False
-
-        # --- 4. No successful attach signal ---
-        # Kubernetes emits "SuccessfulAttachVolume" on success
-        if timeline.count(reason="SuccessfulAttachVolume") > 0:
+        if total_failures < 2 and duration < 60:
             return False
 
         return True
@@ -79,19 +85,17 @@ class VolumeAttachFailedRule(FailureRule):
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
         timeline = context.get("timeline")
+        matched_events = self._matching_events(timeline) if timeline else []
 
-        # Extract dominant failure message (useful for cloud/provider-specific hints)
         dominant_msg = None
-        if timeline:
-            msgs = [
-                (e.get("message") or "")
-                for e in timeline.events_within_window(
-                    5,
-                    reason="FailedAttachVolume",
-                )
+        if matched_events:
+            messages = [
+                (event.get("message") or "")
+                for event in matched_events
+                for _ in range(self._occurrences(event))
             ]
-            if msgs:
-                dominant_msg = max(set(msgs), key=msgs.count)
+            if messages:
+                dominant_msg = max(set(messages), key=messages.count)
 
         chain = CausalChain(
             causes=[
@@ -124,16 +128,15 @@ class VolumeAttachFailedRule(FailureRule):
             "confidence": 0.92,
             "causes": chain,
             "evidence": [
-                "Repeated FailedAttachVolume events within short time window",
-                "Volume attach failures persisted for >60 seconds",
-                "No successful volume attachment observed",
+                "FailedAttachVolume events persist for the scheduled Pod",
+                "Attach failures are not classified as explicit multi-attach or device conflicts",
                 *(["Dominant attach error: " + dominant_msg] if dominant_msg else []),
             ],
             "likely_causes": [
-                "Volume already attached to another node (multi-attach conflict)",
                 "Cloud provider failed to attach disk (quota, API error, or timeout)",
                 "Node is not reachable or not ready for volume attachment",
                 "Zone or topology mismatch between node and volume",
+                "CSI attacher or backend keeps timing out",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
@@ -141,8 +144,6 @@ class VolumeAttachFailedRule(FailureRule):
                 "kubectl describe node <node-name>",
                 "kubectl describe pvc",
                 "kubectl get volumeattachments",
-                "Check cloud provider disk attachment status",
-                "Verify volume is not attached to another node",
             ],
             "blocking": True,
             "object_evidence": {

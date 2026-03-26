@@ -4,13 +4,13 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class CSIPluginCrashLoopRule(FailureRule):
     """
-    Detects Pods stuck in a CSI driver CrashLoopBackOff.
+    Detects explicit CSI controller/node plugin CrashLoopBackOff conditions.
 
-    Real-world interpretation:
-    - CSI driver sidecar or plugin container repeatedly crashes
-    - Persistent volumes managed by CSI remain unavailable
-    - Pod operations depending on storage fail
-    - Often caused by misconfigured drivers, incompatible Kubernetes versions, or storage endpoint issues
+    Real-world behavior:
+    - the most reliable signal is when the target pod itself looks like a CSI
+      component and is in CrashLoopBackOff
+    - for non-CSI workloads, this rule only triggers when crash evidence is
+      explicitly CSI-related; generic application crash loops are excluded
     """
 
     name = "CSIPluginCrashLoop"
@@ -20,38 +20,87 @@ class CSIPluginCrashLoopRule(FailureRule):
     blocks = [
         "CrashLoopBackOff",
         "RepeatedCrashLoop",
-        "VolumeAttachError",
-        "PVCNotBound",
-        "FailedScheduling",
+        "CSIControllerUnavailable",
+        "CSIProvisioningFailed",
     ]
     phases = ["Pending", "Running"]
     requires = {
         "pod": True,
         "context": ["timeline"],
-        "objects": ["pvc", "storageclass"],
+        "optional_objects": ["pvc", "storageclass"],
     }
 
-    CRASH_MARKERS = (
-        "csi plugin crashloop",
-        "container failed",
-        "back-off restarting",
-        "terminated with exit code",
-        "oomkilled",
+    CSI_COMPONENT_MARKERS = (
+        "csi",
+        "external-provisioner",
+        "external-attacher",
+        "node-driver-registrar",
+        "liveness-probe",
+        "csi-node",
+        "csi-controller",
     )
 
-    def _occurrences(self, event) -> int:
-        count = event.get("count", 1)
-        try:
-            return max(int(count), 1)
-        except Exception:
-            return 1
+    STORAGE_FAILURE_REASONS = {
+        "ProvisioningFailed",
+        "FailedAttachVolume",
+        "FailedMount",
+    }
 
-    def _has_csi_crash_events(self, timeline) -> bool:
-        recent_failures = timeline.events_within_window(15)
-        for e in recent_failures:
-            message = str(e.get("message", "")).lower()
-            if any(marker in message for marker in self.CRASH_MARKERS):
+    def _pod_text(self, pod: dict) -> str:
+        metadata = pod.get("metadata", {})
+        labels = metadata.get("labels", {}) or {}
+        spec_containers = pod.get("spec", {}).get("containers", []) or []
+        statuses = pod.get("status", {}).get("containerStatuses", []) or []
+
+        values = [
+            metadata.get("name", ""),
+            metadata.get("namespace", ""),
+            *labels.keys(),
+            *labels.values(),
+            *[container.get("name", "") for container in spec_containers],
+            *[status.get("name", "") for status in statuses],
+        ]
+
+        return " ".join(str(value).lower() for value in values if value)
+
+    def _pod_looks_like_csi_component(self, pod: dict) -> bool:
+        text = self._pod_text(pod)
+        return any(marker in text for marker in self.CSI_COMPONENT_MARKERS)
+
+    def _pod_is_crashlooping(self, pod: dict, timeline) -> bool:
+        for status in pod.get("status", {}).get("containerStatuses", []) or []:
+            waiting = status.get("state", {}).get("waiting", {}) or {}
+            if waiting.get("reason") == "CrashLoopBackOff":
                 return True
+
+        for event in timeline.raw_events:
+            reason = str(event.get("reason", "")).lower()
+            message = str(event.get("message", "")).lower()
+            if (
+                reason == "backoff"
+                and "back-off restarting failed container" in message
+            ):
+                return True
+
+        return False
+
+    def _storage_failures_point_to_csi(self, timeline) -> bool:
+        for event in timeline.raw_events:
+            if event.get("reason") not in self.STORAGE_FAILURE_REASONS:
+                continue
+
+            message = str(event.get("message", "")).lower()
+            if any(
+                marker in message
+                for marker in (
+                    "csi",
+                    "rpc error",
+                    "driver not found",
+                    "connection refused",
+                )
+            ):
+                return True
+
         return False
 
     def matches(self, pod, events, context) -> bool:
@@ -59,36 +108,17 @@ class CSIPluginCrashLoopRule(FailureRule):
         if not timeline:
             return False
 
-        if not self._has_csi_crash_events(timeline):
+        if not self._pod_is_crashlooping(pod, timeline):
             return False
 
-        crash_count = sum(
-            self._occurrences(e)
-            for e in timeline.events_within_window(15)
-            if any(
-                marker in str(e.get("message", "")).lower()
-                for marker in self.CRASH_MARKERS
-            )
-        )
+        if self._pod_looks_like_csi_component(pod):
+            return True
 
-        # Realistic threshold: multiple crashes in short window
-        if crash_count < 2:
-            return False
-
-        # Ensure at least 60s of sustained crash events
-        duration = timeline.duration_between(
-            lambda event: any(
-                marker in str(event.get("message", "")).lower()
-                for marker in self.CRASH_MARKERS
-            )
-        )
-        if duration < 60:
-            return False
-
-        return True
+        return self._storage_failures_point_to_csi(timeline)
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
+        is_csi_component = self._pod_looks_like_csi_component(pod)
 
         chain = CausalChain(
             causes=[
@@ -116,33 +146,44 @@ class CSIPluginCrashLoopRule(FailureRule):
             ]
         )
 
+        root_cause = (
+            "CSI plugin pod is crash-looping"
+            if is_csi_component
+            else "CSI plugin crash-loop is preventing storage operations"
+        )
+
         object_evidence = {
             f"pod:{pod_name}": [
-                "Pod operations impacted by CSI plugin crash",
-                "Container logs indicate repeated CSI plugin crashes",
+                (
+                    "Target pod appears to be a CSI component in CrashLoopBackOff"
+                    if is_csi_component
+                    else "Pod is affected by CSI-related storage failures while CSI components are crash-looping"
+                )
             ]
         }
 
         return {
-            "root_cause": "Pod affected by CSI driver/plugin CrashLoopBackOff",
+            "root_cause": root_cause,
             "confidence": 0.92,
             "causes": chain,
             "evidence": [
-                "CSI plugin container shows repeated crash events",
-                "Sustained back-off restarts (>60s)",
-                "Dependent PVCs remain Pending or fail to attach",
+                (
+                    "Pod identity or labels indicate a CSI controller or node plugin"
+                    if is_csi_component
+                    else "CrashLoopBackOff is only reported when crash evidence is explicitly CSI-related"
+                ),
+                "Back-off restarts are present for the crashing component",
             ],
             "likely_causes": [
                 "CSI driver misconfiguration or version mismatch",
-                "Storage endpoint or network issues affecting plugin",
-                "Resource starvation causing container OOM or termination",
+                "Storage endpoint or network issues affecting the CSI plugin",
+                "Resource starvation causing the CSI component to restart",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
                 "kubectl logs <csi-plugin-pod> -c <csi-container>",
-                "kubectl get pvc -o wide",
-                "kubectl describe pvc",
-                "Inspect CSI driver Deployment or DaemonSet logs",
+                "kubectl get pods -n kube-system",
+                "Inspect CSI driver Deployment or DaemonSet events",
             ],
             "blocking": True,
             "object_evidence": object_evidence,

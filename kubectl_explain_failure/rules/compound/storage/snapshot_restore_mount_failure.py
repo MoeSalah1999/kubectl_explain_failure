@@ -4,13 +4,8 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class SnapshotRestoreThenMountFailureRule(FailureRule):
     """
-    Detects Pods failing because a PVC restore from a VolumeSnapshot
-    succeeded but subsequent volume mount failed.
-
-    Real-world interpretation:
-    - PVC is created from a VolumeSnapshot
-    - Snapshot restore succeeds but Pod cannot mount the volume
-    - This represents a CSI driver/volume-level failure
+    Detects a PVC restored from a VolumeSnapshot that bound successfully and
+    later failed during attach or mount.
     """
 
     name = "SnapshotRestoreThenMountFailure"
@@ -18,143 +13,153 @@ class SnapshotRestoreThenMountFailureRule(FailureRule):
     priority = 91
     deterministic = True
     blocks = [
-        "PodMountFailure",
-        "VolumeMountFailed",
-        "PVCNotBound",
         "FailedMount",
+        "PVCMountFailed",
+        "VolumeAttachFailed",
     ]
-    phases = ["Pending", "ContainerCreating"]
+    phases = ["Pending"]
     requires = {
         "pod": True,
         "context": ["timeline"],
-        "objects": ["pvc", "volumesnapshot", "pod"],
+        "objects": ["pvc"],
+        "optional_objects": ["volumesnapshot", "pv"],
     }
 
-    RESTORE_MARKERS = (
-        "successfully restored snapshot",
-        "restore completed",
+    GENERIC_MOUNT_FAILURE_MARKERS = (
+        "failed to mount volume",
+        "mountvolume.setup failed",
+        "mountvolume.setupat failed",
+        "unable to attach or mount volumes",
+        "failed to attach volume",
+        "attachvolume.attach failed",
     )
 
-    MOUNT_FAILURE_MARKERS = (
-        "failed to mount volume",
-        "mountVolume.SetUp failed",
-        "unable to attach or mount volumes",
+    SPECIFIC_EXCLUSION_MARKERS = (
+        "permission denied",
+        "multi-attach",
+        "already attached",
+        "already exclusively attached",
+        "device is busy",
+        "device or resource busy",
+        "volume mode",
+        "raw block",
+        "block device",
+        "node affinity conflict",
+        "volume node affinity conflict",
     )
+
+    def _is_snapshot_backed_pvc(self, pvc: dict) -> bool:
+        for key in ("dataSource", "dataSourceRef"):
+            source = pvc.get("spec", {}).get(key) or {}
+            if source.get("kind") == "VolumeSnapshot":
+                return True
+        return False
+
+    def _referenced_snapshot_pvcs(self, pod: dict, context: dict) -> dict[str, dict]:
+        pvc_objects = context.get("objects", {}).get("pvc", {})
+        referenced = {}
+
+        for volume in pod.get("spec", {}).get("volumes", []) or []:
+            claim = volume.get("persistentVolumeClaim") or {}
+            claim_name = claim.get("claimName")
+            pvc = pvc_objects.get(claim_name)
+            if claim_name and pvc and self._is_snapshot_backed_pvc(pvc):
+                referenced[claim_name] = pvc
+
+        return referenced
+
+    def _generic_mount_failures(self, timeline) -> list[dict]:
+        failures = []
+
+        for event in timeline.raw_events:
+            if event.get("reason") not in {"FailedMount", "FailedAttachVolume"}:
+                continue
+
+            message = str(event.get("message", "")).lower()
+            if any(marker in message for marker in self.SPECIFIC_EXCLUSION_MARKERS):
+                continue
+            if any(marker in message for marker in self.GENERIC_MOUNT_FAILURE_MARKERS):
+                failures.append(event)
+
+        return failures
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
             return False
 
-        # Check if PVC references a VolumeSnapshot
-        pvc_objects = context.get("objects", {}).get("pvc", {})
-        snapshot_restored = False
-        for pvc in pvc_objects.values():
-            annotations = pvc.get("metadata", {}).get("annotations", {})
-            if annotations.get("volume.kubernetes.io/selected-node") or annotations.get(
-                "pv.kubernetes.io/bind-completed"
-            ):
-                snapshot_restored = True
-
-        if not snapshot_restored:
+        snapshot_pvcs = self._referenced_snapshot_pvcs(pod, context)
+        if not snapshot_pvcs:
             return False
 
-        # Check timeline for mount failure signals after restore
-        mount_failures = [
-            e
-            for e in timeline.raw_events
-            if any(
-                marker in str(e.get("message", "")).lower()
-                for marker in self.MOUNT_FAILURE_MARKERS
-            )
-        ]
-
-        if not mount_failures:
+        if any(
+            pvc.get("status", {}).get("phase") != "Bound"
+            for pvc in snapshot_pvcs.values()
+        ):
             return False
 
-        # Require at least one restore event followed by mount failure
-        restore_events = [
-            e
-            for e in timeline.raw_events
-            if any(
-                marker in str(e.get("message", "")).lower()
-                for marker in self.RESTORE_MARKERS
-            )
-        ]
-
-        if not restore_events:
+        if not pod.get("spec", {}).get("nodeName") and not any(
+            event.get("reason") == "Scheduled" for event in timeline.raw_events
+        ):
             return False
 
-        # Ensure the restore precedes the mount failure
-        restore_time = min(
-            context["timeline"]._reference_time() for e in restore_events  # fallback
-        )
-        failure_time = max(
-            context["timeline"]._reference_time() for e in mount_failures
-        )
-
-        if failure_time <= restore_time:
-            return False
-
-        return True
+        return bool(self._generic_mount_failures(timeline))
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
+        pvc_names = sorted(self._referenced_snapshot_pvcs(pod, context))
+
         chain = CausalChain(
             causes=[
                 Cause(
                     code="SNAPSHOT_RESTORE_SUCCESS",
-                    message="PVC was restored from VolumeSnapshot successfully",
+                    message="PVC was restored successfully from a VolumeSnapshot",
                     role="volume_context",
                 ),
                 Cause(
                     code="VOLUME_MOUNT_FAILURE",
-                    message="Pod failed to mount the restored volume",
+                    message="Pod failed to attach or mount the restored volume",
                     role="volume_root",
                     blocking=True,
                 ),
                 Cause(
-                    code="CSI_DRIVER_FAILURE",
-                    message="CSI driver or node-level issue prevents volume attachment/mount",
-                    role="infrastructure_root",
-                ),
-                Cause(
                     code="POD_PENDING",
-                    message="Pod remains Pending because volume cannot be mounted",
+                    message="Pod remains Pending because the restored volume cannot be used",
                     role="workload_symptom",
                 ),
             ]
         )
 
         object_evidence = {
-            f"pod:{pod_name}": ["Pod cannot start because restored volume cannot mount"]
+            f"pod:{pod_name}": [
+                "Pod cannot start because a snapshot-restored volume cannot be mounted"
+            ]
         }
-        for pvc_name, _pvc in context.get("objects", {}).get("pvc", {}).items():
+        for pvc_name in pvc_names:
             object_evidence[f"pvc:{pvc_name}"] = [
-                "PVC restored from snapshot but volume mount failed"
+                "PVC restored from snapshot but later attach or mount failed"
             ]
 
         return {
-            "root_cause": "Pod cannot start because restored volume cannot be mounted",
-            "confidence": 0.92,
+            "root_cause": "Pod cannot start because a snapshot-restored volume cannot be mounted",
+            "confidence": 0.93,
             "causes": chain,
             "evidence": [
-                "PVC restored from VolumeSnapshot successfully",
-                "Pod container cannot mount the volume",
-                "CSI driver logs indicate volume attach/mount failure",
+                "Referenced PVC is bound and sourced from a VolumeSnapshot",
+                "Pod later reports attach or mount failures for that restored volume",
+                "Specific mount causes like permission-denied or multi-attach are excluded",
             ],
             "likely_causes": [
-                "CSI driver bug or crash",
-                "Node does not have access to restored volume",
-                "Volume topology or permissions prevent mount",
+                "Node-specific storage access problem after restore completed",
+                "CSI attacher or kubelet cannot finish the post-restore mount sequence",
+                "Restored volume exists but is not becoming usable on the target node",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
                 "kubectl get pvc -o wide",
                 "kubectl describe pvc",
                 "kubectl get volumesnapshot -o yaml",
-                "Check CSI driver logs on the node",
-                "Inspect PV and node access permissions",
+                "Check CSI node and controller logs",
             ],
             "blocking": True,
             "object_evidence": object_evidence,

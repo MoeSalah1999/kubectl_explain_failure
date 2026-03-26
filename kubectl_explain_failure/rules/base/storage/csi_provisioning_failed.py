@@ -4,24 +4,14 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class CSIProvisioningFailedRule(FailureRule):
     """
-    Detects failures in dynamic volume provisioning via CSI drivers.
+    Detects dynamic provisioning failures for CSI-backed PVCs.
 
-    Real-world scenarios:
-    - StorageClass misconfiguration (invalid parameters)
-    - CSI driver unavailable or crashing
-    - Backend storage system rejecting volume creation
-    - Quota / capacity exhaustion in storage backend
-    - Authentication / permission failures in CSI provisioner
-
-    Signals:
-    - ProvisioningFailed / ExternalProvisioning events on PVC
-    - Repeated provisioning attempts without success
-    - CSI-related error messages (CreateVolume, rpc error, etc.)
-    - PVC remains in Pending phase
-
-    Scope:
-    - PersistentVolumeClaim provisioning lifecycle
-    - Deterministic when explicit provisioning failures are observed
+    Real-world behavior:
+    - `ExternalProvisioning` is informational and means Kubernetes is still
+      waiting for an external provisioner.
+    - `ProvisioningFailed` is the actual failure signal.
+    - CSI-specific context comes from either the StorageClass provisioner or
+      CreateVolume / gRPC style error text.
     """
 
     name = "CSIProvisioningFailed"
@@ -30,8 +20,8 @@ class CSIProvisioningFailedRule(FailureRule):
     deterministic = True
 
     blocks = [
-        "PVCUnbound",
-        "VolumeProvisioningDelayed",
+        "PVCNotBound",
+        "DynamicProvisioningTimeout",
     ]
 
     phases = ["Pending"]
@@ -39,102 +29,117 @@ class CSIProvisioningFailedRule(FailureRule):
     requires = {
         "context": ["timeline"],
         "objects": ["pvc"],
+        "optional_objects": ["storageclass"],
     }
+
+    def _occurrences(self, event: dict) -> int:
+        count = event.get("count", 1)
+        try:
+            return max(int(count), 1)
+        except Exception:
+            return 1
+
+    def _referenced_or_all_pvcs(self, pod: dict, context: dict) -> dict[str, dict]:
+        pvc_objects = context.get("objects", {}).get("pvc", {})
+        referenced = {}
+
+        for volume in pod.get("spec", {}).get("volumes", []) or []:
+            claim = volume.get("persistentVolumeClaim") or {}
+            claim_name = claim.get("claimName")
+            if claim_name and claim_name in pvc_objects:
+                referenced[claim_name] = pvc_objects[claim_name]
+
+        return referenced or pvc_objects
+
+    def _pending_pvcs(self, pod: dict, context: dict) -> dict[str, dict]:
+        return {
+            name: pvc
+            for name, pvc in self._referenced_or_all_pvcs(pod, context).items()
+            if pvc.get("status", {}).get("phase") != "Bound"
+        }
+
+    def _is_csi_storageclass(self, provisioner: str | None) -> bool:
+        if provisioner is None:
+            return False
+        return "csi" in provisioner.lower()
+
+    def _matching_failure_events(self, timeline) -> list[dict]:
+        return [
+            event
+            for event in timeline.raw_events
+            if event.get("reason") == "ProvisioningFailed"
+        ]
+
+    def _has_csi_context(
+        self,
+        pod: dict,
+        context: dict,
+        failure_events: list[dict],
+    ) -> bool:
+        storageclasses = context.get("objects", {}).get("storageclass", {})
+
+        for pvc in self._pending_pvcs(pod, context).values():
+            sc_name = pvc.get("spec", {}).get("storageClassName")
+            if not sc_name:
+                continue
+
+            storageclass = storageclasses.get(sc_name, {})
+            if self._is_csi_storageclass(storageclass.get("provisioner")):
+                return True
+
+        for event in failure_events:
+            message = str(event.get("message", "")).lower()
+            if any(
+                marker in message for marker in ("createvolume", "rpc error", "csi")
+            ):
+                return True
+
+        return False
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
             return False
 
-        pvc_objects = context.get("objects", {}).get("pvc", {})
-        if not pvc_objects:
+        pending_pvcs = self._pending_pvcs(pod, context)
+        if not pending_pvcs:
             return False
 
-        # --- 1. PVC must still be unbound ---
-        unbound = False
-        for pvc in pvc_objects.values():
-            status = pvc.get("status")
-            phase = None
-
-            if isinstance(status, dict):
-                phase = status.get("phase")
-            elif isinstance(status, str):
-                phase = status
-
-            if phase != "Bound":
-                unbound = True
-                break
-
-        if not unbound:
+        failure_events = self._matching_failure_events(timeline)
+        if not failure_events:
             return False
 
-        # --- 2. Recent provisioning failure signals ---
-        recent_failures = timeline.events_within_window(
-            10, reason="ProvisioningFailed"
-        ) + timeline.events_within_window(10, reason="ExternalProvisioning")
-
-        if len(recent_failures) < 2:
-            return False
-
-        # --- 3. Detect CSI-specific failure semantics ---
-        failure_signals = 0
-
-        for e in recent_failures:
-            msg = (e.get("message") or "").lower()
-
-            if (
-                "failed to provision volume" in msg
-                or "createvolume" in msg
-                or "rpc error" in msg
-                or "timed out waiting for external provisioner" in msg
-                or "no matches for kind" in msg
-                or "storageclass" in msg
-                or "not found" in msg
-                or "permission denied" in msg
-                or "quota" in msg
-                or "exceeded" in msg
-            ):
-                failure_signals += 1
-
-        if failure_signals < 2:
-            return False
-
-        # --- 4. Ensure no successful provisioning occurred ---
         if timeline.count(reason="ProvisioningSucceeded") > 0:
             return False
 
-        # --- 5. Ensure it's not just slow provisioning ---
+        if not self._has_csi_context(pod, context, failure_events):
+            return False
+
+        total_failures = sum(self._occurrences(event) for event in failure_events)
         duration = timeline.duration_between(
-            lambda e: e.get("reason") in ("ProvisioningFailed", "ExternalProvisioning")
+            lambda e: e.get("reason") in {"ProvisioningFailed", "ExternalProvisioning"}
         )
 
-        if duration < 30:  # avoid transient retries
+        if total_failures < 2 and duration < 60:
             return False
 
         return True
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
-
-        pvc_objects = context.get("objects", {}).get("pvc", {})
-        pvc_name = "<unknown>"
-
-        if pvc_objects:
-            pvc_obj = next(iter(pvc_objects.values()))
-            pvc_name = pvc_obj.get("metadata", {}).get("name", "<unknown>")
-
         timeline = context.get("timeline")
+        pvc_names = sorted(self._pending_pvcs(pod, context)) or ["<unknown>"]
 
-        # Extract dominant provisioning error
         dominant_msg = None
         if timeline:
-            msgs = [
-                (e.get("message") or "")
-                for e in timeline.events_within_window(10)
-                if e.get("reason") in ("ProvisioningFailed", "ExternalProvisioning")
+            messages = [
+                (event.get("message") or "")
+                for event in timeline.raw_events
+                if event.get("reason") == "ProvisioningFailed"
+                for _ in range(self._occurrences(event))
             ]
-            if msgs:
-                dominant_msg = max(set(msgs), key=msgs.count)
+            if messages:
+                dominant_msg = max(set(messages), key=messages.count)
 
         chain = CausalChain(
             causes=[
@@ -162,10 +167,9 @@ class CSIProvisioningFailedRule(FailureRule):
             "confidence": 0.96,
             "causes": chain,
             "evidence": [
-                "Repeated ProvisioningFailed or ExternalProvisioning events",
-                "CSI provisioning error messages detected",
-                "PVC remains in Pending (unbound) state",
-                "Provisioning retries sustained over time (>30s)",
+                "PVC remains Pending while ProvisioningFailed events continue",
+                "Provisioning failures align with CSI provisioner or CreateVolume behavior",
+                "ExternalProvisioning alone is not treated as a failure signal",
                 *(
                     ["Dominant provisioning error: " + dominant_msg]
                     if dominant_msg
@@ -180,20 +184,21 @@ class CSIProvisioningFailedRule(FailureRule):
                 "Permission or authentication failure in CSI provisioner",
             ],
             "suggested_checks": [
-                f"kubectl describe pvc {pvc_name}",
+                *[f"kubectl describe pvc {pvc_name}" for pvc_name in pvc_names],
                 f"kubectl describe pod {pod_name}",
                 "kubectl get storageclass",
                 "kubectl get events --sort-by=.lastTimestamp",
-                "Check CSI controller pods (kubectl get pods -n kube-system)",
-                "Inspect CSI driver logs",
-                "Verify StorageClass parameters",
-                "Check backend storage system health and quotas",
+                "kubectl get pods -n kube-system",
+                "Inspect CSI provisioner logs",
             ],
             "blocking": True,
             "object_evidence": {
-                f"pvc:{pvc_name}": [
-                    "PVC stuck in Pending due to repeated provisioning failures"
-                ],
+                **{
+                    f"pvc:{pvc_name}": [
+                        "PVC remains Pending while CSI provisioning fails"
+                    ]
+                    for pvc_name in pvc_names
+                },
                 f"pod:{pod_name}": [
                     "Pod blocked waiting for dynamically provisioned volume"
                 ],

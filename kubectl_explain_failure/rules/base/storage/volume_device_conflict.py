@@ -4,28 +4,9 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class VolumeDeviceConflictRule(FailureRule):
     """
-    Detects volume device conflicts where a Pod cannot attach or mount
-    a volume due to conflicting usage or incompatible device semantics.
-
-    Real-world scenarios:
-    - Volume already attached to another node (multi-attach violation)
-    - Same volume used as both Block and Filesystem across Pods
-    - Device path conflicts on node (e.g. /dev/xvdX already in use)
-    - CSI driver rejects conflicting attachment mode
-
-    Signals:
-    - FailedAttachVolume or FailedMount events
-    - Error messages indicating:
-        - "already attached"
-        - "multi-attach error"
-        - "device is busy"
-        - "volume mode conflict"
-        - "block device vs filesystem mismatch"
-    - Repeated failures within short window
-
-    Scope:
-    - Storage layer (volume attach/mount lifecycle)
-    - Deterministic when conflict signals are explicit
+    Detects explicit volume device conflicts where Kubernetes or the CSI driver
+    reports that the volume cannot be attached or mounted because it is already
+    in use or its device semantics do not match.
     """
 
     name = "VolumeDeviceConflict"
@@ -34,76 +15,76 @@ class VolumeDeviceConflictRule(FailureRule):
     deterministic = True
 
     blocks = [
-        "VolumeMountFailure",
-        "VolumeAttachTimeout",
+        "VolumeAttachFailed",
+        "FailedMount",
+        "PVCMountFailed",
+        "RepeatedMountRetry",
     ]
 
-    phases = ["Pending", "ContainerCreating"]
+    phases = ["Pending"]
 
     requires = {
         "context": ["timeline"],
-        "objects": ["pvc"],  # ensures volume-backed workload context
+        "objects": ["pvc"],
     }
+
+    CONFLICT_MARKERS = (
+        "multi-attach error",
+        "already attached",
+        "already exclusively attached",
+        "exclusively attached",
+        "is already in use",
+        "device is busy",
+        "device or resource busy",
+        "mount point busy",
+        "target is busy",
+        "volume mode",
+        "raw block",
+        "block device",
+        "filesystem mode",
+    )
+
+    def _occurrences(self, event: dict) -> int:
+        count = event.get("count", 1)
+        try:
+            return max(int(count), 1)
+        except Exception:
+            return 1
+
+    def _matching_events(self, timeline) -> list[dict]:
+        matches = []
+
+        for event in timeline.raw_events:
+            if event.get("reason") not in {"FailedAttachVolume", "FailedMount"}:
+                continue
+
+            message = str(event.get("message", "")).lower()
+            if any(marker in message for marker in self.CONFLICT_MARKERS):
+                matches.append(event)
+
+        return matches
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
             return False
 
-        # --- 1. Look for relevant volume failure events ---
-        recent_attach = timeline.events_within_window(5, reason="FailedAttachVolume")
-        recent_mount = timeline.events_within_window(5, reason="FailedMount")
-
-        failures = recent_attach + recent_mount
-
-        if len(failures) < 2:
-            return False  # avoid transient noise
-
-        # --- 2. Detect conflict semantics in messages ---
-        conflict_signals = 0
-
-        for e in failures:
-            msg = (e.get("message") or "").lower()
-
-            if (
-                "already attached" in msg
-                or "multi-attach" in msg
-                or "is already in use" in msg
-                or "device is busy" in msg
-                or "volume mode" in msg
-                or "block device" in msg
-                or "filesystem mode" in msg
-                or "incompatible" in msg
-            ):
-                conflict_signals += 1
-
-        if conflict_signals < 2:
-            return False
-
-        # --- 3. Ensure it's not progressing ---
-        if timeline.count(reason="SuccessfulAttachVolume") > 0:
-            return False
-
-        if timeline.count(reason="Mounted") > 0:
-            return False
-
-        return True
+        return bool(self._matching_events(timeline))
 
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
-
         timeline = context.get("timeline")
+        matched_events = self._matching_events(timeline) if timeline else []
 
-        # Extract dominant error message
         dominant_msg = None
-        if timeline:
-            msgs = [
-                (e.get("message") or "")
-                for e in timeline.events_within_window(5)
-                if e.get("reason") in ("FailedAttachVolume", "FailedMount")
+        if matched_events:
+            messages = [
+                (event.get("message") or "")
+                for event in matched_events
+                for _ in range(self._occurrences(event))
             ]
-            if msgs:
-                dominant_msg = max(set(msgs), key=msgs.count)
+            if messages:
+                dominant_msg = max(set(messages), key=messages.count)
 
         chain = CausalChain(
             causes=[
@@ -131,9 +112,8 @@ class VolumeDeviceConflictRule(FailureRule):
             "confidence": 0.97,
             "causes": chain,
             "evidence": [
-                "Repeated FailedAttachVolume or FailedMount events",
-                "Conflict-related error messages detected (multi-attach, device busy, or mode mismatch)",
-                "No successful attach or mount observed",
+                "FailedAttachVolume or FailedMount event contains explicit conflict semantics",
+                "Conflict points to multi-attach, busy-device, or volumeMode mismatch behavior",
                 *(["Dominant error message: " + dominant_msg] if dominant_msg else []),
             ],
             "likely_causes": [
@@ -147,15 +127,14 @@ class VolumeDeviceConflictRule(FailureRule):
                 "kubectl get events --sort-by=.lastTimestamp",
                 "kubectl describe pvc",
                 "kubectl describe pv",
-                "Check VolumeAttachment objects (kubectl get volumeattachments)",
+                "kubectl get volumeattachments",
                 "Verify volumeMode consistency across Pods and PVCs",
                 "Inspect CSI driver logs for attachment errors",
-                "Ensure volume is not mounted on another node",
             ],
             "blocking": True,
             "object_evidence": {
                 f"pod:{pod_name}": [
-                    "Pod blocked due to volume device conflict during attach/mount"
+                    "Pod blocked due to volume device conflict during attach or mount"
                 ]
             },
         }

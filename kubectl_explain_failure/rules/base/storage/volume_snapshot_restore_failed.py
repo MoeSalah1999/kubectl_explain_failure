@@ -4,84 +4,111 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class VolumeSnapshotRestoreFailedRule(FailureRule):
     """
-    Detects failures when restoring a volume from a VolumeSnapshot via CSI.
+    Detects failures while provisioning a PVC from a VolumeSnapshot.
 
-    Real-world interpretation:
-    This occurs when:
-    - CSI driver fails to create a volume from snapshot
-    - Snapshot is missing, corrupted, or incompatible
-    - StorageClass / parameters mismatch
-    - Underlying cloud provider restore API fails
-    - VolumeSnapshotContent is not ready or invalid
-
-    Signals:
-    - Repeated ProvisioningFailed or FailedCreate events
-    - Messages referencing snapshot restore
-    - Occurring within a short time window (retry loop)
-    - Sustained duration (not transient)
-    - No successful provisioning event
-
-    Scope:
-    - CSI snapshot restore lifecycle (PVC provisioning from snapshot)
-    - Storage control plane (external-provisioner)
-
-    Exclusions:
-    - Standard PVC provisioning failures (non-snapshot)
-    - Volume mount / attach failures (handled elsewhere)
+    Real-world behavior:
+    - this should only apply to PVCs whose dataSource/dataSourceRef points to a
+      VolumeSnapshot
+    - generic provisioning failures without snapshot context should not match
     """
 
     name = "VolumeSnapshotRestoreFailed"
     category = "Storage"
     priority = 82
+    deterministic = True
 
     phases = ["Pending"]
 
     requires = {
         "context": ["timeline"],
+        "objects": ["pvc"],
+        "optional_objects": ["volumesnapshot"],
     }
+
+    SNAPSHOT_MARKERS = (
+        "snapshot",
+        "restore",
+        "volumesnapshot",
+        "from snapshot",
+        "snapshotcontent",
+    )
+
+    def _occurrences(self, event: dict) -> int:
+        count = event.get("count", 1)
+        try:
+            return max(int(count), 1)
+        except Exception:
+            return 1
+
+    def _is_snapshot_backed_pvc(self, pvc: dict) -> bool:
+        for key in ("dataSource", "dataSourceRef"):
+            source = pvc.get("spec", {}).get(key) or {}
+            if source.get("kind") == "VolumeSnapshot":
+                return True
+        return False
+
+    def _referenced_or_all_snapshot_pvcs(
+        self, pod: dict, context: dict
+    ) -> dict[str, dict]:
+        pvc_objects = context.get("objects", {}).get("pvc", {})
+        referenced = {}
+
+        for volume in pod.get("spec", {}).get("volumes", []) or []:
+            claim = volume.get("persistentVolumeClaim") or {}
+            claim_name = claim.get("claimName")
+            pvc = pvc_objects.get(claim_name)
+            if claim_name and pvc and self._is_snapshot_backed_pvc(pvc):
+                referenced[claim_name] = pvc
+
+        if referenced:
+            return referenced
+
+        return {
+            name: pvc
+            for name, pvc in pvc_objects.items()
+            if self._is_snapshot_backed_pvc(pvc)
+        }
+
+    def _matching_events(self, timeline) -> list[dict]:
+        matches = []
+        for event in timeline.raw_events:
+            if event.get("reason") not in {"ProvisioningFailed", "FailedCreate"}:
+                continue
+
+            message = str(event.get("message", "")).lower()
+            if any(marker in message for marker in self.SNAPSHOT_MARKERS):
+                matches.append(event)
+
+        return matches
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
             return False
 
-        # --- 1. Repeated provisioning failures ---
-        recent_failures = timeline.events_within_window(
-            5,
-            reason="ProvisioningFailed",
-        ) + timeline.events_within_window(
-            5,
-            reason="FailedCreate",
-        )
-
-        if len(recent_failures) < 3:
+        snapshot_pvcs = self._referenced_or_all_snapshot_pvcs(pod, context)
+        if not snapshot_pvcs:
             return False
 
-        # --- 2. Snapshot restore signal in messages ---
-        snapshot_related = 0
-        for e in recent_failures:
-            msg = (e.get("message") or "").lower()
-            if "snapshot" in msg or "restore" in msg:
-                snapshot_related += 1
-
-        if snapshot_related < 2:
+        if not any(
+            pvc.get("status", {}).get("phase") != "Bound"
+            for pvc in snapshot_pvcs.values()
+        ):
             return False
 
-        # --- 3. Ensure this is volume-related failure ---
-        if not timeline.has(kind="Volume", phase="Failure"):
+        matched_events = self._matching_events(timeline)
+        if not matched_events:
             return False
 
-        # --- 4. Sustained retry duration ---
-        duration = timeline.duration_between(
-            lambda e: e.get("reason") in ("ProvisioningFailed", "FailedCreate")
-        )
-
-        if duration < 60:
-            return False
-
-        # --- 5. No successful provisioning ---
-        # External provisioner emits "ProvisioningSucceeded"
         if timeline.count(reason="ProvisioningSucceeded") > 0:
+            return False
+
+        total_failures = sum(self._occurrences(event) for event in matched_events)
+        duration = timeline.duration_between(
+            lambda e: e.get("reason") in {"ProvisioningFailed", "FailedCreate"}
+        )
+
+        if total_failures < 2 and duration < 60:
             return False
 
         return True
@@ -89,41 +116,36 @@ class VolumeSnapshotRestoreFailedRule(FailureRule):
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
         timeline = context.get("timeline")
+        pvc_names = sorted(self._referenced_or_all_snapshot_pvcs(pod, context)) or [
+            "<unknown>"
+        ]
+        matched_events = self._matching_events(timeline) if timeline else []
 
-        # Extract dominant failure message
         dominant_msg = None
-        if timeline:
-            msgs: list[str] = [
-                (e.get("message") or "")
-                for e in (
-                    timeline.events_within_window(5, reason="ProvisioningFailed")
-                    + timeline.events_within_window(5, reason="FailedCreate")
-                )
+        if matched_events:
+            messages = [
+                (event.get("message") or "")
+                for event in matched_events
+                for _ in range(self._occurrences(event))
             ]
-            if msgs:
-                dominant_msg = max(set(msgs), key=msgs.count)
+            dominant_msg = max(set(messages), key=messages.count)
 
         chain = CausalChain(
             causes=[
                 Cause(
                     code="SNAPSHOT_RESTORE_FAILED",
-                    message="CSI failed to restore volume from snapshot",
+                    message="CSI failed to provision a volume from a snapshot source",
                     role="volume_root",
                     blocking=True,
                 ),
                 Cause(
                     code="CSI_PROVISIONER_RETRY",
-                    message="CSI external-provisioner repeatedly retries snapshot restore",
+                    message="CSI external-provisioner repeatedly retries the restore workflow",
                     role="control_loop",
                 ),
                 Cause(
-                    code="VOLUME_CREATION_BLOCKED",
-                    message="Volume cannot be created from snapshot",
-                    role="volume_intermediate",
-                ),
-                Cause(
                     code="POD_WAITING_FOR_VOLUME",
-                    message="Pod cannot start because restored volume is unavailable",
+                    message="Pod cannot start because the restored volume is unavailable",
                     role="workload_symptom",
                 ),
             ]
@@ -131,13 +153,12 @@ class VolumeSnapshotRestoreFailedRule(FailureRule):
 
         return {
             "root_cause": "Volume restoration from snapshot is failing, preventing PVC provisioning",
-            "confidence": 0.91,
+            "confidence": 0.92,
             "causes": chain,
             "evidence": [
-                "Repeated provisioning failures related to snapshot restore",
-                "Snapshot-related errors detected in events",
-                "Sustained provisioning retry duration (>60s)",
-                "No successful volume provisioning observed",
+                "PVC is requesting a volume from a VolumeSnapshot data source",
+                "Provisioning failures explicitly mention snapshot or restore context",
+                "No successful provisioning event was observed",
                 *(
                     ["Dominant provisioning error: " + dominant_msg]
                     if dominant_msg
@@ -145,26 +166,28 @@ class VolumeSnapshotRestoreFailedRule(FailureRule):
                 ),
             ],
             "likely_causes": [
-                "VolumeSnapshot or VolumeSnapshotContent not ready or missing",
-                "CSI driver does not support snapshot restore for this StorageClass",
-                "Snapshot corrupted or incompatible with target volume parameters",
-                "Cloud provider restore API failure or quota issue",
-                "Mismatch between snapshot and requested volume size or type",
+                "VolumeSnapshot or VolumeSnapshotContent is not ready or is missing",
+                "CSI driver does not support restoring this snapshot into the requested volume",
+                "Snapshot metadata is incompatible with the target restore request",
+                "Cloud or backend restore API rejected the request",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
-                "kubectl get events --sort-by=.lastTimestamp",
-                "kubectl describe pvc",
+                *[f"kubectl describe pvc {pvc_name}" for pvc_name in pvc_names],
                 "kubectl get volumesnapshots",
-                "kubectl describe volumesnapshot <snapshot-name>",
                 "kubectl get volumesnapshotcontents",
-                "Check CSI driver logs (external-provisioner)",
-                "Verify StorageClass supports snapshot restore",
+                "Check CSI external-provisioner logs",
             ],
             "blocking": True,
             "object_evidence": {
+                **{
+                    f"pvc:{pvc_name}": [
+                        "PVC is snapshot-backed and provisioning from snapshot failed"
+                    ]
+                    for pvc_name in pvc_names
+                },
                 f"pod:{pod_name}": [
-                    "Pod blocked waiting for volume restoration from snapshot"
-                ]
+                    "Pod is blocked waiting for a volume restored from snapshot"
+                ],
             },
         }

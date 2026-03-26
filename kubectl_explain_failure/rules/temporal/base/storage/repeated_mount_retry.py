@@ -4,55 +4,44 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 
 class RepeatedMountRetryRule(FailureRule):
     """
-    Detects Pods that repeatedly fail volume mounts.
+    Detects a Pod that stays in a kubelet FailedMount retry loop for a PVC-backed
+    volume.
 
-    Signals:
-    - Multiple consecutive FailedMount events on the Pod
-    - Duration exceeds a sustained threshold (~5 minutes)
-    - Mount failure is persistent, not transient
-
-    Interpretation:
-    The Pod cannot mount one or more volumes due to persistent storage or CSI errors.
-    Repeated retries indicate a deterministic mounting failure rather than transient delays.
-
-    Scope:
-    - Volume layer (CSI / kubelet mount)
-    - Deterministic (object state + timeline duration)
-    - Captures sustained mount failures (>3 consecutive failures)
+    This is a temporal symptom rule, not the underlying root cause. It uses
+    FailedMount retry count and duration, and intentionally coexists with more
+    specific mount or attach diagnoses.
     """
 
     name = "RepeatedMountRetry"
     category = "Temporal"
     priority = 90
-    deterministic = True
+    deterministic = False
     blocks = [
-        "PodUnschedulable",
-        "VolumeAttachFailed",
-        "VolumeDetachFailed",
         "FailedMount",
+        "PVCMountFailed",
     ]
     phases = ["Pending", "Running"]
     requires = {
         "pod": True,
         "context": ["timeline"],
-        "objects": ["pvc", "pv"],
+        "objects": ["pvc"],
+        "optional_objects": ["pv"],
     }
 
     MOUNT_FAILURE_MARKERS = (
-        "failedmount",
-        "mountvolume",
-        "attachvolume",
-        "csi error",
+        "unable to attach or mount volumes",
+        "mountvolume.setup failed",
+        "mountvolume.setupat failed",
+        "failed to mount volume",
     )
 
     EXCLUSION_MARKERS = (
         "already mounted",
         "successfully mounted",
-        "unmounted",
     )
 
     MIN_CONSECUTIVE_FAILURES = 3
-    MIN_DURATION_SECONDS = 300  # 5 minutes
+    MIN_DURATION_SECONDS = 300
 
     def _occurrences(self, event) -> int:
         count = event.get("count", 1)
@@ -61,37 +50,45 @@ class RepeatedMountRetryRule(FailureRule):
         except Exception:
             return 1
 
+    def _referenced_pvc_names(self, pod: dict, context: dict) -> list[str]:
+        pvc_objects = context.get("objects", {}).get("pvc", {})
+        referenced = []
+
+        for volume in pod.get("spec", {}).get("volumes", []) or []:
+            claim = volume.get("persistentVolumeClaim") or {}
+            claim_name = claim.get("claimName")
+            if claim_name and claim_name in pvc_objects:
+                referenced.append(claim_name)
+
+        return referenced or list(pvc_objects.keys())
+
+    def _is_mount_failure(self, event: dict) -> bool:
+        if event.get("reason") != "FailedMount":
+            return False
+
+        message = str(event.get("message", "")).lower()
+        if any(marker in message for marker in self.EXCLUSION_MARKERS):
+            return False
+
+        return any(marker in message for marker in self.MOUNT_FAILURE_MARKERS)
+
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
             return False
 
-        # Filter FailedMount-like events
-        mount_failures = [
-            e
-            for e in timeline.raw_events
-            if any(
-                marker in str(e.get("reason", "")).lower()
-                or marker in str(e.get("message", "")).lower()
-                for marker in self.MOUNT_FAILURE_MARKERS
-            )
-            and not any(
-                marker in str(e.get("message", "")).lower()
-                for marker in self.EXCLUSION_MARKERS
-            )
-        ]
-
-        if len(mount_failures) < self.MIN_CONSECUTIVE_FAILURES:
+        if not self._referenced_pvc_names(pod, context):
             return False
 
-        # Check sustained duration
-        duration = timeline.duration_between(
-            lambda e: any(
-                marker in str(e.get("reason", "")).lower()
-                or marker in str(e.get("message", "")).lower()
-                for marker in self.MOUNT_FAILURE_MARKERS
-            )
-        )
+        mount_failures = [
+            event for event in timeline.raw_events if self._is_mount_failure(event)
+        ]
+        failure_count = sum(self._occurrences(event) for event in mount_failures)
+
+        if failure_count < self.MIN_CONSECUTIVE_FAILURES:
+            return False
+
+        duration = timeline.duration_between(lambda e: self._is_mount_failure(e))
         if duration < self.MIN_DURATION_SECONDS:
             return False
 
@@ -100,12 +97,18 @@ class RepeatedMountRetryRule(FailureRule):
     def explain(self, pod, events, context):
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
         timeline = context.get("timeline")
+        mount_failures = [
+            event for event in timeline.raw_events if self._is_mount_failure(event)
+        ]
+        failure_count = sum(self._occurrences(event) for event in mount_failures)
+        duration = timeline.duration_between(lambda e: self._is_mount_failure(e))
+
         dominant_msg = None
-        if timeline:
+        if mount_failures:
             messages = [
-                str(e.get("message", ""))
-                for e in timeline.raw_events
-                if e.get("reason") == "FailedMount"
+                str(event.get("message", ""))
+                for event in mount_failures
+                for _ in range(self._occurrences(event))
             ]
             if messages:
                 dominant_msg = max(set(messages), key=messages.count)
@@ -132,12 +135,12 @@ class RepeatedMountRetryRule(FailureRule):
         )
 
         return {
-            "root_cause": "Pod repeatedly fails volume mounts",
+            "root_cause": "Pod is stuck in repeated volume mount retries",
             "confidence": 0.92,
             "causes": chain,
             "evidence": [
-                f"Pod '{pod_name}' experienced >= {self.MIN_CONSECUTIVE_FAILURES} consecutive FailedMount events",
-                f"Sustained mount failure duration: {timeline.duration_between(lambda e: 'failedmount' in str(e.get('reason', '')).lower()):.1f}s",
+                f"Pod '{pod_name}' accumulated {failure_count} FailedMount attempts",
+                f"Sustained mount retry duration: {duration:.1f}s",
                 *(
                     ["Dominant mount failure message: " + dominant_msg]
                     if dominant_msg
@@ -147,17 +150,19 @@ class RepeatedMountRetryRule(FailureRule):
             "likely_causes": [
                 "CSI driver errors or misconfiguration",
                 "Node disk or volume unavailable",
-                "PVC/PV binding issues preventing mount",
+                "PVC or PV issue preventing kubelet from completing the mount",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
                 "kubectl get pvc -o wide",
                 "kubectl describe pvc",
                 "Check PV and node availability",
-                "Inspect CSI driver logs on affected node",
+                "Inspect kubelet and CSI driver logs on the affected node",
             ],
             "blocking": True,
             "object_evidence": {
-                f"pod:{pod_name}": ["Pod repeatedly fails to mount volumes"],
+                f"pod:{pod_name}": [
+                    "Pod repeatedly fails to mount a PVC-backed volume"
+                ],
             },
         }
