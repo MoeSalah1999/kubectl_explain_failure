@@ -294,8 +294,9 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 ### Storage
 
 - AccessModeMismatch
-- CSIPluginNotRegistered
 - ConfigMapNotFound
+- CSIPluginNotRegistered
+- CSIProvisioningFailed
 - FailedMount
 - FilesystemResizePending
 - PVCMountFailed
@@ -303,6 +304,8 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - PVReleasedOrFailed
 - ReadWriteOnceMultiNodeConflict
 - StorageClassProvisionerMissing
+- VolumeAttachFailed
+- VolumeDeviceConflict
 - VolumeMountPermissionDenied
 
 ## Compound Rules
