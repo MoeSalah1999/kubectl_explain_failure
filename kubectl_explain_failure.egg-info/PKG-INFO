@@ -447,6 +447,8 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ### Storage
 
+- RepeatedMountRetry
+- VolumeAttachDetachThrashing
 - VolumeAttachmentTimeout
 
 ## Resolution Rules
