@@ -1,0 +1,52 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "ledger-db-0",
+      "namespace": "finance"
+    },
+    "spec": {
+      "nodeName": "ip-10-0-22-17.ec2.internal",
+      "volumes": [
+        {
+          "name": "data",
+          "persistentVolumeClaim": {
+            "claimName": "ledger-db-data"
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "postgres",
+          "image": "postgres:16",
+          "volumeMounts": [
+            {
+              "name": "data",
+              "mountPath": "/var/lib/postgresql/data"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "objects": {},
+  "events": [
+    {
+      "reason": "Scheduled",
+      "message": "Successfully assigned finance/ledger-db-0 to ip-10-0-22-17.ec2.internal",
+      "lastTimestamp": "2026-03-25T10:00:00Z"
+    },
+    {
+      "reason": "FailedAttachVolume",
+      "source": {
+        "component": "attachdetach-controller"
+      },
+      "message": "AttachVolume.Attach failed for volume \"pvc-09ab8c7d6e5f4a32\" : timed out waiting for the condition",
+      "firstTimestamp": "2026-03-25T10:01:00Z",
+      "lastTimestamp": "2026-03-25T10:04:00Z",
+      "count": 4
+    }
+  ]
+}

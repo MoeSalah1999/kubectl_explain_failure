@@ -1,0 +1,51 @@
+{
+  "root_cause": "Volume attachment to node is failing, blocking Pod startup",
+  "blocking": true,
+  "confidence": 0.92,
+  "evidence": [
+    "FailedAttachVolume events persist for the scheduled Pod",
+    "Attach failures are not classified as explicit multi-attach or device conflicts",
+    "Dominant attach error: AttachVolume.Attach failed for volume \"pvc-09ab8c7d6e5f4a32\" : timed out waiting for the condition"
+  ],
+  "causes": [
+    {
+      "code": "VOLUME_ATTACH_FAILED",
+      "message": "Volume cannot be attached to the target node",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "ATTACH_CONTROLLER_RETRY",
+      "message": "AttachDetach controller repeatedly retries volume attachment",
+      "role": "control_loop"
+    },
+    {
+      "code": "VOLUME_UNAVAILABLE_ON_NODE",
+      "message": "Volume not available on node, preventing container startup",
+      "role": "volume_intermediate"
+    },
+    {
+      "code": "POD_BLOCKED_ON_VOLUME",
+      "message": "Pod cannot start because required volume is not attached",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:ledger-db-0": [
+      "Pod blocked waiting for volume attachment to complete"
+    ]
+  },
+  "likely_causes": [
+    "Cloud provider failed to attach disk (quota, API error, or timeout)",
+    "Node is not reachable or not ready for volume attachment",
+    "Zone or topology mismatch between node and volume",
+    "CSI attacher or backend keeps timing out"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod ledger-db-0",
+    "kubectl get events --sort-by=.lastTimestamp",
+    "kubectl describe node <node-name>",
+    "kubectl describe pvc",
+    "kubectl get volumeattachments"
+  ]
+}
