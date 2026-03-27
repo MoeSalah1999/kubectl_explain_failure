@@ -1,0 +1,48 @@
+{
+  "root_cause": "CSI plugin pod is crash-looping",
+  "blocking": true,
+  "confidence": 0.92,
+  "evidence": [
+    "Pod identity or labels indicate a CSI controller or node plugin",
+    "Back-off restarts are present for the crashing component"
+  ],
+  "causes": [
+    {
+      "code": "CSI_PLUGIN_CRASH",
+      "message": "CSI driver/plugin container repeatedly crashes",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "VOLUME_UNAVAILABLE",
+      "message": "Persistent volumes managed by CSI remain unavailable",
+      "role": "volume_context"
+    },
+    {
+      "code": "POD_PENDING_OR_FAILING",
+      "message": "Pod fails operations dependent on CSI-managed storage",
+      "role": "workload_symptom"
+    },
+    {
+      "code": "CRASHLOOP_BACKOFF",
+      "message": "Kubernetes observes repeated back-off restarts",
+      "role": "control_loop"
+    }
+  ],
+  "object_evidence": {
+    "pod:ebs-csi-node-rp9k2": [
+      "Target pod appears to be a CSI component in CrashLoopBackOff"
+    ]
+  },
+  "likely_causes": [
+    "CSI driver misconfiguration or version mismatch",
+    "Storage endpoint or network issues affecting the CSI plugin",
+    "Resource starvation causing the CSI component to restart"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod ebs-csi-node-rp9k2",
+    "kubectl logs <csi-plugin-pod> -c <csi-container>",
+    "kubectl get pods -n kube-system",
+    "Inspect CSI driver Deployment or DaemonSet events"
+  ]
+}

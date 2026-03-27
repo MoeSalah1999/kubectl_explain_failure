@@ -1,0 +1,56 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "ebs-csi-node-rp9k2",
+      "namespace": "kube-system",
+      "labels": {
+        "app.kubernetes.io/name": "aws-ebs-csi-driver",
+        "app.kubernetes.io/component": "csi-node"
+      }
+    },
+    "spec": {
+      "nodeName": "ip-10-0-31-8.ec2.internal",
+      "containers": [
+        {
+          "name": "ebs-plugin",
+          "image": "public.ecr.aws/eks/aws-ebs-csi-driver:v1.38.1"
+        },
+        {
+          "name": "node-driver-registrar",
+          "image": "registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.12.0"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "node-driver-registrar",
+          "restartCount": 8,
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff",
+              "message": "back-off 5m0s restarting failed container=node-driver-registrar pod=ebs-csi-node-rp9k2_kube-system"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 1
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {},
+  "events": [
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container node-driver-registrar in pod ebs-csi-node-rp9k2_kube-system",
+      "firstTimestamp": "2026-03-25T09:58:00Z",
+      "lastTimestamp": "2026-03-25T10:04:00Z",
+      "count": 6
+    }
+  ]
+}
