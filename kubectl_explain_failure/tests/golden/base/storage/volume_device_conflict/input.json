@@ -1,0 +1,88 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-db-0",
+      "namespace": "payments"
+    },
+    "spec": {
+      "nodeName": "ip-10-0-12-34.ec2.internal",
+      "volumes": [
+        {
+          "name": "data",
+          "persistentVolumeClaim": {
+            "claimName": "payments-db-data"
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "postgres",
+          "image": "postgres:16",
+          "volumeDevices": [
+            {
+              "name": "data",
+              "devicePath": "/dev/xvdb"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "objects": {
+    "pvc": {
+      "payments-db-data": {
+        "metadata": {
+          "name": "payments-db-data",
+          "namespace": "payments",
+          "annotations": {
+            "volume.kubernetes.io/storage-provisioner": "ebs.csi.aws.com"
+          }
+        },
+        "spec": {
+          "accessModes": ["ReadWriteOnce"],
+          "storageClassName": "gp3",
+          "volumeMode": "Filesystem",
+          "volumeName": "pvc-0abc123def456"
+        },
+        "status": {
+          "phase": "Bound"
+        }
+      }
+    },
+    "pv": {
+      "pvc-0abc123def456": {
+        "metadata": {
+          "name": "pvc-0abc123def456"
+        },
+        "spec": {
+          "accessModes": ["ReadWriteOnce"],
+          "volumeMode": "Filesystem",
+          "csi": {
+            "driver": "ebs.csi.aws.com",
+            "volumeHandle": "vol-0abc123def456"
+          }
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "Scheduled",
+      "message": "Successfully assigned payments/payments-db-0 to ip-10-0-12-34.ec2.internal",
+      "lastTimestamp": "2026-03-25T11:00:00Z"
+    },
+    {
+      "reason": "FailedMount",
+      "source": {
+        "component": "kubelet"
+      },
+      "message": "MapVolume.MapPodDevice failed for volume \"data\" : volume mode \"Filesystem\" does not match pod request for raw block device",
+      "firstTimestamp": "2026-03-25T11:01:00Z",
+      "lastTimestamp": "2026-03-25T11:13:00Z",
+      "count": 7
+    }
+  ]
+}

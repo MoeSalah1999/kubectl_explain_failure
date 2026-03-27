@@ -1,0 +1,48 @@
+{
+  "root_cause": "Volume device conflict prevents volume attachment or mount",
+  "blocking": true,
+  "confidence": 0.88,
+  "evidence": [
+    "FailedAttachVolume or FailedMount event contains explicit conflict semantics",
+    "Conflict points to multi-attach, busy-device, or volumeMode mismatch behavior",
+    "Dominant error message: MapVolume.MapPodDevice failed for volume \"data\" : volume mode \"Filesystem\" does not match pod request for raw block device"
+  ],
+  "causes": [
+    {
+      "code": "VOLUME_DEVICE_CONFLICT",
+      "message": "Volume cannot be attached due to conflicting usage or device semantics",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "ATTACH_OR_MOUNT_FAILURE",
+      "message": "Kubelet or CSI driver fails to attach or mount the volume",
+      "role": "storage_intermediate"
+    },
+    {
+      "code": "POD_VOLUME_UNAVAILABLE",
+      "message": "Pod cannot access required volume and cannot start",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:payments-db-0": [
+      "Pod blocked due to volume device conflict during attach or mount"
+    ]
+  },
+  "likely_causes": [
+    "Volume already attached to another node (multi-attach violation)",
+    "Same volume used with conflicting volumeMode (Block vs Filesystem)",
+    "Device path already in use on node",
+    "CSI driver enforcing exclusive access constraints"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod payments-db-0",
+    "kubectl get events --sort-by=.lastTimestamp",
+    "kubectl describe pvc",
+    "kubectl describe pv",
+    "kubectl get volumeattachments",
+    "Verify volumeMode consistency across Pods and PVCs",
+    "Inspect CSI driver logs for attachment errors"
+  ]
+}
