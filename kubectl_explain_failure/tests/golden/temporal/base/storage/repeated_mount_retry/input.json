@@ -1,0 +1,91 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-worker-0",
+      "namespace": "payments"
+    },
+    "spec": {
+      "nodeName": "ip-10-0-24-19.ec2.internal",
+      "volumes": [
+        {
+          "name": "data",
+          "persistentVolumeClaim": {
+            "claimName": "payments-worker-data"
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "worker",
+          "image": "ghcr.io/example/payments-worker:3.2.1",
+          "volumeMounts": [
+            {
+              "name": "data",
+              "mountPath": "/var/lib/payments"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "worker",
+          "state": {
+            "waiting": {
+              "reason": "ContainerCreating"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "pvc": {
+      "payments-worker-data": {
+        "metadata": {
+          "name": "payments-worker-data",
+          "namespace": "payments"
+        },
+        "spec": {
+          "accessModes": ["ReadWriteOnce"],
+          "storageClassName": "gp3",
+          "volumeName": "pvc-0123abcd4567ef89"
+        },
+        "status": {
+          "phase": "Bound"
+        }
+      }
+    },
+    "pv": {
+      "pvc-0123abcd4567ef89": {
+        "metadata": {
+          "name": "pvc-0123abcd4567ef89"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedMount",
+      "source": {
+        "component": "kubelet"
+      },
+      "message": "Unable to attach or mount volumes: unmounted volumes=[data], unattached volumes=[data]: timed out waiting for the condition",
+      "firstTimestamp": "2026-03-25T10:00:00Z",
+      "lastTimestamp": "2026-03-25T10:00:00Z",
+      "count": 2
+    },
+    {
+      "reason": "FailedMount",
+      "source": {
+        "component": "kubelet"
+      },
+      "message": "Unable to attach or mount volumes: unmounted volumes=[data], unattached volumes=[data]: timed out waiting for the condition",
+      "firstTimestamp": "2026-03-25T10:06:00Z",
+      "lastTimestamp": "2026-03-25T10:06:00Z",
+      "count": 2
+    }
+  ]
+}

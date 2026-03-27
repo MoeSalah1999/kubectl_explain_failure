@@ -1,0 +1,45 @@
+{
+  "root_cause": "Pod is stuck in repeated volume mount retries",
+  "blocking": true,
+  "confidence": 0.92,
+  "evidence": [
+    "Pod 'payments-worker-0' accumulated 4 FailedMount attempts",
+    "Sustained mount retry duration: 360.0s",
+    "Dominant mount failure message: Unable to attach or mount volumes: unmounted volumes=[data], unattached volumes=[data]: timed out waiting for the condition"
+  ],
+  "causes": [
+    {
+      "code": "VOLUME_MOUNT_FAILED",
+      "message": "Persistent volume mount failed repeatedly",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_MOUNT_RETRY_LOOP",
+      "message": "Pod continues to retry volume mount without success",
+      "role": "control_loop"
+    },
+    {
+      "code": "POD_PENDING_OR_RUNNING",
+      "message": "Pod cannot proceed due to failed volume mount",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:payments-worker-0": [
+      "Pod repeatedly fails to mount a PVC-backed volume"
+    ]
+  },
+  "likely_causes": [
+    "CSI driver errors or misconfiguration",
+    "Node disk or volume unavailable",
+    "PVC or PV issue preventing kubelet from completing the mount"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod payments-worker-0",
+    "kubectl get pvc -o wide",
+    "kubectl describe pvc",
+    "Check PV and node availability",
+    "Inspect kubelet and CSI driver logs on the affected node"
+  ]
+}
