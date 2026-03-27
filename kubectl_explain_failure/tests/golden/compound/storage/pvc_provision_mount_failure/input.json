@@ -1,0 +1,90 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "orders-db-0",
+      "namespace": "orders"
+    },
+    "spec": {
+      "nodeName": "ip-10-0-18-42.ec2.internal",
+      "volumes": [
+        {
+          "name": "data",
+          "persistentVolumeClaim": {
+            "claimName": "orders-db-data"
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "postgres",
+          "image": "postgres:16",
+          "volumeMounts": [
+            {
+              "name": "data",
+              "mountPath": "/var/lib/postgresql/data"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "objects": {
+    "pvc": {
+      "orders-db-data": {
+        "metadata": {
+          "name": "orders-db-data",
+          "namespace": "orders",
+          "annotations": {
+            "volume.kubernetes.io/storage-provisioner": "ebs.csi.aws.com"
+          }
+        },
+        "spec": {
+          "accessModes": ["ReadWriteOnce"],
+          "storageClassName": "gp3",
+          "volumeName": "pvc-0f12ab34cd56ef78"
+        },
+        "status": {
+          "phase": "Bound"
+        }
+      }
+    },
+    "pv": {
+      "pvc-0f12ab34cd56ef78": {
+        "metadata": {
+          "name": "pvc-0f12ab34cd56ef78",
+          "annotations": {
+            "pv.kubernetes.io/provisioned-by": "ebs.csi.aws.com"
+          }
+        }
+      }
+    },
+    "storageclass": {
+      "gp3": {
+        "metadata": {
+          "name": "gp3"
+        },
+        "provisioner": "ebs.csi.aws.com"
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "Scheduled",
+      "message": "Successfully assigned orders/orders-db-0 to ip-10-0-18-42.ec2.internal",
+      "lastTimestamp": "2026-03-25T12:00:00Z"
+    },
+    {
+      "reason": "FailedAttachVolume",
+      "source": {
+        "component": "attachdetach-controller"
+      },
+      "message": "AttachVolume.Attach failed for volume \"pvc-0f12ab34cd56ef78\" : timed out waiting for the condition",
+      "firstTimestamp": "2026-03-25T12:01:00Z",
+      "lastTimestamp": "2026-03-25T12:05:00Z",
+      "count": 3
+    }
+  ]
+}
