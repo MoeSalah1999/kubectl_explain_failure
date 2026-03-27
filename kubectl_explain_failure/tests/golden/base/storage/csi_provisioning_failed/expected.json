@@ -1,0 +1,52 @@
+{
+  "root_cause": "PVC cannot be provisioned due to CSI driver or storage backend failure",
+  "blocking": true,
+  "confidence": 0.96,
+  "evidence": [
+    "PVC remains Pending while ProvisioningFailed events continue",
+    "Provisioning failures align with CSI provisioner or CreateVolume behavior",
+    "ExternalProvisioning alone is not treated as a failure signal",
+    "Dominant provisioning error: failed to provision volume with StorageClass \"gp3\": exceeded EBS volume quota for this account"
+  ],
+  "causes": [
+    {
+      "code": "CSI_PROVISIONING_FAILURE",
+      "message": "CSI driver failed to provision a volume",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "PVC_UNBOUND",
+      "message": "PersistentVolumeClaim remains unbound due to provisioning failure",
+      "role": "storage_intermediate"
+    },
+    {
+      "code": "POD_VOLUME_BLOCKED",
+      "message": "Pod cannot start because required volume is not available",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pvc:payments-cache-pvc": [
+      "PVC remains Pending while CSI provisioning fails"
+    ],
+    "pod:payments-api-6dd7b6f7d8-4w2x9": [
+      "Pod blocked waiting for dynamically provisioned volume"
+    ]
+  },
+  "likely_causes": [
+    "CSI driver is not running or misconfigured",
+    "StorageClass parameters are invalid",
+    "Backend storage system rejected volume creation",
+    "Insufficient storage capacity or quota exceeded",
+    "Permission or authentication failure in CSI provisioner"
+  ],
+  "suggested_checks": [
+    "kubectl describe pvc payments-cache-pvc",
+    "kubectl describe pod payments-api-6dd7b6f7d8-4w2x9",
+    "kubectl get storageclass",
+    "kubectl get events --sort-by=.lastTimestamp",
+    "kubectl get pods -n kube-system",
+    "Inspect CSI provisioner logs"
+  ]
+}

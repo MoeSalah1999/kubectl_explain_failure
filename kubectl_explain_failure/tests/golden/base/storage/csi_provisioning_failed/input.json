@@ -1,0 +1,86 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-api-6dd7b6f7d8-4w2x9",
+      "namespace": "payments"
+    },
+    "spec": {
+      "volumes": [
+        {
+          "name": "cache",
+          "persistentVolumeClaim": {
+            "claimName": "payments-cache-pvc"
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/payments-api:2.4.1",
+          "volumeMounts": [
+            {
+              "name": "cache",
+              "mountPath": "/var/lib/payments/cache"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "objects": {
+    "pvc": {
+      "payments-cache-pvc": {
+        "metadata": {
+          "name": "payments-cache-pvc",
+          "namespace": "payments",
+          "annotations": {
+            "volume.kubernetes.io/storage-provisioner": "ebs.csi.aws.com"
+          }
+        },
+        "spec": {
+          "accessModes": ["ReadWriteOnce"],
+          "resources": {
+            "requests": {
+              "storage": "100Gi"
+            }
+          },
+          "storageClassName": "gp3"
+        },
+        "status": {
+          "phase": "Pending"
+        }
+      }
+    },
+    "storageclass": {
+      "gp3": {
+        "metadata": {
+          "name": "gp3"
+        },
+        "provisioner": "ebs.csi.aws.com",
+        "parameters": {
+          "type": "gp3",
+          "fsType": "xfs"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "ExternalProvisioning",
+      "message": "Waiting for a volume to be created either by the external provisioner \"ebs.csi.aws.com\" or manually by the system administrator",
+      "firstTimestamp": "2026-03-25T11:00:00Z",
+      "lastTimestamp": "2026-03-25T11:04:00Z",
+      "count": 5
+    },
+    {
+      "reason": "ProvisioningFailed",
+      "message": "failed to provision volume with StorageClass \"gp3\": exceeded EBS volume quota for this account",
+      "firstTimestamp": "2026-03-25T11:01:00Z",
+      "lastTimestamp": "2026-03-25T11:04:00Z",
+      "count": 3
+    }
+  ]
+}
