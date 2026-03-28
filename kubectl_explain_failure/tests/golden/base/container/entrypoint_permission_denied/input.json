@@ -1,0 +1,42 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "orders-api-7fd6b7b8cf-jg2sm",
+      "namespace": "orders"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/orders-api:2.9.4"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "state": {
+            "waiting": {
+              "reason": "RunContainerError",
+              "message": "failed to start container \"api\": Error response from daemon: OCI runtime create failed: runc create failed: unable to start container process: exec: \"/app/start.sh\": permission denied: unknown"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Failed",
+      "message": "Error: failed to start container \"api\": Error response from daemon: OCI runtime create failed: runc create failed: unable to start container process: exec: \"/app/start.sh\": permission denied: unknown",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-25T12:00:00Z",
+      "lastTimestamp": "2026-03-25T12:01:00Z",
+      "count": 2
+    }
+  ]
+}

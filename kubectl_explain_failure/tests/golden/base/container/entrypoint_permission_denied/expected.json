@@ -1,0 +1,52 @@
+{
+  "root_cause": "Container entrypoint exists but cannot be executed due to permission denial",
+  "blocking": true,
+  "confidence": 0.96,
+  "resolution": {
+    "winner": "EntrypointPermissionDenied",
+    "suppressed": [
+      "InvalidEntrypoint",
+      "ContainerRuntimePermissionDenied",
+      "CrashLoopBackOff"
+    ]
+  },
+  "evidence": [
+    "Kubelet or runtime reports exec-style permission denied while starting the container",
+    "Container remains in a waiting startup error state",
+    "Dominant exec error: Error: failed to start container \"api\": Error response from daemon: OCI runtime create failed: runc create failed: unable to start container process: exec: \"/app/start.sh\": permission denied: unknown"
+  ],
+  "causes": [
+    {
+      "code": "ENTRYPOINT_EXECUTION_ATTEMPTED",
+      "message": "Container runtime attempted to execute the configured entrypoint or startup command",
+      "role": "execution_context"
+    },
+    {
+      "code": "ENTRYPOINT_PERMISSION_DENIED",
+      "message": "Entrypoint or startup script exists but is not executable by the container runtime",
+      "role": "execution_root",
+      "blocking": true
+    },
+    {
+      "code": "CONTAINER_NEVER_STARTS",
+      "message": "Container remains stuck before successful startup",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:orders-api-7fd6b7b8cf-jg2sm": [
+      "Pod cannot start because the configured entrypoint is not executable"
+    ]
+  },
+  "likely_causes": [
+    "Entrypoint script or binary lacks execute permission in the image",
+    "Image build copied the startup script without preserving executable mode",
+    "Container runs as a user that cannot execute the configured entrypoint"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod orders-api-7fd6b7b8cf-jg2sm",
+    "Inspect the image entrypoint or command and file permissions",
+    "Verify the startup script is executable in the built image",
+    "Check the container user and filesystem ownership of the entrypoint"
+  ]
+}

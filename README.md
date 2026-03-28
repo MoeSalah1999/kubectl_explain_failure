@@ -215,6 +215,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ContainerRuntimeStartFailure
 - ContainerStartTimeout
 - CrashLoopBackOff
+- EntrypointPermissionDenied
 - ImageArchitectureMismatch
 - ImagePullBackOff
 - ImagePullError
