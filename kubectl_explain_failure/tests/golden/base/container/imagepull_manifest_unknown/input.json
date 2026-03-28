@@ -1,0 +1,46 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-api-84d55f7c95-4kmn8",
+      "namespace": "payments"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/payments-api:2026.03.25-hotfix"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "state": {
+            "waiting": {
+              "reason": "ImagePullBackOff",
+              "message": "Back-off pulling image \"ghcr.io/example/payments-api:2026.03.25-hotfix\""
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "ErrImagePull",
+      "message": "rpc error: code = NotFound desc = failed to pull and unpack image \"ghcr.io/example/payments-api:2026.03.25-hotfix\": failed to resolve reference \"ghcr.io/example/payments-api:2026.03.25-hotfix\": ghcr.io/example/payments-api:2026.03.25-hotfix: manifest unknown: manifest unknown",
+      "firstTimestamp": "2026-03-25T08:00:00Z",
+      "lastTimestamp": "2026-03-25T08:02:00Z",
+      "count": 2
+    },
+    {
+      "reason": "ImagePullBackOff",
+      "message": "Back-off pulling image \"ghcr.io/example/payments-api:2026.03.25-hotfix\": rpc error: code = NotFound desc = manifest unknown",
+      "firstTimestamp": "2026-03-25T08:03:00Z",
+      "lastTimestamp": "2026-03-25T08:05:00Z",
+      "count": 3
+    }
+  ]
+}

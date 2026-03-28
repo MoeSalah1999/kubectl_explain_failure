@@ -217,6 +217,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ImageArchitectureMismatch
 - ImagePullBackOff
 - ImagePullError
+- ImagePullManifestUnknown
 - ImagePullSecretMissing
 - ImagePullUnauthorized
 - InitContainerFailure

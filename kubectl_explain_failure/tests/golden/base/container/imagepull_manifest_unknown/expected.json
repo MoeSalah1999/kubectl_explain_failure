@@ -1,0 +1,51 @@
+{
+  "root_cause": "Requested image manifest or tag does not exist in the registry",
+  "blocking": true,
+  "confidence": 0.94,
+  "resolution": {
+    "winner": "ImagePullManifestUnknown",
+    "suppressed": [
+      "ImagePullError",
+      "ImagePullBackOff"
+    ]
+  },
+  "evidence": [
+    "ErrImagePull or ImagePullBackOff includes explicit manifest-not-found markers",
+    "Manifest lookup failures repeat or progress into backoff",
+    "Dominant manifest error: Back-off pulling image \"ghcr.io/example/payments-api:2026.03.25-hotfix\": rpc error: code = NotFound desc = manifest unknown"
+  ],
+  "causes": [
+    {
+      "code": "IMAGE_REFERENCE_REQUESTED",
+      "message": "Pod requests a specific image manifest or tag from the registry",
+      "role": "workload_context"
+    },
+    {
+      "code": "IMAGE_MANIFEST_NOT_FOUND",
+      "message": "Registry could not find the requested image manifest or tag",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "IMAGE_PULL_CANNOT_PROGRESS",
+      "message": "Kubelet cannot pull the image because the requested manifest is unavailable",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:payments-api-84d55f7c95-4kmn8": [
+      "Pod cannot start because the requested image manifest is missing from the registry"
+    ]
+  },
+  "likely_causes": [
+    "Image tag was mistyped or never pushed to the registry",
+    "Deployment still references an old image digest or tag that was deleted",
+    "Registry repository exists but the requested manifest was garbage-collected or never published"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod payments-api-84d55f7c95-4kmn8",
+    "Verify the image name, tag, or digest exists in the target registry",
+    "Compare the deployed image reference with the tags or manifests published by CI",
+    "Check whether the workload should pin a valid digest instead of a missing tag"
+  ]
+}
