@@ -1,0 +1,113 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "restore-db-0",
+      "namespace": "backups"
+    },
+    "spec": {
+      "volumes": [
+        {
+          "name": "data",
+          "persistentVolumeClaim": {
+            "claimName": "restore-db-data"
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "postgres",
+          "image": "postgres:16",
+          "volumeMounts": [
+            {
+              "name": "data",
+              "mountPath": "/var/lib/postgresql/data"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "objects": {
+    "pvc": {
+      "restore-db-data": {
+        "metadata": {
+          "name": "restore-db-data",
+          "namespace": "backups"
+        },
+        "spec": {
+          "accessModes": [
+            "ReadWriteOnce"
+          ],
+          "resources": {
+            "requests": {
+              "storage": "200Gi"
+            }
+          },
+          "dataSource": {
+            "apiGroup": "snapshot.storage.k8s.io",
+            "kind": "VolumeSnapshot",
+            "name": "db-snapshot-2026-03-24"
+          }
+        },
+        "status": {
+          "phase": "Pending"
+        }
+      }
+    },
+    "volumesnapshot": {
+      "db-snapshot-2026-03-24": {
+        "metadata": {
+          "name": "db-snapshot-2026-03-24",
+          "namespace": "backups"
+        },
+        "status": {
+          "readyToUse": false,
+          "error": {
+            "message": "Underlying snapshot content is not ready for restore"
+          }
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "ExternalProvisioning",
+      "message": "Waiting for a volume to be created from snapshot by the external provisioner or manually by the system administrator",
+      "firstTimestamp": "2026-03-25T12:00:00Z",
+      "lastTimestamp": "2026-03-25T12:00:00Z"
+    },
+    {
+      "reason": "ProvisioningFailed",
+      "message": "failed to provision volume with dataSource \"db-snapshot-2026-03-24\": restore from snapshot failed because VolumeSnapshotContent snapcontent-db-snapshot-2026-03-24 is not ready",
+      "firstTimestamp": "2026-03-25T12:01:00Z",
+      "lastTimestamp": "2026-03-25T12:01:00Z"
+    },
+    {
+      "reason": "ExternalProvisioning",
+      "message": "Waiting for a volume to be created from snapshot by the external provisioner or manually by the system administrator",
+      "firstTimestamp": "2026-03-25T12:03:00Z",
+      "lastTimestamp": "2026-03-25T12:03:00Z"
+    },
+    {
+      "reason": "ProvisioningFailed",
+      "message": "failed to provision volume with dataSource \"db-snapshot-2026-03-24\": restore from snapshot failed because VolumeSnapshotContent snapcontent-db-snapshot-2026-03-24 is not ready",
+      "firstTimestamp": "2026-03-25T12:04:00Z",
+      "lastTimestamp": "2026-03-25T12:04:00Z"
+    },
+    {
+      "reason": "ExternalProvisioning",
+      "message": "Waiting for a volume to be created from snapshot by the external provisioner or manually by the system administrator",
+      "firstTimestamp": "2026-03-25T12:06:00Z",
+      "lastTimestamp": "2026-03-25T12:06:00Z"
+    },
+    {
+      "reason": "ProvisioningFailed",
+      "message": "failed to provision volume with dataSource \"db-snapshot-2026-03-24\": restore from snapshot failed because VolumeSnapshotContent snapcontent-db-snapshot-2026-03-24 is not ready",
+      "firstTimestamp": "2026-03-25T12:07:00Z",
+      "lastTimestamp": "2026-03-25T12:07:00Z"
+    }
+  ]
+}

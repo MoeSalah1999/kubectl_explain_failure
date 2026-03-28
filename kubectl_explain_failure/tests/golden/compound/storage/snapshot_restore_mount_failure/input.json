@@ -1,0 +1,99 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "restored-pg-0",
+      "namespace": "backups"
+    },
+    "spec": {
+      "nodeName": "ip-10-0-27-19.ec2.internal",
+      "volumes": [
+        {
+          "name": "data",
+          "persistentVolumeClaim": {
+            "claimName": "restored-pg-data"
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "postgres",
+          "image": "postgres:16",
+          "volumeMounts": [
+            {
+              "name": "data",
+              "mountPath": "/var/lib/postgresql/data"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "objects": {
+    "pvc": {
+      "restored-pg-data": {
+        "metadata": {
+          "name": "restored-pg-data",
+          "namespace": "backups"
+        },
+        "spec": {
+          "accessModes": [
+            "ReadWriteOnce"
+          ],
+          "storageClassName": "gp3",
+          "volumeName": "pvc-1a2b3c4d5e6f7890",
+          "dataSource": {
+            "apiGroup": "snapshot.storage.k8s.io",
+            "kind": "VolumeSnapshot",
+            "name": "pg-base-snap-2026-03-24"
+          }
+        },
+        "status": {
+          "phase": "Bound"
+        }
+      }
+    },
+    "pv": {
+      "pvc-1a2b3c4d5e6f7890": {
+        "metadata": {
+          "name": "pvc-1a2b3c4d5e6f7890"
+        }
+      }
+    },
+    "volumesnapshot": {
+      "pg-base-snap-2026-03-24": {
+        "metadata": {
+          "name": "pg-base-snap-2026-03-24",
+          "namespace": "backups"
+        },
+        "status": {
+          "readyToUse": true
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "ProvisioningSucceeded",
+      "message": "Successfully provisioned volume pvc-1a2b3c4d5e6f7890 from snapshot pg-base-snap-2026-03-24",
+      "lastTimestamp": "2026-03-25T13:00:00Z"
+    },
+    {
+      "reason": "Scheduled",
+      "message": "Successfully assigned backups/restored-pg-0 to ip-10-0-27-19.ec2.internal",
+      "lastTimestamp": "2026-03-25T13:02:00Z"
+    },
+    {
+      "reason": "FailedAttachVolume",
+      "source": {
+        "component": "attachdetach-controller"
+      },
+      "message": "AttachVolume.Attach failed for volume \"pvc-1a2b3c4d5e6f7890\" : timed out waiting for the condition",
+      "firstTimestamp": "2026-03-25T13:03:00Z",
+      "lastTimestamp": "2026-03-25T13:08:00Z",
+      "count": 4
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "root_cause": "Pod cannot start because a snapshot-restored volume cannot be mounted",
+  "blocking": true,
+  "confidence": 0.93,
+  "evidence": [
+    "Referenced PVC is bound and sourced from a VolumeSnapshot",
+    "Pod later reports attach or mount failures for that restored volume",
+    "Specific mount causes like permission-denied or multi-attach are excluded"
+  ],
+  "causes": [
+    {
+      "code": "SNAPSHOT_RESTORE_SUCCESS",
+      "message": "PVC was restored successfully from a VolumeSnapshot",
+      "role": "volume_context"
+    },
+    {
+      "code": "VOLUME_MOUNT_FAILURE",
+      "message": "Pod failed to attach or mount the restored volume",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_PENDING",
+      "message": "Pod remains Pending because the restored volume cannot be used",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:restored-pg-0": [
+      "Pod cannot start because a snapshot-restored volume cannot be mounted"
+    ],
+    "pvc:restored-pg-data": [
+      "PVC restored from snapshot but later attach or mount failed"
+    ]
+  },
+  "likely_causes": [
+    "Node-specific storage access problem after restore completed",
+    "CSI attacher or kubelet cannot finish the post-restore mount sequence",
+    "Restored volume exists but is not becoming usable on the target node"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod restored-pg-0",
+    "kubectl get pvc -o wide",
+    "kubectl describe pvc",
+    "kubectl get volumesnapshot -o yaml",
+    "Check CSI node and controller logs"
+  ]
+}
