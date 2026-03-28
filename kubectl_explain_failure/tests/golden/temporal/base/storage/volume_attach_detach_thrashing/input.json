@@ -1,0 +1,87 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "ledger-db-0",
+      "namespace": "finance"
+    },
+    "spec": {
+      "nodeName": "ip-10-0-61-8.ec2.internal",
+      "volumes": [
+        {
+          "name": "data",
+          "persistentVolumeClaim": {
+            "claimName": "ledger-db-data"
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "postgres",
+          "image": "postgres:16",
+          "volumeMounts": [
+            {
+              "name": "data",
+              "mountPath": "/var/lib/postgresql/data"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "objects": {
+    "pvc": {
+      "ledger-db-data": {
+        "metadata": {
+          "name": "ledger-db-data",
+          "namespace": "finance"
+        },
+        "spec": {
+          "accessModes": [
+            "ReadWriteOnce"
+          ],
+          "volumeName": "pvc-a1b2c3d4e5f60789"
+        },
+        "status": {
+          "phase": "Bound"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "SuccessfulAttachVolume",
+      "source": {
+        "component": "attachdetach-controller"
+      },
+      "message": "AttachVolume.Attach succeeded for volume \"pvc-a1b2c3d4e5f60789\"",
+      "lastTimestamp": "2026-03-25T11:00:00Z"
+    },
+    {
+      "reason": "SuccessfulDetachVolume",
+      "source": {
+        "component": "attachdetach-controller"
+      },
+      "message": "Detaching volume \"pvc-a1b2c3d4e5f60789\" from node ip-10-0-61-8.ec2.internal",
+      "lastTimestamp": "2026-03-25T11:03:00Z"
+    },
+    {
+      "reason": "SuccessfulAttachVolume",
+      "source": {
+        "component": "attachdetach-controller"
+      },
+      "message": "AttachVolume.Attach succeeded for volume \"pvc-a1b2c3d4e5f60789\"",
+      "lastTimestamp": "2026-03-25T11:06:00Z"
+    },
+    {
+      "reason": "SuccessfulDetachVolume",
+      "source": {
+        "component": "attachdetach-controller"
+      },
+      "message": "Detaching volume \"pvc-a1b2c3d4e5f60789\" from node ip-10-0-61-8.ec2.internal",
+      "lastTimestamp": "2026-03-25T11:09:00Z"
+    }
+  ]
+}

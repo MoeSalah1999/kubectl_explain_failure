@@ -1,0 +1,47 @@
+{
+  "root_cause": "Pod is impacted by flapping volume attach and detach behavior",
+  "blocking": true,
+  "confidence": 0.92,
+  "evidence": [
+    "Timeline shows an alternating attach/detach/attach/detach pattern",
+    "The attach and detach cycle repeats within a short time window"
+  ],
+  "causes": [
+    {
+      "code": "CSI_DRIVER_OR_NODE_ISSUE",
+      "message": "Underlying CSI driver bugs or node-level attach/detach errors are causing volume flapping",
+      "role": "volume_context"
+    },
+    {
+      "code": "VOLUME_ATTACH_DETACH_FLAPPING",
+      "message": "Volume repeatedly attaches and detaches within a short time window",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_VOLUME_INSTABILITY",
+      "message": "Pod is affected by unstable volume lifecycle transitions",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:ledger-db-0": [
+      "Pod is impacted by repeated volume attach and detach cycles"
+    ],
+    "pvc:ledger-db-data": [
+      "PVC is involved in repeated short-window attach and detach events"
+    ]
+  },
+  "likely_causes": [
+    "CSI driver bug causing flapping volume attachments",
+    "Node-level instability or repeated controller retries",
+    "Backend attachment state is oscillating instead of converging"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod ledger-db-0",
+    "kubectl get pvc -o wide",
+    "kubectl get volumeattachments",
+    "Inspect CSI controller and node plugin logs",
+    "Check node health and storage backend attachment state"
+  ]
+}
