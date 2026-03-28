@@ -6,7 +6,7 @@ from kubectl_explain_failure.engine import explain_failure, normalize_context
 from kubectl_explain_failure.timeline import build_timeline
 
 BASE_DIR = os.path.dirname(__file__)
-FIXTURE_DIR = os.path.join(BASE_DIR, "image_updated_crashloop")
+FIXTURE_DIR = os.path.join(BASE_DIR, "crashloop_after_image_update")
 
 
 def load_json(name: str):
@@ -14,7 +14,7 @@ def load_json(name: str):
         return json.load(f)
 
 
-def test_image_updated_then_crashloop_golden():
+def test_crashloop_after_image_update_golden():
     data = load_json("input.json")
     expected = load_json("expected.json")
 
@@ -41,7 +41,6 @@ def test_image_updated_then_crashloop_golden():
         )()
     )
 
-    # Noise objects (data completeness boost)
     context["node"] = {"node1": {"metadata": {"name": "node1"}}}
     context["pvc"] = {"metadata": {"name": "pvc1"}, "status": {"phase": "Bound"}}
     context["pv"] = {"metadata": {"name": "pv1"}}
@@ -50,36 +49,37 @@ def test_image_updated_then_crashloop_golden():
     context["secret"] = {"metadata": {"name": "mysecret"}}
 
     if events:
-        context["timeline"] = build_timeline(events)
+        context["timeline"] = build_timeline(events, relative_to="last_event")
 
     context = normalize_context(context)
 
     result = explain_failure(pod, events, context=context)
 
-    # Root cause
     assert result["root_cause"] == expected["root_cause"]
-
-    # Blocking
     assert result["blocking"] is True
+    assert result["confidence"] >= expected["confidence"]
 
-    # Confidence (compound rule should be high confidence)
-    assert result["confidence"] >= 0.90
+    assert result["resolution"]["winner"] == "CrashLoopAfterImageUpdate"
+    for suppressed in expected["resolution"]["suppressed"]:
+        assert suppressed in result["resolution"]["suppressed"]
 
-    # Evidence
     for ev in expected["evidence"]:
         assert ev in result["evidence"]
 
-    # Causes (order must match)
     for exp_cause, res_cause in zip(expected["causes"], result["causes"], strict=False):
         assert exp_cause["code"] == res_cause["code"]
         assert exp_cause["message"] == res_cause["message"]
         assert exp_cause["role"] == res_cause["role"]
         assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
-        assert exp_cause.get("blocking", True) == res_cause.get("blocking", True)
 
-    # Object evidence
     assert "object_evidence" in result
     for obj_key, items in expected["object_evidence"].items():
         assert obj_key in result["object_evidence"]
         for item in items:
             assert item in result["object_evidence"][obj_key]
+
+    for lc in expected.get("likely_causes", []):
+        assert lc in result.get("likely_causes", [])
+
+    for sc in expected.get("suggested_checks", []):
+        assert sc in result.get("suggested_checks", [])

@@ -1,0 +1,53 @@
+{
+  "root_cause": "CrashLoop began after a recent image update",
+  "blocking": true,
+  "confidence": 0.95,
+  "resolution": {
+    "suppressed": [
+      "CrashLoopBackOff"
+    ]
+  },
+  "evidence": [
+    "A fresh successful image pull was recorded for the container that is now crashlooping",
+    "CrashLoopBackOff started after the new image was pulled in the same pod lifecycle",
+    "First BackOff event followed the successful pull by 192.0s"
+  ],
+  "causes": [
+    {
+      "code": "FRESH_IMAGE_PULL_COMPLETED",
+      "message": "Kubelet completed a fresh pull of the image now used by the crashing container",
+      "role": "image_context"
+    },
+    {
+      "code": "NEW_IMAGE_RUNTIME_REGRESSION",
+      "message": "The newly pulled image starts and then fails repeatedly at runtime",
+      "role": "execution_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_CRASHLOOP",
+      "message": "Pod entered CrashLoopBackOff after the image update",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:orders-api-6d7d7ff9dc-p4lrk": [
+      "CrashLoopBackOff began shortly after kubelet pulled a fresh image"
+    ],
+    "container:api": [
+      "Container restarted 6 times after image 'ghcr.io/example/orders-api:2026.03.27-rc1' was freshly pulled"
+    ]
+  },
+  "likely_causes": [
+    "The new image introduced an application regression that causes immediate startup failure",
+    "The updated image changed runtime dependencies, configuration defaults, or bundled assets",
+    "The rollout switched to a bad build even though the image pulled successfully"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod orders-api-6d7d7ff9dc-p4lrk",
+    "Inspect logs from the crashing container revision",
+    "Compare the new image digest with the previous known-good rollout",
+    "Roll back to the previous image and confirm whether the crashloop stops",
+    "Review application startup changes introduced by the new image build"
+  ]
+}

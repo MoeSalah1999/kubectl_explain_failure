@@ -1,0 +1,67 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "orders-api-6d7d7ff9dc-p4lrk",
+      "namespace": "orders"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/orders-api:2026.03.27-rc1"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "restartCount": 6,
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff",
+              "message": "back-off 5m0s restarting failed container=api pod=orders-api-6d7d7ff9dc-p4lrk_orders"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 1,
+              "finishedAt": "2026-03-27T10:03:52Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Pulling",
+      "message": "Pulling image \"ghcr.io/example/orders-api:2026.03.27-rc1\"",
+      "lastTimestamp": "2026-03-27T10:00:00Z"
+    },
+    {
+      "reason": "Pulled",
+      "message": "Successfully pulled image \"ghcr.io/example/orders-api:2026.03.27-rc1\" in 3.842s",
+      "lastTimestamp": "2026-03-27T10:00:18Z"
+    },
+    {
+      "reason": "Created",
+      "message": "Created container api",
+      "lastTimestamp": "2026-03-27T10:00:26Z"
+    },
+    {
+      "reason": "Started",
+      "message": "Started container api",
+      "lastTimestamp": "2026-03-27T10:00:29Z"
+    },
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container api in pod orders-api-6d7d7ff9dc-p4lrk_orders(52b0b4b0-0eb7-4b9b-9bb1-3e43ad82290b)",
+      "firstTimestamp": "2026-03-27T10:03:30Z",
+      "lastTimestamp": "2026-03-27T10:04:00Z",
+      "count": 4
+    }
+  ]
+}
