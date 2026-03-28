@@ -1,0 +1,55 @@
+{
+  "root_cause": "CSI controller is unavailable, causing controller-side volume operations to fail",
+  "blocking": true,
+  "confidence": 0.94,
+  "evidence": [
+    "Controller-side volume lifecycle failures repeat over time",
+    "Events show CSI controller RPC, timeout, or connection failures",
+    "Dominant CSI error: AttachVolume.Attach failed for volume \"pvc-0f1a2b3c4d5e6f78\" : rpc error: code = Unavailable desc = ControllerPublishVolume failed for driver ebs.csi.aws.com: connection refused"
+  ],
+  "causes": [
+    {
+      "code": "CSI_CONTROLLER_UNAVAILABLE",
+      "message": "CSI controller is unavailable or not responding",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "CSI_CONTROL_PLANE_FAILURE",
+      "message": "CSI control-plane cannot process controller-side volume operations",
+      "role": "control_loop"
+    },
+    {
+      "code": "POD_BLOCKED_ON_STORAGE",
+      "message": "Pod cannot start because CSI-managed storage operations fail",
+      "role": "workload_symptom"
+    }
+  ],
+  "resolution": {
+    "winner": "CSIControllerUnavailable",
+    "suppressed": [
+      "CSIProvisioningFailed",
+      "VolumeAttachFailed",
+      "VolumeExpansionFailed",
+      "VolumeSnapshotRestoreFailed"
+    ]
+  },
+  "object_evidence": {
+    "pod:orders-db-0": [
+      "Pod blocked because CSI controller-side operations are unavailable"
+    ]
+  },
+  "likely_causes": [
+    "CSI controller pods are down or crash-looping",
+    "CSI sidecars such as the provisioner, attacher, or resizer are not healthy",
+    "Network or DNS issues prevent controller-to-driver communication",
+    "Cloud provider API problems are causing CSI controller calls to fail"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod orders-db-0",
+    "kubectl get events --sort-by=.lastTimestamp",
+    "kubectl get pods -n kube-system",
+    "kubectl logs -n kube-system <csi-controller-pod>",
+    "kubectl get volumeattachments"
+  ]
+}

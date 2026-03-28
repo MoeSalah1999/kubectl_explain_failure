@@ -1,0 +1,55 @@
+{
+  "root_cause": "PersistentVolumeClaim expansion is failing due to CSI or storage backend limitations",
+  "blocking": true,
+  "confidence": 0.91,
+  "evidence": [
+    "Explicit volume expansion failure events were observed",
+    "Expansion retries persisted over time",
+    "No successful expansion completion was observed",
+    "Dominant expansion error: resize volume \"pvc-7a6b5c4d-3e2f-11ef-9abc-0a1b2c3d4e5f\" failed: requested size 500Gi exceeds the maximum volume size supported by the storage backend"
+  ],
+  "causes": [
+    {
+      "code": "VOLUME_EXPANSION_FAILED",
+      "message": "PersistentVolumeClaim expansion cannot be completed",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "CSI_EXPANSION_RETRY_LOOP",
+      "message": "CSI resizer or kubelet repeatedly retries volume expansion",
+      "role": "control_loop"
+    },
+    {
+      "code": "PVC_CAPACITY_NOT_UPDATED",
+      "message": "Requested storage capacity was not applied to the volume",
+      "role": "volume_intermediate"
+    },
+    {
+      "code": "WORKLOAD_STORAGE_CONSTRAINT",
+      "message": "Workload may be constrained by unexpanded storage capacity",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pvc:analytics-db-data": [
+      "PVC expansion repeatedly failed and did not complete"
+    ],
+    "pod:analytics-db-0": [
+      "Pod may be impacted by insufficient or unexpanded storage"
+    ]
+  },
+  "likely_causes": [
+    "CSI driver does not support volume expansion",
+    "Storage backend quota or size limits were exceeded",
+    "Filesystem resize failed on the node",
+    "Volume cannot be expanded online for this driver or volume type"
+  ],
+  "suggested_checks": [
+    "kubectl describe pvc analytics-db-data",
+    "kubectl describe pod analytics-db-0",
+    "kubectl get events --sort-by=.lastTimestamp",
+    "kubectl get storageclass -o yaml",
+    "Check CSI resizer and node plugin logs"
+  ]
+}

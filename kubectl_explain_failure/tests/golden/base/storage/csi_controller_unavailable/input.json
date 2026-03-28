@@ -1,0 +1,51 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "orders-db-0",
+      "namespace": "orders"
+    },
+    "spec": {
+      "nodeName": "ip-10-0-31-44.ec2.internal",
+      "volumes": [
+        {
+          "name": "data",
+          "persistentVolumeClaim": {
+            "claimName": "orders-db-data"
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "postgres",
+          "image": "postgres:16",
+          "volumeMounts": [
+            {
+              "name": "data",
+              "mountPath": "/var/lib/postgresql/data"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "Scheduled",
+      "message": "Successfully assigned orders/orders-db-0 to ip-10-0-31-44.ec2.internal",
+      "lastTimestamp": "2026-03-25T14:00:00Z"
+    },
+    {
+      "reason": "FailedAttachVolume",
+      "source": {
+        "component": "attachdetach-controller"
+      },
+      "message": "AttachVolume.Attach failed for volume \"pvc-0f1a2b3c4d5e6f78\" : rpc error: code = Unavailable desc = ControllerPublishVolume failed for driver ebs.csi.aws.com: connection refused",
+      "firstTimestamp": "2026-03-25T14:01:00Z",
+      "lastTimestamp": "2026-03-25T14:06:00Z",
+      "count": 6
+    }
+  ]
+}
