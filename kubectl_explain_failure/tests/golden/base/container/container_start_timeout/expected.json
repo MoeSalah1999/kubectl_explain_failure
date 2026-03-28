@@ -1,0 +1,45 @@
+{
+  "root_cause": "Container runtime timed out while starting the container",
+  "blocking": true,
+  "confidence": 0.95,
+  "evidence": [
+    "Kubelet failure events explicitly show container start timeout markers",
+    "Container remains in a waiting startup state while timeout events repeat",
+    "Dominant timeout error: Error: failed to create containerd task: context deadline exceeded while starting container \"worker\""
+  ],
+  "causes": [
+    {
+      "code": "CONTAINER_START_REQUESTED",
+      "message": "Kubelet requested that the runtime start the container",
+      "role": "execution_context"
+    },
+    {
+      "code": "CONTAINER_START_TIMEOUT",
+      "message": "Container runtime exceeded the allowed time while starting the container",
+      "role": "execution_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_STUCK_STARTING",
+      "message": "Pod remains stuck before container startup completes",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:payments-worker-5dff7d7bb9-k4sn2": [
+      "Pod is stuck because container startup timed out in the runtime"
+    ]
+  },
+  "likely_causes": [
+    "containerd or CRI-O is overloaded or unhealthy on the node",
+    "Runtime shim startup is hanging",
+    "Node resource pressure is delaying runtime startup beyond kubelet deadlines",
+    "Security or storage hooks in the start path are blocking container launch"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod payments-worker-5dff7d7bb9-k4sn2",
+    "Check kubelet logs for start timeout or deadline exceeded errors",
+    "Verify containerd or CRI-O health on the node",
+    "Inspect node resource pressure and runtime shim behavior"
+  ]
+}

@@ -213,6 +213,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ContainerCreateConfigError
 - ContainerRuntimePermissionDenied
 - ContainerRuntimeStartFailure
+- ContainerStartTimeout
 - CrashLoopBackOff
 - ImageArchitectureMismatch
 - ImagePullBackOff

@@ -1,0 +1,50 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-worker-5dff7d7bb9-k4sn2",
+      "namespace": "payments"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "worker",
+          "image": "ghcr.io/example/payments-worker:3.2.1"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "worker",
+          "state": {
+            "waiting": {
+              "reason": "ContainerCreating",
+              "message": "container is being created"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Pulled",
+      "message": "Container image \"ghcr.io/example/payments-worker:3.2.1\" already present on machine",
+      "source": {
+        "component": "kubelet"
+      },
+      "lastTimestamp": "2026-03-25T10:00:00Z"
+    },
+    {
+      "reason": "Failed",
+      "message": "Error: failed to create containerd task: context deadline exceeded while starting container \"worker\"",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-25T10:01:00Z",
+      "lastTimestamp": "2026-03-25T10:05:00Z",
+      "count": 3
+    }
+  ]
+}
