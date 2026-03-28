@@ -1,0 +1,53 @@
+{
+  "root_cause": "CSI driver required for the volume is not registered or cannot be found",
+  "blocking": true,
+  "confidence": 0.94,
+  "evidence": [
+    "FailedMount or FailedAttachVolume explicitly reports a missing CSI driver",
+    "Dominant error: MountVolume.SetUp failed for volume \"secrets-store-inline\" : kubernetes.io/csi: mounter.SetUpAt failed to get CSI client: driver name secrets-store.csi.k8s.io not found in the list of registered CSI drivers"
+  ],
+  "causes": [
+    {
+      "code": "CSI_DRIVER_NOT_FOUND",
+      "message": "Required CSI driver name is not registered for volume operations",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "CSI_PLUGIN_UNAVAILABLE",
+      "message": "Kubelet or the attach path cannot resolve the requested CSI driver",
+      "role": "volume_intermediate"
+    },
+    {
+      "code": "POD_BLOCKED_ON_VOLUME",
+      "message": "Pod cannot start because volume initialization failed",
+      "role": "workload_symptom"
+    }
+  ],
+  "resolution": {
+    "winner": "CSIDriverNotFound",
+    "suppressed": [
+      "CSIControllerUnavailable",
+      "VolumeAttachFailed",
+      "FailedMount",
+      "PVCMountFailed"
+    ]
+  },
+  "object_evidence": {
+    "pod:payments-api-7b6c9d4f8f-r6zxh": [
+      "Pod blocked because the requested CSI driver name cannot be resolved"
+    ]
+  },
+  "likely_causes": [
+    "CSI node plugin is not installed or not running on the target node",
+    "StorageClass or PV references the wrong CSI driver name",
+    "Driver registration on the node failed"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod payments-api-7b6c9d4f8f-r6zxh",
+    "kubectl get events --sort-by=.lastTimestamp",
+    "kubectl get csidrivers",
+    "kubectl get pods -n kube-system",
+    "Check CSI node plugin logs on the target node"
+  ]
+}

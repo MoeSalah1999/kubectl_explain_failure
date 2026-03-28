@@ -1,0 +1,56 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-api-7b6c9d4f8f-r6zxh",
+      "namespace": "payments"
+    },
+    "spec": {
+      "nodeName": "aks-userpool1-38156422-vmss00000d",
+      "volumes": [
+        {
+          "name": "secrets-store-inline",
+          "csi": {
+            "driver": "secrets-store.csi.k8s.io",
+            "readOnly": true,
+            "volumeAttributes": {
+              "secretProviderClass": "payments-vault"
+            }
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/payments-api:2.4.1",
+          "volumeMounts": [
+            {
+              "name": "secrets-store-inline",
+              "mountPath": "/mnt/secrets-store",
+              "readOnly": true
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "reason": "Scheduled",
+      "message": "Successfully assigned payments/payments-api-7b6c9d4f8f-r6zxh to aks-userpool1-38156422-vmss00000d",
+      "lastTimestamp": "2026-03-25T09:55:00Z"
+    },
+    {
+      "reason": "FailedMount",
+      "source": {
+        "component": "kubelet"
+      },
+      "message": "MountVolume.SetUp failed for volume \"secrets-store-inline\" : kubernetes.io/csi: mounter.SetUpAt failed to get CSI client: driver name secrets-store.csi.k8s.io not found in the list of registered CSI drivers",
+      "firstTimestamp": "2026-03-25T09:56:00Z",
+      "lastTimestamp": "2026-03-25T10:02:00Z",
+      "count": 9
+    }
+  ]
+}
