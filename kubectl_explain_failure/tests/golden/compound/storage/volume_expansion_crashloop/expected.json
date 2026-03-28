@@ -1,0 +1,56 @@
+{
+  "root_cause": "Pod enters CrashLoopBackOff after PVC expansion failed or remained incomplete",
+  "blocking": true,
+  "confidence": 0.90,
+  "resolution": {
+    "winner": "VolumeExpansionThenCrashLoop",
+    "suppressed": [
+      "CrashLoopBackOff",
+      "VolumeExpansionFailed",
+      "FailedMount"
+    ]
+  },
+  "evidence": [
+    "Referenced PVC still shows failed or incomplete expansion state",
+    "CrashLoopBackOff starts after the expansion problem is present",
+    "Storage-related follow-up signals remain visible for the Pod"
+  ],
+  "causes": [
+    {
+      "code": "PVC_EXPANSION_FAILED",
+      "message": "PVC expansion failed or remains incomplete",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "STORAGE_STATE_REMAINS_INCONSISTENT",
+      "message": "Workload sees storage state that did not catch up to the requested expansion",
+      "role": "volume_intermediate"
+    },
+    {
+      "code": "POD_CRASHLOOP",
+      "message": "Pod repeatedly restarts after the failed or incomplete expansion",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:analytics-db-0": [
+      "Pod enters CrashLoopBackOff after volume expansion failed or remained incomplete"
+    ],
+    "pvc:analytics-db-data": [
+      "PVC has active expansion failure or unexpanded requested size"
+    ]
+  },
+  "likely_causes": [
+    "PVC resize cannot complete due to driver or backend limitations",
+    "Filesystem resize did not finish on the node",
+    "Application restarts because it still sees insufficient or inconsistent storage state"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod analytics-db-0",
+    "kubectl logs <pod> --previous",
+    "kubectl get pvc -o wide",
+    "kubectl describe pvc",
+    "Check CSI resizer and kubelet logs"
+  ]
+}

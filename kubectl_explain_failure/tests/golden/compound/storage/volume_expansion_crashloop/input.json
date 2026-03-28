@@ -1,0 +1,126 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "analytics-db-0",
+      "namespace": "analytics"
+    },
+    "spec": {
+      "nodeName": "ip-10-0-51-12.ec2.internal",
+      "volumes": [
+        {
+          "name": "data",
+          "persistentVolumeClaim": {
+            "claimName": "analytics-db-data"
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "postgres",
+          "image": "postgres:16",
+          "volumeMounts": [
+            {
+              "name": "data",
+              "mountPath": "/var/lib/postgresql/data"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "postgres",
+          "ready": false,
+          "restartCount": 7,
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff",
+              "message": "back-off 5m0s restarting failed container=postgres pod=analytics-db-0_analytics"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 1
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "pvc": {
+      "analytics-db-data": {
+        "metadata": {
+          "name": "analytics-db-data",
+          "namespace": "analytics"
+        },
+        "spec": {
+          "accessModes": [
+            "ReadWriteOnce"
+          ],
+          "resources": {
+            "requests": {
+              "storage": "500Gi"
+            }
+          },
+          "storageClassName": "gp3-expand",
+          "volumeName": "pvc-11223344aabbccdd"
+        },
+        "status": {
+          "phase": "Bound",
+          "capacity": {
+            "storage": "200Gi"
+          }
+        }
+      }
+    },
+    "storageclass": {
+      "gp3-expand": {
+        "metadata": {
+          "name": "gp3-expand"
+        },
+        "provisioner": "ebs.csi.aws.com",
+        "allowVolumeExpansion": true
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "ExternalExpanding",
+      "message": "Waiting for external resizer to expand PVC analytics-db-data",
+      "firstTimestamp": "2026-03-25T16:10:00Z",
+      "lastTimestamp": "2026-03-25T16:12:00Z",
+      "count": 3
+    },
+    {
+      "reason": "VolumeResizeFailed",
+      "source": {
+        "component": "external-resizer"
+      },
+      "message": "resize volume \"pvc-11223344aabbccdd\" failed: requested size 500Gi exceeds the maximum volume size supported by the storage backend",
+      "firstTimestamp": "2026-03-25T16:11:00Z",
+      "lastTimestamp": "2026-03-25T16:18:00Z",
+      "count": 4
+    },
+    {
+      "reason": "FailedMount",
+      "source": {
+        "component": "kubelet"
+      },
+      "message": "MountVolume.SetUp failed for volume \"data\" : filesystem resize failed and volume remains smaller than requested size",
+      "firstTimestamp": "2026-03-25T16:19:00Z",
+      "lastTimestamp": "2026-03-25T16:21:00Z",
+      "count": 3
+    },
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container postgres in pod analytics-db-0_analytics due to CrashLoopBackOff after storage initialization errors",
+      "firstTimestamp": "2026-03-25T16:24:00Z",
+      "lastTimestamp": "2026-03-25T16:30:00Z",
+      "count": 6
+    }
+  ]
+}
