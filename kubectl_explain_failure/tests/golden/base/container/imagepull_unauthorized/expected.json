@@ -1,0 +1,52 @@
+{
+  "root_cause": "Registry rejected the image pull due to authentication or authorization failure",
+  "blocking": true,
+  "confidence": 0.93,
+  "resolution": {
+    "winner": "ImagePullUnauthorized",
+    "suppressed": [
+      "ImagePullError",
+      "ImagePullBackOff"
+    ]
+  },
+  "evidence": [
+    "ErrImagePull or ImagePullBackOff includes explicit registry authorization failure markers",
+    "Unauthorized image pull failures repeat or progress into backoff",
+    "Dominant auth error: rpc error: code = Unknown desc = failed to pull and unpack image \"registry.example.com/private/ledger-api:1.7.3\": failed to authorize: failed to fetch anonymous token: unexpected status from GET request to https://registry.example.com/token?scope=repository%3Aprivate%2Fledger-api%3Apull&service=registry.example.com: 401 Unauthorized"
+  ],
+  "causes": [
+    {
+      "code": "PRIVATE_REGISTRY_ACCESS_REQUIRED",
+      "message": "Container image requires authenticated or authorized registry access",
+      "role": "workload_context"
+    },
+    {
+      "code": "REGISTRY_AUTHORIZATION_FAILED",
+      "message": "Registry rejected the image pull request as unauthorized",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "IMAGE_PULL_BLOCKED",
+      "message": "Kubelet cannot pull the image until registry access is fixed",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:ledger-api-7d8d56c7c9-zx8rm": [
+      "Pod cannot start because the registry denied access to the requested image"
+    ]
+  },
+  "likely_causes": [
+    "Pod or node has no valid credentials for the private registry",
+    "Registry token or credential helper is expired or rejected",
+    "Registry repository exists but the caller lacks pull permissions",
+    "Workload identity or node identity is not authorized for this image repository"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod ledger-api-7d8d56c7c9-zx8rm",
+    "Verify registry credentials or credential provider configuration",
+    "Confirm the registry repository grants pull access to this workload or node identity",
+    "Retry the image pull with the same credentials outside the cluster"
+  ]
+}

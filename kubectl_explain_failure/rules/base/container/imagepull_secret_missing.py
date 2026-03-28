@@ -38,7 +38,7 @@ class ImagePullSecretMissingRule(FailureRule):
     }
 
     deterministic = True
-    blocks = ["ImagePullError"]
+    blocks = ["ImagePullError", "ImagePullUnauthorized"]
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")

@@ -1,0 +1,46 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "ledger-api-7d8d56c7c9-zx8rm",
+      "namespace": "finance"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "registry.example.com/private/ledger-api:1.7.3"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "state": {
+            "waiting": {
+              "reason": "ImagePullBackOff",
+              "message": "Back-off pulling image \"registry.example.com/private/ledger-api:1.7.3\""
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "ErrImagePull",
+      "message": "rpc error: code = Unknown desc = failed to pull and unpack image \"registry.example.com/private/ledger-api:1.7.3\": failed to authorize: failed to fetch anonymous token: unexpected status from GET request to https://registry.example.com/token?scope=repository%3Aprivate%2Fledger-api%3Apull&service=registry.example.com: 401 Unauthorized",
+      "firstTimestamp": "2026-03-25T09:00:00Z",
+      "lastTimestamp": "2026-03-25T09:02:00Z",
+      "count": 2
+    },
+    {
+      "reason": "ImagePullBackOff",
+      "message": "Back-off pulling image \"registry.example.com/private/ledger-api:1.7.3\"",
+      "firstTimestamp": "2026-03-25T09:03:00Z",
+      "lastTimestamp": "2026-03-25T09:05:00Z",
+      "count": 3
+    }
+  ]
+}
