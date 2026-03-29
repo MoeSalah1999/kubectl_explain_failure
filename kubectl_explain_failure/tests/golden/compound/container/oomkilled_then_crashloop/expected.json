@@ -1,0 +1,55 @@
+{
+  "root_cause": "OOMKilled termination escalated into CrashLoopBackOff",
+  "blocking": true,
+  "confidence": 0.98,
+  "resolution": {
+    "suppressed": [
+      "CrashLoopBackOff",
+      "OOMKilled"
+    ]
+  },
+  "evidence": [
+    "Container lastState shows OOMKilled before the current CrashLoopBackOff state",
+    "Kubelet emitted BackOff restart events for the same crashing container",
+    "First BackOff event started 16.0s after the recorded OOMKilled termination",
+    "OOMKilled termination exit code was 137"
+  ],
+  "causes": [
+    {
+      "code": "OOM_TERMINATION_OBSERVED",
+      "message": "The container's most recent termination was caused by OOMKilled",
+      "role": "resource_context"
+    },
+    {
+      "code": "MEMORY_PRESSURE_REPEATEDLY_KILLS_CONTAINER",
+      "message": "The workload keeps exceeding its memory limit and cannot stay up long enough to stabilize",
+      "role": "resource_root",
+      "blocking": true
+    },
+    {
+      "code": "CRASHLOOP_AFTER_OOM",
+      "message": "Kubelet enters restart backoff after the OOMKilled termination",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:payments-worker-6c4fd7b6d8-z8qf2": [
+      "Pod is in CrashLoopBackOff after an OOMKilled container termination"
+    ],
+    "container:worker": [
+      "Container restarted 7 times after being OOMKilled"
+    ]
+  },
+  "likely_causes": [
+    "Container memory limit is too low for the workload's startup or steady-state usage",
+    "The application has a memory spike or leak that repeatedly triggers kernel OOM enforcement",
+    "A recent code or traffic change increased memory consumption beyond the configured limit"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod payments-worker-6c4fd7b6d8-z8qf2",
+    "Review container memory requests and limits",
+    "Inspect memory usage around startup and peak load",
+    "Check whether a recent deployment changed workload memory behavior",
+    "Raise the memory limit temporarily to confirm the crashloop is OOM-driven"
+  ]
+}

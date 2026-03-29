@@ -325,11 +325,12 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 ### Container
 
 - CrashLoopAfterConfigChange
+- CrashLoopAfterImageUpdate
 - CrashLoopLivenessProbe
 - CrashLoopOOMKilled
 - ImagePullSecretMissingCompound
 - ImageTagMutableDrift
-- CrashLoopAfterImageUpdate
+- OOMKilledThenCrashLoop
 - RapidRestartEscalation
 
 ### Controllers

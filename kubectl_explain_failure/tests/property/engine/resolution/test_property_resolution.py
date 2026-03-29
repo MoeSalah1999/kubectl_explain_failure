@@ -17,9 +17,6 @@ from kubectl_explain_failure.rules.base.scheduling.failed_scheduling import (
     FailedSchedulingRule,
 )
 from kubectl_explain_failure.rules.base.storage.pvc_not_bound import PVCNotBoundRule
-from kubectl_explain_failure.rules.compound.container.crashloop_oom import (
-    CrashLoopOOMKilledRule,
-)
 from kubectl_explain_failure.tests.property.strategies import (
     event_strategy,
     pvc_strategy,
@@ -29,7 +26,6 @@ RULES = [
     PVCNotBoundRule(),
     FailedSchedulingRule(),
     CrashLoopBackOffRule(),
-    CrashLoopOOMKilledRule(),
 ]
 
 

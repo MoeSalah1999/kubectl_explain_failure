@@ -1,0 +1,57 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-worker-6c4fd7b6d8-z8qf2",
+      "namespace": "payments"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "worker",
+          "image": "ghcr.io/example/payments-worker:2026.03.27"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "worker",
+          "restartCount": 7,
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff",
+              "message": "back-off 5m0s restarting failed container=worker pod=payments-worker-6c4fd7b6d8-z8qf2_payments"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "OOMKilled",
+              "exitCode": 137,
+              "finishedAt": "2026-03-27T11:04:18Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Started",
+      "message": "Started container worker",
+      "lastTimestamp": "2026-03-27T11:03:41Z"
+    },
+    {
+      "reason": "Killing",
+      "message": "Container worker failed liveness probe, will be restarted",
+      "lastTimestamp": "2026-03-27T11:04:20Z"
+    },
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container worker in pod payments-worker-6c4fd7b6d8-z8qf2_payments(eb12f1df-5861-4810-a4cb-f4f42586dc7d)",
+      "firstTimestamp": "2026-03-27T11:04:34Z",
+      "lastTimestamp": "2026-03-27T11:05:10Z",
+      "count": 5
+    }
+  ]
+}
