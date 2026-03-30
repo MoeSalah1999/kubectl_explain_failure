@@ -1,0 +1,59 @@
+{
+  "root_cause": "Container runtime startup failures are bursting with brief successful starts in between",
+  "confidence": 0.90,
+  "resolution": {
+    "suppressed": [
+      "ContainerRuntimeStartFailure"
+    ]
+  },
+  "evidence": [
+    "Container 'api' showed runtime startup failure -> Started -> runtime startup failure within 5.0 minutes",
+    "Runtime start failures accounted for 5 attempt(s) across the burst",
+    "Transient recovery lasted about 1.2 minutes before failure resumed",
+    "Container is currently back in waiting startup state (CreateContainerError) with restartCount=3",
+    "Burst uses kubelet timeline ordering rather than a single failure snapshot"
+  ],
+  "causes": [
+    {
+      "code": "RUNTIME_START_FAILURE_OBSERVED",
+      "message": "Container 'api' experienced runtime startup failures in multiple recent episodes",
+      "role": "execution_context"
+    },
+    {
+      "code": "TRANSIENT_RUNTIME_RECOVERY_BETWEEN_FAILURES",
+      "message": "The container briefly reached a Started state before runtime startup failures returned",
+      "role": "temporal_context"
+    },
+    {
+      "code": "RUNTIME_FAILURE_BURST",
+      "message": "Container runtime startup instability is bursting rather than remaining a single isolated failure",
+      "role": "execution_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_RETURNED_TO_STARTUP_ERROR",
+      "message": "The pod returned to a startup failure state after transient recovery",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:runtime-burst-api": [
+      "Pod startup alternated between runtime failure and temporary success before failing again"
+    ],
+    "container:api": [
+      "Container restartCount=3 and latest startup state is CreateContainerError",
+      "Error: failed to start container \"api\": Error response from daemon: failed to create containerd task: failed to create shim task: ttrpc: closed: unknown"
+    ]
+  },
+  "likely_causes": [
+    "containerd or CRI-O on the node is intermittently unstable and briefly recovers between startup attempts",
+    "A runtime shim or low-level OCI path is flapping, allowing some starts to succeed before failing again",
+    "Node-level runtime dependencies such as cgroups, shim processes, or daemon state are unstable during container launch"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod runtime-burst-api",
+    "kubectl logs runtime-burst-api -c api --previous",
+    "Inspect kubelet and containerd or CRI-O logs for alternating start success and runtime create-task failures",
+    "Check runtime daemon restarts and shim stability on the node during the burst window"
+  ]
+}

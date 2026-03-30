@@ -1,0 +1,105 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "runtime-burst-api",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/runtime-burst-api:2026.03.30"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "restartCount": 3,
+          "state": {
+            "waiting": {
+              "reason": "CreateContainerError",
+              "message": "failed to start container \"api\": Error response from daemon: failed to create containerd task: failed to create shim task: ttrpc: closed: unknown"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 1,
+              "finishedAt": "2026-03-30T11:02:18Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "Pulled",
+      "message": "Successfully pulled image \"ghcr.io/example/runtime-burst-api:2026.03.30\"",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "runtime-burst-api",
+        "namespace": "default"
+      },
+      "firstTimestamp": "2026-03-30T11:00:10Z",
+      "lastTimestamp": "2026-03-30T11:00:10Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "Error: failed to create containerd task for container \"api\": failed to create shim task: ttrpc: closed: unknown",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "runtime-burst-api",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-03-30T11:00:30Z",
+      "lastTimestamp": "2026-03-30T11:00:45Z",
+      "count": 2
+    },
+    {
+      "type": "Normal",
+      "reason": "Started",
+      "message": "Started container api",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "runtime-burst-api",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-03-30T11:01:20Z",
+      "lastTimestamp": "2026-03-30T11:01:20Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "Error: failed to start container \"api\": Error response from daemon: failed to create containerd task: failed to create shim task: ttrpc: closed: unknown",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "runtime-burst-api",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-03-30T11:02:30Z",
+      "lastTimestamp": "2026-03-30T11:05:30Z",
+      "count": 3
+    }
+  ]
+}
