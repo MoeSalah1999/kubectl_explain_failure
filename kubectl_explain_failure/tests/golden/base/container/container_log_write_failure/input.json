@@ -1,0 +1,33 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "orders-api-logpath-failure"
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "state": {
+            "waiting": {
+              "reason": "CreateContainerError",
+              "message": "failed to start container \"api\": failed to create symbolic link /var/log/containers/orders-api-logpath-failure_default_api-9f0f9d7d2c1e1eab.log to /var/log/pods/default_orders-api-logpath-failure_7d125f65-6487-43bb-96ad-5eab6545cb4f/api/0.log: no space left on device"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Failed",
+      "count": 3,
+      "message": "Error: failed to create symbolic link /var/log/containers/orders-api-logpath-failure_default_api-9f0f9d7d2c1e1eab.log to /var/log/pods/default_orders-api-logpath-failure_7d125f65-6487-43bb-96ad-5eab6545cb4f/api/0.log: no space left on device",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-29T11:00:00Z",
+      "lastTimestamp": "2026-03-29T11:04:00Z"
+    }
+  ]
+}

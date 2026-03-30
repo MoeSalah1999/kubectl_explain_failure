@@ -3,24 +3,23 @@ from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import timeline_has_event
 
 
-class OverlayFSStorageExhaustedRule(FailureRule):
+class ContainerLogWriteFailureRule(FailureRule):
     """
-    Detects container startup failures caused by exhausted runtime storage in
-    overlayfs or a snapshot-backed rootfs path on the node.
+    Detects container startup failures caused by the runtime or node OS being
+    unable to create or write the container's log path.
 
     Real-world behavior:
-    - kubelet/containerd often emits `no space left on device` while creating
-      overlay mounts, unpacking image layers, or preparing the container rootfs
-    - the container typically remains in CreateContainerError or RunContainerError
-      because the runtime cannot materialize the writable layer
-    - this is narrower than generic runtime start failure and more directly
-      actionable than a broad node DiskPressure diagnosis when the pod-level
-      runtime message explicitly identifies overlay/snapshot storage exhaustion
+    - kubelet and container runtimes often surface this as failures creating
+      log symlinks or writing under `/var/log/pods` or `/var/log/containers`
+    - common node-side errors include `no space left on device`,
+      `disk quota exceeded`, or low-level I/O failures on the log path
+    - the container usually remains in CreateContainerError, RunContainerError,
+      or ContainerCreating because startup cannot complete once log setup fails
     """
 
-    name = "OverlayFSStorageExhausted"
+    name = "ContainerLogWriteFailure"
     category = "Container"
-    priority = 89
+    priority = 88
     deterministic = True
 
     phases = ["Pending", "Running"]
@@ -32,50 +31,50 @@ class OverlayFSStorageExhaustedRule(FailureRule):
 
     blocks = [
         "ContainerRuntimeStartFailure",
-        "NodeDiskPressure",
     ]
 
-    NO_SPACE_MARKERS = (
+    FAILURE_MARKERS = (
         "no space left on device",
         "disk quota exceeded",
+        "input/output error",
+        "i/o error",
+        "file too large",
     )
 
-    FILESYSTEM_CONTEXT_MARKERS = (
+    LOG_CONTEXT_MARKERS = (
+        "/var/log/pods",
+        "/var/log/containers",
+        "container log",
+        "log file",
+        "log symlink",
+        "create symbolic link",
+        "failed to create symbolic link",
+        "failed to create container log",
+        "failed to open log file",
+        "failed to write log",
+        "logger",
+        ".log",
+    )
+
+    STARTUP_CONTEXT_MARKERS = (
+        "failed to start container",
+        "failed to create containerd task",
+        "failed to create shim task",
+        "container runtime",
+        "createcontainer",
+        "starting container",
+    )
+
+    EXCLUSION_MARKERS = (
         "overlay",
         "overlayfs",
         "snapshot",
         "snapshotter",
         "rootfs",
-        "layer",
-        "diff",
-        "merged",
-        "/var/lib/containerd",
-        "/var/lib/docker",
-    )
-
-    RUNTIME_CONTEXT_MARKERS = (
-        "failed to create containerd task",
-        "failed to start container",
-        "failed to prepare rootfs",
-        "failed to extract layer",
-        "error creating overlay mount",
-        "error mounting",
-        "apply layer",
-        "unpack image",
-        "write layer",
-    )
-
-    EXCLUSION_MARKERS = (
         "structure needs cleaning",
         "filesystem corruption",
         "corrupt",
         "corrupted",
-        "/var/log/pods",
-        "/var/log/containers",
-        "container log",
-        "log symlink",
-        "create symbolic link",
-        "log file",
         "read-only file system",
         "permission denied",
         "context deadline exceeded",
@@ -101,7 +100,7 @@ class OverlayFSStorageExhaustedRule(FailureRule):
         except Exception:
             return 1
 
-    def _is_overlayfs_storage_exhaustion_message(self, message: str) -> bool:
+    def _is_log_write_failure_message(self, message: str) -> bool:
         msg = (message or "").lower()
         if not msg:
             return False
@@ -109,24 +108,25 @@ class OverlayFSStorageExhaustedRule(FailureRule):
         if any(marker in msg for marker in self.EXCLUSION_MARKERS):
             return False
 
-        if not any(marker in msg for marker in self.NO_SPACE_MARKERS):
+        if not any(marker in msg for marker in self.FAILURE_MARKERS):
             return False
 
-        has_fs_context = any(
-            marker in msg for marker in self.FILESYSTEM_CONTEXT_MARKERS
+        has_log_context = any(marker in msg for marker in self.LOG_CONTEXT_MARKERS)
+        has_startup_context = any(
+            marker in msg for marker in self.STARTUP_CONTEXT_MARKERS
         )
-        has_runtime_context = any(
-            marker in msg for marker in self.RUNTIME_CONTEXT_MARKERS
+
+        return (
+            has_log_context
+            or has_startup_context
+            and ("/var/log/" in msg or "log" in msg)
         )
-        return has_fs_context or has_runtime_context
 
     def _matching_events(self, timeline) -> list[dict]:
         return [
             event
             for event in timeline.raw_events
-            if self._is_overlayfs_storage_exhaustion_message(
-                str(event.get("message", ""))
-            )
+            if self._is_log_write_failure_message(str(event.get("message", "")))
         ]
 
     def _matching_waiting_messages(self, pod: dict) -> list[str]:
@@ -137,7 +137,7 @@ class OverlayFSStorageExhaustedRule(FailureRule):
                 continue
 
             message = waiting.get("message") or ""
-            if self._is_overlayfs_storage_exhaustion_message(message):
+            if self._is_log_write_failure_message(message):
                 messages.append(message)
         return messages
 
@@ -190,59 +190,53 @@ class OverlayFSStorageExhaustedRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="CONTAINER_LAYER_PREPARATION_STARTED",
-                    message="Kubelet asked the runtime to prepare the container writable layer and root filesystem",
+                    code="CONTAINER_LOG_PATH_SETUP_STARTED",
+                    message="Kubelet asked the runtime to initialize the container log path before startup",
                     role="execution_context",
                 ),
                 Cause(
-                    code="OVERLAYFS_STORAGE_EXHAUSTED",
-                    message="Overlay or snapshot-backed runtime storage on the node ran out of space",
+                    code="CONTAINER_LOG_WRITE_FAILED",
+                    message="The node or runtime could not create or write the container log path",
                     role="execution_root",
                     blocking=True,
                 ),
                 Cause(
-                    code="CONTAINER_CANNOT_START",
-                    message="Container cannot start because the runtime cannot allocate or mount its writable filesystem layer",
+                    code="CONTAINER_STARTUP_ABORTED",
+                    message="Container cannot finish startup because log initialization failed on the node",
                     role="workload_symptom",
                 ),
             ]
         )
 
         return {
-            "root_cause": "Overlay or snapshot-backed runtime storage is exhausted and blocks container startup",
-            "confidence": 0.97,
+            "root_cause": "Container log path could not be created or written by the runtime",
+            "confidence": 0.96,
             "causes": chain,
             "blocking": True,
             "evidence": [
-                "Kubelet or runtime reports overlay or snapshot-backed container storage ran out of space",
+                "Kubelet or runtime reports failure while creating or writing the container log path",
                 "Container remains in a waiting startup error state instead of reaching a started state",
                 *(
-                    [
-                        f"Storage exhaustion-shaped runtime failure repeated {total_failures} times"
-                    ]
+                    [f"Log path failure repeated {total_failures} times"]
                     if total_failures > 1
                     else []
                 ),
-                *(
-                    ["Dominant storage exhaustion error: " + dominant_msg]
-                    if dominant_msg
-                    else []
-                ),
+                *(["Dominant log path error: " + dominant_msg] if dominant_msg else []),
             ],
             "object_evidence": {
                 f"pod:{pod_name}": [
-                    "Pod cannot start because overlay or snapshot-backed runtime storage is out of space"
+                    "Pod cannot start because the runtime could not create or write its container logs"
                 ]
             },
             "likely_causes": [
-                "Container runtime storage under /var/lib/containerd or /var/lib/docker is full",
-                "Image layers, snapshots, or writable container layers consumed the remaining node filesystem space",
-                "Node cleanup or image garbage collection did not reclaim enough runtime storage",
+                "The node filesystem backing /var/log/pods or /var/log/containers is full or quota-limited",
+                "Node log storage experienced I/O failures while kubelet or the runtime created container log files",
+                "Container log rotation or cleanup did not reclaim enough space on the node log path",
             ],
             "suggested_checks": [
                 f"kubectl describe pod {pod_name}",
-                "Inspect kubelet and containerd or CRI-O logs for overlayfs, snapshot, or rootfs no-space errors",
-                "Check node disk usage for the runtime storage path and image layer directories",
-                "Review image garbage collection and log cleanup on the affected node",
+                "Inspect kubelet and containerd or CRI-O logs for log file or symlink creation failures",
+                "Check node disk usage and health for /var/log/pods and /var/log/containers",
+                "Review container log rotation and cleanup configuration on the node",
             ],
         }

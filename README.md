@@ -212,6 +212,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 - ContainerFilesystemCorrupted
 - ContainerCreateConfigError
+- ContainerLogWriteFailure
 - ContainerRuntimePermissionDenied
 - ContainerRuntimeStartFailure
 - OverlayFSStorageExhausted
