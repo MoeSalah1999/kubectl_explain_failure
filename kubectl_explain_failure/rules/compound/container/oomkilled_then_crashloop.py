@@ -138,9 +138,7 @@ class OOMKilledThenCrashLoopRule(FailureRule):
         timeline = context.get("timeline")
         correlation = self._correlated_status(pod, timeline) if timeline else None
 
-        container_name = (
-            correlation["container_name"] if correlation else "<unknown>"
-        )
+        container_name = correlation["container_name"] if correlation else "<unknown>"
         restart_count = correlation["restart_count"] if correlation else 0
         terminated = correlation["terminated"] if correlation else {}
         delay = correlation["delay"] if correlation else None
@@ -175,7 +173,9 @@ class OOMKilledThenCrashLoopRule(FailureRule):
                 "Container lastState shows OOMKilled before the current CrashLoopBackOff state",
                 "Kubelet emitted BackOff restart events for the same crashing container",
                 *(
-                    [f"First BackOff event started {delay:.1f}s after the recorded OOMKilled termination"]
+                    [
+                        f"First BackOff event started {delay:.1f}s after the recorded OOMKilled termination"
+                    ]
                     if delay is not None
                     else []
                 ),

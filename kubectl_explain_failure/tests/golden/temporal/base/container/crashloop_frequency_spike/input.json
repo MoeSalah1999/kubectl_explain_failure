@@ -1,0 +1,62 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-api-7d9c6f5c9f-r9m2k",
+      "namespace": "prod"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "registry.example.com/checkout-api:2026.03.20"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "restartCount": 14,
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 1,
+              "finishedAt": "2026-03-20T11:59:42Z"
+            }
+          },
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff",
+              "message": "back-off 5m0s restarting failed container=api pod=checkout-api-7d9c6f5c9f-r9m2k_prod"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "BackOff",
+      "count": 2,
+      "firstTimestamp": "2026-03-20T11:42:00Z",
+      "lastTimestamp": "2026-03-20T11:48:00Z",
+      "source": {
+        "component": "kubelet"
+      },
+      "message": "Back-off restarting failed container api in pod checkout-api-7d9c6f5c9f-r9m2k_prod(5e5fd7ac-5f15-4b12-a0a4-59e97f28fd56)"
+    },
+    {
+      "type": "Warning",
+      "reason": "BackOff",
+      "count": 6,
+      "firstTimestamp": "2026-03-20T11:52:00Z",
+      "lastTimestamp": "2026-03-20T12:00:00Z",
+      "source": {
+        "component": "kubelet"
+      },
+      "message": "Back-off restarting failed container api in pod checkout-api-7d9c6f5c9f-r9m2k_prod(5e5fd7ac-5f15-4b12-a0a4-59e97f28fd56)"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "root_cause": "CrashLoop restart frequency spiked sharply relative to the prior baseline",
+  "blocking": true,
+  "confidence": 0.91,
+  "resolution": {
+    "suppressed": [
+      "CrashLoopBackOff",
+      "RapidRestartEscalation",
+      "RepeatedCrashLoop"
+    ]
+  },
+  "evidence": [
+    "Container 'api' is currently waiting in CrashLoopBackOff with restartCount=14",
+    "Estimated recent BackOff frequency: 6 occurrences in the last 10 minutes",
+    "Estimated prior BackOff frequency: 2 occurrences in the preceding 10 minutes",
+    "Recent crashloop rate is 3.0x higher than the prior baseline",
+    "BackOff acceleration observed across 18.0 minutes of timeline history"
+  ],
+  "causes": [
+    {
+      "code": "CRASHLOOP_ACTIVE",
+      "message": "Container 'api' is currently in CrashLoopBackOff",
+      "role": "workload_context"
+    },
+    {
+      "code": "RECENT_BACKOFF_RATE_SPIKE",
+      "message": "BackOff occurrences increased from 2 to 6 across consecutive 10-minute windows",
+      "role": "temporal_context"
+    },
+    {
+      "code": "CRASHLOOP_ACCELERATING",
+      "message": "Kubelet restart backoff is accelerating rather than staying at a stable failure rate",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "WORKLOAD_STABILITY_DEGRADING",
+      "message": "The Pod is becoming less stable as crash frequency increases",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-api-7d9c6f5c9f-r9m2k": [
+      "CrashLoop restart rate increased from 2 to 6 occurrences across consecutive windows"
+    ],
+    "container:api": [
+      "Container restartCount=14 while current state remains CrashLoopBackOff"
+    ]
+  },
+  "likely_causes": [
+    "A recent rollout, config change, or dependency regression made the container fail faster than before",
+    "The application is reaching the same failure condition earlier in startup than it did in the prior window",
+    "An external dependency or credential issue degraded and is now triggering denser restart backoff events"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod checkout-api-7d9c6f5c9f-r9m2k",
+    "kubectl logs checkout-api-7d9c6f5c9f-r9m2k -c api --previous",
+    "Compare the spike window with recent deploy, config, secret, or dependency changes",
+    "Inspect restart timestamps and application logs to identify what changed just before the spike"
+  ]
+}
