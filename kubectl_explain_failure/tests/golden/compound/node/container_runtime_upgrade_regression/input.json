@@ -1,0 +1,114 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "post-upgrade-api-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node1"
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "restartCount": 0,
+          "state": {
+            "waiting": {
+              "reason": "ContainerCreating",
+              "message": "failed to create containerd task"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "node": {
+    "metadata": {
+      "name": "node1"
+    },
+    "status": {
+      "conditions": [
+        {
+          "type": "Ready",
+          "status": "False",
+          "reason": "KubeletNotReady",
+          "message": "failed to get runtime status: rpc error: code = Unimplemented desc = unknown service runtime.v1.RuntimeService",
+          "lastTransitionTime": "2026-03-30T09:06:30Z"
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "Starting",
+      "message": "Starting kubelet.",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-30T09:00:00Z",
+      "lastTimestamp": "2026-03-30T09:00:00Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "RegisteredNode",
+      "message": "Node node1 event: Registered Node node1 in Controller",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Node",
+        "name": "node1"
+      },
+      "firstTimestamp": "2026-03-30T09:00:20Z",
+      "lastTimestamp": "2026-03-30T09:00:20Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "NodeReady",
+      "message": "Node node1 status is now: NodeReady",
+      "source": {
+        "component": "node-controller"
+      },
+      "involvedObject": {
+        "kind": "Node",
+        "name": "node1"
+      },
+      "firstTimestamp": "2026-03-30T09:00:45Z",
+      "lastTimestamp": "2026-03-30T09:00:45Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedCreatePodSandBox",
+      "message": "Failed to create pod sandbox: rpc error: code = Unimplemented desc = unknown service runtime.v1.RuntimeService",
+      "count": 6,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "post-upgrade-api-pod",
+        "namespace": "default",
+        "nodeName": "node1"
+      },
+      "firstTimestamp": "2026-03-30T09:02:00Z",
+      "lastTimestamp": "2026-03-30T09:06:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "ContainerRuntimeUnhealthy",
+      "message": "container runtime status check may not have completed yet: rpc error: code = Unimplemented desc = unknown service runtime.v1.RuntimeService",
+      "count": 3,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Node",
+        "name": "node1"
+      },
+      "firstTimestamp": "2026-03-30T09:03:00Z",
+      "lastTimestamp": "2026-03-30T09:06:20Z"
+    }
+  ]
+}

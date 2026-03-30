@@ -1,0 +1,63 @@
+{
+  "root_cause": "Recent container runtime upgrade or restart introduced a CRI compatibility regression on the node",
+  "confidence": 0.95,
+  "resolution": {
+    "suppressed": [
+      "ContainerRuntimeVersionMismatch",
+      "ContainerRuntimeUnavailable",
+      "NodeNotReady"
+    ]
+  },
+  "evidence": [
+    "Node Ready condition currently reports a container runtime API/version mismatch",
+    "Recent node startup or re-registration signal observed on node1 (reason=RegisteredNode)",
+    "CRI mismatch failures began 1.7 minutes after that startup window",
+    "Mismatch failures repeated 9 time(s) within 4.3 minutes",
+    "First post-start mismatch event reason: FailedCreatePodSandBox"
+  ],
+  "causes": [
+    {
+      "code": "NODE_RUNTIME_RECENTLY_RESTARTED_OR_REREGISTERED",
+      "message": "Timeline shows a recent kubelet or node startup/re-registration signal before CRI incompatibility began",
+      "role": "temporal_context"
+    },
+    {
+      "code": "POST_UPGRADE_RUNTIME_REGRESSION",
+      "message": "A recent runtime or kubelet rollout introduced a CRI compatibility regression on the node",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "KUBELET_RUNTIME_API_NEGOTIATION_FAILS",
+      "message": "Kubelet can reach the runtime but repeated CRI API/version negotiation fails after the rollout window",
+      "role": "control_loop"
+    },
+    {
+      "code": "POD_BLOCKED_BY_POST_UPGRADE_CRI_MISMATCH",
+      "message": "The pod remains blocked because sandbox creation and runtime operations fail after the upgrade regression",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "Ready condition indicates CRI incompatibility (reason=KubeletNotReady)",
+      "Node emitted a recent startup or re-registration signal before mismatch failures began"
+    ],
+    "pod:post-upgrade-api-pod": [
+      "Pod is assigned to a node where CRI mismatch failures started immediately after a restart or upgrade window",
+      "Failed to create pod sandbox: rpc error: code = Unimplemented desc = unknown service runtime.v1.RuntimeService"
+    ]
+  },
+  "likely_causes": [
+    "containerd or CRI-O was upgraded to a CRI API level kubelet on this node does not support",
+    "Kubelet was upgraded or restarted against an older runtime that does not implement the expected CRI service",
+    "A node maintenance or package rollout restarted kubelet/runtime components in an incompatible combination",
+    "The runtime shim or CRI plugin changed during the rollout and now fails kubelet API negotiation"
+  ],
+  "suggested_checks": [
+    "kubectl describe node node1",
+    "kubectl describe pod post-upgrade-api-pod",
+    "Compare kubelet and container runtime versions on the node and recent upgrade history",
+    "Inspect kubelet and container runtime logs around the startup window and first CRI mismatch failures"
+  ]
+}
