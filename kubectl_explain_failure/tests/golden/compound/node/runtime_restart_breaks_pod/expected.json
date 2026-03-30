@@ -1,0 +1,50 @@
+{
+  "root_cause": "Container runtime restart on the node disrupted the pod after recovery",
+  "confidence": 0.96,
+  "blocking": true,
+  "resolution": {
+    "suppressed": [
+      "CrashLoopBackOff"
+    ]
+  },
+  "evidence": [
+    "Node runtime outage signal was observed before recovery on node node1",
+    "Node Ready condition is currently True (reason=KubeletReady), indicating the node recovered after the runtime interruption",
+    "Event: SandboxChanged",
+    "Pod disruption happened after the runtime recovered rather than during a still-active outage",
+    "Pod restartCount increased to 4 after the disruption"
+  ],
+  "causes": [
+    {
+      "code": "RUNTIME_OUTAGE_OBSERVED",
+      "message": "Timeline shows the node container runtime became unavailable before pod disruption",
+      "role": "temporal_context"
+    },
+    {
+      "code": "NODE_RUNTIME_RESTARTED",
+      "message": "The node container runtime restarted or recovered and destabilized the affected pod",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_SANDBOX_OR_CONTAINER_DISRUPTED",
+      "message": "After runtime recovery, kubelet had to recreate or restart pod workload state",
+      "role": "control_loop"
+    },
+    {
+      "code": "POD_BROKEN_AFTER_RUNTIME_RESTART",
+      "message": "The pod remains unhealthy because runtime restart fallout interrupted its execution state",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:node1": [
+      "Ready condition=True reason=KubeletReady",
+      "Runtime outage was followed by node recovery before pod disruption"
+    ],
+    "pod:payments-api-5fd79b6d76-m2x8q": [
+      "Pod was disrupted after the node container runtime restarted or recovered",
+      "Pod sandbox changed, it will be killed and re-created."
+    ]
+  }
+}

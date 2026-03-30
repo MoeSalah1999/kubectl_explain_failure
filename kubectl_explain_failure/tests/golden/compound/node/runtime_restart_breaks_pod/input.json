@@ -1,0 +1,108 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-api-5fd79b6d76-m2x8q",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node1"
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "restartCount": 4,
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "finishedAt": "2026-03-29T10:05:10Z"
+            }
+          },
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff",
+              "message": "back-off 5m0s restarting failed container=api pod=payments-api-5fd79b6d76-m2x8q_default"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "node": {
+    "metadata": {
+      "name": "node1"
+    },
+    "status": {
+      "conditions": [
+        {
+          "type": "Ready",
+          "status": "True",
+          "reason": "KubeletReady",
+          "message": "kubelet is posting ready status",
+          "lastTransitionTime": "2026-03-29T10:02:05Z"
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "NodeNotReady",
+      "message": "Node node1 status is now: NodeNotReady: container runtime is down, PLEG is not healthy: pleg was last seen active 3m ago",
+      "source": {
+        "component": "node-controller"
+      },
+      "involvedObject": {
+        "kind": "Node",
+        "name": "node1"
+      },
+      "firstTimestamp": "2026-03-29T10:00:00Z",
+      "lastTimestamp": "2026-03-29T10:00:00Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "NodeReady",
+      "message": "Node node1 status is now: NodeReady",
+      "source": {
+        "component": "node-controller"
+      },
+      "involvedObject": {
+        "kind": "Node",
+        "name": "node1"
+      },
+      "firstTimestamp": "2026-03-29T10:02:00Z",
+      "lastTimestamp": "2026-03-29T10:02:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "SandboxChanged",
+      "message": "Pod sandbox changed, it will be killed and re-created.",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-5fd79b6d76-m2x8q",
+        "namespace": "default"
+      },
+      "firstTimestamp": "2026-03-29T10:03:10Z",
+      "lastTimestamp": "2026-03-29T10:03:10Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container api in pod payments-api-5fd79b6d76-m2x8q_default(2f801f38-8d76-46c2-bbf0-39b1109ce93a)",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-5fd79b6d76-m2x8q",
+        "namespace": "default"
+      },
+      "firstTimestamp": "2026-03-29T10:05:20Z",
+      "lastTimestamp": "2026-03-29T10:05:20Z"
+    }
+  ]
+}
