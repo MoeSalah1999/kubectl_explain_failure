@@ -362,7 +362,7 @@ class RuntimeFailureBurstRule(FailureRule):
                 if total_failures < self.MIN_FAILURE_OCCURRENCES:
                     continue
 
-                status = next(
+                status: dict[str, Any] = next(
                     (
                         item
                         for item in all_statuses

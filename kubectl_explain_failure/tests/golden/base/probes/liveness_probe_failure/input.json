@@ -1,0 +1,83 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-api-5f8664b9db-rh8dt",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/payments-api:2026.03.31",
+          "livenessProbe": {
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8080
+            },
+            "periodSeconds": 10,
+            "timeoutSeconds": 1,
+            "failureThreshold": 3
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": true,
+          "restartCount": 2,
+          "state": {
+            "running": {
+              "startedAt": "2026-03-31T10:03:00Z"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 137,
+              "finishedAt": "2026-03-31T10:02:42Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Liveness probe failed: HTTP probe failed with statuscode: 500",
+      "count": 3,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-5f8664b9db-rh8dt",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-03-31T10:01:10Z",
+      "lastTimestamp": "2026-03-31T10:02:20Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Killing",
+      "message": "Container api failed liveness probe, will be restarted",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-5f8664b9db-rh8dt",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-03-31T10:01:45Z",
+      "lastTimestamp": "2026-03-31T10:02:30Z"
+    }
+  ]
+}

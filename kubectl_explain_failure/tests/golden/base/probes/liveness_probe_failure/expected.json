@@ -1,0 +1,54 @@
+{
+  "root_cause": "Container failing livenessProbe checks",
+  "confidence": 0.95,
+  "evidence": [
+    "Recent kubelet events show liveness probe failure for container 'api'",
+    "Liveness probe failure was observed 3 time(s) within the last 15 minutes",
+    "Container 'api' has restartCount=2 while Pod phase remains Running",
+    "Container is currently in running state after liveness-triggered restart pressure",
+    "Kubelet emitted 2 liveness-driven restart signal(s) for the container"
+  ],
+  "causes": [
+    {
+      "code": "LIVENESS_PROBE_CONFIGURED",
+      "message": "Container 'api' has a liveness probe configured and recently evaluated by kubelet",
+      "role": "healthcheck_context"
+    },
+    {
+      "code": "LIVENESS_PROBE_FAILED",
+      "message": "Kubelet liveness checks are failing and triggering restarts",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "CONTAINER_RESTARTED_BY_KUBELET",
+      "message": "Kubelet restarted the container after failed liveness checks",
+      "role": "execution_intermediate"
+    },
+    {
+      "code": "WORKLOAD_HEALTH_UNSTABLE",
+      "message": "The workload remains unstable because the container cannot stay healthy long enough to avoid restart pressure",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:payments-api-5f8664b9db-rh8dt": [
+      "Pod stays Running but kubelet is restarting a container due to failed liveness checks"
+    ],
+    "container:api": [
+      "Container restartCount=2 with recent liveness probe failures",
+      "Liveness probe failed: HTTP probe failed with statuscode: 500"
+    ]
+  },
+  "likely_causes": [
+    "The liveness probe path, command, or port does not match the application's real health behavior",
+    "The application becomes unhealthy after startup and fails kubelet liveness checks",
+    "Probe timeoutSeconds or failureThreshold is too strict for the container's runtime behavior"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod payments-api-5f8664b9db-rh8dt",
+    "kubectl logs payments-api-5f8664b9db-rh8dt -c api --previous",
+    "Review livenessProbe path, port, command, timeoutSeconds, and failureThreshold",
+    "Compare kubelet probe failures with application logs and dependency availability"
+  ]
+}

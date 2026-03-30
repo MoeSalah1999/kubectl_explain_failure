@@ -34,7 +34,7 @@ class CrashLoopLivenessProbeCompoundRule(FailureRule):
     priority = 59
 
     # Supersedes simple crash loop rule
-    blocks = ["CrashLoopBackOff"]
+    blocks = ["CrashLoopBackOff", "LivenessProbeFailure"]
 
     requires = {
         "context": ["timeline"],

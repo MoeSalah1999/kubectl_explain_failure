@@ -36,6 +36,7 @@ class RepeatedProbeFailureEscalationRule(FailureRule):
     category = "Compound"
     priority = 58  # Higher than simple probe rules
     blocks = [
+        "LivenessProbeFailure",
         "ReadinessProbeFailure",
         "StartupProbeFailure",
         "CrashLoopBackOff",
