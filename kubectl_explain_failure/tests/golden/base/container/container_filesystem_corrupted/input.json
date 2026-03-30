@@ -1,0 +1,33 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-api-rootfs-corrupt"
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "state": {
+            "waiting": {
+              "reason": "CreateContainerError",
+              "message": "failed to start container \"api\": Error response from daemon: failed to create containerd task: failed to mount rootfs component at /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/842/fs: structure needs cleaning: unknown"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Failed",
+      "count": 3,
+      "message": "Error: failed to create containerd task: failed to mount rootfs component at /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/842/fs: structure needs cleaning",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-28T10:00:00Z",
+      "lastTimestamp": "2026-03-28T10:04:00Z"
+    }
+  ]
+}

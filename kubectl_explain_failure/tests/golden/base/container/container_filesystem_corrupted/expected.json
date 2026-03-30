@@ -1,0 +1,50 @@
+{
+  "root_cause": "Container runtime storage is corrupted and prevents container startup",
+  "blocking": true,
+  "confidence": 0.97,
+  "resolution": {
+    "suppressed": [
+      "ContainerRuntimeStartFailure"
+    ]
+  },
+  "evidence": [
+    "Kubelet or runtime reports overlay/rootfs/layer corruption while preparing the container filesystem",
+    "Container remains in a waiting startup error state instead of reaching a started state",
+    "Corruption-shaped runtime failure repeated 3 times",
+    "Dominant corruption error: Error: failed to create containerd task: failed to mount rootfs component at /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/842/fs: structure needs cleaning"
+  ],
+  "causes": [
+    {
+      "code": "CONTAINER_ROOTFS_PREPARATION_STARTED",
+      "message": "Kubelet asked the runtime to prepare the container root filesystem",
+      "role": "execution_context"
+    },
+    {
+      "code": "CONTAINER_FILESYSTEM_CORRUPTED",
+      "message": "Container runtime storage or root filesystem on the node is corrupted",
+      "role": "execution_root",
+      "blocking": true
+    },
+    {
+      "code": "CONTAINER_CANNOT_BE_CREATED",
+      "message": "Container cannot start because the runtime cannot mount or unpack its filesystem",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-api-rootfs-corrupt": [
+      "Pod cannot start because the runtime filesystem backing the container is corrupted"
+    ]
+  },
+  "likely_causes": [
+    "overlayfs or snapshotter data under the container runtime storage path is corrupted",
+    "Underlying node disk or filesystem errors damaged container runtime metadata or layers",
+    "A node crash or unclean shutdown left containerd or Docker layer state inconsistent"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod checkout-api-rootfs-corrupt",
+    "Inspect kubelet and containerd or CRI-O logs for overlayfs, snapshot, or rootfs corruption messages",
+    "Check node dmesg and filesystem health for disk or metadata corruption",
+    "Inspect the runtime storage path under /var/lib/containerd or /var/lib/docker on the node"
+  ]
+}

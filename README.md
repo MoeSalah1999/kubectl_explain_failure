@@ -210,6 +210,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ### Container
 
+- ContainerFilesystemCorrupted
 - ContainerCreateConfigError
 - ContainerRuntimePermissionDenied
 - ContainerRuntimeStartFailure
