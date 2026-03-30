@@ -214,6 +214,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ContainerCreateConfigError
 - ContainerRuntimePermissionDenied
 - ContainerRuntimeStartFailure
+- OverlayFSStorageExhausted
 - ContainerStartTimeout
 - CrashLoopBackOff
 - EntrypointPermissionDenied

@@ -1,0 +1,33 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-worker-overlayfs-full"
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "worker",
+          "state": {
+            "waiting": {
+              "reason": "CreateContainerError",
+              "message": "failed to start container \"worker\": Error response from daemon: failed to create containerd task: failed to prepare rootfs component at /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/1264/fs: no space left on device: unknown"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Failed",
+      "count": 4,
+      "message": "Error: failed to create containerd task: failed to prepare rootfs component at /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/1264/fs: no space left on device",
+      "source": {
+        "component": "kubelet"
+      },
+      "firstTimestamp": "2026-03-29T09:10:00Z",
+      "lastTimestamp": "2026-03-29T09:16:00Z"
+    }
+  ]
+}

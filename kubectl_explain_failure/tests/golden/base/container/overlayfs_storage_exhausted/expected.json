@@ -1,0 +1,51 @@
+{
+  "root_cause": "Overlay or snapshot-backed runtime storage is exhausted and blocks container startup",
+  "blocking": true,
+  "confidence": 0.97,
+  "resolution": {
+    "suppressed": [
+      "ContainerRuntimeStartFailure",
+      "NodeDiskPressure"
+    ]
+  },
+  "evidence": [
+    "Kubelet or runtime reports overlay or snapshot-backed container storage ran out of space",
+    "Container remains in a waiting startup error state instead of reaching a started state",
+    "Storage exhaustion-shaped runtime failure repeated 4 times",
+    "Dominant storage exhaustion error: Error: failed to create containerd task: failed to prepare rootfs component at /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/1264/fs: no space left on device"
+  ],
+  "causes": [
+    {
+      "code": "CONTAINER_LAYER_PREPARATION_STARTED",
+      "message": "Kubelet asked the runtime to prepare the container writable layer and root filesystem",
+      "role": "execution_context"
+    },
+    {
+      "code": "OVERLAYFS_STORAGE_EXHAUSTED",
+      "message": "Overlay or snapshot-backed runtime storage on the node ran out of space",
+      "role": "execution_root",
+      "blocking": true
+    },
+    {
+      "code": "CONTAINER_CANNOT_START",
+      "message": "Container cannot start because the runtime cannot allocate or mount its writable filesystem layer",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:payments-worker-overlayfs-full": [
+      "Pod cannot start because overlay or snapshot-backed runtime storage is out of space"
+    ]
+  },
+  "likely_causes": [
+    "Container runtime storage under /var/lib/containerd or /var/lib/docker is full",
+    "Image layers, snapshots, or writable container layers consumed the remaining node filesystem space",
+    "Node cleanup or image garbage collection did not reclaim enough runtime storage"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod payments-worker-overlayfs-full",
+    "Inspect kubelet and containerd or CRI-O logs for overlayfs, snapshot, or rootfs no-space errors",
+    "Check node disk usage for the runtime storage path and image layer directories",
+    "Review image garbage collection and log cleanup on the affected node"
+  ]
+}
