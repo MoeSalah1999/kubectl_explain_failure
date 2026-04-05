@@ -1,0 +1,55 @@
+{
+  "root_cause": "Container readinessProbe endpoint is refusing connections",
+  "blocking": true,
+  "confidence": 0.96,
+  "resolution": {
+    "suppressed": [
+      "LivenessProbeFailure",
+      "ReadinessProbeFailure",
+      "StartupProbeFailure"
+    ]
+  },
+  "evidence": [
+    "Recent kubelet events show readiness probe connection refused for container 'api'",
+    "Readiness probe connection refused was observed 4 time(s) within the last 15 minutes",
+    "Container 'api' remains running but ready=False, consistent with readiness connection-refused behavior",
+    "Configured readiness probe targets port 8080"
+  ],
+  "causes": [
+    {
+      "code": "PROBE_ENDPOINT_TARGETED",
+      "message": "Container 'api' has a readiness probe targeting an application endpoint",
+      "role": "healthcheck_context"
+    },
+    {
+      "code": "PROBE_ENDPOINT_REFUSED_CONNECTION",
+      "message": "The readiness probe is reaching the target address but the endpoint is actively refusing connections",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "PROBE_REFUSAL_IMPACT",
+      "message": "The workload cannot become healthy or stay stable because the probed socket is not accepting connections",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:catalog-api-6d8b7c74b9-zm2fs": [
+      "readiness probe connection-refused failures detected"
+    ],
+    "container:api": [
+      "Readiness probe failed: Get \"http://10.244.2.18:8080/readyz\": dial tcp 10.244.2.18:8080: connect: connection refused"
+    ]
+  },
+  "likely_causes": [
+    "The application is not listening on the port or interface that the probe is targeting",
+    "The probe is pointed at the wrong container port or a socket that opens later than expected",
+    "The process is crashing or failing to bind before the kubelet probe reaches the endpoint"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod catalog-api-6d8b7c74b9-zm2fs",
+    "kubectl logs catalog-api-6d8b7c74b9-zm2fs -c api --previous",
+    "Verify that the application is listening on the port and interface used by the readiness probe",
+    "Review the readiness probe port, path, initialDelaySeconds, and startup sequence"
+  ]
+}
