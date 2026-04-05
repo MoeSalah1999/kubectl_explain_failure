@@ -1,0 +1,58 @@
+{
+  "root_cause": "Repeated DNS resolution failures are causing the container to crash and enter CrashLoopBackOff",
+  "confidence": 0.96,
+  "blocking": true,
+  "resolution": {
+    "winner": "DNSFailureThenCrashLoop",
+    "suppressed": [
+      "DNSResolutionFailure",
+      "CrashLoopBackOff"
+    ]
+  },
+  "evidence": [
+    "Timeline shows 2 DNS-failure -> restart-backoff sequence(s) for container 'worker' within the recent incident window",
+    "Container 'worker' is now restartCount=6 with a current CrashLoopBackOff state driven by repeated startup failures",
+    "Representative DNS failure: DNS lookup failed for auth-api.internal.example: lookup auth-api.internal.example on 10.96.0.10:53: no such host",
+    "Representative BackOff: Back-off restarting failed container worker in pod auth-worker-6b49d8f9f7-nq2lm_default",
+    "DNS failures consistently target hostname 'auth-api.internal.example' before restart backoff begins",
+    "The most recent terminated state exited with code 1 before the current CrashLoopBackOff"
+  ],
+  "causes": [
+    {
+      "code": "DNS_DEPENDENCY_REQUIRED_FOR_STARTUP",
+      "message": "Container startup depends on resolving a required hostname before the process can stabilize",
+      "role": "runtime_context"
+    },
+    {
+      "code": "REPEATED_DNS_RESOLUTION_FAILURE",
+      "message": "Repeated DNS resolution failures prevent the workload from completing startup successfully",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "CRASHLOOP_AFTER_DNS_FAILURE",
+      "message": "Kubelet repeatedly restarts the container until it enters CrashLoopBackOff",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:auth-worker-6b49d8f9f7-nq2lm": [
+      "Pod is repeatedly restarting after DNS resolution failures"
+    ],
+    "container:worker": [
+      "DNS lookup failed for auth-api.internal.example: lookup auth-api.internal.example on 10.96.0.10:53: no such host",
+      "Back-off restarting failed container worker in pod auth-worker-6b49d8f9f7-nq2lm_default"
+    ]
+  },
+  "likely_causes": [
+    "CoreDNS or upstream DNS forwarding is unavailable or misconfigured",
+    "The application depends on a hostname that is missing from cluster or upstream DNS",
+    "Startup logic exits immediately when DNS resolution fails instead of retrying gracefully"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod auth-worker-6b49d8f9f7-nq2lm",
+    "kubectl logs auth-worker-6b49d8f9f7-nq2lm -c worker --previous",
+    "kubectl get pods -n kube-system | grep coredns",
+    "Verify the failing hostname from inside a debug pod and inspect the pod's resolv.conf"
+  ]
+}

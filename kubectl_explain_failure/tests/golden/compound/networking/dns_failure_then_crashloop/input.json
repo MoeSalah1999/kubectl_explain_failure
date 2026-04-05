@@ -1,0 +1,109 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "auth-worker-6b49d8f9f7-nq2lm",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "worker",
+          "image": "ghcr.io/example/auth-worker:2026.04.05"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "worker",
+          "ready": false,
+          "restartCount": 6,
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff",
+              "message": "back-off 5m0s restarting failed container=worker pod=auth-worker-6b49d8f9f7-nq2lm_default"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 1,
+              "finishedAt": "2026-04-05T12:03:45Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "DNS lookup failed for auth-api.internal.example: lookup auth-api.internal.example on 10.96.0.10:53: no such host",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "auth-worker-6b49d8f9f7-nq2lm",
+        "namespace": "default",
+        "fieldPath": "spec.containers{worker}"
+      },
+      "firstTimestamp": "2026-04-05T12:01:00Z",
+      "lastTimestamp": "2026-04-05T12:01:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container worker in pod auth-worker-6b49d8f9f7-nq2lm_default",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "auth-worker-6b49d8f9f7-nq2lm",
+        "namespace": "default",
+        "fieldPath": "spec.containers{worker}"
+      },
+      "firstTimestamp": "2026-04-05T12:01:40Z",
+      "lastTimestamp": "2026-04-05T12:01:40Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "DNS lookup failed for auth-api.internal.example: lookup auth-api.internal.example on 10.96.0.10:53: no such host",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "auth-worker-6b49d8f9f7-nq2lm",
+        "namespace": "default",
+        "fieldPath": "spec.containers{worker}"
+      },
+      "firstTimestamp": "2026-04-05T12:02:20Z",
+      "lastTimestamp": "2026-04-05T12:02:40Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container worker in pod auth-worker-6b49d8f9f7-nq2lm_default",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "auth-worker-6b49d8f9f7-nq2lm",
+        "namespace": "default",
+        "fieldPath": "spec.containers{worker}"
+      },
+      "firstTimestamp": "2026-04-05T12:03:10Z",
+      "lastTimestamp": "2026-04-05T12:03:40Z"
+    }
+  ]
+}
