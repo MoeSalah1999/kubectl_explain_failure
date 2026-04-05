@@ -1,0 +1,56 @@
+{
+  "root_cause": "Container livenessProbe is timing out",
+  "blocking": true,
+  "confidence": 0.96,
+  "resolution": {
+    "suppressed": [
+      "LivenessProbeFailure",
+      "ReadinessProbeFailure",
+      "StartupProbeFailure"
+    ]
+  },
+  "evidence": [
+    "Recent kubelet events show liveness probe timeout for container 'api'",
+    "Liveness probe timeout was observed 3 time(s) within the last 15 minutes",
+    "Container 'api' has restartCount=3 with state=running after liveness timeout events",
+    "Kubelet emitted 2 liveness-driven restart signal(s) after timeout events",
+    "Configured livenessProbe.timeoutSeconds=1"
+  ],
+  "causes": [
+    {
+      "code": "PROBE_CONFIGURED",
+      "message": "Container 'api' has a liveness probe configured",
+      "role": "healthcheck_context"
+    },
+    {
+      "code": "PROBE_TIMED_OUT",
+      "message": "The liveness probe is timing out before the container responds",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "PROBE_TIMEOUT_IMPACT",
+      "message": "Probe timeout is preventing the workload from becoming healthy or remaining stable",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:payments-api-6f7b8d4db9-tw8vz": [
+      "liveness probe timeout detected for a running container"
+    ],
+    "container:api": [
+      "Liveness probe failed: Get \"http://10.244.1.12:8080/healthz\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"
+    ]
+  },
+  "likely_causes": [
+    "Probe timeoutSeconds is too low for the application's real response time",
+    "The probe endpoint or exec command is waiting on a slow dependency or overloaded runtime path",
+    "Node, network, or application latency is causing the health check to miss the kubelet timeout budget"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod payments-api-6f7b8d4db9-tw8vz",
+    "kubectl logs payments-api-6f7b8d4db9-tw8vz -c api --previous",
+    "Review livenessProbe.timeoutSeconds, periodSeconds, and failureThreshold",
+    "Compare probe timeout timestamps with application and dependency latency"
+  ]
+}

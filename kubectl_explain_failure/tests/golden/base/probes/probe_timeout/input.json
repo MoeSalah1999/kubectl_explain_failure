@@ -1,0 +1,83 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-api-6f7b8d4db9-tw8vz",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/payments-api:2026.04.05",
+          "livenessProbe": {
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8080
+            },
+            "periodSeconds": 10,
+            "timeoutSeconds": 1,
+            "failureThreshold": 3
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": true,
+          "restartCount": 3,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-05T10:04:30Z"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 137,
+              "finishedAt": "2026-04-05T10:04:10Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Liveness probe failed: Get \"http://10.244.1.12:8080/healthz\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)",
+      "count": 3,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-6f7b8d4db9-tw8vz",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-05T10:03:00Z",
+      "lastTimestamp": "2026-04-05T10:03:50Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Killing",
+      "message": "Container api failed liveness probe, will be restarted",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-6f7b8d4db9-tw8vz",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-05T10:03:20Z",
+      "lastTimestamp": "2026-04-05T10:04:00Z"
+    }
+  ]
+}
