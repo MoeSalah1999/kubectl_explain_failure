@@ -1,0 +1,58 @@
+{
+  "root_cause": "Repeated liveness probe failures escalated into a kubelet restart loop",
+  "blocking": true,
+  "confidence": 0.93,
+  "resolution": {
+    "suppressed": [
+      "LivenessProbeFailure",
+      "StartupProbeFailure",
+      "CrashLoopBackOff",
+      "ProbeTooAggressiveCausingRestarts"
+    ]
+  },
+  "evidence": [
+    "Timeline shows liveness probe failure -> restart -> liveness probe failure -> restart for container 'api'",
+    "Repeated probe/restart loop completed within 3.9 minutes with 4 probe-failure occurrence(s) and 2 restart signal(s)",
+    "Container 'api' now has restartCount=4, ready=False, state=running",
+    "Escalation is based on ordered kubelet probe and restart episodes, not a single failed probe event"
+  ],
+  "causes": [
+    {
+      "code": "RESTART_DRIVING_PROBE_FAILURES_OBSERVED",
+      "message": "Container 'api' is repeatedly failing its liveness probe and kubelet is reacting with restarts",
+      "role": "container_health_context"
+    },
+    {
+      "code": "PROBE_FAILURE_RESTART_LOOP_ESCALATING",
+      "message": "The liveness probe failure pattern has escalated into a repeat restart loop rather than a one-off health check miss",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "WORKLOAD_STABILITY_DEGRADED_BY_PROBE_RESTARTS",
+      "message": "Repeated kubelet probe restarts are degrading workload stability",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:orders-api-7cc9dbf6f8-rx4qw": [
+      "Liveness probe failures repeatedly triggered kubelet restarts in the same incident window"
+    ],
+    "container:api": [
+      "Container restartCount=4 after repeated liveness probe restart cycles",
+      "Liveness probe failed: HTTP probe failed with statuscode: 500",
+      "Container api failed liveness probe, will be restarted"
+    ]
+  },
+  "likely_causes": [
+    "The liveness probe target does not reflect the application's real healthy state",
+    "The application briefly recovers after restart but re-enters the same unhealthy condition",
+    "Dependencies, warm-up time, or runtime load are causing the same probe-driven restart cycle to repeat"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod orders-api-7cc9dbf6f8-rx4qw",
+    "kubectl logs orders-api-7cc9dbf6f8-rx4qw -c api --previous",
+    "Review the liveness probe path, command, thresholds, and timing against real application behavior",
+    "Correlate restart timestamps with application logs and dependency readiness to explain why the same probe failure keeps recurring"
+  ]
+}

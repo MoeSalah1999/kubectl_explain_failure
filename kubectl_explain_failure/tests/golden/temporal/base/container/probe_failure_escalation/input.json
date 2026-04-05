@@ -1,0 +1,118 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "orders-api-7cc9dbf6f8-rx4qw",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/orders-api:2026.04.04",
+          "livenessProbe": {
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8080
+            },
+            "initialDelaySeconds": 20,
+            "periodSeconds": 10,
+            "timeoutSeconds": 1,
+            "failureThreshold": 3
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": false,
+          "restartCount": 4,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-04T14:04:20Z"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 137,
+              "finishedAt": "2026-04-04T14:04:10Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Liveness probe failed: HTTP probe failed with statuscode: 500",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "orders-api-7cc9dbf6f8-rx4qw",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-04T14:00:05Z",
+      "lastTimestamp": "2026-04-04T14:00:40Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Killing",
+      "message": "Container api failed liveness probe, will be restarted",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "orders-api-7cc9dbf6f8-rx4qw",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-04T14:00:42Z",
+      "lastTimestamp": "2026-04-04T14:00:42Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Liveness probe failed: HTTP probe failed with statuscode: 500",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "orders-api-7cc9dbf6f8-rx4qw",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-04T14:03:25Z",
+      "lastTimestamp": "2026-04-04T14:03:55Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Killing",
+      "message": "Container api failed liveness probe, will be restarted",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "orders-api-7cc9dbf6f8-rx4qw",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-04T14:04:00Z",
+      "lastTimestamp": "2026-04-04T14:04:00Z"
+    }
+  ]
+}
