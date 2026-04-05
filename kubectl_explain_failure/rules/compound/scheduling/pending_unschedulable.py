@@ -97,6 +97,11 @@ class PendingUnschedulableRule(FailureRule):
             "scheduler extender",
             "failed to run extender",
             "extender",
+            # HostPort allocation failures
+            "didn't have free ports for the requested pod ports",
+            "port is already allocated",
+            "ports are already allocated",
+            "port conflicts",
         )
 
         for e in recent_failed_scheduling:

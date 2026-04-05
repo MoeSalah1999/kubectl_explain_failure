@@ -1,0 +1,39 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "ingress-gateway-7d6f59d8bb-z9r7m",
+      "namespace": "ingress-system"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "gateway",
+          "ports": [
+            {
+              "name": "http",
+              "containerPort": 8080,
+              "hostPort": 8080,
+              "protocol": "TCP"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/4 nodes are available: 4 node(s) didn't have free ports for the requested pod ports.",
+      "count": 3,
+      "source": {
+        "component": "default-scheduler"
+      },
+      "firstTimestamp": "2026-04-05T12:10:00Z",
+      "lastTimestamp": "2026-04-05T12:14:20Z"
+    }
+  ]
+}

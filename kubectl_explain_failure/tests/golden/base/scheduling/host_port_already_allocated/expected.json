@@ -1,0 +1,45 @@
+{
+  "root_cause": "Requested hostPort 0.0.0.0:8080/TCP is already allocated on candidate nodes",
+  "blocking": true,
+  "confidence": 0.96,
+  "evidence": [
+    "Pod requests hostPort binding(s): 0.0.0.0:8080/TCP (container gateway)",
+    "Scheduler reported hostPort allocation conflict 3 time(s) within the last 20 minutes",
+    "Representative scheduler message: 0/4 nodes are available: 4 node(s) didn't have free ports for the requested pod ports."
+  ],
+  "causes": [
+    {
+      "code": "HOSTPORT_BINDING_REQUESTED",
+      "message": "Pod requests node-level hostPort binding",
+      "role": "workload_context"
+    },
+    {
+      "code": "HOSTPORT_ALREADY_ALLOCATED",
+      "message": "Requested hostPort tuple is already allocated on candidate node(s)",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_REMAINS_UNSCHEDULABLE",
+      "message": "Scheduler cannot place the Pod until a node has a free matching hostPort",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:ingress-system/ingress-gateway-7d6f59d8bb-z9r7m": [
+      "hostPort requests=0.0.0.0:8080/TCP (container gateway)",
+      "0/4 nodes are available: 4 node(s) didn't have free ports for the requested pod ports."
+    ]
+  },
+  "likely_causes": [
+    "Another Pod on candidate nodes is already using the same <hostIP, hostPort, protocol> tuple",
+    "A DaemonSet or rollout keeps the previous Pod instance bound to the same hostPort",
+    "The cluster has too few eligible nodes with that hostPort still free"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod ingress-gateway-7d6f59d8bb-z9r7m -n ingress-system",
+    "kubectl get pods -A -o wide",
+    "Check which workload is already using the requested hostPort on eligible nodes",
+    "Reduce hostPort usage or increase the number of eligible nodes with free ports"
+  ]
+}
