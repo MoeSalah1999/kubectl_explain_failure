@@ -3,11 +3,43 @@ from __future__ import annotations
 import ipaddress
 import re
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, TypedDict
 
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import Timeline, parse_time
+
+
+class TargetInfo(TypedDict):
+    raw: str
+    host: str
+    port: int | None
+    service_name: str | None
+    service_namespace: str
+
+
+class SequenceInfo(TypedDict):
+    dependency_event: dict[str, Any]
+    probe_event: dict[str, Any]
+    probe_kind: str
+    strength: int
+    target: TargetInfo
+    service_ready: bool
+
+
+class CandidateInfo(TypedDict):
+    container_name: str
+    probe_kind: str
+    ready: bool
+    restart_count: int
+    state_name: str
+    sequence_count: int
+    total_strength: int
+    target: TargetInfo
+    service_ready: bool
+    policy_names: list[str]
+    dependency_message: str
+    probe_message: str
 
 
 class NetworkPolicyThenProbeFailureRule(FailureRule):
@@ -210,7 +242,10 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
         candidates = objects.get(kind, {})
         direct = candidates.get(name)
         if isinstance(direct, dict):
-            if namespace is None or direct.get("metadata", {}).get("namespace", "default") == namespace:
+            if (
+                namespace is None
+                or direct.get("metadata", {}).get("namespace", "default") == namespace
+            ):
                 return direct
         for obj in candidates.values():
             if not isinstance(obj, dict):
@@ -218,7 +253,10 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
             metadata = obj.get("metadata", {})
             if metadata.get("name") != name:
                 continue
-            if namespace is not None and metadata.get("namespace", "default") != namespace:
+            if (
+                namespace is not None
+                and metadata.get("namespace", "default") != namespace
+            ):
                 continue
             return obj
         return None
@@ -247,7 +285,7 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
             and self._policy_is_egress_isolating(policy)
         ]
 
-    def _extract_target(self, message: str, pod_namespace: str) -> dict[str, Any] | None:
+    def _extract_target(self, message: str, pod_namespace: str) -> TargetInfo | None:
         patterns = (
             r"(?:failed to connect to|because dependency)\s+(?P<target>[a-z0-9.-]+(?::\d+)?)",
             r"dial tcp\s+(?P<target>[a-z0-9.-]+:\d+)",
@@ -301,7 +339,9 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
             return False, []
 
         ips: list[str] = []
-        endpoints = self._find_named_object(objects, "endpoints", service_name, service_namespace)
+        endpoints = self._find_named_object(
+            objects, "endpoints", service_name, service_namespace
+        )
         if endpoints:
             for subset in endpoints.get("subsets", []) or []:
                 for address in subset.get("addresses", []) or []:
@@ -337,7 +377,9 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
             return target_namespace == policy_namespace
         if not namespace_selector:
             return True
-        namespace_obj = self._find_named_object(objects, "namespace", target_namespace, None)
+        namespace_obj = self._find_named_object(
+            objects, "namespace", target_namespace, None
+        )
         if not namespace_obj:
             return False
         labels = namespace_obj.get("metadata", {}).get("labels", {}) or {}
@@ -362,7 +404,9 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
                 continue
         return True
 
-    def _ports_allow_target(self, ports: list[dict[str, Any]] | None, target_port: int | None) -> bool:
+    def _ports_allow_target(
+        self, ports: list[dict[str, Any]] | None, target_port: int | None
+    ) -> bool:
         if not ports:
             return True
         if target_port is None:
@@ -382,7 +426,7 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
     def _peer_allows_target(
         self,
         peer: dict[str, Any],
-        target: dict[str, Any],
+        target: TargetInfo,
         objects: dict[str, Any],
         policy_namespace: str,
     ) -> bool:
@@ -391,8 +435,12 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
 
         service_name = target.get("service_name")
         service_namespace = target.get("service_namespace")
-        service_obj = self._find_named_object(objects, "service", service_name, service_namespace)
-        service_selector = service_obj.get("spec", {}).get("selector", {}) if service_obj else {}
+        service_obj = self._find_named_object(
+            objects, "service", service_name, service_namespace
+        )
+        service_selector = (
+            service_obj.get("spec", {}).get("selector", {}) if service_obj else {}
+        )
 
         ip_block = peer.get("ipBlock")
         if isinstance(ip_block, dict):
@@ -408,11 +456,18 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
                 cluster_ip = service_obj.get("spec", {}).get("clusterIP")
                 if cluster_ip and cluster_ip != "None":
                     candidate_ips.append(str(cluster_ip))
-            _ready, endpoint_ips = self._service_ready_endpoints(objects, service_name, service_namespace)
+            _ready, endpoint_ips = self._service_ready_endpoints(
+                objects, service_name, service_namespace
+            )
             candidate_ips.extend(endpoint_ips)
-            return any(self._ip_allowed_by_block(ip_value, ip_block) for ip_value in candidate_ips)
+            return any(
+                self._ip_allowed_by_block(ip_value, ip_block)
+                for ip_value in candidate_ips
+            )
 
         if service_name is None:
+            return False
+        if not isinstance(service_namespace, str):
             return False
 
         namespace_selector = peer.get("namespaceSelector")
@@ -422,7 +477,9 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
         ):
             return False
         if pod_selector is not None:
-            if not service_selector or not self._match_selector(pod_selector, service_selector):
+            if not service_selector or not self._match_selector(
+                pod_selector, service_selector
+            ):
                 return False
         if namespace_selector is None and pod_selector is None:
             return False
@@ -432,7 +489,7 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
 
     def _target_allowed_by_policy_union(
         self,
-        target: dict[str, Any],
+        target: TargetInfo,
         policies: list[dict[str, Any]],
         objects: dict[str, Any],
     ) -> bool:
@@ -459,7 +516,7 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
         container_name: str,
         pod_namespace: str,
         assume_single_container: bool,
-    ) -> dict[str, Any] | None:
+    ) -> TargetInfo | None:
         if not self._container_event_match(
             event, container_name, assume_single_container=assume_single_container
         ):
@@ -487,7 +544,7 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
         event: dict[str, Any],
         *,
         container_name: str,
-        target: dict[str, Any],
+        target: TargetInfo,
         assume_single_container: bool,
     ) -> str | None:
         if self._event_component(event) not in {"", "kubelet"}:
@@ -510,7 +567,9 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
             return probe_kind
         return None
 
-    def _status_for_container(self, pod: dict[str, Any], container_name: str) -> dict[str, Any]:
+    def _status_for_container(
+        self, pod: dict[str, Any], container_name: str
+    ) -> dict[str, Any]:
         for status in pod.get("status", {}).get("containerStatuses", []) or []:
             if str(status.get("name", "")) == container_name:
                 return status
@@ -521,7 +580,7 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
         pod: dict[str, Any],
         timeline: Timeline,
         context: dict[str, Any],
-    ) -> dict[str, Any] | None:
+    ) -> CandidateInfo | None:
         objects = context.get("objects", {})
         egress_policies = self._selected_egress_policies(pod, objects)
         if not egress_policies:
@@ -534,16 +593,20 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
         pod_namespace = pod.get("metadata", {}).get("namespace", "default")
         container_names = self._candidate_container_names(pod)
         assume_single_container = len(container_names) == 1
-        best = None
+        best: CandidateInfo | None = None
 
         for container_name in container_names:
             status = self._status_for_container(pod, container_name)
             ready = bool(status.get("ready", False))
             restart_count = int(status.get("restartCount", 0) or 0)
             state = status.get("state", {}) or {}
-            state_name = "waiting" if "waiting" in state else "terminated" if "terminated" in state else "running"
+            state_name = (
+                "waiting"
+                if "waiting" in state
+                else "terminated" if "terminated" in state else "running"
+            )
 
-            sequences = []
+            sequences: list[SequenceInfo] = []
             for dep_event in ordered:
                 dep_start = self._event_start(dep_event)
                 dep_end = self._event_end(dep_event) or dep_start
@@ -558,7 +621,9 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
                 )
                 if target is None:
                     continue
-                if self._target_allowed_by_policy_union(target, egress_policies, objects):
+                if self._target_allowed_by_policy_union(
+                    target, egress_policies, objects
+                ):
                     continue
 
                 service_ready, _ips = self._service_ready_endpoints(
@@ -586,7 +651,10 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
                             "dependency_event": dep_event,
                             "probe_event": probe_event,
                             "probe_kind": probe_kind,
-                            "strength": min(self._occurrences(dep_event), self._occurrences(probe_event)),
+                            "strength": min(
+                                self._occurrences(dep_event),
+                                self._occurrences(probe_event),
+                            ),
                             "target": target,
                             "service_ready": service_ready,
                         }
@@ -596,10 +664,13 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
             if not sequences:
                 continue
             total_strength = sum(seq["strength"] for seq in sequences)
-            if len(sequences) < self.MIN_SEQUENCE_OCCURRENCES and total_strength < self.MIN_SEQUENCE_OCCURRENCES:
+            if (
+                len(sequences) < self.MIN_SEQUENCE_OCCURRENCES
+                and total_strength < self.MIN_SEQUENCE_OCCURRENCES
+            ):
                 continue
 
-            dominant = max(
+            dominant: SequenceInfo = max(
                 sequences,
                 key=lambda seq: (
                     1 if seq["service_ready"] else 0,
@@ -610,7 +681,7 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
             if dominant["probe_kind"] == "readiness" and ready and total_strength < 3:
                 continue
 
-            candidate = {
+            candidate: CandidateInfo = {
                 "container_name": container_name,
                 "probe_kind": dominant["probe_kind"],
                 "ready": ready,
@@ -621,9 +692,14 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
                 "target": dominant["target"],
                 "service_ready": dominant["service_ready"],
                 "policy_names": sorted(
-                    {str(policy.get("metadata", {}).get("name", "<unknown>")) for policy in egress_policies}
+                    {
+                        str(policy.get("metadata", {}).get("name", "<unknown>"))
+                        for policy in egress_policies
+                    }
                 ),
-                "dependency_message": str(dominant["dependency_event"].get("message", "")),
+                "dependency_message": str(
+                    dominant["dependency_event"].get("message", "")
+                ),
                 "probe_message": str(dominant["probe_event"].get("message", "")),
             }
             if best is None or (
@@ -641,15 +717,22 @@ class NetworkPolicyThenProbeFailureRule(FailureRule):
 
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
-        return isinstance(timeline, Timeline) and self._best_candidate(pod, timeline, context) is not None
+        return (
+            isinstance(timeline, Timeline)
+            and self._best_candidate(pod, timeline, context) is not None
+        )
 
     def explain(self, pod, events, context):
         timeline = context.get("timeline")
         if not isinstance(timeline, Timeline):
-            raise ValueError("NetworkPolicyThenProbeFailure requires a Timeline context")
+            raise ValueError(
+                "NetworkPolicyThenProbeFailure requires a Timeline context"
+            )
         candidate = self._best_candidate(pod, timeline, context)
         if candidate is None:
-            raise ValueError("NetworkPolicyThenProbeFailure explain() called without match")
+            raise ValueError(
+                "NetworkPolicyThenProbeFailure explain() called without match"
+            )
 
         pod_name = pod.get("metadata", {}).get("name", "<unknown>")
         container_name = candidate["container_name"]
