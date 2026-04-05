@@ -1,0 +1,109 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "inventory-api-6c7c9d8c75-2kxqg",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/inventory-api:2026.04.01",
+          "startupProbe": {
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8080
+            },
+            "periodSeconds": 10,
+            "timeoutSeconds": 1,
+            "failureThreshold": 30
+          },
+          "livenessProbe": {
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8080
+            },
+            "periodSeconds": 10,
+            "timeoutSeconds": 1,
+            "failureThreshold": 3
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": false,
+          "restartCount": 4,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-01T09:05:00Z"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 137,
+              "finishedAt": "2026-04-01T09:04:56Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Startup probe failed: HTTP probe failed with statuscode: 500",
+      "count": 8,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "inventory-api-6c7c9d8c75-2kxqg",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-01T09:00:20Z",
+      "lastTimestamp": "2026-04-01T09:04:40Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Liveness probe failed: HTTP probe failed with statuscode: 500",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "inventory-api-6c7c9d8c75-2kxqg",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-01T09:04:15Z",
+      "lastTimestamp": "2026-04-01T09:04:50Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Killing",
+      "message": "Container api failed liveness probe, will be restarted",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "inventory-api-6c7c9d8c75-2kxqg",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-01T09:04:30Z",
+      "lastTimestamp": "2026-04-01T09:04:55Z"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "root_cause": "startupProbe failure is the primary issue; liveness signal conflicts with startup gating",
+  "blocking": true,
+  "confidence": 0.97,
+  "resolution": {
+    "winner": "ProbeConflictStartupVsLiveness",
+    "suppressed": [
+      "StartupProbeFailure",
+      "LivenessProbeFailure"
+    ]
+  },
+  "evidence": [
+    "Container 'api' defines both startupProbe and livenessProbe",
+    "Recent kubelet events show startupProbe failures overlapping liveness probe failures",
+    "Container 'api' remains unstable with ready=False, state=running, restartCount=4",
+    "Kubernetes should not evaluate liveness probes until startupProbe succeeds"
+  ],
+  "causes": [
+    {
+      "code": "STARTUP_PROBE_GATES_LIVENESS",
+      "message": "Container 'api' defines startupProbe and livenessProbe, so kubelet should gate liveness on startup success",
+      "role": "healthcheck_context"
+    },
+    {
+      "code": "STARTUP_PROBE_STILL_FAILING",
+      "message": "Startup probe is still the active failure signal for the container",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "LIVENESS_SIGNAL_CONFLICTS_WITH_STARTUP_GATE",
+      "message": "Reported liveness failures overlap unresolved startup failure and are not the primary diagnosis",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:inventory-api-6c7c9d8c75-2kxqg": [
+      "startupProbe failures overlap liveness failures for the same unresolved container"
+    ],
+    "container:api": [
+      "Container defines both startupProbe and livenessProbe",
+      "Startup probe failed: HTTP probe failed with statuscode: 500",
+      "Liveness probe failed: HTTP probe failed with statuscode: 500"
+    ]
+  },
+  "likely_causes": [
+    "The startupProbe budget does not cover the application's real initialization time",
+    "startupProbe and livenessProbe are checking the container before the application has fully initialized",
+    "Rapid restarts are mixing startup and liveness events across the same pod incident"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod inventory-api-6c7c9d8c75-2kxqg -n default",
+    "Review startupProbe and livenessProbe together, especially initialDelaySeconds, periodSeconds, and failureThreshold",
+    "Confirm the startup probe only succeeds after the application and its critical dependencies are fully initialized",
+    "kubectl logs inventory-api-6c7c9d8c75-2kxqg -n default -c api --previous"
+  ]
+}
