@@ -1,0 +1,51 @@
+{
+  "root_cause": "Service 'search' is missing EndpointSlice objects needed for backend discovery",
+  "blocking": true,
+  "confidence": 0.96,
+  "evidence": [
+    "Service 'search' is selector-based but no EndpointSlice objects with label kubernetes.io/service-name=search were found",
+    "Observed 3 recent failure signal(s) referencing Service 'search' within the last 20 minutes",
+    "Legacy Endpoints for Service 'search' still contain ready backend address(es): 10.244.1.37, 10.244.2.12",
+    "Recent events also mention EndpointSlice sync or controller failure for the Service",
+    "Workload configuration explicitly references the affected Service"
+  ],
+  "causes": [
+    {
+      "code": "SERVICE_REQUIRES_ENDPOINTSLICES",
+      "message": "Selector-based Service 'search' should have controller-managed EndpointSlices",
+      "role": "service_context"
+    },
+    {
+      "code": "ENDPOINTSLICE_MISSING",
+      "message": "No EndpointSlice objects are linked to Service 'search'",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "SERVICE_BACKEND_DISCOVERY_INCOMPLETE",
+      "message": "Service backend routing metadata is incomplete even though the Service exists",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "service:search": [
+      "No matching EndpointSlice objects found for the Service",
+      "Legacy Endpoints still list ready backend addresses"
+    ],
+    "pod:catalog-api-74cc9bb66b-wqf8m": [
+      "Error: failed to connect to http://search.default.svc.cluster.local:8080/query: dial tcp 10.96.41.22:8080: i/o timeout",
+      "env api:SEARCH_BACKEND_URL=http://search.default.svc.cluster.local:8080"
+    ]
+  },
+  "likely_causes": [
+    "The EndpointSlice controller is unhealthy or cannot reconcile the Service",
+    "Admission, RBAC, or API errors prevented EndpointSlice creation or update",
+    "Service discovery objects drifted and Endpoints were populated without corresponding EndpointSlices"
+  ],
+  "suggested_checks": [
+    "kubectl get endpointslice -l kubernetes.io/service-name=search",
+    "kubectl describe service search",
+    "kubectl get endpoints search",
+    "Inspect kube-controller-manager and EndpointSlice controller health"
+  ]
+}

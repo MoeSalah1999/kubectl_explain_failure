@@ -249,6 +249,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 - CNIPluginFailure
 - DNSResolutionFailure
+- EndpointSliceMissing
 - ServiceEndpointsEmpty
 - ServiceNotFound
 - ServicePortMismatch

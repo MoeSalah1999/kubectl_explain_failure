@@ -1,0 +1,152 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "catalog-api-74cc9bb66b-wqf8m",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/catalog-api:2026.04.05",
+          "env": [
+            {
+              "name": "SEARCH_BACKEND_URL",
+              "value": "http://search.default.svc.cluster.local:8080"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-05T11:58:20Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "service": {
+      "search": {
+        "metadata": {
+          "name": "search",
+          "namespace": "default"
+        },
+        "spec": {
+          "selector": {
+            "app": "search"
+          },
+          "clusterIP": "10.96.41.22",
+          "ports": [
+            {
+              "name": "http",
+              "port": 8080,
+              "targetPort": 8080,
+              "protocol": "TCP"
+            }
+          ]
+        }
+      }
+    },
+    "endpoints": {
+      "search": {
+        "metadata": {
+          "name": "search",
+          "namespace": "default"
+        },
+        "subsets": [
+          {
+            "addresses": [
+              {
+                "ip": "10.244.1.37"
+              },
+              {
+                "ip": "10.244.2.12"
+              }
+            ],
+            "ports": [
+              {
+                "port": 8080,
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "endpointslice": {
+      "payments-x7z2c": {
+        "metadata": {
+          "name": "payments-x7z2c",
+          "namespace": "default",
+          "labels": {
+            "kubernetes.io/service-name": "payments",
+            "endpointslice.kubernetes.io/managed-by": "endpointslice-controller.k8s.io"
+          }
+        },
+        "addressType": "IPv4",
+        "ports": [
+          {
+            "name": "https",
+            "protocol": "TCP",
+            "port": 443
+          }
+        ],
+        "endpoints": [
+          {
+            "addresses": [
+              "10.244.3.21"
+            ],
+            "conditions": {
+              "ready": true
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "Error: failed to connect to http://search.default.svc.cluster.local:8080/query: dial tcp 10.96.41.22:8080: i/o timeout",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "catalog-api-74cc9bb66b-wqf8m",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-05T12:00:10Z",
+      "lastTimestamp": "2026-04-05T12:01:10Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedToUpdateEndpointSlices",
+      "message": "Error updating EndpointSlices for Service default/search: etcdserver: request timed out",
+      "count": 1,
+      "source": {
+        "component": "endpoint-slice-controller"
+      },
+      "involvedObject": {
+        "kind": "Service",
+        "name": "search",
+        "namespace": "default"
+      },
+      "firstTimestamp": "2026-04-05T12:01:40Z",
+      "lastTimestamp": "2026-04-05T12:01:40Z"
+    }
+  ]
+}
