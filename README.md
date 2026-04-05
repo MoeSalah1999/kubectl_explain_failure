@@ -379,6 +379,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 ### Probes
 
 - ProbeConflictStartupVsLiveness
+- ProbeDependencyChainFailure
 - RepeatedProbeFailureEscalation
 
 ### Scheduling

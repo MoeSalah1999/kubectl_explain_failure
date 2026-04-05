@@ -1,0 +1,152 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "orders-api-6b5d7d8c96-jq5kh",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/orders-api:2026.04.05",
+          "readinessProbe": {
+            "httpGet": {
+              "path": "/readyz",
+              "port": 8080
+            },
+            "initialDelaySeconds": 5,
+            "timeoutSeconds": 1,
+            "periodSeconds": 10,
+            "failureThreshold": 3
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": false,
+          "restartCount": 5,
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 1,
+              "finishedAt": "2026-04-05T12:03:55Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "Error: failed to connect to postgres.default.svc.cluster.local:5432: dial tcp 10.96.42.17:5432: connect: connection refused",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "orders-api-6b5d7d8c96-jq5kh",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-05T12:00:00Z",
+      "lastTimestamp": "2026-04-05T12:00:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: GET /readyz returned 503 because dependency postgres.default.svc.cluster.local:5432 is unavailable",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "orders-api-6b5d7d8c96-jq5kh",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-05T12:00:20Z",
+      "lastTimestamp": "2026-04-05T12:00:40Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container api in pod orders-api-6b5d7d8c96-jq5kh_default",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "orders-api-6b5d7d8c96-jq5kh",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-05T12:01:00Z",
+      "lastTimestamp": "2026-04-05T12:01:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "Error: failed to connect to postgres.default.svc.cluster.local:5432: dial tcp 10.96.42.17:5432: connect: connection refused",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "orders-api-6b5d7d8c96-jq5kh",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-05T12:02:10Z",
+      "lastTimestamp": "2026-04-05T12:02:10Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: GET /readyz returned 503 because dependency postgres.default.svc.cluster.local:5432 is unavailable",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "orders-api-6b5d7d8c96-jq5kh",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-05T12:02:25Z",
+      "lastTimestamp": "2026-04-05T12:02:45Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container api in pod orders-api-6b5d7d8c96-jq5kh_default",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "orders-api-6b5d7d8c96-jq5kh",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-05T12:03:10Z",
+      "lastTimestamp": "2026-04-05T12:03:10Z"
+    }
+  ]
+}

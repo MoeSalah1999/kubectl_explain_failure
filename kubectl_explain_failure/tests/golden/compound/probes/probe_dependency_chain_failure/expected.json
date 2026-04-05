@@ -1,0 +1,65 @@
+{
+  "root_cause": "Health checks depend on an unavailable upstream dependency, causing probe failures and restart pressure",
+  "blocking": true,
+  "confidence": 0.95,
+  "resolution": {
+    "suppressed": [
+      "CrashLoopBackOff",
+      "CrashLoopLivenessProbe",
+      "ServiceEndpointsEmpty"
+    ]
+  },
+  "evidence": [
+    "Timeline shows dependency failure before readiness probe failures and restart pressure for container 'api'",
+    "Observed 2 dependency -> probe failure -> restart chain(s) within the recent incident window",
+    "Container 'api' now has restartCount=5, ready=False, state=waiting",
+    "Dependency service 'postgres' has no ready endpoints, reinforcing the upstream outage signal"
+  ],
+  "causes": [
+    {
+      "code": "DEPENDENCY_OUTAGE_OBSERVED",
+      "message": "Recent failures show dependency 'postgres.default.svc.cluster.local:5432' is unavailable before probe failures begin",
+      "role": "dependency_context"
+    },
+    {
+      "code": "HEALTH_CHECK_COUPLED_TO_DEPENDENCY",
+      "message": "Application health checks depend on external dependency availability instead of local process health",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "DEPENDENCY_FAILURE_PROPAGATES_TO_PROBES",
+      "message": "Readiness probes fail as the dependency outage propagates through the health endpoint",
+      "role": "container_health_context"
+    },
+    {
+      "code": "WORKLOAD_ENTERS_RESTART_PRESSURE",
+      "message": "The pod becomes unstable or restarts as dependency-driven health failures accumulate",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:orders-api-6b5d7d8c96-jq5kh": [
+      "Readiness health checks are failing downstream of dependency unavailability"
+    ],
+    "container:api": [
+      "Error: failed to connect to postgres.default.svc.cluster.local:5432: dial tcp 10.96.42.17:5432: connect: connection refused",
+      "Readiness probe failed: GET /readyz returned 503 because dependency postgres.default.svc.cluster.local:5432 is unavailable",
+      "Back-off restarting failed container api in pod orders-api-6b5d7d8c96-jq5kh_default"
+    ],
+    "service:postgres": [
+      "Dependency service has no ready endpoints during the probe failure chain"
+    ]
+  },
+  "likely_causes": [
+    "The readiness or liveness endpoint is coupled to database or cache availability instead of local container health",
+    "An upstream dependency outage is propagating into probe failures because the health check is too deep",
+    "The application exits or degrades when the dependency is unavailable, turning an upstream outage into restart churn"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod orders-api-6b5d7d8c96-jq5kh",
+    "kubectl logs orders-api-6b5d7d8c96-jq5kh -c api --previous",
+    "Inspect the health endpoint implementation and remove hard dependency checks from liveness where possible",
+    "Verify dependency availability and service endpoints for the upstream database or backing service"
+  ]
+}
