@@ -1,0 +1,53 @@
+{
+  "root_cause": "Readiness probe health is oscillating between failure and recovery",
+  "blocking": true,
+  "confidence": 0.94,
+  "resolution": {
+    "suppressed": [
+      "ReadinessProbeFailure"
+    ]
+  },
+  "evidence": [
+    "Timeline shows readiness probe failure -> success -> failure for container 'api'",
+    "Container 'api' currently reports ready=False, state=running, restartCount=0",
+    "Probe recovery was temporary and the same probe failed again in the same incident window"
+  ],
+  "causes": [
+    {
+      "code": "PROBE_RECOVERY_OBSERVED",
+      "message": "Container 'api' briefly recovered its readiness probe before failing again",
+      "role": "probe_context"
+    },
+    {
+      "code": "PROBE_HEALTH_SIGNAL_OSCILLATING",
+      "message": "The readiness probe is oscillating between failure and recovery instead of reaching a stable healthy state",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "WORKLOAD_HEALTH_FLAPPING",
+      "message": "The workload alternates between recovery and degradation, preventing stable readiness or runtime health",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-api-6dc77bd84c-r7v9q": [
+      "Readiness probe state is oscillating instead of converging"
+    ],
+    "container:api": [
+      "Readiness probe failed: HTTP probe failed with statuscode: 503",
+      "Readiness probe succeeded"
+    ]
+  },
+  "likely_causes": [
+    "Probe thresholds or timing are too sensitive for the application's real warm-up or dependency behavior",
+    "The health endpoint briefly recovers but depends on an unstable internal or upstream condition",
+    "The application is alternating between partially healthy and degraded states faster than the probe policy can absorb"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod checkout-api-6dc77bd84c-r7v9q",
+    "kubectl logs checkout-api-6dc77bd84c-r7v9q -c api",
+    "Review readiness probe timing and thresholds against the application's recovery behavior",
+    "Correlate the brief recovery window with dependency readiness and application startup phases"
+  ]
+}
