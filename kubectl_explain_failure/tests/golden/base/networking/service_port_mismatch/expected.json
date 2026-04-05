@@ -1,0 +1,53 @@
+{
+  "root_cause": "Application is calling Service 'payments' on port 8443, but the Service only exposes port 443",
+  "blocking": true,
+  "confidence": 0.96,
+  "evidence": [
+    "Recent workload failures reference Service 'payments' on port 8443, but the Service publishes port(s) 443",
+    "Port mismatch symptoms were observed 3 time(s) within the last 20 minutes",
+    "Service 'payments' has ready endpoints, so the failure is not explained by empty backends",
+    "Requested port 8443 matches Service targetPort, suggesting clients are using the backend port instead of the Service port",
+    "Workload configuration explicitly references the mismatched Service port"
+  ],
+  "causes": [
+    {
+      "code": "SERVICE_REFERENCE_CONFIGURED",
+      "message": "Workload is attempting to reach Service 'payments' on port 8443",
+      "role": "service_context"
+    },
+    {
+      "code": "SERVICE_PORT_MISMATCH",
+      "message": "Service 'payments' exposes port(s) 443, but clients are using port 8443",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "SERVICE_CONNECTION_FAILURE",
+      "message": "The Service name resolves, but traffic is sent to a port that the Service does not publish",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "service:payments": [
+      "Service exposes ports 443",
+      "Service targetPorts 8443",
+      "Ready endpoints exist for the Service"
+    ],
+    "pod:checkout-api-6c74b7d879-rm4gv": [
+      "Error: failed to connect to https://payments.default.svc.cluster.local:8443/authorize: dial tcp 10.96.18.54:8443: connect: connection refused",
+      "env api:PAYMENTS_BASE_URL=https://payments.default.svc.cluster.local:8443",
+      "args api:--payments-url=https://payments.default.svc.cluster.local:8443"
+    ]
+  },
+  "likely_causes": [
+    "The application is hardcoded to use the backend targetPort or containerPort instead of Service.spec.ports[*].port",
+    "A Helm value or application setting still points to an old Service port after the Service was changed",
+    "Client-side dependency configuration drifted from the Kubernetes Service definition"
+  ],
+  "suggested_checks": [
+    "kubectl describe service payments",
+    "kubectl get endpoints payments",
+    "kubectl describe pod checkout-api-6c74b7d879-rm4gv",
+    "Compare the application's configured dependency URL/port with Service.spec.ports[*].port rather than targetPort"
+  ]
+}

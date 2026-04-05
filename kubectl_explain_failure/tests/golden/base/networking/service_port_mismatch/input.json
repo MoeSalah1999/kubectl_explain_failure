@@ -1,0 +1,129 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-api-6c74b7d879-rm4gv",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/checkout-api:2026.04.05",
+          "env": [
+            {
+              "name": "PAYMENTS_BASE_URL",
+              "value": "https://payments.default.svc.cluster.local:8443"
+            }
+          ],
+          "args": [
+            "--payments-url=https://payments.default.svc.cluster.local:8443"
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": false,
+          "restartCount": 4,
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 1,
+              "finishedAt": "2026-04-05T10:08:55Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "service": {
+      "payments": {
+        "metadata": {
+          "name": "payments",
+          "namespace": "default"
+        },
+        "spec": {
+          "selector": {
+            "app": "payments"
+          },
+          "ports": [
+            {
+              "name": "https",
+              "port": 443,
+              "targetPort": 8443,
+              "protocol": "TCP"
+            }
+          ]
+        }
+      }
+    },
+    "endpoints": {
+      "payments": {
+        "metadata": {
+          "name": "payments",
+          "namespace": "default"
+        },
+        "subsets": [
+          {
+            "addresses": [
+              {
+                "ip": "10.244.3.19"
+              }
+            ],
+            "ports": [
+              {
+                "port": 8443,
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "Error: failed to connect to https://payments.default.svc.cluster.local:8443/authorize: dial tcp 10.96.18.54:8443: connect: connection refused",
+      "count": 3,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-6c74b7d879-rm4gv",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-05T10:05:10Z",
+      "lastTimestamp": "2026-04-05T10:06:10Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container api in pod checkout-api-6c74b7d879-rm4gv_default",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-6c74b7d879-rm4gv",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-05T10:06:40Z",
+      "lastTimestamp": "2026-04-05T10:08:20Z"
+    }
+  ]
+}
