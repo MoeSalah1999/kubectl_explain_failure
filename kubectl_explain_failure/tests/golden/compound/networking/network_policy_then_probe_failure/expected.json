@@ -1,0 +1,68 @@
+{
+  "root_cause": "A NetworkPolicy blocks required dependency egress, and probe failures follow because the health check depends on that blocked upstream",
+  "blocking": true,
+  "confidence": 0.96,
+  "resolution": {
+    "suppressed": [
+      "NetworkPolicyBlocked",
+      "ProbeTimeout",
+      "ReadinessProbeFailure"
+    ]
+  },
+  "evidence": [
+    "NetworkPolicy selection for this pod includes egress isolation via allow-cluster-dns, default-deny-egress",
+    "Timeline shows dependency connectivity failures before readiness probe failures for container 'api'",
+    "Observed 2 effective policy-backed dependency -> probe failure occurrence(s) within the recent incident window",
+    "Container 'api' is currently ready=False, restartCount=0, state=running",
+    "Dependency service 'postgres' still has ready endpoints, which points to pod egress isolation rather than a backend outage"
+  ],
+  "causes": [
+    {
+      "code": "EGRESS_POLICY_SELECTS_POD",
+      "message": "An egress-isolating NetworkPolicy selects this pod, so outbound traffic is limited to explicitly allowed destinations",
+      "role": "policy_context"
+    },
+    {
+      "code": "REQUIRED_DEPENDENCY_NOT_ALLOWED_BY_POLICY",
+      "message": "Effective NetworkPolicy egress rules do not allow required traffic to 'postgres.default.svc.cluster.local:5432'",
+      "role": "policy_root",
+      "blocking": true
+    },
+    {
+      "code": "HEALTH_CHECK_DEPENDS_ON_BLOCKED_UPSTREAM",
+      "message": "The readiness health check depends on upstream dependency reachability, so policy-blocked egress propagates into probe failure",
+      "role": "configuration_context"
+    },
+    {
+      "code": "PROBE_FAILURE_FOLLOWS_POLICY_BLOCK",
+      "message": "Readiness probe failures begin only after dependency connectivity failures appear on the same container",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:orders-api-6b5d7d8c96-zr8lf": [
+      "Readiness probe failures are downstream of policy-blocked dependency traffic"
+    ],
+    "networkpolicy:allow-cluster-dns": [
+      "This policy selects the pod for egress isolation and does not effectively allow the required dependency traffic"
+    ],
+    "container:api": [
+      "Error: failed to connect to postgres.default.svc.cluster.local:5432: dial tcp 10.96.42.17:5432: i/o timeout",
+      "Readiness probe failed: GET /readyz returned 503 because dependency postgres.default.svc.cluster.local:5432 timed out"
+    ],
+    "service:postgres": [
+      "The backing Service still has ready endpoints during the probe failure sequence"
+    ]
+  },
+  "likely_causes": [
+    "The pod is selected by a deny-all or overly narrow egress NetworkPolicy that does not allow required dependency traffic",
+    "The readiness endpoint is coupled to dependency reachability instead of local container health",
+    "Backend services are healthy, but only this pod cannot reach them because policy enforcement isolates its outbound traffic"
+  ],
+  "suggested_checks": [
+    "kubectl describe networkpolicy allow-cluster-dns",
+    "kubectl describe pod orders-api-6b5d7d8c96-zr8lf",
+    "Review the effective union of egress rules for this pod and verify the dependency destination and port are explicitly allowed",
+    "Exec into a debug pod with the same labels or policy selection and test connectivity to the dependency target"
+  ]
+}

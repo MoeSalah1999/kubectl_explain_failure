@@ -1,0 +1,214 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "orders-api-6b5d7d8c96-zr8lf",
+      "namespace": "default",
+      "labels": {
+        "app": "orders-api",
+        "tier": "api"
+      }
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/orders-api:2026.04.05",
+          "readinessProbe": {
+            "httpGet": {
+              "path": "/readyz",
+              "port": 8080
+            },
+            "periodSeconds": 10,
+            "timeoutSeconds": 1,
+            "failureThreshold": 3
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-05T12:00:00Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "networkpolicy": {
+      "default-deny-egress": {
+        "metadata": {
+          "name": "default-deny-egress",
+          "namespace": "default"
+        },
+        "spec": {
+          "podSelector": {
+            "matchLabels": {
+              "app": "orders-api"
+            }
+          },
+          "policyTypes": [
+            "Egress"
+          ],
+          "egress": []
+        }
+      },
+      "allow-cluster-dns": {
+        "metadata": {
+          "name": "allow-cluster-dns",
+          "namespace": "default"
+        },
+        "spec": {
+          "podSelector": {
+            "matchLabels": {
+              "app": "orders-api"
+            }
+          },
+          "policyTypes": [
+            "Egress"
+          ],
+          "egress": [
+            {
+              "to": [
+                {
+                  "ipBlock": {
+                    "cidr": "10.96.0.10/32"
+                  }
+                }
+              ],
+              "ports": [
+                {
+                  "protocol": "UDP",
+                  "port": 53
+                },
+                {
+                  "protocol": "TCP",
+                  "port": 53
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "service": {
+      "postgres": {
+        "metadata": {
+          "name": "postgres",
+          "namespace": "default"
+        },
+        "spec": {
+          "clusterIP": "10.96.42.17",
+          "selector": {
+            "app": "postgres"
+          },
+          "ports": [
+            {
+              "port": 5432,
+              "targetPort": 5432
+            }
+          ]
+        }
+      }
+    },
+    "endpoints": {
+      "postgres": {
+        "metadata": {
+          "name": "postgres",
+          "namespace": "default"
+        },
+        "subsets": [
+          {
+            "addresses": [
+              {
+                "ip": "10.244.1.21"
+              }
+            ],
+            "ports": [
+              {
+                "port": 5432
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "Error: failed to connect to postgres.default.svc.cluster.local:5432: dial tcp 10.96.42.17:5432: i/o timeout",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "orders-api-6b5d7d8c96-zr8lf",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-05T12:00:00Z",
+      "lastTimestamp": "2026-04-05T12:00:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: GET /readyz returned 503 because dependency postgres.default.svc.cluster.local:5432 timed out",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "orders-api-6b5d7d8c96-zr8lf",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-05T12:00:15Z",
+      "lastTimestamp": "2026-04-05T12:00:25Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "Error: failed to connect to postgres.default.svc.cluster.local:5432: dial tcp 10.96.42.17:5432: i/o timeout",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "orders-api-6b5d7d8c96-zr8lf",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-05T12:02:00Z",
+      "lastTimestamp": "2026-04-05T12:02:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: GET /readyz returned 503 because dependency postgres.default.svc.cluster.local:5432 timed out",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "orders-api-6b5d7d8c96-zr8lf",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-05T12:02:15Z",
+      "lastTimestamp": "2026-04-05T12:02:25Z"
+    }
+  ]
+}
