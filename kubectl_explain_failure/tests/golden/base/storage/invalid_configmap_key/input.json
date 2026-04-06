@@ -1,0 +1,82 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "config-key-missing-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "app",
+          "image": "nginx:1.27",
+          "env": [
+            {
+              "name": "APP_CONFIG",
+              "valueFrom": {
+                "configMapKeyRef": {
+                  "name": "app-config",
+                  "key": "app.yaml"
+                }
+              }
+            }
+          ],
+          "volumeMounts": [
+            {
+              "name": "config",
+              "mountPath": "/etc/app"
+            }
+          ]
+        }
+      ],
+      "volumes": [
+        {
+          "name": "config",
+          "configMap": {
+            "name": "app-config",
+            "items": [
+              {
+                "key": "app.yaml",
+                "path": "app.yaml"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "state": {
+            "waiting": {
+              "reason": "CreateContainerConfigError",
+              "message": "Error: couldn't find key app.yaml in ConfigMap default/app-config"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "configmaps": {
+    "app-config": {
+      "metadata": {
+        "name": "app-config",
+        "namespace": "default"
+      },
+      "data": {
+        "logging.yaml": "level: info\n"
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedMount",
+      "message": "MountVolume.SetUp failed for volume \"config\" : configmap references non-existent config key: app.yaml"
+    },
+    {
+      "reason": "CreateContainerConfigError",
+      "message": "Error: couldn't find key app.yaml in ConfigMap default/app-config"
+    }
+  ]
+}

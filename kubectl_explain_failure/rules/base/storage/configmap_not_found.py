@@ -42,6 +42,10 @@ class ConfigMapNotFoundRule(FailureRule):
     deterministic = True
     blocks = []
 
+    def _is_missing_configmap_message(self, message: str) -> bool:
+        lowered = message.lower()
+        return "configmap" in lowered and "not found" in lowered
+
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
@@ -56,9 +60,10 @@ class ConfigMapNotFoundRule(FailureRule):
 
         # Ensure message references ConfigMap
         for e in events:
-            if (
-                e.get("reason") == "CreateContainerConfigError"
-                and "configmap" in e.get("message", "").lower()
+            if e.get(
+                "reason"
+            ) == "CreateContainerConfigError" and self._is_missing_configmap_message(
+                e.get("message", "")
             ):
                 return True
 

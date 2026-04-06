@@ -1,0 +1,51 @@
+{
+  "root_cause": "Referenced ConfigMap is missing a required key",
+  "blocking": true,
+  "confidence": 0.9,
+  "suppressed": [
+    "ContainerCreateConfigError",
+    "FailedMount"
+  ],
+  "evidence": [
+    "ConfigMap 'app-config' is missing required key 'app.yaml'",
+    "Event: FailedMount",
+    "Event: CreateContainerConfigError",
+    "Missing ConfigMap key surfaces across multiple kubelet startup checks"
+  ],
+  "causes": [
+    {
+      "code": "CONFIGMAP_KEY_REFERENCE",
+      "message": "Pod references key 'app.yaml' from ConfigMap 'app-config'",
+      "role": "workload_context"
+    },
+    {
+      "code": "CONFIGMAP_KEY_NOT_FOUND",
+      "message": "Required key 'app.yaml' does not exist in ConfigMap 'app-config'",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "CONFIG_DEPENDENCY_BLOCKS_STARTUP",
+      "message": "Kubelet cannot resolve required ConfigMap-backed configuration for startup",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "configmap:app-config": [
+      "Required key 'app.yaml' is absent",
+      "Referenced by env 'APP_CONFIG' in container 'app'",
+      "Referenced by configMap volume 'config'",
+      "Available keys: logging.yaml"
+    ]
+  },
+  "likely_causes": [
+    "ConfigMap key name typo in an env or volume item reference",
+    "ConfigMap was updated and no longer includes the expected key",
+    "Workload manifest expects configuration data that was never populated"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod config-key-missing-pod",
+    "kubectl get configmap app-config -o yaml",
+    "Review configMapKeyRef and configMap volume item keys in the Pod spec"
+  ]
+}
