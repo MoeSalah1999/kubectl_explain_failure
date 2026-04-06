@@ -1,0 +1,99 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-api-7d6c8d4fd9-km72p",
+      "namespace": "default",
+      "labels": {
+        "app": "payments-api",
+        "tier": "api"
+      },
+      "ownerReferences": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "ReplicaSet",
+          "name": "payments-rs-old",
+          "controller": true
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "objects": {
+    "replicaset": {
+      "payments-rs-old": {
+        "metadata": {
+          "name": "payments-rs-old",
+          "namespace": "default"
+        },
+        "spec": {
+          "replicas": 1,
+          "selector": {
+            "matchLabels": {
+              "app": "payments-api",
+              "tier": "api"
+            }
+          }
+        },
+        "status": {
+          "replicas": 1,
+          "readyReplicas": 0,
+          "availableReplicas": 0
+        }
+      },
+      "payments-rs-new": {
+        "metadata": {
+          "name": "payments-rs-new",
+          "namespace": "default"
+        },
+        "spec": {
+          "replicas": 1,
+          "selector": {
+            "matchLabels": {
+              "app": "payments-api",
+              "tier": "api"
+            }
+          }
+        },
+        "status": {
+          "replicas": 1,
+          "readyReplicas": 0,
+          "availableReplicas": 0
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set payments-rs-old to 1",
+      "source": {
+        "component": "DeploymentController"
+      },
+      "firstTimestamp": "2026-04-06T11:00:00Z",
+      "lastTimestamp": "2026-04-06T11:00:00Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set payments-rs-new to 1",
+      "source": {
+        "component": "DeploymentController"
+      },
+      "firstTimestamp": "2026-04-06T11:01:00Z",
+      "lastTimestamp": "2026-04-06T11:01:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedCreate",
+      "message": "ReplicaSet \"payments-rs-new\" cannot adopt Pod \"payments-api-7d6c8d4fd9-km72p\": Pod already has controller reference to ReplicaSet/payments-rs-old",
+      "source": {
+        "component": "replicaset-controller"
+      },
+      "firstTimestamp": "2026-04-06T11:02:00Z",
+      "lastTimestamp": "2026-04-06T11:02:00Z"
+    }
+  ]
+}

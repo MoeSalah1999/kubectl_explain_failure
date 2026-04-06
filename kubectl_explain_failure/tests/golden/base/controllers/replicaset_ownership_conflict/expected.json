@@ -1,0 +1,60 @@
+{
+  "root_cause": "Overlapping ReplicaSet ownership is causing controller conflict",
+  "blocking": true,
+  "confidence": 0.96,
+  "resolution": {
+    "suppressed": [
+      "ReplicaSetUnavailable"
+    ]
+  },
+  "evidence": [
+    "Pod labels match multiple active ReplicaSets: payments-rs-old, payments-rs-new",
+    "Recent controller timeline shows activity for conflicting ReplicaSets within 20 minutes",
+    "Representative conflict signal: ReplicaSet \"payments-rs-new\" cannot adopt Pod \"payments-api-7d6c8d4fd9-km72p\": Pod already has controller reference to ReplicaSet/payments-rs-old"
+  ],
+  "causes": [
+    {
+      "code": "MULTIPLE_REPLICASETS_ACTIVE",
+      "message": "Multiple active ReplicaSets are reconciling the same rollout window",
+      "role": "controller_context"
+    },
+    {
+      "code": "REPLICASET_OWNERSHIP_CONFLICT",
+      "message": "ReplicaSet selectors or owner metadata allow more than one controller path to claim the same Pod",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "REPLICASET_RECONCILIATION_CONTENDED",
+      "message": "ReplicaSet reconciliation becomes unstable because ownership and adoption are ambiguous",
+      "role": "controller_intermediate"
+    },
+    {
+      "code": "ROLLOUT_PROGRESS_IMPAIRED",
+      "message": "Controller rollout progress is impaired by conflicting ReplicaSet ownership",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:payments-api-7d6c8d4fd9-km72p": [
+      "Pod labels match multiple active ReplicaSets: payments-rs-old, payments-rs-new"
+    ],
+    "replicaset:payments-rs-old": [
+      "Current Pod owner in ownerReferences"
+    ],
+    "replicaset:payments-rs-new": [
+      "Also matches Pod labels during active reconciliation"
+    ]
+  },
+  "likely_causes": [
+    "Two ReplicaSets in the same namespace have overlapping selectors",
+    "A Pod was manually relabeled or ownerReferences were edited, so ReplicaSet adoption is now ambiguous",
+    "A rollout or copied manifest introduced a ReplicaSet selector that is broader than intended"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod payments-api-7d6c8d4fd9-km72p",
+    "Compare ReplicaSet selectors and template labels with `kubectl get rs -o yaml`",
+    "Ensure only one active ReplicaSet selector matches the Pod labels in this namespace",
+    "Review recent rollout changes for manual selector or ownerReference edits"
+  ]
+}

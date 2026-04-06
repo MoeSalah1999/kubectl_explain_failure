@@ -242,6 +242,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ImmutableFieldUpdateRejected
 - PodDisruptionBudgetBlocking
 - ReplicaSetCreateFailure
+- ReplicaSetOwnershipConflict
 - ReplicaSetUnavailable
 - StatefulSetUpdateBlocked
 
