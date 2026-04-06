@@ -1,0 +1,56 @@
+{
+  "root_cause": "StatefulSet rollout references a missing volumeClaimTemplate",
+  "blocking": true,
+  "confidence": 0.95,
+  "resolution": {
+    "suppressed": []
+  },
+  "evidence": [
+    "Pod ledger-db-0 is owned by StatefulSet ledger-db",
+    "Pod references ordinal PVC data-ledger-db-0 for volume data",
+    "StatefulSet ledger-db has no volumeClaimTemplate named data",
+    "Recent storage signal: MountVolume.SetUp failed for volume \"data\" : persistentvolumeclaim \"data-ledger-db-0\" not found"
+  ],
+  "causes": [
+    {
+      "code": "STATEFULSET_STORAGE_IDENTITY_EXPECTED",
+      "message": "StatefulSet 'ledger-db' is expected to provide per-pod storage identities across ordinals",
+      "role": "controller_context"
+    },
+    {
+      "code": "VOLUMECLAIMTEMPLATE_MISSING",
+      "message": "StatefulSet 'ledger-db' is missing volumeClaimTemplate 'data' required to generate PVC 'data-ledger-db-0'",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "STATEFULSET_PVC_NOT_MATERIALIZED",
+      "message": "The StatefulSet controller cannot materialize the expected per-ordinal PVC for the Pod",
+      "role": "controller_intermediate"
+    },
+    {
+      "code": "STATEFULSET_POD_STORAGE_BLOCKED",
+      "message": "Pod startup is blocked because the expected StatefulSet storage claim does not exist",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "statefulset:ledger-db": [
+      "Missing volumeClaimTemplate data"
+    ],
+    "pod:ledger-db-0": [
+      "Volume data references PVC data-ledger-db-0"
+    ]
+  },
+  "likely_causes": [
+    "The StatefulSet spec references an ordinal-style PVC name but the matching volumeClaimTemplate was never defined",
+    "A copied or hand-edited StatefulSet manifest mixes explicit claim names with template-based storage semantics",
+    "A rollout introduced storage naming drift between Pod volumes and StatefulSet volumeClaimTemplates"
+  ],
+  "suggested_checks": [
+    "kubectl describe statefulset ledger-db",
+    "kubectl describe pod ledger-db-0",
+    "Compare StatefulSet spec.volumeClaimTemplates with Pod volume claim names and ordinal naming",
+    "Use volumeClaimTemplates for per-replica PVC generation instead of hardcoding ordinal claim names"
+  ]
+}

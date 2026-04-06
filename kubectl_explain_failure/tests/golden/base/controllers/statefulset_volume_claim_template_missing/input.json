@@ -1,0 +1,101 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "ledger-db-0",
+      "namespace": "default",
+      "ownerReferences": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "StatefulSet",
+          "name": "ledger-db",
+          "controller": true
+        }
+      ]
+    },
+    "spec": {
+      "volumes": [
+        {
+          "name": "data",
+          "persistentVolumeClaim": {
+            "claimName": "data-ledger-db-0"
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "db",
+          "image": "postgres:16",
+          "volumeMounts": [
+            {
+              "name": "data",
+              "mountPath": "/var/lib/postgresql/data"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "statefulsets": {
+    "ledger-db": {
+      "metadata": {
+        "name": "ledger-db",
+        "namespace": "default"
+      },
+      "spec": {
+        "serviceName": "ledger-db",
+        "replicas": 1,
+        "template": {
+          "spec": {
+            "containers": [
+              {
+                "name": "db",
+                "volumeMounts": [
+                  {
+                    "name": "data",
+                    "mountPath": "/var/lib/postgresql/data"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "volumeClaimTemplates": [
+          {
+            "metadata": {
+              "name": "wal"
+            },
+            "spec": {
+              "accessModes": [
+                "ReadWriteOnce"
+              ],
+              "resources": {
+                "requests": {
+                  "storage": "10Gi"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/3 nodes are available: pod has unbound immediate PersistentVolumeClaims. preemption: 0/3 nodes are available: 3 No preemption victims found for incoming pod.",
+      "firstTimestamp": "2026-04-06T12:00:00Z",
+      "lastTimestamp": "2026-04-06T12:00:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedMount",
+      "message": "MountVolume.SetUp failed for volume \"data\" : persistentvolumeclaim \"data-ledger-db-0\" not found",
+      "firstTimestamp": "2026-04-06T12:01:00Z",
+      "lastTimestamp": "2026-04-06T12:01:00Z"
+    }
+  ]
+}
