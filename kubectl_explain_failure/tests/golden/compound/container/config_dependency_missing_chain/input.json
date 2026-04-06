@@ -1,0 +1,51 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "config-chain-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "app",
+          "image": "nginx:1.27",
+          "envFrom": [
+            {
+              "configMapRef": {
+                "name": "app-config"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "state": {
+            "waiting": {
+              "reason": "CreateContainerConfigError",
+              "message": "configmap \"app-config\" not found"
+            }
+          },
+          "ready": false
+        }
+      ]
+    }
+  },
+  "configmaps": {},
+  "events": [
+    {
+      "reason": "FailedMount",
+      "message": "Unable to attach or mount volumes: unmounted volumes=[config], unattached volumes=[config default-token]: timed out waiting for the condition; MountVolume.SetUp failed for volume \"config\" : configmap \"app-config\" not found",
+      "lastTimestamp": "2026-04-05T11:00:00Z"
+    },
+    {
+      "reason": "CreateContainerConfigError",
+      "message": "configmap \"app-config\" not found",
+      "lastTimestamp": "2026-04-05T11:03:00Z"
+    }
+  ]
+}
