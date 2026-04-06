@@ -381,6 +381,9 @@ def explain_failure(
     if owners:
         context["owners"] = owners
 
+    context.setdefault("_engine_state", {})
+    context["_engine_state"]["matched_rules"] = []
+
     explanations: list[tuple[dict[str, Any], FailureRule, CausalChain]] = []
 
     # ----------------------------
@@ -555,6 +558,17 @@ def explain_failure(
             chain = build_chain(exp)
 
             explanations.append((exp, rule, chain))
+            context["_engine_state"]["matched_rules"].append(
+                {
+                    "name": rule.name,
+                    "category": getattr(rule, "category", None),
+                    "priority": getattr(rule, "priority", 0),
+                    "deterministic": bool(getattr(rule, "deterministic", False)),
+                    "root_cause": exp.get("root_cause"),
+                    "confidence": float(exp.get("confidence", 0.0)),
+                    "blocking": bool(exp.get("blocking", False)),
+                }
+            )
             if verbose:
                 print(
                     f"[DEBUG] Rule '{rule.name}' matched "

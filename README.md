@@ -474,6 +474,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 ## Resolution Rules
 
 - ConflictingSignalsResolution
+- LowConfidenceDiagnosis
 - RootCauseAmbiguity
 
 

@@ -1,0 +1,35 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "weak-signal-pod",
+      "namespace": "default"
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "waiting": {
+              "reason": "ContainerCreating"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Failed",
+      "message": "Error: failed to reserve container name for pod weak-signal-pod",
+      "lastTimestamp": "2026-04-06T14:00:00Z"
+    },
+    {
+      "reason": "Failed",
+      "message": "Error: failed to create container for pod weak-signal-pod",
+      "lastTimestamp": "2026-04-06T14:03:00Z"
+    }
+  ]
+}
