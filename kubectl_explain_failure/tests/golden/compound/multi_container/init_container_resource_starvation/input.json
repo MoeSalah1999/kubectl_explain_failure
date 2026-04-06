@@ -1,0 +1,81 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-api-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "initContainers": [
+        {
+          "name": "init-migrate",
+          "image": "ghcr.io/example/migrate:2026.04.05",
+          "resources": {
+            "requests": {
+              "cpu": "100m",
+              "memory": "64Mi"
+            },
+            "limits": {
+              "cpu": "500m",
+              "memory": "128Mi"
+            }
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "payments-api",
+          "image": "ghcr.io/example/payments-api:2026.04.05"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "initContainerStatuses": [
+        {
+          "name": "init-migrate",
+          "ready": false,
+          "restartCount": 4,
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff",
+              "message": "back-off 5m0s restarting failed init container=init-migrate pod=payments-api-pod_default(91af3c1b)"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "OOMKilled",
+              "exitCode": 137,
+              "finishedAt": "2026-04-06T12:05:44Z"
+            }
+          }
+        }
+      ],
+      "containerStatuses": [
+        {
+          "name": "payments-api",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "waiting": {
+              "reason": "PodInitializing"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed init container init-migrate in pod payments-api-pod_default(91af3c1b)",
+      "count": 3,
+      "lastTimestamp": "2026-04-06T12:05:52Z"
+    },
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed init container init-migrate in pod payments-api-pod_default(91af3c1b)",
+      "count": 4,
+      "lastTimestamp": "2026-04-06T12:07:00Z"
+    }
+  ]
+}

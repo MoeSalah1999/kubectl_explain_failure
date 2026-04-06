@@ -366,6 +366,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ### Multi-Container
 
+- InitContainerResourceStarvation
 - InitContainerBlocksMain
 - MultiContainerPartialFailure
 - SidecarBlocksMainContainer

@@ -1,0 +1,64 @@
+{
+  "root_cause": "Init container is resource-starved and keeps OOM-killing before main startup",
+  "blocking": true,
+  "confidence": 0.94,
+  "resolution": {
+    "suppressed": [
+      "InitContainerBlocksMain"
+    ]
+  },
+  "evidence": [
+    "Init container 'init-migrate' lastState shows OOMKilled before the current CrashLoopBackOff",
+    "Main container 'payments-api' has not started and remains waiting: PodInitializing",
+    "First BackOff retry for init container 'init-migrate' began 8.0s after the recorded OOMKilled termination",
+    "Latest init container BackOff: Back-off restarting failed init container init-migrate in pod payments-api-pod_default(91af3c1b)",
+    "Init container memory request/limit: request=64Mi, limit=128Mi",
+    "OOMKilled termination exit code was 137"
+  ],
+  "causes": [
+    {
+      "code": "INIT_CONTAINER_BOOTSTRAP_WORKLOAD",
+      "message": "Init container 'init-migrate' performs bootstrap work before the main workload can start",
+      "role": "workload_context"
+    },
+    {
+      "code": "INIT_CONTAINER_OOM_RESOURCE_STARVATION",
+      "message": "Init container 'init-migrate' is repeatedly exhausting its runtime memory budget",
+      "role": "resource_root",
+      "blocking": true
+    },
+    {
+      "code": "KUBELET_RETRIES_INIT_CONTAINER",
+      "message": "Kubelet keeps retrying the failed init container instead of advancing to normal containers",
+      "role": "platform_semantics"
+    },
+    {
+      "code": "MAIN_STARTUP_STILL_BLOCKED",
+      "message": "Main container 'payments-api' remains blocked behind init container completion",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:payments-api-pod": [
+      "Pod is stuck in initialization because the init container cannot complete within its memory budget"
+    ],
+    "container:init-migrate": [
+      "Container restarted 4 times after OOMKilled",
+      "memory request=64Mi, limit=128Mi"
+    ],
+    "container:payments-api": [
+      "Main container is still waiting with reason PodInitializing"
+    ]
+  },
+  "likely_causes": [
+    "The init container memory limit is too low for migrations, decompression, or bootstrap data loading",
+    "A recent bootstrap script or image change increased peak memory usage during initialization",
+    "Node-level memory pressure is amplifying init-container startup memory spikes"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod payments-api-pod",
+    "kubectl logs payments-api-pod -c init-migrate --previous",
+    "Review init-container memory requests and limits against real bootstrap usage",
+    "Inspect the init workload for data expansion, migrations, or cache warmup steps that spike memory"
+  ]
+}
