@@ -1,0 +1,176 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "web-7f9f6c86d5-abcde",
+      "namespace": "default",
+      "labels": {
+        "app": "web",
+        "pod-template-hash": "7f9f6c86d5"
+      },
+      "ownerReferences": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "ReplicaSet",
+          "name": "web-7f9f6c86d5",
+          "controller": true
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "deployment": {
+    "web": {
+      "metadata": {
+        "name": "web",
+        "namespace": "default",
+        "generation": 12
+      },
+      "spec": {
+        "replicas": 4,
+        "progressDeadlineSeconds": 600,
+        "selector": {
+          "matchLabels": {
+            "app": "web"
+          }
+        },
+        "strategy": {
+          "type": "RollingUpdate",
+          "rollingUpdate": {
+            "maxUnavailable": 1,
+            "maxSurge": 1
+          }
+        }
+      },
+      "status": {
+        "observedGeneration": 12,
+        "replicas": 5,
+        "updatedReplicas": 2,
+        "readyReplicas": 2,
+        "availableReplicas": 2,
+        "unavailableReplicas": 3,
+        "conditions": [
+          {
+            "type": "Progressing",
+            "status": "False",
+            "reason": "ProgressDeadlineExceeded",
+            "message": "ReplicaSet \"web-7f9f6c86d5\" has timed out progressing."
+          },
+          {
+            "type": "Available",
+            "status": "False",
+            "reason": "MinimumReplicasUnavailable",
+            "message": "Deployment does not have minimum availability."
+          }
+        ]
+      }
+    }
+  },
+  "replicaset": {
+    "web-6c9d8f7b5c": {
+      "metadata": {
+        "name": "web-6c9d8f7b5c",
+        "namespace": "default",
+        "annotations": {
+          "deployment.kubernetes.io/revision": "11"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "name": "web",
+            "controller": true
+          }
+        ]
+      },
+      "spec": {
+        "replicas": 3
+      },
+      "status": {
+        "replicas": 3,
+        "readyReplicas": 2,
+        "availableReplicas": 2
+      }
+    },
+    "web-7f9f6c86d5": {
+      "metadata": {
+        "name": "web-7f9f6c86d5",
+        "namespace": "default",
+        "annotations": {
+          "deployment.kubernetes.io/revision": "12"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "name": "web",
+            "controller": true
+          }
+        ]
+      },
+      "spec": {
+        "replicas": 2
+      },
+      "status": {
+        "replicas": 2,
+        "readyReplicas": 0,
+        "availableReplicas": 0
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set web-7f9f6c86d5 to 1",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "web",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-05T10:00:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled down replica set web-6c9d8f7b5c to 3",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "web",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-05T10:01:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set web-7f9f6c86d5 to 2",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "web",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-05T10:07:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled down replica set web-6c9d8f7b5c to 2",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "web",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-05T10:17:00Z"
+    }
+  ]
+}

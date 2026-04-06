@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from typing import Any
 
 from kubectl_explain_failure.causality import CausalChain, Cause
@@ -28,9 +27,12 @@ class StatefulSetVolumeClaimTemplateMissingRule(FailureRule):
     }
     blocks = [
         "FailedMount",
+        "FailedScheduling",
+        "PendingUnschedulable",
         "PVCNotBound",
         "PVCMountFailed",
         "PVCMountFailure",
+        "RootCauseAmbiguity",
         "StatefulSetUpdateBlocked",
     ]
 
@@ -40,6 +42,11 @@ class StatefulSetVolumeClaimTemplateMissingRule(FailureRule):
         "unbound immediate persistentvolumeclaims",
         "failedmount",
         "mountvolume.setup failed",
+        "not found",
+    )
+    PREFERRED_SIGNAL_MARKERS = (
+        "mountvolume.setup failed",
+        "persistentvolumeclaim",
         "not found",
     )
 
@@ -121,7 +128,9 @@ class StatefulSetVolumeClaimTemplateMissingRule(FailureRule):
             if not claim_name:
                 continue
 
-            template_name = self._ordinal_claim_candidate(str(claim_name), sts_name, ordinal)
+            template_name = self._ordinal_claim_candidate(
+                str(claim_name), sts_name, ordinal
+            )
             if template_name is None:
                 continue
             if template_name in template_names:
@@ -143,6 +152,9 @@ class StatefulSetVolumeClaimTemplateMissingRule(FailureRule):
         pod_name: str,
         claim_name: str,
     ) -> str | None:
+        best_message = None
+        best_score = -1
+
         for event in timeline.events_within_window(self.WINDOW_MINUTES):
             message = str(event.get("message", "")).lower()
             if pod_name.lower() not in message and claim_name.lower() not in message:
@@ -150,10 +162,23 @@ class StatefulSetVolumeClaimTemplateMissingRule(FailureRule):
                     continue
             if not any(marker in message for marker in self.STORAGE_MARKERS):
                 continue
-            return str(event.get("message", ""))
-        return None
 
-    def _candidate(self, pod: dict[str, Any], context: dict[str, Any]) -> dict[str, str] | None:
+            score = 0
+            if str(event.get("reason", "")).lower() == "failedmount":
+                score += 10
+            score += sum(
+                1 for marker in self.PREFERRED_SIGNAL_MARKERS if marker in message
+            )
+
+            if score > best_score:
+                best_score = score
+                best_message = str(event.get("message", ""))
+
+        return best_message
+
+    def _candidate(
+        self, pod: dict[str, Any], context: dict[str, Any]
+    ) -> dict[str, str] | None:
         timeline = context.get("timeline")
         if not isinstance(timeline, Timeline):
             return None

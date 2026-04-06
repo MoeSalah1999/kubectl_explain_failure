@@ -264,8 +264,10 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ImmutableFieldUpdateRejected
 - PodDisruptionBudgetBlocking
 - ReplicaSetCreateFailure
+- ReplicaSetOwnershipConflict
 - ReplicaSetUnavailable
 - StatefulSetUpdateBlocked
+- StatefulSetVolumeClaimTemplateMissing
 
 ### Networking
 
@@ -366,9 +368,9 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ### Controllers
 
+- DeploymentRolloutStalled
 - HPAUnableToScale
 - OwnerBlockedPod
-- RollingUpdateStuckMidway
 - WebhookFailureBlocksDeployment
 
 ### Cross-Domain

@@ -28,6 +28,7 @@ class WebhookFailureBlocksDeploymentRule(FailureRule):
     priority = 40
     deterministic = False
     blocks = [
+        "DeploymentProgressDeadlineExceeded",
         "DeploymentReplicaMismatch",
         "ReplicaSetCreateFailure",
     ]

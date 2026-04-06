@@ -1,0 +1,69 @@
+{
+  "root_cause": "Deployment rollout stalled while transitioning to a new ReplicaSet",
+  "blocking": true,
+  "confidence": 0.94,
+  "suppressed": [
+    "DeploymentReplicaMismatch",
+    "DeploymentProgressDeadlineExceeded",
+    "ReplicaSetUnavailable"
+  ],
+  "evidence": [
+    "Deployment 'web' observed generation 12/12 but only 2/4 replicas are available",
+    "New ReplicaSet 'web-7f9f6c86d5' (revision 12) has 0/2 available replicas",
+    "Recent controller rollout activity spans 17.0 minutes across 4 events, exceeding the 10.0 minute progress deadline",
+    "Older ReplicaSets still hold 3 replicas and 2 available replicas, so the rollout has not converged",
+    "Deployment Progressing condition reports ProgressDeadlineExceeded",
+    "Deployment Available condition is False (MinimumReplicasUnavailable)"
+  ],
+  "causes": [
+    {
+      "code": "DEPLOYMENT_GENERATION_OBSERVED",
+      "message": "Deployment 'web' has been observed at generation 12",
+      "role": "controller_context"
+    },
+    {
+      "code": "DEPLOYMENT_ROLLOUT_PROGRESS_STALLED",
+      "message": "The Deployment controller is no longer making rollout progress toward the desired replica set state",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "NEW_REPLICASET_NOT_BECOMING_AVAILABLE",
+      "message": "New ReplicaSet 'web-7f9f6c86d5' is scaled but not becoming fully available",
+      "role": "controller_intermediate"
+    },
+    {
+      "code": "DEPLOYMENT_REMAINS_BELOW_TARGET_AVAILABILITY",
+      "message": "Deployment availability remains below target (2/4) while the rollout is incomplete",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "deployment:web": [
+      "observedGeneration=12, generation=12",
+      "updatedReplicas=2, availableReplicas=2, desiredReplicas=4",
+      "Progressing=False (ProgressDeadlineExceeded)",
+      "ReplicaSet \"web-7f9f6c86d5\" has timed out progressing."
+    ],
+    "replicaset:web-7f9f6c86d5": [
+      "revision=12",
+      "availableReplicas=0/2"
+    ],
+    "replicaset:web-6c9d8f7b5c": [
+      "Older rollout revision still active with 3 replicas",
+      "availableReplicas=2"
+    ]
+  },
+  "likely_causes": [
+    "New revision pods are failing readiness, startup, or container runtime checks so the new ReplicaSet never becomes available",
+    "Scheduling or cluster capacity constraints are slowing the replacement pods enough to exhaust the Deployment progress deadline",
+    "Older pods cannot drain or terminate cleanly because of PodDisruptionBudget, long shutdown time, or stuck finalization",
+    "ReplicaSet or admission-level errors are preventing the Deployment controller from completing the intended scale transition"
+  ],
+  "suggested_checks": [
+    "kubectl rollout status deployment web",
+    "kubectl describe deployment web",
+    "kubectl describe replicaset web-7f9f6c86d5",
+    "kubectl get rs,pods -l app=web -o wide"
+  ]
+}

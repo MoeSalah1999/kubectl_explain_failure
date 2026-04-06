@@ -28,6 +28,11 @@ class DeploymentProgressDeadlineExceededRule(FailureRule):
         "objects": ["deployment"],
     }
 
+    def _condition_is_false(self, value) -> bool:
+        if isinstance(value, bool):
+            return value is False
+        return str(value).strip().lower() == "false"
+
     def matches(self, pod, events, context) -> bool:
         deploy_objs = context.get("objects", {}).get("deployment", {})
         if not deploy_objs:
@@ -38,7 +43,7 @@ class DeploymentProgressDeadlineExceededRule(FailureRule):
             for cond in conditions:
                 if (
                     cond.get("type") == "Progressing"
-                    and cond.get("status") is False
+                    and self._condition_is_false(cond.get("status"))
                     and cond.get("reason") == "ProgressDeadlineExceeded"
                 ):
                     return True

@@ -76,6 +76,9 @@ class PendingUnschedulableRule(FailureRule):
         # -------------------------------------------------
         SPECIFIC_MARKERS = (
             # Volume-related (your current failure)
+            "persistentvolumeclaim",
+            "persistentvolumeclaims",
+            "unbound immediate persistentvolumeclaims",
             "volume node affinity conflict",
             # Topology-related
             "topology spread constraints",

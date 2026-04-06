@@ -32,7 +32,12 @@ class OwnerBlockedPodRule(FailureRule):
     name = "OwnerBlockedPod"
     category = "Compound"
     priority = 56
-    blocks = ["ReplicaSetUnavailable", "ReplicaSetCreateFailure"]
+    blocks = [
+        "DeploymentProgressDeadlineExceeded",
+        "DeploymentReplicaMismatch",
+        "ReplicaSetUnavailable",
+        "ReplicaSetCreateFailure",
+    ]
     requires = {
         "objects": ["deployment", "replicaset"],
     }

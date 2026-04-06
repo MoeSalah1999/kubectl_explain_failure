@@ -6,7 +6,7 @@ from kubectl_explain_failure.engine import explain_failure, normalize_context
 from kubectl_explain_failure.timeline import build_timeline
 
 BASE_DIR = os.path.dirname(__file__)
-FIXTURE_DIR = os.path.join(BASE_DIR, "rolling_update_stuck_midway")
+FIXTURE_DIR = os.path.join(BASE_DIR, "deployment_rollout_stalled")
 
 
 def load_json(name: str):
@@ -14,7 +14,7 @@ def load_json(name: str):
         return json.load(f)
 
 
-def test_rolling_update_stuck_midway_golden():
+def test_deployment_rollout_stalled_golden():
     data = load_json("input.json")
     expected = load_json("expected.json")
 
@@ -41,7 +41,6 @@ def test_rolling_update_stuck_midway_golden():
         )()
     )
 
-    # Inject Deployment + ReplicaSet objects
     context["objects"] = {
         "deployment": data.get("deployment", {}),
         "replicaset": data.get("replicaset", {}),
@@ -54,38 +53,31 @@ def test_rolling_update_stuck_midway_golden():
 
     result = explain_failure(pod, events, context=context)
 
-    # Root cause
     assert result["root_cause"] == expected["root_cause"]
-
-    # Blocking
     assert result["blocking"] is True
+    assert result["confidence"] >= expected["confidence"]
+    assert result["resolution"]["winner"] == "DeploymentRolloutStalled"
 
-    # Confidence
-    assert result["confidence"] >= 0.85
+    for suppressed in expected.get("suppressed", []):
+        assert suppressed in result["resolution"]["suppressed"]
 
-    # Evidence
     for ev in expected["evidence"]:
         assert ev in result["evidence"]
 
-    # Causes
     for exp_cause, res_cause in zip(expected["causes"], result["causes"], strict=False):
         assert exp_cause["code"] == res_cause["code"]
         assert exp_cause["message"] == res_cause["message"]
         assert exp_cause["role"] == res_cause["role"]
         assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
-        assert exp_cause.get("blocking", True) == res_cause.get("blocking", True)
 
-    # Object evidence
     assert "object_evidence" in result
     for obj_key, items in expected["object_evidence"].items():
         assert obj_key in result["object_evidence"]
         for item in items:
             assert item in result["object_evidence"][obj_key]
 
-    # Likely causes
     for lc in expected.get("likely_causes", []):
         assert lc in result.get("likely_causes", [])
 
-    # Suggested checks
     for sc in expected.get("suggested_checks", []):
         assert sc in result.get("suggested_checks", [])

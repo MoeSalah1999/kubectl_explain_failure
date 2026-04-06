@@ -346,9 +346,9 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ### Controllers
 
+- DeploymentRolloutStalled
 - HPAUnableToScale
 - OwnerBlockedPod
-- RollingUpdateStuckMidway
 - WebhookFailureBlocksDeployment
 
 ### Cross-Domain
