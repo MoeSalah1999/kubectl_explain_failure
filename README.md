@@ -232,6 +232,10 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ReadOnlyRootFilesystemWriteAttempt
 - TerminationGracePeriodExceeded
 
+### Multi-Container
+
+- SidecarCrashLoop
+
 ### Controllers
 
 - CRDConversionWebhookFailure

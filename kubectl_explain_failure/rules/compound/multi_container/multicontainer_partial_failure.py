@@ -1,5 +1,8 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
+from kubectl_explain_failure.rules.multi_container_helpers import (
+    is_recognized_sidecar_container,
+)
 
 
 class MultiContainerPartialFailureRule(FailureRule):
@@ -52,10 +55,38 @@ class MultiContainerPartialFailureRule(FailureRule):
 
     FAILURE_STATES = {"CrashLoopBackOff", "Error", "OOMKilled"}
 
+    def _sidecar_only_failure(self, pod: dict, statuses: list[dict]) -> bool:
+        ready_primary = False
+        failing_sidecar = False
+
+        for status in statuses:
+            name = str(status.get("name", ""))
+            state = status.get("state", {}) or {}
+            waiting = state.get("waiting", {}) or {}
+            terminated = state.get("terminated", {}) or {}
+            reason = waiting.get("reason") or terminated.get("reason")
+            is_sidecar = is_recognized_sidecar_container(pod, name)
+
+            if status.get("ready") and not is_sidecar:
+                ready_primary = True
+
+            if reason not in self.FAILURE_STATES:
+                continue
+
+            if not is_sidecar:
+                return False
+
+            failing_sidecar = True
+
+        return ready_primary and failing_sidecar
+
     def matches(self, pod, events, context) -> bool:
         statuses = pod.get("status", {}).get("containerStatuses", [])
         if len(statuses) < 2:
             return False  # Not multi-container
+
+        if self._sidecar_only_failure(pod, statuses):
+            return False
 
         ready_count = 0
         failing_count = 0

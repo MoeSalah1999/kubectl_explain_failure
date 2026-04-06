@@ -1,0 +1,75 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "mesh-app-pod",
+      "namespace": "default",
+      "annotations": {
+        "sidecar.istio.io/status": "{\"version\":\"1.22.1\"}"
+      }
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "checkout",
+          "image": "example/checkout:v1"
+        },
+        {
+          "name": "istio-proxy",
+          "image": "docker.io/istio/proxyv2:1.22.1"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "checkout",
+          "ready": true,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-05T11:00:15Z"
+            }
+          }
+        },
+        {
+          "name": "istio-proxy",
+          "ready": false,
+          "restartCount": 7,
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff",
+              "message": "back-off 5m0s restarting failed container=istio-proxy pod=mesh-app-pod_default(2f5cfe98)"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 1,
+              "finishedAt": "2026-04-05T11:08:30Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Started",
+      "message": "Started container checkout",
+      "lastTimestamp": "2026-04-05T11:00:15Z"
+    },
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container istio-proxy in pod mesh-app-pod_default(2f5cfe98)",
+      "count": 5,
+      "lastTimestamp": "2026-04-05T11:06:00Z"
+    },
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container istio-proxy in pod mesh-app-pod_default(2f5cfe98)",
+      "count": 7,
+      "lastTimestamp": "2026-04-05T11:09:00Z"
+    }
+  ]
+}

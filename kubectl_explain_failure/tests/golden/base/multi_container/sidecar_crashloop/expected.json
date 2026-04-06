@@ -1,0 +1,62 @@
+{
+  "root_cause": "Sidecar container is crashing while the primary workload remains healthy",
+  "blocking": true,
+  "confidence": 0.9,
+  "resolution": {
+    "suppressed": [
+      "CrashLoopBackOff",
+      "RepeatedCrashLoop"
+    ]
+  },
+  "evidence": [
+    "Recognized sidecar container 'istio-proxy' is waiting in CrashLoopBackOff with restartCount=7",
+    "Primary container 'checkout' remains Ready",
+    "Recent BackOff events are specific to sidecar container 'istio-proxy'",
+    "Latest sidecar crash message: Back-off restarting failed container istio-proxy in pod mesh-app-pod_default(2f5cfe98)"
+  ],
+  "causes": [
+    {
+      "code": "SIDECAR_ROLE_IDENTIFIED",
+      "message": "Container 'istio-proxy' is acting as a sidecar alongside the main workload",
+      "role": "workload_context"
+    },
+    {
+      "code": "SIDECAR_CRASH_LOOP",
+      "message": "Sidecar container 'istio-proxy' is repeatedly crashing",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "PRIMARY_CONTAINER_STILL_HEALTHY",
+      "message": "Primary container 'checkout' remains healthy while the sidecar fails",
+      "role": "container_health_context"
+    },
+    {
+      "code": "POD_DEGRADED_BY_SIDECAR_FAILURE",
+      "message": "Pod remains degraded because the supporting sidecar cannot stay up",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:mesh-app-pod": [
+      "Pod has a healthy primary container but a crashlooping sidecar"
+    ],
+    "container:istio-proxy": [
+      "Recognized sidecar is in CrashLoopBackOff"
+    ],
+    "container:checkout": [
+      "Primary workload container remains Ready"
+    ]
+  },
+  "likely_causes": [
+    "The sidecar has invalid bootstrap or control-plane configuration",
+    "The sidecar cannot reach its upstream dependency or control plane and exits during startup",
+    "Injected sidecar certificates, tokens, or mesh-specific configuration are stale or missing"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod mesh-app-pod",
+    "kubectl logs mesh-app-pod -c istio-proxy",
+    "kubectl logs mesh-app-pod -c checkout",
+    "Inspect service-mesh, logging-agent, or proxy bootstrap configuration for the sidecar"
+  ]
+}
