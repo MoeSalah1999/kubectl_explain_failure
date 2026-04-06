@@ -368,6 +368,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 - InitContainerBlocksMain
 - MultiContainerPartialFailure
+- SidecarBlocksMainContainer
 - SidecarInjectionFailure
 
 ### Networking

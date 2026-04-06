@@ -1,0 +1,87 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "orders-api-pod",
+      "namespace": "default",
+      "annotations": {
+        "sidecar.istio.io/status": "{\"version\":\"1.22.1\"}"
+      }
+    },
+    "spec": {
+      "initContainers": [
+        {
+          "name": "istio-proxy",
+          "image": "docker.io/istio/proxyv2:1.22.1",
+          "restartPolicy": "Always",
+          "startupProbe": {
+            "httpGet": {
+              "path": "/healthz/ready",
+              "port": 15021
+            }
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "orders-api",
+          "image": "ghcr.io/example/orders-api:2026.04.05"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "initContainerStatuses": [
+        {
+          "name": "istio-proxy",
+          "ready": false,
+          "started": false,
+          "restartCount": 3,
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff",
+              "message": "back-off 5m0s restarting failed container=istio-proxy pod=orders-api-pod_default(31e950be)"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 1,
+              "finishedAt": "2026-04-06T10:08:10Z"
+            }
+          }
+        }
+      ],
+      "containerStatuses": [
+        {
+          "name": "orders-api",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "waiting": {
+              "reason": "PodInitializing"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Started",
+      "message": "Started container istio-proxy",
+      "lastTimestamp": "2026-04-06T10:05:00Z"
+    },
+    {
+      "reason": "Unhealthy",
+      "message": "Startup probe failed: Get \"http://10.32.1.14:15021/healthz/ready\": connection refused for container istio-proxy",
+      "count": 4,
+      "lastTimestamp": "2026-04-06T10:07:00Z"
+    },
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container istio-proxy in pod orders-api-pod_default(31e950be)",
+      "count": 3,
+      "lastTimestamp": "2026-04-06T10:09:00Z"
+    }
+  ]
+}

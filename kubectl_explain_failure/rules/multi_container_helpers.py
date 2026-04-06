@@ -52,9 +52,11 @@ def pod_has_sidecar_injection_signal(pod: dict) -> bool:
     return False
 
 
-def _container_specs_by_name(pod: dict) -> dict[str, dict]:
+def _all_container_specs_by_name(pod: dict) -> dict[str, dict]:
     spec = pod.get("spec", {}) or {}
-    containers = spec.get("containers", []) or []
+    containers = (spec.get("containers", []) or []) + (
+        spec.get("initContainers", []) or []
+    )
     return {
         str(container.get("name")): container
         for container in containers
@@ -73,7 +75,7 @@ def is_recognized_sidecar_container(pod: dict, container_name: str) -> bool:
     if lowered_name.endswith(SIDECAR_SUFFIXES):
         return True
 
-    container_spec = _container_specs_by_name(pod).get(container_name, {})
+    container_spec = _all_container_specs_by_name(pod).get(container_name, {})
     image = str(container_spec.get("image", "")).lower()
     if any(marker in image for marker in SIDECAR_IMAGE_MARKERS):
         return True
@@ -82,5 +84,21 @@ def is_recognized_sidecar_container(pod: dict, container_name: str) -> bool:
         "proxy" in lowered_name or "agent" in lowered_name
     ):
         return True
+
+    return False
+
+
+def is_restartable_init_sidecar(pod: dict, container_name: str) -> bool:
+    spec = pod.get("spec", {}) or {}
+    init_containers = spec.get("initContainers", []) or []
+
+    for container in init_containers:
+        if container.get("name") != container_name:
+            continue
+
+        if str(container.get("restartPolicy", "")).lower() != "always":
+            return False
+
+        return is_recognized_sidecar_container(pod, container_name)
 
     return False

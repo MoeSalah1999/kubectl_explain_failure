@@ -1,0 +1,62 @@
+{
+  "root_cause": "Restartable sidecar init container is blocking main container startup",
+  "blocking": true,
+  "confidence": 0.92,
+  "resolution": {
+    "suppressed": [
+      "InitContainerBlocksMain",
+      "StartupProbeFailure"
+    ]
+  },
+  "evidence": [
+    "Restartable init sidecar 'istio-proxy' is still marked started=false",
+    "Main container 'orders-api' has not started and remains waiting: PodInitializing",
+    "Recent startup-blocking events are specific to restartable init sidecar 'istio-proxy'",
+    "Startup probe failed: Get \"http://10.32.1.14:15021/healthz/ready\": connection refused for container istio-proxy"
+  ],
+  "causes": [
+    {
+      "code": "RESTARTABLE_SIDECAR_INIT_PRESENT",
+      "message": "Pod defines restartable init sidecar 'istio-proxy'",
+      "role": "workload_context"
+    },
+    {
+      "code": "SIDECAR_INIT_NOT_STARTED",
+      "message": "Restartable init sidecar 'istio-proxy' has not reached a started state",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "KUBELET_INIT_SEQUENCE_GATED",
+      "message": "Kubelet will not start normal containers until restartable init sidecars are started",
+      "role": "platform_semantics"
+    },
+    {
+      "code": "MAIN_CONTAINER_STARTUP_BLOCKED_BY_SIDECAR",
+      "message": "Main container 'orders-api' is still blocked behind sidecar startup",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:orders-api-pod": [
+      "Pod is stuck before normal containers because a restartable init sidecar has not started"
+    ],
+    "container:istio-proxy": [
+      "state=waiting, reason=CrashLoopBackOff, restartCount=3, started=False"
+    ],
+    "container:orders-api": [
+      "Main container is still waiting with reason PodInitializing"
+    ]
+  },
+  "likely_causes": [
+    "The sidecar startupProbe is too strict or targets an endpoint that is not ready yet",
+    "The sidecar cannot finish bootstrap because its mesh, agent, or control-plane dependency is unavailable",
+    "The restartable init sidecar configuration is invalid and kubelet keeps retrying it before normal containers can start"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod orders-api-pod",
+    "kubectl logs orders-api-pod -c istio-proxy --previous",
+    "Review the initContainers entry for restartPolicy: Always and any startupProbe gating on the sidecar",
+    "Inspect service-mesh or agent bootstrap dependencies required before the sidecar can report started"
+  ]
+}
