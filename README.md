@@ -476,6 +476,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ConflictingSignalsResolution
 - LowConfidenceDiagnosis
 - RootCauseAmbiguity
+- SuppressedSignalExplanation
 
 
 

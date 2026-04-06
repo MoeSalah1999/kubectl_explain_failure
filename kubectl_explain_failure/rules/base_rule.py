@@ -16,6 +16,8 @@ class FailureRule:
     phases: list[str] = []  # e.g. ["Pending", "Running"]
     container_states: list[str] = []  # e.g. ["waiting", "terminated"]
     dependencies: list[str] = []  # names of other rules
+    post_resolution: bool = False
+    augment_only: bool = False
 
     # ---- Blocking / suppression semantics ----
     blocks: list[str] = []  # names of rules this rule suppresses

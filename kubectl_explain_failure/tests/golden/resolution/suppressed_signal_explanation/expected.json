@@ -1,0 +1,29 @@
+{
+  "root_cause": "Volume mount failed due to permission denied on the node",
+  "blocking": true,
+  "confidence": 0.95,
+  "resolution": {
+    "winner": "VolumeMountPermissionDenied",
+    "explained_by": "SuppressedSignalExplanation",
+    "suppressed": [
+      "FailedMount",
+      "PVCMountFailed"
+    ],
+    "reason": "Engine kept 'VolumeMountPermissionDenied' as the primary diagnosis because it is the most specific matched signal in the recent incident window and suppressed 2 secondary signal(s): FailedMount, PVCMountFailed"
+  },
+  "evidence": [
+    "Engine suppressed 2 secondary matched signal(s): FailedMount, PVCMountFailed",
+    "Recent timeline still shows overlapping failure reasons in the same incident window: FailedMount"
+  ],
+  "suppressed_signal_explanation": {
+    "winner": "VolumeMountPermissionDenied",
+    "winner_root_cause": "Volume mount failed due to permission denied on the node",
+    "suppressed": [
+      "FailedMount",
+      "PVCMountFailed"
+    ],
+    "recent_event_reasons": [
+      "FailedMount"
+    ]
+  }
+}

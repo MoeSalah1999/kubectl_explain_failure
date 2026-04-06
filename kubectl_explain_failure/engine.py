@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 from datetime import datetime, timezone
 from typing import Any
 
@@ -35,6 +36,19 @@ def get_default_rules() -> list[FailureRule]:
 
 def _norm_category(rule: FailureRule) -> str:
     return (getattr(rule, "category", "") or "").strip().lower()
+
+
+def _passes_category_filters(
+    rule: FailureRule,
+    enabled_categories: list[str] | None,
+    disabled_categories: list[str] | None,
+) -> bool:
+    category = getattr(rule, "category", None)
+    if enabled_categories and category not in enabled_categories:
+        return False
+    if disabled_categories and category in disabled_categories:
+        return False
+    return True
 
 
 def normalize_context(context: dict[str, Any]) -> dict[str, Any]:
@@ -276,6 +290,149 @@ def score_explanations(
     return best_root_cause, combined_confidence
 
 
+def _merge_unique_strings(
+    existing: list[str],
+    additions: list[str],
+) -> list[str]:
+    return list(
+        dict.fromkeys(
+            [
+                *(item for item in existing if isinstance(item, str)),
+                *(item for item in additions if isinstance(item, str)),
+            ]
+        )
+    )
+
+
+def _prepare_post_resolution_state(
+    result: dict[str, Any],
+    context: dict[str, Any],
+) -> None:
+    engine_state = context.setdefault("_engine_state", {})
+    matched_rules = engine_state.get("matched_rules", []) or []
+    resolution = result.get("resolution") or {}
+    winner_name = resolution.get("winner")
+    suppressed_names = set(resolution.get("suppressed", []) or [])
+
+    winner_match = next(
+        (item for item in matched_rules if item.get("name") == winner_name),
+        None,
+    )
+    suppressed_matched_rules = [
+        item for item in matched_rules if item.get("name") in suppressed_names
+    ]
+    active_matched_rules = [
+        item
+        for item in matched_rules
+        if item.get("name") == winner_name or item.get("name") not in suppressed_names
+    ]
+
+    engine_state["preliminary_result"] = deepcopy(result)
+    engine_state["winner_match"] = winner_match
+    engine_state["suppressed_matched_rules"] = suppressed_matched_rules
+    engine_state["active_matched_rules"] = active_matched_rules
+
+
+def _merge_post_resolution_expansion(
+    result: dict[str, Any],
+    exp: dict[str, Any],
+    rule: FailureRule,
+) -> dict[str, Any]:
+    resolution_patch = exp.get("resolution_patch")
+    if isinstance(resolution_patch, dict):
+        result.setdefault("resolution", {}).update(resolution_patch)
+
+    for key in ("evidence", "likely_causes", "suggested_checks"):
+        additions = exp.get(key)
+        if isinstance(additions, list) and additions:
+            result[key] = _merge_unique_strings(result.get(key, []), additions)
+
+    object_evidence = exp.get("object_evidence")
+    if isinstance(object_evidence, dict) and object_evidence:
+        result.setdefault("object_evidence", {})
+        for obj_key, items in object_evidence.items():
+            if not isinstance(items, list):
+                continue
+            result["object_evidence"][obj_key] = _merge_unique_strings(
+                result["object_evidence"].get(obj_key, []),
+                items,
+            )
+
+    if "suppressed_signal_explanation" in exp:
+        result["suppressed_signal_explanation"] = exp["suppressed_signal_explanation"]
+
+    result.setdefault("resolution", {})
+    result["resolution"].setdefault("explained_by", rule.name)
+    return result
+
+
+def _apply_post_resolution_rules(
+    result: dict[str, Any],
+    *,
+    pod: dict[str, Any],
+    events: list[dict[str, Any]],
+    context: dict[str, Any],
+    rules: list[FailureRule],
+    enabled_categories: list[str] | None,
+    disabled_categories: list[str] | None,
+    verbose: bool,
+) -> dict[str, Any]:
+    if not result.get("resolution"):
+        return result
+
+    post_rules = [
+        rule
+        for rule in rules
+        if getattr(rule, "post_resolution", False)
+        and _passes_category_filters(rule, enabled_categories, disabled_categories)
+    ]
+    if not post_rules:
+        return result
+
+    _prepare_post_resolution_state(result, context)
+
+    for rule in post_rules:
+        if not rule.matches(pod, events, context):
+            continue
+
+        exp = rule.explain(pod, events, context)
+        if not isinstance(exp, dict):
+            raise TypeError(f"{rule.name}.explain() must return a dict")
+
+        if getattr(rule, "augment_only", False):
+            result = _merge_post_resolution_expansion(result, exp, rule)
+            if verbose:
+                print(f"[DEBUG] Post-resolution rule '{rule.name}' augmented result")
+            continue
+
+        return exp
+
+    return result
+
+
+def _finalize_result(
+    result: dict[str, Any],
+    *,
+    pod: dict[str, Any],
+    events: list[dict[str, Any]],
+    context: dict[str, Any],
+    rules: list[FailureRule],
+    enabled_categories: list[str] | None,
+    disabled_categories: list[str] | None,
+    verbose: bool,
+) -> dict[str, Any]:
+    return _apply_post_resolution_rules(
+        result,
+        pod=pod,
+        events=events,
+        context=context,
+        rules=rules,
+        enabled_categories=enabled_categories,
+        disabled_categories=disabled_categories,
+        verbose=verbose,
+    )
+
+
 # ----------------------------
 # Heuristic engine
 # ----------------------------
@@ -401,6 +558,9 @@ def explain_failure(
     # ----------------------------
     filtered_rules = []
     for rule in rules:
+        if getattr(rule, "post_resolution", False):
+            continue
+
         # Phase gating
         phases = getattr(rule, "phases", None) or getattr(
             rule, "supported_phases", None
@@ -432,9 +592,11 @@ def explain_failure(
     for rule in filtered_rules:
         category = getattr(rule, "category", None)
 
-        if enabled_categories and category not in enabled_categories:
-            continue
-        if disabled_categories and category in disabled_categories:
+        if not _passes_category_filters(
+            rule,
+            enabled_categories,
+            disabled_categories,
+        ):
             continue
 
         # Dependency enforcement
@@ -580,16 +742,25 @@ def explain_failure(
     # No matches → Unknown
     # ----------------------------
     if not explanations:
-        return {
-            "pod": pod_name,
-            "phase": pod_phase,
-            "root_cause": "Unknown",
-            "evidence": [],
-            "likely_causes": [],
-            "suggested_checks": [],
-            "confidence": 0.0,
-            "blocking": False,
-        }
+        return _finalize_result(
+            {
+                "pod": pod_name,
+                "phase": pod_phase,
+                "root_cause": "Unknown",
+                "evidence": [],
+                "likely_causes": [],
+                "suggested_checks": [],
+                "confidence": 0.0,
+                "blocking": False,
+            },
+            pod=pod,
+            events=events,
+            context=context,
+            rules=rules,
+            enabled_categories=enabled_categories,
+            disabled_categories=disabled_categories,
+            verbose=verbose,
+        )
 
     # ----------------------------
     # Apply automatic suppression
@@ -745,22 +916,40 @@ def explain_failure(
                         result["object_evidence"] = {
                             f"pvc:{name}, phase:{phase}": ["PVC not Bound"]
                         }
-            return result
+            return _finalize_result(
+                result,
+                pod=pod,
+                events=events,
+                context=context,
+                rules=rules,
+                enabled_categories=enabled_categories,
+                disabled_categories=disabled_categories,
+                verbose=verbose,
+            )
 
         else:
             compound_matches = []  # fall through to weighted selection
 
     if not filtered_explanations:
-        return {
-            "pod": pod_name,
-            "phase": pod_phase,
-            "root_cause": "Unknown",
-            "evidence": [],
-            "likely_causes": [],
-            "suggested_checks": [],
-            "confidence": 0.0,
-            "blocking": False,
-        }
+        return _finalize_result(
+            {
+                "pod": pod_name,
+                "phase": pod_phase,
+                "root_cause": "Unknown",
+                "evidence": [],
+                "likely_causes": [],
+                "suggested_checks": [],
+                "confidence": 0.0,
+                "blocking": False,
+            },
+            pod=pod,
+            events=events,
+            context=context,
+            rules=rules,
+            enabled_categories=enabled_categories,
+            disabled_categories=disabled_categories,
+            verbose=verbose,
+        )
 
     # ----------------------------
     # STRONG CAUSAL OVERRIDE: PVC blocks scheduling
@@ -830,7 +1019,16 @@ def explain_failure(
             ],
         }
 
-        return result
+        return _finalize_result(
+            result,
+            pod=pod,
+            events=events,
+            context=context,
+            rules=rules,
+            enabled_categories=enabled_categories,
+            disabled_categories=disabled_categories,
+            verbose=verbose,
+        )
 
     # -------------------------------------------------
     # DETERMINISTIC RULE SHORT-CIRCUIT
@@ -869,7 +1067,16 @@ def explain_failure(
             if "object_evidence" in exp:
                 result["object_evidence"] = exp["object_evidence"]
 
-            return result
+            return _finalize_result(
+                result,
+                pod=pod,
+                events=events,
+                context=context,
+                rules=rules,
+                enabled_categories=enabled_categories,
+                disabled_categories=disabled_categories,
+                verbose=verbose,
+            )
 
     best_root_cause, combined_confidence = score_explanations(
         filtered_explanations,
@@ -961,4 +1168,13 @@ def explain_failure(
 
     merged["confidence"] = min(1.0, max(0.0, merged["confidence"]))
 
-    return merged
+    return _finalize_result(
+        merged,
+        pod=pod,
+        events=events,
+        context=context,
+        rules=rules,
+        enabled_categories=enabled_categories,
+        disabled_categories=disabled_categories,
+        verbose=verbose,
+    )

@@ -1,0 +1,66 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "secure-volume-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "nodeName": "node1",
+      "volumes": [
+        {
+          "name": "data",
+          "persistentVolumeClaim": {
+            "claimName": "data-pvc"
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "app",
+          "image": "ghcr.io/example/secure-app:1.2.0",
+          "volumeMounts": [
+            {
+              "name": "data",
+              "mountPath": "/var/lib/app"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "objects": {
+    "node": {
+      "node1": {
+        "metadata": {
+          "name": "node1"
+        }
+      }
+    },
+    "pvc": {
+      "data-pvc": {
+        "metadata": {
+          "name": "data-pvc"
+        },
+        "status": {
+          "phase": "Bound"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedMount",
+      "source": {
+        "component": "kubelet"
+      },
+      "message": "MountVolume.SetUp failed for volume \"data\": mkdir /var/lib/kubelet/pods/1111-2222/volumes/kubernetes.io~csi/data/mount: permission denied",
+      "firstTimestamp": "2026-04-06T14:20:00Z",
+      "lastTimestamp": "2026-04-06T14:24:00Z",
+      "count": 6
+    }
+  ]
+}
