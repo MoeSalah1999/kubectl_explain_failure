@@ -320,6 +320,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - PVCNotBound
 - PVReleasedOrFailed
 - ReadWriteOnceMultiNodeConflict
+- SecretNotFound
 - StorageClassProvisionerMissing
 - VolumeAttachFailed
 - VolumeDeviceConflict

@@ -1,0 +1,50 @@
+{
+  "root_cause": "Referenced Secret does not exist",
+  "blocking": true,
+  "confidence": 0.9,
+  "suppressed": [
+    "ContainerCreateConfigError",
+    "FailedMount"
+  ],
+  "evidence": [
+    "Secret 'app-secret' not found",
+    "Event: FailedMount",
+    "Event: CreateContainerConfigError",
+    "Missing Secret surfaces across multiple kubelet startup checks"
+  ],
+  "causes": [
+    {
+      "code": "SECRET_REFERENCE",
+      "message": "Pod references Secret 'app-secret'",
+      "role": "workload_context"
+    },
+    {
+      "code": "SECRET_NOT_FOUND",
+      "message": "Secret 'app-secret' not found",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "SECRET_DEPENDENCY_BLOCKS_STARTUP",
+      "message": "Kubelet cannot resolve secret-backed configuration required to start the Pod",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "secret:app-secret": [
+      "Secret not found in Pod namespace",
+      "Referenced by secret volume 'app-secret-volume'",
+      "Referenced by envFrom in container 'app'"
+    ]
+  },
+  "likely_causes": [
+    "Secret name typo in an env, envFrom, or volume reference",
+    "Secret was deleted or not yet created in the Pod namespace",
+    "Secret exists in a different namespace than the Pod"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod secret-missing-pod",
+    "kubectl get secret",
+    "kubectl get secret app-secret"
+  ]
+}

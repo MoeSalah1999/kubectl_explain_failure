@@ -1,0 +1,61 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "secret-missing-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "app",
+          "image": "nginx:1.27",
+          "envFrom": [
+            {
+              "secretRef": {
+                "name": "app-secret"
+              }
+            }
+          ],
+          "volumeMounts": [
+            {
+              "name": "app-secret-volume",
+              "mountPath": "/etc/app/secret"
+            }
+          ]
+        }
+      ],
+      "volumes": [
+        {
+          "name": "app-secret-volume",
+          "secret": {
+            "secretName": "app-secret"
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "state": {
+            "waiting": {
+              "reason": "CreateContainerConfigError",
+              "message": "secret \"app-secret\" not found"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedMount",
+      "message": "MountVolume.SetUp failed for volume \"app-secret-volume\" : secret \"app-secret\" not found"
+    },
+    {
+      "reason": "CreateContainerConfigError",
+      "message": "secret \"app-secret\" not found"
+    }
+  ]
+}
