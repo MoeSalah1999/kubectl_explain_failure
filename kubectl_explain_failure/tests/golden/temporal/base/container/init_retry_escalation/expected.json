@@ -1,0 +1,64 @@
+{
+  "root_cause": "Init container retries escalated into a sustained kubelet backoff loop",
+  "blocking": true,
+  "confidence": 0.9,
+  "resolution": {
+    "suppressed": [
+      "InitContainerBlocksMain",
+      "CrashLoopBackOff",
+      "RepeatedCrashLoop"
+    ]
+  },
+  "evidence": [
+    "Init container 'init-bootstrap' is currently waiting in CrashLoopBackOff with restartCount=6",
+    "Estimated recent init retry frequency: 6 BackOff occurrence(s) within the last 20 minutes",
+    "Main container 'catalog-api' has not started and remains waiting: PodInitializing",
+    "Init retry escalation persisted across 12.0 minutes of recent timeline history",
+    "Latest init retry message: Back-off restarting failed init container init-bootstrap in pod catalog-api-pod_default(7e4fa111)"
+  ],
+  "causes": [
+    {
+      "code": "INIT_RETRY_LOOP_OBSERVED",
+      "message": "Init container 'init-bootstrap' is still retrying and has not completed initialization",
+      "role": "workload_context"
+    },
+    {
+      "code": "REPEATED_INIT_BACKOFF_EPISODES",
+      "message": "Kubelet recorded 6 recent init-container retry occurrence(s) for 'init-bootstrap' within the active incident window",
+      "role": "temporal_context"
+    },
+    {
+      "code": "INIT_RETRY_PATTERN_ESCALATING",
+      "message": "Init retries have escalated into a sustained backoff loop rather than a transient startup failure",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "MAIN_CONTAINERS_STILL_BLOCKED_BY_INIT",
+      "message": "Main container 'catalog-api' is still blocked because init completion never stabilizes",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:catalog-api-pod": [
+      "Pod remained stuck in initialization while init retry activity persisted for 12.0 minutes"
+    ],
+    "container:init-bootstrap": [
+      "Init container restartCount=6 with 6 recent BackOff occurrence(s)"
+    ],
+    "container:catalog-api": [
+      "Main container is still waiting with reason PodInitializing"
+    ]
+  },
+  "likely_causes": [
+    "The init script keeps retrying a dependency that is still unavailable or misconfigured",
+    "Bootstrap logic now fails quickly enough that kubelet backoff is compounding within the same incident window",
+    "A recent image, config, or secret change made init-container startup failures persistent instead of transient"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod catalog-api-pod",
+    "kubectl logs catalog-api-pod -c init-bootstrap --previous",
+    "Compare the retry window with recent dependency, config, and image changes used by the init container",
+    "Inspect whether the init step is failing fast on the same operation and should fail clearly instead of endlessly retrying"
+  ]
+}

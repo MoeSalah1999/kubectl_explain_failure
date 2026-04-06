@@ -442,6 +442,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 ### Container
 
 - CrashLoopFrequencySpike
+- InitRetryEscalation
 - InitContainerImagePullThenMainCrash
 - ProbeFailureEscalation
 - ProbeTooAggressiveCausingRestarts

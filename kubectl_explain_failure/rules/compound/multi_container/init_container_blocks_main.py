@@ -57,10 +57,142 @@ class InitContainerBlocksMainRule(FailureRule):
         "ImagePullBackOff",
         "CreateContainerConfigError",
     }
+    RETRY_ESCALATION_WINDOW_MINUTES = 20
+    RETRY_ESCALATION_MIN_OCCURRENCES = 4
+    RETRY_ESCALATION_MIN_RESTART_COUNT = 3
+    RETRY_ESCALATION_MIN_DURATION_SECONDS = 300
+
+    def _blocked_main_containers(self, pod: dict) -> bool:
+        spec_containers = pod.get("spec", {}).get("containers", []) or []
+        if not spec_containers:
+            return False
+
+        statuses = pod.get("status", {}).get("containerStatuses", []) or []
+        statuses_by_name = {
+            str(status.get("name", "")): status
+            for status in statuses
+            if status.get("name")
+        }
+
+        for container in spec_containers:
+            name = str(container.get("name", ""))
+            if not name:
+                continue
+
+            status = statuses_by_name.get(name, {})
+            state = status.get("state", {}) or {}
+            waiting = state.get("waiting", {}) or {}
+            waiting_reason = str(waiting.get("reason", "") or "PodInitializing")
+
+            if state.get("running") or state.get("terminated"):
+                return False
+            if int(status.get("restartCount", 0) or 0) > 0:
+                return False
+            if waiting_reason not in {"PodInitializing", "ContainerCreating"}:
+                return False
+
+        return True
+
+    def _retry_escalation_present(self, pod: dict, context: dict) -> bool:
+        timeline = context.get("timeline")
+        if not timeline or not self._blocked_main_containers(pod):
+            return False
+
+        init_statuses = pod.get("status", {}).get("initContainerStatuses", []) or []
+        failing_names = []
+        for status in init_statuses:
+            state = status.get("state", {}) or {}
+            waiting = state.get("waiting", {}) or {}
+            if waiting.get("reason") != "CrashLoopBackOff":
+                continue
+            if (
+                int(status.get("restartCount", 0) or 0)
+                < self.RETRY_ESCALATION_MIN_RESTART_COUNT
+            ):
+                continue
+            name = str(status.get("name", ""))
+            if name:
+                failing_names.append(name)
+
+        if not failing_names:
+            return False
+
+        occurrence_times = []
+        for event in timeline.events_within_window(
+            self.RETRY_ESCALATION_WINDOW_MINUTES
+        ):
+            if str(event.get("reason", "")) != "BackOff":
+                continue
+            message = str(event.get("message", "")).lower()
+            if not (
+                any(name.lower() in message for name in failing_names)
+                or "failed init container" in message
+                or len(failing_names) == 1
+            ):
+                continue
+
+            count = event.get("count", 1)
+            try:
+                count_value = max(int(count), 1)
+            except Exception:
+                count_value = 1
+
+            start = (
+                event.get("firstTimestamp")
+                or event.get("eventTime")
+                or event.get("lastTimestamp")
+            )
+            end = (
+                event.get("lastTimestamp")
+                or event.get("eventTime")
+                or event.get("firstTimestamp")
+            )
+            if not start and not end:
+                continue
+
+            from kubectl_explain_failure.timeline import parse_time
+
+            try:
+                first_ts = parse_time(start) if start else None
+                last_ts = parse_time(end) if end else None
+            except Exception:
+                continue
+
+            anchor = last_ts or first_ts
+            if anchor is None:
+                continue
+
+            if (
+                count_value <= 1
+                or first_ts is None
+                or last_ts is None
+                or last_ts <= first_ts
+            ):
+                occurrence_times.extend([anchor for _ in range(count_value)])
+                continue
+
+            step = (last_ts - first_ts) / (count_value - 1)
+            occurrence_times.extend(
+                first_ts + (step * index) for index in range(count_value)
+            )
+
+        occurrence_times = sorted(occurrence_times)
+        if len(occurrence_times) < self.RETRY_ESCALATION_MIN_OCCURRENCES:
+            return False
+        if len(occurrence_times) < 2:
+            return False
+
+        observed_duration_seconds = (
+            occurrence_times[-1] - occurrence_times[0]
+        ).total_seconds()
+        return observed_duration_seconds >= self.RETRY_ESCALATION_MIN_DURATION_SECONDS
 
     def matches(self, pod, events, context) -> bool:
         init_statuses = pod.get("status", {}).get("initContainerStatuses", [])
         if not init_statuses:
+            return False
+
+        if self._retry_escalation_present(pod, context):
             return False
 
         for cs in init_statuses:
