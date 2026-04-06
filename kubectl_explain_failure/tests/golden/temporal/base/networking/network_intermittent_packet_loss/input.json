@@ -1,0 +1,158 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-api-7c9d58b7d9-jm2sq",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/payments-api:2026.04.06",
+          "readinessProbe": {
+            "httpGet": {
+              "path": "/readyz",
+              "port": 8080
+            }
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": true,
+          "restartCount": 1,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-06T10:00:00Z"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 1,
+              "finishedAt": "2026-04-06T10:00:15Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "service": {
+      "payments-db": {
+        "metadata": {
+          "name": "payments-db",
+          "namespace": "default"
+        },
+        "spec": {
+          "clusterIP": "10.96.41.22",
+          "selector": {
+            "app": "payments-db"
+          },
+          "ports": [
+            {
+              "port": 5432,
+              "targetPort": 5432
+            }
+          ]
+        }
+      }
+    },
+    "endpoints": {
+      "payments-db": {
+        "metadata": {
+          "name": "payments-db",
+          "namespace": "default"
+        },
+        "subsets": [
+          {
+            "addresses": [
+              {
+                "ip": "10.244.2.31"
+              }
+            ],
+            "ports": [
+              {
+                "port": 5432
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "DNS lookup failed for payments-db.default.svc.cluster.local: lookup payments-db.default.svc.cluster.local on 10.96.0.10:53: read udp 10.244.1.18:49817->10.96.0.10:53: i/o timeout",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-7c9d58b7d9-jm2sq",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-06T10:00:00Z",
+      "lastTimestamp": "2026-04-06T10:00:00Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Ready",
+      "message": "Readiness probe succeeded for container \"api\"",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-7c9d58b7d9-jm2sq",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-06T10:00:20Z",
+      "lastTimestamp": "2026-04-06T10:00:20Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "DNS lookup failed for payments-db.default.svc.cluster.local: lookup payments-db.default.svc.cluster.local on 10.96.0.10:53: read udp 10.244.1.18:50112->10.96.0.10:53: i/o timeout",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-7c9d58b7d9-jm2sq",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-06T10:03:00Z",
+      "lastTimestamp": "2026-04-06T10:03:00Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Ready",
+      "message": "Readiness probe succeeded for container \"api\"",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-7c9d58b7d9-jm2sq",
+        "namespace": "default",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-04-06T10:03:18Z",
+      "lastTimestamp": "2026-04-06T10:03:18Z"
+    }
+  ]
+}

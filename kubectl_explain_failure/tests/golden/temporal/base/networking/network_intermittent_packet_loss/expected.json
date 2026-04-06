@@ -1,0 +1,62 @@
+{
+  "root_cause": "Intermittent packet loss or DNS path instability is causing alternating DNS failures and recoveries",
+  "blocking": false,
+  "confidence": 0.86,
+  "resolution": {
+    "suppressed": [
+      "DNSResolutionFailure"
+    ]
+  },
+  "evidence": [
+    "Timeline shows 2 DNS failure -> recovery episode(s) for container 'api' within 20 minutes",
+    "DNS failures repeatedly target 'payments-db.default.svc.cluster.local' and are followed by recovery signals on the same container",
+    "Container 'api' is currently ready=True, indicating the issue is intermittent rather than constantly failing",
+    "Dependency service 'payments-db' still has ready endpoints during the incident window, which makes steady backend outage less likely"
+  ],
+  "causes": [
+    {
+      "code": "DNS_REQUIRED_FOR_DEPENDENCY_TRAFFIC",
+      "message": "The workload depends on repeated DNS lookups to reach a required upstream dependency",
+      "role": "runtime_context"
+    },
+    {
+      "code": "INTERMITTENT_PACKET_LOSS_INFERRED",
+      "message": "Timeout-style DNS failures alternate with recovery, which is more consistent with intermittent packet loss or DNS path instability than steady misconfiguration",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "DNS_FAILURES_AND_RECOVERIES_ALTERNATE",
+      "message": "The same container repeatedly flips between DNS failure and recovery within a short incident window",
+      "role": "network_intermediate"
+    },
+    {
+      "code": "WORKLOAD_CONNECTIVITY_UNSTABLE",
+      "message": "Application connectivity is unstable because dependency name resolution intermittently fails and then recovers",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:payments-api-7c9d58b7d9-jm2sq": [
+      "The pod alternates between DNS-related connectivity failure and recovery"
+    ],
+    "container:api": [
+      "DNS lookup failed for payments-db.default.svc.cluster.local: lookup payments-db.default.svc.cluster.local on 10.96.0.10:53: read udp 10.244.1.18:49817->10.96.0.10:53: i/o timeout",
+      "Readiness probe succeeded for container \"api\""
+    ],
+    "service:payments-db": [
+      "Service backends remained ready while DNS failures intermittently appeared"
+    ]
+  },
+  "likely_causes": [
+    "The pod-to-DNS network path is intermittently dropping or delaying packets",
+    "Overlay or node networking is causing transient DNS timeouts under load",
+    "CoreDNS traffic is occasionally timing out even though the dependency service itself remains healthy"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod payments-api-7c9d58b7d9-jm2sq",
+    "Run repeated DNS lookups from a debug pod on the same node and watch for timeout spikes",
+    "Inspect CoreDNS latency, timeout, and SERVFAIL metrics during the incident window",
+    "Check node and CNI telemetry for packet drops, retransmits, or overlay-network instability"
+  ]
+}

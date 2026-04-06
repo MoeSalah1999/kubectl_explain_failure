@@ -435,6 +435,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 - CNIIPExhaustion
 - IntermittentNetworkFlapping
+- NetworkIntermittentPacketLoss
 
 ### Node
 
