@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from typing import Any
 
@@ -54,6 +55,10 @@ class DeploymentRolloutStalledRule(FailureRule):
         "successfulcreate",
         "failedcreate",
     }
+    SCALE_RE = re.compile(
+        r"scaled\s+(up|down)\s+replica\s+set\s+([^\s]+)\s+to\s+(\d+)",
+        re.IGNORECASE,
+    )
     CACHE_KEY = "_deployment_rollout_stalled_candidate"
 
     def _as_int(self, value: Any, default: int = 0) -> int:
@@ -141,11 +146,11 @@ class DeploymentRolloutStalledRule(FailureRule):
         if pod_rs_name:
             rs = replicasets.get(pod_rs_name)
             if rs:
-                dep_name = self._deployment_name_for_object(rs)
-                if dep_name:
-                    dep = deployments.get(dep_name)
+                dep_name_from_rs = self._deployment_name_for_object(rs)
+                if dep_name_from_rs:
+                    dep = deployments.get(dep_name_from_rs)
                     if dep and self._namespace(dep) == namespace:
-                        return dep_name, dep
+                        return dep_name_from_rs, dep
 
         in_namespace = [
             (name, dep)
@@ -218,6 +223,72 @@ class DeploymentRolloutStalledRule(FailureRule):
         if not match_labels:
             return "<deployment-selector>"
         return ",".join(f"{key}={value}" for key, value in sorted(match_labels.items()))
+
+    def _parse_scale_action(
+        self,
+        event: dict[str, Any],
+        replicaset_names: set[str],
+    ) -> tuple[str, str] | None:
+        if self._event_reason(event) != "scalingreplicaset":
+            return None
+
+        source = self._source_component(event)
+        if source and source not in self.CONTROLLER_COMPONENTS:
+            return None
+
+        match = self.SCALE_RE.search(str(event.get("message", "")))
+        if not match:
+            return None
+
+        rs_name = match.group(2)
+        if rs_name not in replicaset_names:
+            return None
+
+        return rs_name, match.group(1).lower()
+
+    def _has_rollout_oscillation(
+        self,
+        events: list[dict[str, Any]],
+        *,
+        new_rs_name: str,
+        older_rs_names: set[str],
+    ) -> bool:
+        if not older_rs_names:
+            return False
+
+        labels: list[str] = []
+        counts = {"new-up": 0, "new-down": 0, "old-up": 0, "old-down": 0}
+
+        for event in events:
+            parsed = self._parse_scale_action(event, {new_rs_name, *older_rs_names})
+            if parsed is None:
+                continue
+
+            rs_name, direction = parsed
+            label = f"new-{direction}" if rs_name == new_rs_name else f"old-{direction}"
+            counts[label] += 1
+            if not labels or labels[-1] != label:
+                labels.append(label)
+
+        if (
+            counts["new-up"] < 2
+            or counts["new-down"] < 1
+            or counts["old-up"] < 1
+            or counts["old-down"] < 1
+            or len(labels) < 5
+        ):
+            return False
+
+        try:
+            first_new_up = labels.index("new-up")
+            first_old_down = labels.index("old-down", first_new_up + 1)
+            rollback_new_down = labels.index("new-down", first_old_down + 1)
+            rollback_old_up = labels.index("old-up", first_old_down + 1)
+            labels.index("new-up", max(rollback_new_down, rollback_old_up) + 1)
+        except ValueError:
+            return False
+
+        return True
 
     def _event_mentions_rollout(
         self,
@@ -355,6 +426,13 @@ class DeploymentRolloutStalledRule(FailureRule):
             )
         ]
         recent_rollout_span_seconds = self._span_seconds(recent_rollout_events)
+
+        if self._has_rollout_oscillation(
+            recent_rollout_events,
+            new_rs_name=new_rs_name,
+            older_rs_names={name for name, _ in older_rs},
+        ):
+            return None
 
         if len(recent_rollout_events) < self.MIN_ROLLOUT_EVENTS:
             return None

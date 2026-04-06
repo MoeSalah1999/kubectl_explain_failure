@@ -349,6 +349,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - DeploymentRolloutStalled
 - HPAUnableToScale
 - OwnerBlockedPod
+- StatefulSetOrdinalStartupBlocked
 - WebhookFailureBlocksDeployment
 
 ### Cross-Domain
@@ -416,6 +417,10 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - VolumeSchedulingDeadlock
 
 ## Temporal Rules
+
+### Controllers
+
+- DeploymentRolloutOscillation
 
 ### Admission
 

@@ -1,0 +1,69 @@
+{
+  "root_cause": "StatefulSet ordered rollout is blocked because ordinal 2 cannot finish startup",
+  "blocking": true,
+  "confidence": 0.97,
+  "resolution": {
+    "winner": "StatefulSetOrdinalStartupBlocked",
+    "suppressed": [
+      "StatefulSetUpdateBlocked",
+      "StartupProbeFailure"
+    ]
+  },
+  "evidence": [
+    "StatefulSet 'ledger-db' is split between revisions 'ledger-db-6b6b6d4c9f' and 'ledger-db-7d889b5d7c' with 1/3 replicas updated",
+    "Pod 'ledger-db-2' is ordinal 2 and is the current ordered rollout gate for revision 'ledger-db-7d889b5d7c'",
+    "Recent rollout and startup signals for ordinal 2 persisted for 8.0 minutes",
+    "Startup probe failed: HTTP probe failed with statuscode: 500"
+  ],
+  "causes": [
+    {
+      "code": "STATEFULSET_ROLLING_UPDATE_ACTIVE",
+      "message": "StatefulSet 'ledger-db' is rolling from revision 'ledger-db-6b6b6d4c9f' to 'ledger-db-7d889b5d7c'",
+      "role": "controller_context"
+    },
+    {
+      "code": "STATEFULSET_ORDINAL_STARTUP_BLOCKED",
+      "message": "Container 'db' on ordinal 2 is still failing startupProbe checks",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "STATEFULSET_ORDERED_PROGRESS_BLOCKED",
+      "message": "Lower ordinals 0, 1 cannot advance to revision 'ledger-db-7d889b5d7c' until ordinal 2 becomes Ready",
+      "role": "controller_intermediate"
+    },
+    {
+      "code": "STATEFULSET_ROLLOUT_STALLED",
+      "message": "StatefulSet rollout remains split at 1/3 updated replicas",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "statefulset:ledger-db": [
+      "currentRevision=ledger-db-6b6b6d4c9f",
+      "updateRevision=ledger-db-7d889b5d7c",
+      "updatedReplicas=1/3"
+    ],
+    "pod:ledger-db-2": [
+      "ordinal=2",
+      "controller-revision-hash=ledger-db-7d889b5d7c",
+      "Lower ordinals 0, 1 cannot advance to revision 'ledger-db-7d889b5d7c' until ordinal 2 becomes Ready",
+      "ready=False, state=running, restartCount=4"
+    ],
+    "container:db": [
+      "Startup probe failed: HTTP probe failed with statuscode: 500"
+    ]
+  },
+  "likely_causes": [
+    "The new StatefulSet revision introduced an application or configuration regression that prevents the updated ordinal from completing startup",
+    "The startupProbe budget is too short for the workload's real initialization or recovery time on the updated revision",
+    "The ordinal-specific data set or migration path for this replica makes startup slower or more failure-prone than other replicas",
+    "A dependency, secret, or local volume assumption changed in the new revision and only surfaces once the updated ordinal starts"
+  ],
+  "suggested_checks": [
+    "kubectl describe statefulset ledger-db",
+    "kubectl describe pod ledger-db-2",
+    "kubectl logs ledger-db-2 -c db --previous",
+    "Compare currentRevision and updateRevision and inspect the highest updated ordinal before proceeding with lower ordinals"
+  ]
+}

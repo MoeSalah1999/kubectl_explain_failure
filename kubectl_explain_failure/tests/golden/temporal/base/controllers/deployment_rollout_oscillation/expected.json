@@ -1,0 +1,69 @@
+{
+  "root_cause": "Deployment rollout is oscillating between newer and older ReplicaSets",
+  "blocking": true,
+  "confidence": 0.9,
+  "suppressed": [
+    "DeploymentReplicaMismatch",
+    "ReplicaSetUnavailable",
+    "DeploymentRolloutStalled"
+  ],
+  "evidence": [
+    "Deployment 'web' observed generation 13/13 while rollout remains split across revisions",
+    "Scaling sequence alternated as: web-7f9f6c86d5 up -> web-6c9d8f7b5c down -> web-7f9f6c86d5 down -> web-6c9d8f7b5c up -> web-7f9f6c86d5 up -> web-6c9d8f7b5c down",
+    "Newest ReplicaSet 'web-7f9f6c86d5' (revision 13) was scaled up 2 times and back down 1 time(s) over 17.0 minutes",
+    "Older ReplicaSets were first reduced and then restored during the same rollout window (2 downscale, 1 upscale events)",
+    "Deployment still reports only 2/4 available replicas and 1/4 updated replicas"
+  ],
+  "causes": [
+    {
+      "code": "DEPLOYMENT_GENERATION_OBSERVED",
+      "message": "Deployment 'web' has been observed at generation 13",
+      "role": "controller_context"
+    },
+    {
+      "code": "DEPLOYMENT_ROLLOUT_OSCILLATION",
+      "message": "The rollout keeps reversing between the newest and older ReplicaSets instead of converging",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "ROLLING_UPDATE_DIRECTION_REVERSED",
+      "message": "ReplicaSet scaling direction flipped from promotion to rollback and then back to retry",
+      "role": "control_loop"
+    },
+    {
+      "code": "DEPLOYMENT_FAILED_TO_CONVERGE",
+      "message": "Deployment remains below target availability (2/4) while revisions continue to alternate",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "deployment:web": [
+      "observedGeneration=13, generation=13",
+      "updatedReplicas=1, availableReplicas=2, desiredReplicas=4",
+      "ReplicaSet scaling direction reversed and then retried within one rollout window"
+    ],
+    "replicaset:web-7f9f6c86d5": [
+      "revision=13",
+      "scaleUpEvents=2, scaleDownEvents=1",
+      "availableReplicas=0/1"
+    ],
+    "replicaset:web-6c9d8f7b5c": [
+      "revision=12",
+      "scaleUpEvents=1, scaleDownEvents=2",
+      "currentReplicas=3, availableReplicas=2"
+    ]
+  },
+  "likely_causes": [
+    "Release automation or GitOps reconciliation is alternating between retrying and reverting the Deployment revision",
+    "The new revision becomes unhealthy after partial rollout, causing an older ReplicaSet to be restored before another retry",
+    "Multiple actors are updating the Deployment faster than the rollout can stabilize",
+    "Controller-side failures in readiness, scheduling, or admission are causing repeated abandon-and-retry behavior for the new ReplicaSet"
+  ],
+  "suggested_checks": [
+    "kubectl rollout history deployment web",
+    "kubectl describe deployment web",
+    "kubectl get rs -l app=web -o wide",
+    "kubectl get events --sort-by=.lastTimestamp"
+  ]
+}

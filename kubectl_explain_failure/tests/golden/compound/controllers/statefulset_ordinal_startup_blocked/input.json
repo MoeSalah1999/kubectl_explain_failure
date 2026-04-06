@@ -1,0 +1,122 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "ledger-db-2",
+      "namespace": "default",
+      "labels": {
+        "app": "ledger-db",
+        "controller-revision-hash": "ledger-db-7d889b5d7c"
+      },
+      "ownerReferences": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "StatefulSet",
+          "name": "ledger-db",
+          "controller": true
+        }
+      ]
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "db",
+          "image": "ghcr.io/example/ledger-db:2026.04.06",
+          "startupProbe": {
+            "httpGet": {
+              "path": "/startupz",
+              "port": 8080
+            },
+            "periodSeconds": 10,
+            "timeoutSeconds": 1,
+            "failureThreshold": 30
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "db",
+          "ready": false,
+          "started": false,
+          "restartCount": 4,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-06T11:00:40Z"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 1,
+              "finishedAt": "2026-04-06T11:07:50Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "statefulsets": {
+    "ledger-db": {
+      "metadata": {
+        "name": "ledger-db",
+        "namespace": "default",
+        "generation": 9
+      },
+      "spec": {
+        "replicas": 3,
+        "serviceName": "ledger-db",
+        "updateStrategy": {
+          "type": "RollingUpdate",
+          "rollingUpdate": {
+            "partition": 0
+          }
+        }
+      },
+      "status": {
+        "observedGeneration": 9,
+        "replicas": 3,
+        "readyReplicas": 2,
+        "currentReplicas": 2,
+        "updatedReplicas": 1,
+        "currentRevision": "ledger-db-6b6b6d4c9f",
+        "updateRevision": "ledger-db-7d889b5d7c"
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "SuccessfulCreate",
+      "message": "create Pod ledger-db-2 in StatefulSet ledger-db successful",
+      "source": {
+        "component": "statefulset-controller"
+      },
+      "involvedObject": {
+        "kind": "StatefulSet",
+        "name": "ledger-db",
+        "namespace": "default"
+      },
+      "firstTimestamp": "2026-04-06T11:00:00Z",
+      "lastTimestamp": "2026-04-06T11:00:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Startup probe failed: HTTP probe failed with statuscode: 500",
+      "count": 6,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "ledger-db-2",
+        "namespace": "default",
+        "fieldPath": "spec.containers{db}"
+      },
+      "firstTimestamp": "2026-04-06T11:02:00Z",
+      "lastTimestamp": "2026-04-06T11:08:00Z"
+    }
+  ]
+}
