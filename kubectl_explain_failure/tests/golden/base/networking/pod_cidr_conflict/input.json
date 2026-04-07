@@ -1,0 +1,98 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "inventory-api-5f8fb8d4b7-7p9sl",
+      "namespace": "retail"
+    },
+    "spec": {
+      "nodeName": "worker-a"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "nodes": [
+    {
+      "metadata": {
+        "name": "worker-a"
+      },
+      "spec": {
+        "podCIDR": "10.244.12.0/24",
+        "podCIDRs": [
+          "10.244.12.0/24"
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastTransitionTime": "2026-03-29T09:02:00Z"
+          },
+          {
+            "type": "NetworkUnavailable",
+            "status": "True",
+            "reason": "PodCIDRConflict",
+            "message": "Node networking is blocked because PodCIDR 10.244.12.0/24 overlaps another node allocation",
+            "lastTransitionTime": "2026-03-29T09:05:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "worker-b"
+      },
+      "spec": {
+        "podCIDR": "10.244.12.0/24",
+        "podCIDRs": [
+          "10.244.12.0/24"
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastTransitionTime": "2026-03-29T08:50:00Z"
+          },
+          {
+            "type": "NetworkUnavailable",
+            "status": "False",
+            "lastTransitionTime": "2026-03-29T08:45:00Z"
+          }
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "CIDRNotAvailable",
+      "message": "Node worker-a PodCIDR 10.244.12.0/24 conflicts with node worker-b allocation 10.244.12.0/24",
+      "source": {
+        "component": "kube-controller-manager"
+      },
+      "involvedObject": {
+        "kind": "Node",
+        "name": "worker-a"
+      },
+      "firstTimestamp": "2026-03-29T09:04:20Z",
+      "lastTimestamp": "2026-03-29T09:04:20Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "NodeNetworkUnavailable",
+      "message": "Node worker-a status is now: NodeNetworkUnavailable. PodCIDR 10.244.12.0/24 overlaps with another node allocation.",
+      "source": {
+        "component": "node-controller"
+      },
+      "involvedObject": {
+        "kind": "Node",
+        "name": "worker-a"
+      },
+      "firstTimestamp": "2026-03-29T09:05:10Z",
+      "lastTimestamp": "2026-03-29T09:05:10Z"
+    }
+  ]
+}

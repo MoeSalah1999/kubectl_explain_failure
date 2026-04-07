@@ -34,6 +34,7 @@ class NodeNetworkUnavailableCascadeRule(FailureRule):
         "CNIConfigMissing",
         "CNIPluginFailure",
         "NodeNetworkUnavailable",
+        "PodCIDRConflict",
         "NodeNotReady",
         "FailedScheduling",
     ]

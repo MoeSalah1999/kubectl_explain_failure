@@ -1,0 +1,53 @@
+{
+  "root_cause": "Node PodCIDR conflicts with another node allocation",
+  "blocking": true,
+  "confidence": 0.97,
+  "evidence": [
+    "Assigned node PodCIDR 10.244.12.0/24 overlaps another node allocation",
+    "Latest relevant controller event reason: NodeNetworkUnavailable",
+    "Observed 2 recent PodCIDR conflict event(s) in the incident window",
+    "Affected node is marked NetworkUnavailable while PodCIDR conflict is active"
+  ],
+  "causes": [
+    {
+      "code": "NODE_PODCIDR_ASSIGNED",
+      "message": "Node is assigned PodCIDR 10.244.12.0/24",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "POD_CIDR_CONFLICT",
+      "message": "Node PodCIDR overlaps another node allocation and prevents stable node networking",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "WORKLOAD_BLOCKED_BY_POD_CIDR_CONFLICT",
+      "message": "Workloads on the affected node cannot rely on normal pod networking while the PodCIDR conflict persists",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:worker-a": [
+      "Node PodCIDR=10.244.12.0/24",
+      "PodCIDR 10.244.12.0/24 overlaps node worker-b allocation 10.244.12.0/24"
+    ],
+    "node:worker-b": [
+      "Conflicts with node worker-a PodCIDR 10.244.12.0/24"
+    ],
+    "pod:inventory-api-5f8fb8d4b7-7p9sl": [
+      "Pod is assigned to a node whose PodCIDR conflicts with another node allocation"
+    ]
+  },
+  "likely_causes": [
+    "Node IPAM assigned a duplicate or overlapping PodCIDR to multiple nodes",
+    "Cluster CIDR configuration changed and left stale PodCIDR allocations behind",
+    "A controller or cloud-network integration replayed an already-used PodCIDR range",
+    "Node re-registration or restore logic reused a PodCIDR that was still active on another node"
+  ],
+  "suggested_checks": [
+    "kubectl describe node worker-a",
+    "Compare spec.podCIDR/spec.podCIDRs across nodes for duplicates or overlaps",
+    "Inspect kube-controller-manager logs for node IPAM or CIDR allocation conflicts",
+    "kubectl describe pod inventory-api-5f8fb8d4b7-7p9sl"
+  ]
+}
