@@ -1,0 +1,215 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-api-7b9d9c8d5f-bx2qp",
+      "namespace": "default",
+      "labels": {
+        "app": "checkout-api"
+      }
+    },
+    "spec": {
+      "nodeName": "worker-7",
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/checkout-api:2026.04.07"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "objects": {
+    "node": {
+      "worker-7": {
+        "metadata": {
+          "name": "worker-7"
+        },
+        "status": {
+          "conditions": [
+            {
+              "type": "Ready",
+              "status": "True"
+            },
+            {
+              "type": "NetworkUnavailable",
+              "status": "False"
+            }
+          ]
+        }
+      }
+    },
+    "pod": {
+      "aws-node-7bk2h": {
+        "metadata": {
+          "name": "aws-node-7bk2h",
+          "namespace": "kube-system",
+          "labels": {
+            "k8s-app": "aws-node",
+            "app.kubernetes.io/name": "aws-cni"
+          }
+        },
+        "spec": {
+          "nodeName": "worker-7",
+          "initContainers": [
+            {
+              "name": "install-cni",
+              "image": "public.ecr.aws/eks/aws-vpc-cni-init:v1.18.1"
+            }
+          ],
+          "containers": [
+            {
+              "name": "aws-node",
+              "image": "public.ecr.aws/eks/aws-vpc-cni:v1.18.1"
+            }
+          ]
+        },
+        "status": {
+          "phase": "Pending",
+          "initContainerStatuses": [
+            {
+              "name": "install-cni",
+              "ready": false,
+              "restartCount": 6,
+              "state": {
+                "waiting": {
+                  "reason": "CrashLoopBackOff",
+                  "message": "back-off 5m0s restarting failed container=install-cni pod=aws-node-7bk2h_kube-system"
+                }
+              },
+              "lastState": {
+                "terminated": {
+                  "reason": "Error",
+                  "exitCode": 1,
+                  "message": "failed to write CNI config to /etc/cni/net.d/10-aws.conflist: read-only file system"
+                }
+              }
+            }
+          ],
+          "containerStatuses": [
+            {
+              "name": "aws-node",
+              "ready": false,
+              "restartCount": 0,
+              "state": {
+                "waiting": {
+                  "reason": "PodInitializing"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aws-node-2z9mk": {
+        "metadata": {
+          "name": "aws-node-2z9mk",
+          "namespace": "kube-system",
+          "labels": {
+            "k8s-app": "aws-node",
+            "app.kubernetes.io/name": "aws-cni"
+          }
+        },
+        "spec": {
+          "nodeName": "worker-8"
+        },
+        "status": {
+          "phase": "Running",
+          "initContainerStatuses": [
+            {
+              "name": "install-cni",
+              "ready": true,
+              "restartCount": 0,
+              "state": {
+                "terminated": {
+                  "reason": "Completed",
+                  "exitCode": 0
+                }
+              }
+            }
+          ],
+          "containerStatuses": [
+            {
+              "name": "aws-node",
+              "ready": true,
+              "restartCount": 0,
+              "state": {
+                "running": {
+                  "startedAt": "2026-04-07T08:41:00Z"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container install-cni in pod aws-node-7bk2h_kube-system",
+      "count": 5,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "aws-node-7bk2h",
+        "namespace": "kube-system",
+        "fieldPath": "spec.initContainers{install-cni}"
+      },
+      "firstTimestamp": "2026-04-07T08:45:00Z",
+      "lastTimestamp": "2026-04-07T08:46:30Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "Error: failed to write CNI config file /etc/cni/net.d/10-aws.conflist: read-only file system",
+      "count": 5,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "aws-node-7bk2h",
+        "namespace": "kube-system",
+        "fieldPath": "spec.initContainers{install-cni}"
+      },
+      "firstTimestamp": "2026-04-07T08:45:10Z",
+      "lastTimestamp": "2026-04-07T08:46:40Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedCreatePodSandBox",
+      "message": "Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"3cb53a20\": plugin type=\"aws-cni\" failed (add): failed to load CNI config file /etc/cni/net.d/10-aws.conflist: no such file or directory",
+      "count": 3,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-7b9d9c8d5f-bx2qp",
+        "namespace": "default"
+      },
+      "firstTimestamp": "2026-04-07T08:48:00Z",
+      "lastTimestamp": "2026-04-07T08:49:20Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedCreatePodSandBox",
+      "message": "Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"3cb53a21\": plugin type=\"aws-cni\" failed (add): cni config uninitialized",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-7b9d9c8d5f-bx2qp",
+        "namespace": "default"
+      },
+      "firstTimestamp": "2026-04-07T08:50:00Z",
+      "lastTimestamp": "2026-04-07T08:50:30Z"
+    }
+  ]
+}

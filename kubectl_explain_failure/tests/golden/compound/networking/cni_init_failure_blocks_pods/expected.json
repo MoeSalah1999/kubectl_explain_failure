@@ -1,0 +1,59 @@
+{
+  "root_cause": "Node-local CNI initialization failure is blocking workload pod networking",
+  "confidence": 0.97,
+  "blocking": true,
+  "resolution": {
+    "winner": "CNIInitFailureBlocksPods",
+    "suppressed": [
+      "CNIConfigMissing",
+      "CNIPluginFailure"
+    ]
+  },
+  "evidence": [
+    "Recognized node-local CNI pod 'aws-node-7bk2h' on node 'worker-7' has failing init container 'install-cni' with state=waiting restartCount=6",
+    "Timeline shows 5 effective CNI-init-failure -> workload-network-block occurrence(s) within the last 30 minutes",
+    "Representative CNI init failure: Back-off restarting failed container install-cni in pod aws-node-7bk2h_kube-system",
+    "Representative workload symptom: Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"3cb53a20\": plugin type=\"aws-cni\" failed (add): failed to load CNI config file /etc/cni/net.d/10-aws.conflist: no such file or directory"
+  ],
+  "causes": [
+    {
+      "code": "NODE_LOCAL_CNI_AGENT_PRESENT",
+      "message": "Assigned node 'worker-7' relies on node-local CNI pod 'aws-node-7bk2h' to bootstrap pod networking",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "CNI_INIT_BOOTSTRAP_FAILED",
+      "message": "CNI init container 'install-cni' failed before node-local network bootstrap completed",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "WORKLOAD_POD_NETWORK_SETUP_BLOCKED",
+      "message": "Workload pod 'checkout-api-7b9d9c8d5f-bx2qp' later failed sandbox network setup on the same node",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:worker-7": [
+      "A node-local CNI daemon failed during init/bootstrap before workload pod networking could be set up"
+    ],
+    "pod:aws-node-7bk2h": [
+      "Back-off restarting failed container install-cni in pod aws-node-7bk2h_kube-system"
+    ],
+    "pod:checkout-api-7b9d9c8d5f-bx2qp": [
+      "Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"3cb53a20\": plugin type=\"aws-cni\" failed (add): failed to load CNI config file /etc/cni/net.d/10-aws.conflist: no such file or directory"
+    ]
+  },
+  "likely_causes": [
+    "The node-local CNI DaemonSet could not finish its install/bootstrap step on the affected node",
+    "The init container failed to render or copy CNI config or binaries under /etc/cni/net.d or the node plugin path",
+    "A hostPath mount, permission issue, or image/problem in the CNI init container left the node without usable CNI bootstrap artifacts",
+    "New workload pods on that node are blocked until the node-local CNI pod completes init successfully"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod aws-node-7bk2h -n kube-system",
+    "kubectl logs -n kube-system aws-node-7bk2h -c install-cni",
+    "kubectl describe pod checkout-api-7b9d9c8d5f-bx2qp",
+    "kubectl get pods -n kube-system -o wide | findstr worker-7"
+  ]
+}
