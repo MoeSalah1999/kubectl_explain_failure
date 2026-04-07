@@ -274,15 +274,15 @@ class DeploymentRollbackLoopRule(FailureRule):
                     ):
                         continue
 
-                    for l in range(k + 1, len(actions)):
-                        stable_restore = actions[l]
+                    for restore_index in range(k + 1, len(actions)):
+                        stable_restore = actions[restore_index]
                         if (
                             stable_restore["rs_name"] != stable_rs_name
                             or stable_restore["direction"] != "up"
                         ):
                             continue
 
-                        for m in range(l + 1, len(actions)):
+                        for m in range(restore_index + 1, len(actions)):
                             retry_new = actions[m]
                             retry_revision = revisions.get(retry_new["rs_name"], -1)
                             if retry_new["direction"] != "up":
