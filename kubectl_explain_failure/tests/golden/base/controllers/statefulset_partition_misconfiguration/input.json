@@ -1,0 +1,103 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "ledger-db-1",
+      "namespace": "default",
+      "labels": {
+        "app": "ledger-db",
+        "controller-revision-hash": "ledger-db-6b6b6d4c9f"
+      },
+      "ownerReferences": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "StatefulSet",
+          "name": "ledger-db",
+          "controller": true
+        }
+      ]
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "db",
+          "image": "registry.k8s.example/ledger-db:v2"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "db",
+          "ready": true,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-07T09:40:00Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "statefulsets": {
+    "ledger-db": {
+      "metadata": {
+        "name": "ledger-db",
+        "namespace": "default",
+        "generation": 7
+      },
+      "spec": {
+        "replicas": 3,
+        "serviceName": "ledger-db",
+        "updateStrategy": {
+          "type": "RollingUpdate",
+          "rollingUpdate": {
+            "partition": 3
+          }
+        }
+      },
+      "status": {
+        "replicas": 3,
+        "readyReplicas": 3,
+        "currentReplicas": 3,
+        "updatedReplicas": 0,
+        "currentRevision": "ledger-db-6b6b6d4c9f",
+        "updateRevision": "ledger-db-7d889b5d7c",
+        "observedGeneration": 7
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "UpdateBlocked",
+      "message": "StatefulSet ledger-db RollingUpdate partition 3 is above the highest existing ordinal 2, so no Pod is eligible for update to revision ledger-db-7d889b5d7c",
+      "source": {
+        "component": "statefulset-controller"
+      },
+      "involvedObject": {
+        "kind": "StatefulSet",
+        "name": "ledger-db",
+        "namespace": "default"
+      },
+      "firstTimestamp": "2026-04-07T10:00:00Z",
+      "lastTimestamp": "2026-04-07T10:00:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "PartitionStalled",
+      "message": "StatefulSet ledger-db still reports currentRevision ledger-db-6b6b6d4c9f and updateRevision ledger-db-7d889b5d7c with partition 3; 0 Pods updated",
+      "source": {
+        "component": "statefulset-controller"
+      },
+      "involvedObject": {
+        "kind": "StatefulSet",
+        "name": "ledger-db",
+        "namespace": "default"
+      },
+      "firstTimestamp": "2026-04-07T10:12:00Z",
+      "lastTimestamp": "2026-04-07T10:12:00Z"
+    }
+  ]
+}

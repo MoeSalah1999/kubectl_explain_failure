@@ -1,0 +1,65 @@
+{
+  "root_cause": "StatefulSet rollout cannot start because updateStrategy partition excludes every replica",
+  "confidence": 0.97,
+  "blocking": true,
+  "resolution": {
+    "winner": "StatefulSetPartitionMisconfiguration",
+    "suppressed": [
+      "StatefulSetUpdateBlocked"
+    ]
+  },
+  "evidence": [
+    "StatefulSet 'ledger-db' has replicas=3 but RollingUpdate partition=3, so no existing ordinal qualifies for update",
+    "StatefulSet 'ledger-db' observed generation 7/7 with currentRevision 'ledger-db-6b6b6d4c9f' and updateRevision 'ledger-db-7d889b5d7c'",
+    "updatedReplicas remains 0 while currentReplicas=3 and readyReplicas=3",
+    "Observed 2 recent partition-related controller event(s) over 12.0 minutes; latest: StatefulSet ledger-db still reports currentRevision ledger-db-6b6b6d4c9f and updateRevision ledger-db-7d889b5d7c with partition 3; 0 Pods updated",
+    "Pod 'ledger-db-1' remains on current revision 'ledger-db-6b6b6d4c9f' because ordinal 1 is below partition 3"
+  ],
+  "causes": [
+    {
+      "code": "STATEFULSET_NEW_REVISION_OBSERVED",
+      "message": "StatefulSet 'ledger-db' has observed a new revision 'ledger-db-7d889b5d7c' while existing Pods still run revision 'ledger-db-6b6b6d4c9f'",
+      "role": "controller_context"
+    },
+    {
+      "code": "STATEFULSET_PARTITION_EXCLUDES_ALL_ORDINALS",
+      "message": "RollingUpdate partition 3 is above the highest existing ordinal 2, so no Pod is eligible for update",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "STATEFULSET_ROLLOUT_CANNOT_START",
+      "message": "The StatefulSet controller cannot begin the rolling update because zero ordinals satisfy the configured partition",
+      "role": "controller_intermediate"
+    },
+    {
+      "code": "STATEFULSET_RETAINED_OLD_REVISION",
+      "message": "All current replicas remain on the old revision and updatedReplicas is still 0",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "statefulset:ledger-db": [
+      "partition=3, replicas=3, highestOrdinal=2",
+      "currentRevision=ledger-db-6b6b6d4c9f, updateRevision=ledger-db-7d889b5d7c",
+      "updatedReplicas=0, currentReplicas=3, readyReplicas=3"
+    ],
+    "pod:ledger-db-1": [
+      "ordinal=1",
+      "controller-revision-hash=ledger-db-6b6b6d4c9f",
+      "Ordinal 1 is below partition 3, so this Pod stays on revision 'ledger-db-6b6b6d4c9f'"
+    ]
+  },
+  "likely_causes": [
+    "A canary or staged RollingUpdate partition was left at the replica count after an earlier maintenance step",
+    "The partition value was copied from a larger StatefulSet or from a previous scale and now exceeds the highest live ordinal",
+    "Automation patched spec.updateStrategy.rollingUpdate.partition to pause rollout but never lowered it to resume updates",
+    "A manual StatefulSet edit introduced a new template revision while leaving the rollout partition set too high"
+  ],
+  "suggested_checks": [
+    "kubectl describe statefulset ledger-db",
+    "kubectl get statefulset ledger-db -o yaml",
+    "Compare spec.updateStrategy.rollingUpdate.partition with the highest current ordinal and desired replica count",
+    "Lower or remove the partition after confirming which ordinals should actually receive the new revision"
+  ]
+}
