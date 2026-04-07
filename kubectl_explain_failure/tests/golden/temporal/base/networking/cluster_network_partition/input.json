@@ -1,0 +1,173 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "controller-manager-5f8669bd77-s7kpm",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "controller",
+          "image": "ghcr.io/example/controller-manager:2026.04.07",
+          "readinessProbe": {
+            "httpGet": {
+              "path": "/readyz",
+              "port": 8080
+            }
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "controller",
+          "ready": true,
+          "restartCount": 1,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-07T09:01:10Z"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 1,
+              "finishedAt": "2026-04-07T08:57:00Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "service": {
+      "kube-dns": {
+        "metadata": {
+          "name": "kube-dns",
+          "namespace": "kube-system"
+        },
+        "spec": {
+          "clusterIP": "10.96.0.10",
+          "ports": [
+            {
+              "port": 53,
+              "protocol": "UDP"
+            }
+          ]
+        }
+      },
+      "kubernetes": {
+        "metadata": {
+          "name": "kubernetes",
+          "namespace": "default"
+        },
+        "spec": {
+          "clusterIP": "10.96.0.1",
+          "ports": [
+            {
+              "port": 443,
+              "protocol": "TCP"
+            }
+          ]
+        }
+      }
+    },
+    "endpoints": {
+      "kube-dns": {
+        "metadata": {
+          "name": "kube-dns",
+          "namespace": "kube-system"
+        },
+        "subsets": [
+          {
+            "addresses": [
+              {
+                "ip": "10.244.0.10"
+              }
+            ],
+            "ports": [
+              {
+                "port": 53
+              }
+            ]
+          }
+        ]
+      },
+      "kubernetes": {
+        "metadata": {
+          "name": "kubernetes",
+          "namespace": "default"
+        },
+        "subsets": [
+          {
+            "addresses": [
+              {
+                "ip": "10.0.0.5"
+              }
+            ],
+            "ports": [
+              {
+                "port": 443
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "DNS lookup failed for leader-elector.default.svc.cluster.local: lookup leader-elector.default.svc.cluster.local on 10.96.0.10:53: read udp 10.244.1.33:49817->10.96.0.10:53: i/o timeout",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "controller-manager-5f8669bd77-s7kpm",
+        "namespace": "default",
+        "fieldPath": "spec.containers{controller}"
+      },
+      "firstTimestamp": "2026-04-07T09:00:00Z",
+      "lastTimestamp": "2026-04-07T09:00:20Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "Failed to reach Kubernetes API: Get \"https://kubernetes.default.svc:443/api/v1/namespaces/default/configmaps?limit=1\": dial tcp 10.96.0.1:443: i/o timeout",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "controller-manager-5f8669bd77-s7kpm",
+        "namespace": "default",
+        "fieldPath": "spec.containers{controller}"
+      },
+      "firstTimestamp": "2026-04-07T09:00:35Z",
+      "lastTimestamp": "2026-04-07T09:00:50Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Ready",
+      "message": "Controller reconnected to cluster network and readiness probe succeeded for container \"controller\"",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "controller-manager-5f8669bd77-s7kpm",
+        "namespace": "default",
+        "fieldPath": "spec.containers{controller}"
+      },
+      "firstTimestamp": "2026-04-07T09:01:10Z",
+      "lastTimestamp": "2026-04-07T09:01:10Z"
+    }
+  ]
+}

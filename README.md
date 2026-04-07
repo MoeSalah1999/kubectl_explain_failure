@@ -455,6 +455,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ### Networking
 
+- ClusterNetworkPartition
 - CNIIPExhaustion
 - IntermittentNetworkFlapping
 - NetworkIntermittentPacketLoss
