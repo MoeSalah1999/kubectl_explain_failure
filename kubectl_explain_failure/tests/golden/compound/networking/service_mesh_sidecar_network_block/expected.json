@@ -1,0 +1,58 @@
+{
+  "root_cause": "Service mesh sidecar is blocking pod traffic before the proxy becomes ready",
+  "confidence": 0.95,
+  "blocking": true,
+  "resolution": {
+    "winner": "ServiceMeshSidecarNetworkBlock",
+    "suppressed": [
+      "ReadinessProbeFailure"
+    ]
+  },
+  "evidence": [
+    "Recognized service-mesh sidecar 'istio-proxy' is present and currently Ready=False with state=running restartCount=0",
+    "Timeline shows 3 sidecar-network-issue -> application-impact sequence(s) within the last 20 minutes",
+    "Representative sidecar issue: Readiness probe failed: Get \"http://10.42.2.19:15021/healthz/ready\": HTTP probe failed with statuscode: 503",
+    "Representative application impact: Readiness probe failed: HTTP probe failed with statuscode: 503"
+  ],
+  "causes": [
+    {
+      "code": "SERVICE_MESH_SIDECAR_PRESENT",
+      "message": "Pod includes injected service-mesh sidecar 'istio-proxy' that mediates pod traffic",
+      "role": "network_context"
+    },
+    {
+      "code": "SIDECAR_PROXY_NOT_READY",
+      "message": "Service-mesh sidecar 'istio-proxy' is intercepting traffic before the proxy is ready to forward it",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "APPLICATION_TRAFFIC_BLOCKED_BY_SIDECAR",
+      "message": "Application container 'payments-api' then develops readiness-level network/probe failures after the sidecar issue appears",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:payments-api-pod": [
+      "Application network symptoms begin only after the service-mesh sidecar becomes not ready"
+    ],
+    "container:istio-proxy": [
+      "Readiness probe failed: Get \"http://10.42.2.19:15021/healthz/ready\": HTTP probe failed with statuscode: 503"
+    ],
+    "container:payments-api": [
+      "Readiness probe failed: HTTP probe failed with statuscode: 503"
+    ]
+  },
+  "likely_causes": [
+    "The mesh sidecar has not received valid xDS/bootstrap configuration from the control plane",
+    "mTLS certificates or service-mesh identity bootstrap are missing or stale, leaving the proxy unready",
+    "Probe rewriting or traffic capture is active before the sidecar can forward application traffic",
+    "The service-mesh control plane is degraded, so the sidecar intercepts traffic but cannot program listeners or clusters"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod payments-api-pod",
+    "kubectl logs payments-api-pod -c istio-proxy",
+    "Inspect service-mesh control-plane health and proxy synchronization status",
+    "Review mesh probe-rewrite and sidecar bootstrap annotations on the pod"
+  ]
+}

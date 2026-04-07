@@ -1,0 +1,165 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-api-pod",
+      "namespace": "default",
+      "annotations": {
+        "sidecar.istio.io/status": "{\"version\":\"1.22.1\"}",
+        "sidecar.istio.io/rewriteAppHTTPProbers": "true"
+      }
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "payments-api",
+          "image": "ghcr.io/example/payments-api:2026.04.07",
+          "readinessProbe": {
+            "httpGet": {
+              "path": "/ready",
+              "port": 8080
+            }
+          }
+        },
+        {
+          "name": "istio-proxy",
+          "image": "docker.io/istio/proxyv2:1.22.1"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "payments-api",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-07T08:00:15Z"
+            }
+          }
+        },
+        {
+          "name": "istio-proxy",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-07T08:00:10Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Started",
+      "message": "Started container istio-proxy",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-pod",
+        "namespace": "default",
+        "fieldPath": "spec.containers{istio-proxy}"
+      },
+      "lastTimestamp": "2026-04-07T08:00:10Z"
+    },
+    {
+      "reason": "Started",
+      "message": "Started container payments-api",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-pod",
+        "namespace": "default",
+        "fieldPath": "spec.containers{payments-api}"
+      },
+      "lastTimestamp": "2026-04-07T08:00:15Z"
+    },
+    {
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: Get \"http://10.42.2.19:15021/healthz/ready\": HTTP probe failed with statuscode: 503",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-pod",
+        "namespace": "default",
+        "fieldPath": "spec.containers{istio-proxy}"
+      },
+      "firstTimestamp": "2026-04-07T08:01:00Z",
+      "lastTimestamp": "2026-04-07T08:01:00Z"
+    },
+    {
+      "reason": "Failed",
+      "message": "Envoy proxy is NOT ready: config not received from Pilot (is Istiod running?): cds updates: 0 successful, 1 rejected",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-pod",
+        "namespace": "default",
+        "fieldPath": "spec.containers{istio-proxy}"
+      },
+      "firstTimestamp": "2026-04-07T08:01:10Z",
+      "lastTimestamp": "2026-04-07T08:01:10Z"
+    },
+    {
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: HTTP probe failed with statuscode: 503",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-pod",
+        "namespace": "default",
+        "fieldPath": "spec.containers{payments-api}"
+      },
+      "firstTimestamp": "2026-04-07T08:01:40Z",
+      "lastTimestamp": "2026-04-07T08:01:40Z"
+    },
+    {
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: Get \"http://10.42.2.19:15021/healthz/ready\": HTTP probe failed with statuscode: 503",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-pod",
+        "namespace": "default",
+        "fieldPath": "spec.containers{istio-proxy}"
+      },
+      "firstTimestamp": "2026-04-07T08:02:20Z",
+      "lastTimestamp": "2026-04-07T08:02:40Z"
+    },
+    {
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: HTTP probe failed with statuscode: 503",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "payments-api-pod",
+        "namespace": "default",
+        "fieldPath": "spec.containers{payments-api}"
+      },
+      "firstTimestamp": "2026-04-07T08:02:50Z",
+      "lastTimestamp": "2026-04-07T08:03:10Z"
+    }
+  ]
+}
