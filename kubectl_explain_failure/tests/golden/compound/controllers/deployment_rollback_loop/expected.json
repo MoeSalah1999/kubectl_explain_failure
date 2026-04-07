@@ -1,0 +1,80 @@
+{
+  "root_cause": "Deployment rollout is stuck in a rollback loop between older and newer ReplicaSets",
+  "confidence": 0.95,
+  "blocking": true,
+  "resolution": {
+    "winner": "DeploymentRollbackLoop",
+    "suppressed": [
+      "DeploymentRolloutStalled",
+      "DeploymentReplicaMismatch",
+      "DeploymentProgressDeadlineExceeded",
+      "ReplicaSetUnavailable"
+    ]
+  },
+  "evidence": [
+    "Deployment 'checkout' observed generation 18/18 while revisions 16, 17, and 18 all appeared in the same rollout incident",
+    "Rollback sequence progressed as: checkout-86c87bcfd6 up -> checkout-74d5d8f6b9 down -> checkout-86c87bcfd6 down -> checkout-74d5d8f6b9 up -> checkout-9c7fd98c54 up",
+    "Stable ReplicaSet 'checkout-74d5d8f6b9' (revision 16) was restored to 3 replicas with 3 available replicas",
+    "Abandoned ReplicaSet 'checkout-86c87bcfd6' (revision 17) was scaled back down before the next rollout attempt",
+    "Newest ReplicaSet 'checkout-9c7fd98c54' (revision 18) is only 0/1 available after the retry loop over 18.0 minutes",
+    "Deployment still reports 3/4 available replicas and 1/4 updated replicas",
+    "Deployment Progressing condition reports ProgressDeadlineExceeded during the rollback loop"
+  ],
+  "causes": [
+    {
+      "code": "DEPLOYMENT_GENERATION_OBSERVED",
+      "message": "Deployment 'checkout' has been observed at generation 18",
+      "role": "controller_context"
+    },
+    {
+      "code": "DEPLOYMENT_ROLLBACK_LOOP",
+      "message": "The Deployment keeps restoring an older stable ReplicaSet after a newer revision fails, then retries rollout again",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "OLDER_REPLICASET_RESTORED",
+      "message": "Older ReplicaSet 'checkout-74d5d8f6b9' was brought back to carry traffic after revision 17 stalled",
+      "role": "controller_intermediate"
+    },
+    {
+      "code": "DEPLOYMENT_FAILED_TO_CONVERGE",
+      "message": "Deployment remains below desired convergence with 3/4 available replicas and only 1/4 updated replicas",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "deployment:checkout": [
+      "observedGeneration=18, generation=18",
+      "updatedReplicas=1, availableReplicas=3, desiredReplicas=4",
+      "Controller rollout history shows rollback to an older ReplicaSet before a new retry",
+      "Progressing=False (ProgressDeadlineExceeded)",
+      "ReplicaSet \"checkout-9c7fd98c54\" has timed out progressing."
+    ],
+    "replicaset:checkout-74d5d8f6b9": [
+      "revision=16",
+      "currentReplicas=3, availableReplicas=3"
+    ],
+    "replicaset:checkout-86c87bcfd6": [
+      "revision=17",
+      "currentReplicas=0, availableReplicas=0",
+      "Earlier rollout attempt was abandoned during rollback"
+    ],
+    "replicaset:checkout-9c7fd98c54": [
+      "revision=18",
+      "currentReplicas=1, availableReplicas=0"
+    ]
+  },
+  "likely_causes": [
+    "Release automation or GitOps keeps reapplying a broken Deployment revision shortly after rolling back to the last stable one",
+    "A new image or pod template repeatedly fails health checks, causing operators to restore the previous ReplicaSet before trying another patch",
+    "Multiple delivery systems are alternately pushing rollback and rollout changes faster than the Deployment can stabilize",
+    "The controller is retrying successive ReplicaSet revisions while an unresolved application or readiness regression remains in the new template"
+  ],
+  "suggested_checks": [
+    "kubectl rollout history deployment checkout",
+    "kubectl describe deployment checkout",
+    "kubectl get rs -l app=checkout -o wide",
+    "Compare the last known good ReplicaSet template with the newer failed revisions before retrying rollout again"
+  ]
+}

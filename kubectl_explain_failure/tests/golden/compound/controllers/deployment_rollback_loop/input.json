@@ -1,0 +1,220 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-74d5d8f6b9-sgjtm",
+      "namespace": "default",
+      "labels": {
+        "app": "checkout",
+        "pod-template-hash": "74d5d8f6b9"
+      },
+      "ownerReferences": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "ReplicaSet",
+          "name": "checkout-74d5d8f6b9",
+          "controller": true
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "deployment": {
+    "checkout": {
+      "metadata": {
+        "name": "checkout",
+        "namespace": "default",
+        "generation": 18
+      },
+      "spec": {
+        "replicas": 4,
+        "progressDeadlineSeconds": 600,
+        "selector": {
+          "matchLabels": {
+            "app": "checkout"
+          }
+        }
+      },
+      "status": {
+        "observedGeneration": 18,
+        "replicas": 4,
+        "updatedReplicas": 1,
+        "readyReplicas": 3,
+        "availableReplicas": 3,
+        "unavailableReplicas": 1,
+        "conditions": [
+          {
+            "type": "Progressing",
+            "status": "False",
+            "reason": "ProgressDeadlineExceeded",
+            "message": "ReplicaSet \"checkout-9c7fd98c54\" has timed out progressing."
+          },
+          {
+            "type": "Available",
+            "status": "True",
+            "reason": "MinimumReplicasAvailable",
+            "message": "Deployment has minimum availability."
+          }
+        ]
+      }
+    }
+  },
+  "replicaset": {
+    "checkout-74d5d8f6b9": {
+      "metadata": {
+        "name": "checkout-74d5d8f6b9",
+        "namespace": "default",
+        "annotations": {
+          "deployment.kubernetes.io/revision": "16"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "name": "checkout",
+            "controller": true
+          }
+        ]
+      },
+      "spec": {
+        "replicas": 3
+      },
+      "status": {
+        "replicas": 3,
+        "readyReplicas": 3,
+        "availableReplicas": 3
+      }
+    },
+    "checkout-86c87bcfd6": {
+      "metadata": {
+        "name": "checkout-86c87bcfd6",
+        "namespace": "default",
+        "annotations": {
+          "deployment.kubernetes.io/revision": "17"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "name": "checkout",
+            "controller": true
+          }
+        ]
+      },
+      "spec": {
+        "replicas": 0
+      },
+      "status": {
+        "replicas": 0,
+        "readyReplicas": 0,
+        "availableReplicas": 0
+      }
+    },
+    "checkout-9c7fd98c54": {
+      "metadata": {
+        "name": "checkout-9c7fd98c54",
+        "namespace": "default",
+        "annotations": {
+          "deployment.kubernetes.io/revision": "18"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "name": "checkout",
+            "controller": true
+          }
+        ]
+      },
+      "spec": {
+        "replicas": 1
+      },
+      "status": {
+        "replicas": 1,
+        "readyReplicas": 0,
+        "availableReplicas": 0
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set checkout-86c87bcfd6 to 1",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "checkout",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-07T10:00:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled down replica set checkout-74d5d8f6b9 to 3",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "checkout",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-07T10:01:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled down replica set checkout-86c87bcfd6 to 0",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "checkout",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-07T10:09:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set checkout-74d5d8f6b9 to 4",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "checkout",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-07T10:10:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set checkout-9c7fd98c54 to 1",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "checkout",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-07T10:18:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled down replica set checkout-74d5d8f6b9 to 3",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "checkout",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-07T10:19:00Z"
+    }
+  ]
+}
