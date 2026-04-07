@@ -1,0 +1,74 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-api-7f95d9b7f6-f8lwz",
+      "namespace": "payments"
+    },
+    "spec": {
+      "nodeName": "ip-10-0-12-44.ec2.internal"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "nodes": [
+    {
+      "metadata": {
+        "name": "ip-10-0-12-44.ec2.internal"
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastTransitionTime": "2026-03-25T10:55:00Z"
+          },
+          {
+            "type": "NetworkUnavailable",
+            "status": "True",
+            "reason": "NoRouteCreated",
+            "message": "RouteController failed to create a route to the node",
+            "lastTransitionTime": "2026-03-25T11:00:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "ip-10-0-16-12.ec2.internal"
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastTransitionTime": "2026-03-25T10:40:00Z"
+          },
+          {
+            "type": "NetworkUnavailable",
+            "status": "False",
+            "reason": "RouteCreated",
+            "message": "Route created for node",
+            "lastTransitionTime": "2026-03-25T10:41:00Z"
+          }
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "NodeNetworkUnavailable",
+      "message": "Node ip-10-0-12-44.ec2.internal status is now: NodeNetworkUnavailable. RouteController failed to create a route to the node.",
+      "source": {
+        "component": "node-controller"
+      },
+      "involvedObject": {
+        "kind": "Node",
+        "name": "ip-10-0-12-44.ec2.internal"
+      },
+      "firstTimestamp": "2026-03-25T11:00:05Z",
+      "lastTimestamp": "2026-03-25T11:00:05Z"
+    }
+  ]
+}

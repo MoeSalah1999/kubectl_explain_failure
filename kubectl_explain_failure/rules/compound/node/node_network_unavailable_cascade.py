@@ -32,6 +32,7 @@ class NodeNetworkUnavailableCascadeRule(FailureRule):
 
     blocks = [
         "CNIPluginFailure",
+        "NodeNetworkUnavailable",
         "NodeNotReady",
         "FailedScheduling",
     ]

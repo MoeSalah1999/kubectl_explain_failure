@@ -1,0 +1,50 @@
+{
+  "root_cause": "Node is marked NetworkUnavailable",
+  "blocking": true,
+  "confidence": 0.94,
+  "evidence": [
+    "Node condition NetworkUnavailable=True",
+    "Node Ready condition remains True",
+    "NetworkUnavailable condition reason: NoRouteCreated",
+    "Timeline contains node-controller or kubelet signal confirming node networking is unavailable"
+  ],
+  "causes": [
+    {
+      "code": "NODE_NETWORK_CONDITION_ACTIVE",
+      "message": "Node reports NetworkUnavailable=True with Ready=True",
+      "role": "infrastructure_context"
+    },
+    {
+      "code": "NODE_NETWORK_UNAVAILABLE",
+      "message": "Node networking is not available for regular workload placement or pod network setup",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "WORKLOAD_BLOCKED_BY_NODE_NETWORK_STATE",
+      "message": "Workload cannot rely on pod networking while its assigned node is NetworkUnavailable",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "node:ip-10-0-12-44.ec2.internal": [
+      "Node condition NetworkUnavailable=True",
+      "Node Ready condition=True"
+    ],
+    "pod:payments-api-7f95d9b7f6-f8lwz": [
+      "Pod is tied to a node marked NetworkUnavailable"
+    ]
+  },
+  "likely_causes": [
+    "Cloud route programming has not completed for the node",
+    "CNI daemon or node network bootstrap has not finished initialization",
+    "The node registered before pod networking became available",
+    "Cluster networking control-plane integration for the node is degraded"
+  ],
+  "suggested_checks": [
+    "kubectl describe node ip-10-0-12-44.ec2.internal",
+    "Inspect node-controller or cloud-controller-manager logs for route programming failures",
+    "Check CNI daemonset status on the affected node",
+    "kubectl describe pod payments-api-7f95d9b7f6-f8lwz"
+  ]
+}
