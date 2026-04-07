@@ -1,0 +1,51 @@
+{
+  "root_cause": "CNI configuration is missing on node",
+  "blocking": true,
+  "confidence": 0.98,
+  "evidence": [
+    "Recent sandbox/network setup event reports missing or uninitialized CNI config",
+    "Latest relevant event reason: FailedCreatePodSandBox",
+    "Observed 2 recent CNI config-missing event(s) in the incident window",
+    "Pod is assigned to node worker-az1-17"
+  ],
+  "causes": [
+    {
+      "code": "POD_SANDBOX_INITIALIZATION",
+      "message": "Kubelet is attempting to initialize Pod sandbox networking",
+      "role": "runtime_context"
+    },
+    {
+      "code": "CNI_CONFIG_MISSING",
+      "message": "Node CNI configuration is missing or not initialized",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_SANDBOX_NETWORKING_BLOCKED",
+      "message": "Pod sandbox creation cannot complete until a valid CNI network configuration is present",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-api-6cb7f8f8c4-vj2hf": [
+      "Pod sandbox creation is blocked because node CNI config is missing or uninitialized",
+      "Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"4b9d\": no networks found in /etc/cni/net.d"
+    ],
+    "node:worker-az1-17": [
+      "Assigned node failed pod sandbox networking because CNI config was missing or uninitialized"
+    ]
+  },
+  "likely_causes": [
+    "CNI daemonset or bootstrap agent did not render config files into /etc/cni/net.d",
+    "Node bootstrapping completed before cluster networking configuration was installed",
+    "CNI config files were removed, corrupted, or mounted incorrectly on the node",
+    "A node-local networking agent crashed before initializing the default CNI network"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod checkout-api-6cb7f8f8c4-vj2hf",
+    "kubectl describe node worker-az1-17",
+    "Check kubelet logs for missing /etc/cni/net.d configuration errors",
+    "Verify the CNI daemonset or bootstrap agent rendered config files on the node",
+    "Inspect /etc/cni/net.d on the affected node for a valid network config"
+  ]
+}

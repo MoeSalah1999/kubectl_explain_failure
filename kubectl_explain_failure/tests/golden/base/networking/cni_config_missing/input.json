@@ -1,0 +1,80 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-api-6cb7f8f8c4-vj2hf",
+      "namespace": "payments"
+    },
+    "spec": {
+      "nodeName": "worker-az1-17"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "node": {
+    "metadata": {
+      "name": "worker-az1-17"
+    },
+    "status": {
+      "conditions": [
+        {
+          "type": "Ready",
+          "status": "True",
+          "lastTransitionTime": "2026-03-28T14:01:00Z"
+        },
+        {
+          "type": "NetworkUnavailable",
+          "status": "False",
+          "lastTransitionTime": "2026-03-28T14:00:30Z"
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "Scheduled",
+      "message": "Successfully assigned payments/checkout-api-6cb7f8f8c4-vj2hf to worker-az1-17",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-6cb7f8f8c4-vj2hf",
+        "namespace": "payments"
+      },
+      "firstTimestamp": "2026-03-28T14:02:00Z",
+      "lastTimestamp": "2026-03-28T14:02:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedCreatePodSandBox",
+      "message": "Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"4b9d\": plugin type=\"calico\" failed (add): network plugin is not ready: cni config uninitialized",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-6cb7f8f8c4-vj2hf",
+        "namespace": "payments"
+      },
+      "firstTimestamp": "2026-03-28T14:03:10Z",
+      "lastTimestamp": "2026-03-28T14:03:10Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedCreatePodSandBox",
+      "message": "Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"4b9d\": no networks found in /etc/cni/net.d",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-6cb7f8f8c4-vj2hf",
+        "namespace": "payments"
+      },
+      "firstTimestamp": "2026-03-28T14:04:00Z",
+      "lastTimestamp": "2026-03-28T14:04:00Z"
+    }
+  ]
+}

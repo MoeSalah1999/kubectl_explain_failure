@@ -31,6 +31,7 @@ class NodeNetworkUnavailableCascadeRule(FailureRule):
     deterministic = True
 
     blocks = [
+        "CNIConfigMissing",
         "CNIPluginFailure",
         "NodeNetworkUnavailable",
         "NodeNotReady",

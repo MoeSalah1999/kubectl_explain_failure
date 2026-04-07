@@ -6,15 +6,15 @@ from kubectl_explain_failure.engine import explain_failure, normalize_context
 from kubectl_explain_failure.timeline import build_timeline
 
 BASE_DIR = os.path.dirname(__file__)
-FIXTURE_DIR = os.path.join(BASE_DIR, "node_network_unavailable_cascade")
+FIXTURE_DIR = os.path.join(BASE_DIR, "cni_config_missing")
 
 
 def load_json(name: str):
-    with open(os.path.join(FIXTURE_DIR, name)) as f:
+    with open(os.path.join(FIXTURE_DIR, name), encoding="utf-8") as f:
         return json.load(f)
 
 
-def test_node_network_unavailable_cascade_golden():
+def test_cni_config_missing_golden():
     data = load_json("input.json")
     expected = load_json("expected.json")
 
@@ -45,7 +45,15 @@ def test_node_network_unavailable_cascade_golden():
     if node:
         context["node"] = node
 
-    context["timeline"] = build_timeline(events, relative_to="last_event")
+    context["pvc"] = {"metadata": {"name": "pvc1"}, "status": {"phase": "Bound"}}
+    context["pv"] = {"metadata": {"name": "pv1"}}
+    context["storageclass"] = {"metadata": {"name": "sc1"}}
+    context["serviceaccount"] = {"metadata": {"name": "default"}}
+    context["secret"] = {"metadata": {"name": "bootstrap-token"}}
+
+    if events:
+        context["timeline"] = build_timeline(events, relative_to="last_event")
+
     context = normalize_context(context)
 
     result = explain_failure(pod, events, context=context)
@@ -53,9 +61,7 @@ def test_node_network_unavailable_cascade_golden():
     assert result["root_cause"] == expected["root_cause"]
     assert result["blocking"] is True
     assert result["confidence"] >= expected["confidence"]
-
-    assert result["resolution"]["winner"] == "NodeNetworkUnavailableCascade"
-    assert "CNIConfigMissing" in result["resolution"]["suppressed"]
+    assert result["resolution"]["winner"] == "CNIConfigMissing"
     assert "CNIPluginFailure" in result["resolution"]["suppressed"]
 
     for exp_cause, res_cause in zip(expected["causes"], result["causes"], strict=False):
@@ -64,12 +70,16 @@ def test_node_network_unavailable_cascade_golden():
         assert exp_cause["role"] == res_cause["role"]
         assert exp_cause.get("blocking", False) == res_cause.get("blocking", False)
 
-    for ev in expected.get("evidence", []):
+    for ev in expected["evidence"]:
         assert ev in result["evidence"]
 
-    if "object_evidence" in expected:
-        assert "object_evidence" in result
-        for obj, items in expected["object_evidence"].items():
-            assert obj in result["object_evidence"]
-            for item in items:
-                assert item in result["object_evidence"][obj]
+    for obj_key, items in expected["object_evidence"].items():
+        assert obj_key in result["object_evidence"]
+        for item in items:
+            assert item in result["object_evidence"][obj_key]
+
+    for lc in expected.get("likely_causes", []):
+        assert lc in result.get("likely_causes", [])
+
+    for sc in expected.get("suggested_checks", []):
+        assert sc in result.get("suggested_checks", [])
