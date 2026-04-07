@@ -1,0 +1,123 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-api-orphan-5d8d7",
+      "namespace": "default",
+      "labels": {
+        "app": "payments-api",
+        "pod-template-hash": "7f8c7d66c4"
+      }
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/payments-api:2026.04.07"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": true,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-07T09:58:00Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "deployment": {
+      "payments-api": {
+        "metadata": {
+          "name": "payments-api",
+          "namespace": "default"
+        },
+        "spec": {
+          "replicas": 3
+        },
+        "status": {
+          "replicas": 3,
+          "updatedReplicas": 1,
+          "availableReplicas": 1
+        }
+      }
+    },
+    "replicaset": {
+      "payments-api-7f8c7d66c4": {
+        "metadata": {
+          "name": "payments-api-7f8c7d66c4",
+          "namespace": "default",
+          "ownerReferences": [
+            {
+              "kind": "Deployment",
+              "name": "payments-api",
+              "controller": true
+            }
+          ]
+        },
+        "spec": {
+          "replicas": 3,
+          "selector": {
+            "matchLabels": {
+              "app": "payments-api",
+              "pod-template-hash": "7f8c7d66c4"
+            }
+          }
+        },
+        "status": {
+          "replicas": 3,
+          "readyReplicas": 1,
+          "availableReplicas": 1,
+          "conditions": [
+            {
+              "type": "ReplicaFailure",
+              "status": true,
+              "reason": "FailedCreate"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set payments-api-7f8c7d66c4 to 3",
+      "source": {
+        "component": "DeploymentController"
+      },
+      "firstTimestamp": "2026-04-07T10:00:00Z",
+      "lastTimestamp": "2026-04-07T10:00:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedCreate",
+      "message": "ReplicaSet \"payments-api-7f8c7d66c4\" cannot adopt Pod \"payments-api-orphan-5d8d7\": failed to update ownerReferences for adoption: Operation cannot be fulfilled on pods \"payments-api-orphan-5d8d7\": the object has been modified; please apply your changes to the latest version and try again",
+      "count": 2,
+      "source": {
+        "component": "replicaset-controller"
+      },
+      "firstTimestamp": "2026-04-07T10:01:00Z",
+      "lastTimestamp": "2026-04-07T10:02:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedCreate",
+      "message": "ReplicaSet \"payments-api-7f8c7d66c4\" cannot adopt Pod \"payments-api-orphan-5d8d7\": failed to update ownerReferences for adoption: Operation cannot be fulfilled on pods \"payments-api-orphan-5d8d7\": the object has been modified; please apply your changes to the latest version and try again",
+      "count": 2,
+      "source": {
+        "component": "replicaset-controller"
+      },
+      "firstTimestamp": "2026-04-07T10:03:00Z",
+      "lastTimestamp": "2026-04-07T10:04:00Z"
+    }
+  ]
+}

@@ -246,6 +246,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - HeadlessServiceMissingForStatefulSet
 - ImmutableFieldUpdateRejected
 - PodDisruptionBudgetBlocking
+- ReplicaSetAdoptionFailure
 - ReplicaSetCreateFailure
 - ReplicaSetOwnershipConflict
 - ReplicaSetUnavailable

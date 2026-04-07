@@ -1,0 +1,60 @@
+{
+  "root_cause": "ReplicaSet failed to adopt a matching orphan Pod",
+  "confidence": 0.96,
+  "blocking": true,
+  "resolution": {
+    "winner": "ReplicaSetAdoptionFailure",
+    "suppressed": [
+      "ReplicaSetCreateFailure",
+      "ReplicaSetUnavailable",
+      "DeploymentReplicaMismatch"
+    ]
+  },
+  "evidence": [
+    "Pod 'payments-api-orphan-5d8d7' has no controlling ownerReference but matches active ReplicaSet 'payments-api-7f8c7d66c4'",
+    "Observed 2 recent ReplicaSet adoption failure event(s) within 20 minutes",
+    "Representative adoption failure: ReplicaSet \"payments-api-7f8c7d66c4\" cannot adopt Pod \"payments-api-orphan-5d8d7\": failed to update ownerReferences for adoption: Operation cannot be fulfilled on pods \"payments-api-orphan-5d8d7\": the object has been modified; please apply your changes to the latest version and try again",
+    "Reconciliation symptom: Deployment 'payments-api' remains at 1/3 available replicas while only 1/3 replicas are updated"
+  ],
+  "causes": [
+    {
+      "code": "ORPHAN_POD_MATCHES_REPLICASET",
+      "message": "A matching Pod exists without a controlling ReplicaSet ownerReference, so ReplicaSet adoption is expected",
+      "role": "controller_context"
+    },
+    {
+      "code": "REPLICASET_ADOPTION_FAILED",
+      "message": "ReplicaSet repeatedly failed to write ownership while attempting to adopt the matching Pod",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "REPLICASET_RECONCILIATION_STALLED",
+      "message": "ReplicaSet reconciliation remains degraded because matching orphan Pods are not being adopted successfully",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:payments-api-orphan-5d8d7": [
+      "Pod is orphaned from controller ownership but still matches a live ReplicaSet selector"
+    ],
+    "replicaset:payments-api-7f8c7d66c4": [
+      "ReplicaSet \"payments-api-7f8c7d66c4\" cannot adopt Pod \"payments-api-orphan-5d8d7\": failed to update ownerReferences for adoption: Operation cannot be fulfilled on pods \"payments-api-orphan-5d8d7\": the object has been modified; please apply your changes to the latest version and try again"
+    ],
+    "deployment:payments-api": [
+      "Deployment 'payments-api' remains at 1/3 available replicas while only 1/3 replicas are updated"
+    ]
+  },
+  "likely_causes": [
+    "ReplicaSet controller hit repeated optimistic-lock or API update conflicts while trying to write ownerReferences",
+    "Admission or policy machinery blocked ownerReference updates during ReplicaSet adoption",
+    "A manually created or orphaned Pod still matches the ReplicaSet selector but cannot be cleanly adopted",
+    "Concurrent metadata mutation on the Pod is preventing ReplicaSet adoption from converging"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod payments-api-orphan-5d8d7",
+    "kubectl describe rs payments-api-7f8c7d66c4",
+    "Inspect ownerReferences, labels, and recent ReplicaSet controller events on the orphan Pod",
+    "Review admission/policy controllers or metadata mutators that may be rewriting the Pod during adoption"
+  ]
+}
