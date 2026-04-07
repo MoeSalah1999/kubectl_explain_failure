@@ -1,0 +1,60 @@
+{
+  "root_cause": "kube-controller-manager is unavailable, so workload controllers cannot reconcile desired state",
+  "confidence": 0.97,
+  "blocking": true,
+  "resolution": {
+    "winner": "ControllerManagerUnavailable",
+    "suppressed": [
+      "DeploymentReplicaMismatch",
+      "DeploymentProgressDeadlineExceeded",
+      "ReplicaSetCreateFailure",
+      "ReplicaSetUnavailable"
+    ]
+  },
+  "evidence": [
+    "Recent kube-controller-manager outage targets pod 'kube-controller-manager-cp-1' with container 'kube-controller-manager' state=waiting restartCount=7",
+    "Representative controller-manager outage signal: leaderelection lost: failed to renew lease kube-system/kube-controller-manager: Get \"https://10.96.0.1:443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-controller-manager\": dial tcp 10.96.0.1:443: i/o timeout",
+    "Workload reconciliation symptom: Deployment 'payments-api' remains at 1/3 available replicas while only 1/3 replicas are updated"
+  ],
+  "causes": [
+    {
+      "code": "WORKLOAD_REQUIRES_CONTROLLER_RECONCILIATION",
+      "message": "This workload depends on kube-controller-manager to reconcile desired controller state",
+      "role": "controller_context"
+    },
+    {
+      "code": "CONTROLLER_MANAGER_UNAVAILABLE",
+      "message": "kube-controller-manager is unavailable due to crash, failed health checks, or lost leadership",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "WORKLOAD_RECONCILIATION_STALLED",
+      "message": "Controller-owned workload state is no longer converging while kube-controller-manager is unavailable",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:kube-controller-manager-cp-1": [
+      "leaderelection lost: failed to renew lease kube-system/kube-controller-manager: Get \"https://10.96.0.1:443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-controller-manager\": dial tcp 10.96.0.1:443: i/o timeout"
+    ],
+    "deployment:payments-api": [
+      "Deployment 'payments-api' remains at 1/3 available replicas while only 1/3 replicas are updated"
+    ],
+    "pod:payments-api-7f8c7d66c4-r8j7l": [
+      "The pod belongs to a controller-managed workload whose desired state is not converging while kube-controller-manager is unavailable"
+    ]
+  },
+  "likely_causes": [
+    "kube-controller-manager lost leadership or cannot renew its lease against the API server",
+    "The controller-manager process is crashlooping or failing its health checks on the control-plane node",
+    "Control-plane network or API connectivity issues are preventing controllers from reconciling desired workload state",
+    "Static-pod or manifest drift on the control-plane node left kube-controller-manager unavailable"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod kube-controller-manager-cp-1 -n kube-system",
+    "kubectl logs -n kube-system kube-controller-manager-cp-1 -c kube-controller-manager",
+    "Inspect kube-controller-manager leader election and API connectivity errors",
+    "kubectl describe deployment payments-api"
+  ]
+}

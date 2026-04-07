@@ -1,0 +1,190 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-api-7f8c7d66c4-r8j7l",
+      "namespace": "default",
+      "ownerReferences": [
+        {
+          "kind": "ReplicaSet",
+          "name": "payments-api-7f8c7d66c4",
+          "controller": true
+        }
+      ]
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/payments-api:2026.04.07"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": true,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-07T09:55:00Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "pod": {
+      "kube-controller-manager-cp-1": {
+        "metadata": {
+          "name": "kube-controller-manager-cp-1",
+          "namespace": "kube-system",
+          "labels": {
+            "component": "kube-controller-manager",
+            "tier": "control-plane"
+          }
+        },
+        "spec": {
+          "containers": [
+            {
+              "name": "kube-controller-manager",
+              "image": "registry.k8s.io/kube-controller-manager:v1.32.0"
+            }
+          ]
+        },
+        "status": {
+          "phase": "Running",
+          "containerStatuses": [
+            {
+              "name": "kube-controller-manager",
+              "ready": false,
+              "restartCount": 7,
+              "state": {
+                "waiting": {
+                  "reason": "CrashLoopBackOff",
+                  "message": "back-off 5m0s restarting failed container=kube-controller-manager pod=kube-controller-manager-cp-1_kube-system"
+                }
+              },
+              "lastState": {
+                "terminated": {
+                  "reason": "Error",
+                  "exitCode": 1
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "deployment": {
+      "payments-api": {
+        "metadata": {
+          "name": "payments-api",
+          "namespace": "default",
+          "generation": 9
+        },
+        "spec": {
+          "replicas": 3
+        },
+        "status": {
+          "observedGeneration": 9,
+          "replicas": 3,
+          "updatedReplicas": 1,
+          "readyReplicas": 1,
+          "availableReplicas": 1,
+          "unavailableReplicas": 2,
+          "conditions": [
+            {
+              "type": "Progressing",
+              "status": "False",
+              "reason": "ProgressDeadlineExceeded",
+              "message": "ReplicaSet \"payments-api-7f8c7d66c4\" has timed out progressing"
+            }
+          ]
+        }
+      }
+    },
+    "replicaset": {
+      "payments-api-7f8c7d66c4": {
+        "metadata": {
+          "name": "payments-api-7f8c7d66c4",
+          "namespace": "default",
+          "ownerReferences": [
+            {
+              "kind": "Deployment",
+              "name": "payments-api",
+              "controller": true
+            }
+          ]
+        },
+        "status": {
+          "replicas": 2,
+          "readyReplicas": 0,
+          "availableReplicas": 0,
+          "conditions": [
+            {
+              "type": "ReplicaFailure",
+              "status": true,
+              "reason": "FailedCreate"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "kube-controller-manager failed healthz check on https://127.0.0.1:10257/healthz: dial tcp 127.0.0.1:10257: connect: connection refused",
+      "count": 3,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-controller-manager-cp-1",
+        "namespace": "kube-system",
+        "fieldPath": "spec.containers{kube-controller-manager}"
+      },
+      "firstTimestamp": "2026-04-07T10:00:00Z",
+      "lastTimestamp": "2026-04-07T10:02:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "kube-controller-manager failed to start after losing apiserver connectivity and could not renew its leadership lease",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-controller-manager-cp-1",
+        "namespace": "kube-system",
+        "fieldPath": "spec.containers{kube-controller-manager}"
+      },
+      "firstTimestamp": "2026-04-07T10:01:00Z",
+      "lastTimestamp": "2026-04-07T10:03:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "LeaderElection",
+      "message": "leaderelection lost: failed to renew lease kube-system/kube-controller-manager: Get \"https://10.96.0.1:443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-controller-manager\": dial tcp 10.96.0.1:443: i/o timeout",
+      "count": 2,
+      "source": {
+        "component": "kube-controller-manager"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-controller-manager-cp-1",
+        "namespace": "kube-system",
+        "fieldPath": "spec.containers{kube-controller-manager}"
+      },
+      "firstTimestamp": "2026-04-07T10:02:30Z",
+      "lastTimestamp": "2026-04-07T10:04:00Z"
+    }
+  ]
+}
