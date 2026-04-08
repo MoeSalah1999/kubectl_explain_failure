@@ -1,0 +1,63 @@
+{
+  "root_cause": "Replica count is oscillating for the workload instead of converging",
+  "confidence": 0.94,
+  "blocking": true,
+  "suppressed": [
+    "DeploymentReplicaMismatch"
+  ],
+  "evidence": [
+    "ReplicaSet 'api-6dbf78c7f9' scaled as: up to 6 -> down to 4 -> up to 6 -> down to 4",
+    "Scaling direction reversed 3 times over 17.0 minutes",
+    "The same ReplicaSet kept changing size instead of a clean one-way rollout handoff",
+    "ReplicaSet 'api-6dbf78c7f9' still has only 2/4 available replicas",
+    "HPA 'api-hpa' also rescaled the workload back and forth as: 6 -> 4 -> 6 -> 4"
+  ],
+  "causes": [
+    {
+      "code": "REPLICA_SCALING_OSCILLATION_OBSERVED",
+      "message": "Timeline shows repeated scale reversals for ReplicaSet 'api-6dbf78c7f9'",
+      "role": "temporal_context"
+    },
+    {
+      "code": "REPLICA_OSCILLATION",
+      "message": "Replica count keeps alternating between scale-up and scale-down instead of settling on a stable desired size",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "SCALING_CONTROL_LOOP_THRASHING",
+      "message": "Controllers or autoscalers are repeatedly reversing replica decisions for the same workload",
+      "role": "control_loop"
+    },
+    {
+      "code": "WORKLOAD_CAPACITY_UNSTABLE",
+      "message": "ReplicaSet remains below stable capacity (2/4 available) while desired replica counts keep reversing",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:api-6dbf78c7f9-zr8kd": [
+      "Pod belongs to a workload whose desired replica count kept reversing"
+    ],
+    "replicaset:api-6dbf78c7f9": [
+      "scaleUpEvents=2, scaleDownEvents=2",
+      "targetReplicaSizes=4,6",
+      "availableReplicas=2/4"
+    ],
+    "hpa:api-hpa": [
+      "SuccessfulRescale sizes alternated as 6 -> 4 -> 6 -> 4",
+      "scaleTargetRef=Deployment/api"
+    ]
+  },
+  "likely_causes": [
+    "An HPA or other autoscaler is responding too aggressively and repeatedly reversing desired replica counts",
+    "Manual or GitOps updates to spec.replicas are fighting with autoscaler-driven changes",
+    "Conflicting controller inputs are alternately scaling the same workload up and down before it stabilizes",
+    "Replica health never stabilizes long enough for the workload to converge on one desired size"
+  ],
+  "suggested_checks": [
+    "kubectl describe rs api-6dbf78c7f9",
+    "kubectl get events --sort-by=.lastTimestamp",
+    "kubectl describe hpa api-hpa"
+  ]
+}

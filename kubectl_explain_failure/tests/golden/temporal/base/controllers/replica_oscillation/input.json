@@ -1,0 +1,178 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "api-6dbf78c7f9-zr8kd",
+      "namespace": "default",
+      "labels": {
+        "app": "api",
+        "pod-template-hash": "6dbf78c7f9"
+      },
+      "ownerReferences": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "ReplicaSet",
+          "name": "api-6dbf78c7f9",
+          "controller": true
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "deployment": {},
+  "replicaset": {
+    "api-6dbf78c7f9": {
+      "metadata": {
+        "name": "api-6dbf78c7f9",
+        "namespace": "default",
+        "annotations": {
+          "deployment.kubernetes.io/revision": "21"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "name": "api",
+            "controller": true
+          }
+        ]
+      },
+      "spec": {
+        "replicas": 4
+      },
+      "status": {
+        "replicas": 4,
+        "readyReplicas": 2,
+        "availableReplicas": 2
+      }
+    }
+  },
+  "hpa": {
+    "api-hpa": {
+      "metadata": {
+        "name": "api-hpa",
+        "namespace": "default"
+      },
+      "spec": {
+        "scaleTargetRef": {
+          "apiVersion": "apps/v1",
+          "kind": "Deployment",
+          "name": "api"
+        },
+        "minReplicas": 2,
+        "maxReplicas": 8
+      },
+      "status": {
+        "currentReplicas": 4,
+        "desiredReplicas": 4
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "SuccessfulRescale",
+      "message": "New size: 6; reason: cpu resource utilization above target",
+      "source": {
+        "component": "horizontal-pod-autoscaler"
+      },
+      "involvedObject": {
+        "kind": "HorizontalPodAutoscaler",
+        "name": "api-hpa",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-07T09:59:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set api-6dbf78c7f9 to 6",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "api",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-07T10:00:00Z"
+    },
+    {
+      "reason": "SuccessfulRescale",
+      "message": "New size: 4; reason: All metrics below target",
+      "source": {
+        "component": "horizontal-pod-autoscaler"
+      },
+      "involvedObject": {
+        "kind": "HorizontalPodAutoscaler",
+        "name": "api-hpa",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-07T10:04:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled down replica set api-6dbf78c7f9 to 4",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "api",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-07T10:05:00Z"
+    },
+    {
+      "reason": "SuccessfulRescale",
+      "message": "New size: 6; reason: cpu resource utilization above target",
+      "source": {
+        "component": "horizontal-pod-autoscaler"
+      },
+      "involvedObject": {
+        "kind": "HorizontalPodAutoscaler",
+        "name": "api-hpa",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-07T10:10:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set api-6dbf78c7f9 to 6",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "api",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-07T10:11:00Z"
+    },
+    {
+      "reason": "SuccessfulRescale",
+      "message": "New size: 4; reason: All metrics below target",
+      "source": {
+        "component": "horizontal-pod-autoscaler"
+      },
+      "involvedObject": {
+        "kind": "HorizontalPodAutoscaler",
+        "name": "api-hpa",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-07T10:16:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled down replica set api-6dbf78c7f9 to 4",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "api",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-07T10:17:00Z"
+    }
+  ]
+}
