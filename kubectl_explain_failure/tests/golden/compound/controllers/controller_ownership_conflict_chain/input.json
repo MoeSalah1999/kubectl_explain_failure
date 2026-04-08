@@ -1,0 +1,195 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-74d5d8f6b9-x7l9m",
+      "namespace": "default",
+      "labels": {
+        "app": "checkout",
+        "tier": "api"
+      },
+      "ownerReferences": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "ReplicaSet",
+          "name": "checkout-74d5d8f6b9",
+          "controller": true
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "deployment": {
+    "checkout": {
+      "metadata": {
+        "name": "checkout",
+        "namespace": "default",
+        "generation": 17
+      },
+      "spec": {
+        "replicas": 4,
+        "progressDeadlineSeconds": 600,
+        "selector": {
+          "matchLabels": {
+            "app": "checkout"
+          }
+        }
+      },
+      "status": {
+        "observedGeneration": 17,
+        "replicas": 5,
+        "updatedReplicas": 2,
+        "readyReplicas": 2,
+        "availableReplicas": 2,
+        "unavailableReplicas": 3,
+        "conditions": [
+          {
+            "type": "Progressing",
+            "status": "False",
+            "reason": "ProgressDeadlineExceeded",
+            "message": "ReplicaSet \"checkout-9c7fd98c54\" has timed out progressing."
+          },
+          {
+            "type": "Available",
+            "status": "False",
+            "reason": "MinimumReplicasUnavailable",
+            "message": "Deployment does not have minimum availability."
+          }
+        ]
+      }
+    }
+  },
+  "replicaset": {
+    "checkout-74d5d8f6b9": {
+      "metadata": {
+        "name": "checkout-74d5d8f6b9",
+        "namespace": "default",
+        "annotations": {
+          "deployment.kubernetes.io/revision": "16"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "name": "checkout",
+            "controller": true
+          }
+        ]
+      },
+      "spec": {
+        "replicas": 3,
+        "selector": {
+          "matchLabels": {
+            "app": "checkout",
+            "tier": "api",
+            "pod-template-hash": "74d5d8f6b9"
+          }
+        }
+      },
+      "status": {
+        "replicas": 3,
+        "readyReplicas": 2,
+        "availableReplicas": 2
+      }
+    },
+    "checkout-9c7fd98c54": {
+      "metadata": {
+        "name": "checkout-9c7fd98c54",
+        "namespace": "default",
+        "annotations": {
+          "deployment.kubernetes.io/revision": "17"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "name": "checkout",
+            "controller": true
+          }
+        ]
+      },
+      "spec": {
+        "replicas": 2,
+        "selector": {
+          "matchLabels": {
+            "app": "checkout",
+            "tier": "api"
+          }
+        }
+      },
+      "status": {
+        "replicas": 2,
+        "readyReplicas": 0,
+        "availableReplicas": 0
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set checkout-9c7fd98c54 to 1",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "checkout",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-06T10:00:00Z"
+    },
+    {
+      "reason": "FailedCreate",
+      "message": "ReplicaSet \"checkout-9c7fd98c54\" cannot adopt Pod \"checkout-74d5d8f6b9-x7l9m\": Pod already has controller reference to ReplicaSet/checkout-74d5d8f6b9",
+      "source": {
+        "component": "replicaset-controller"
+      },
+      "involvedObject": {
+        "kind": "ReplicaSet",
+        "name": "checkout-9c7fd98c54",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-06T10:04:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set checkout-9c7fd98c54 to 2",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "checkout",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-06T10:09:00Z"
+    },
+    {
+      "reason": "FailedCreate",
+      "message": "ReplicaSet \"checkout-9c7fd98c54\" cannot adopt Pod \"checkout-74d5d8f6b9-x7l9m\": Pod already has controller reference to ReplicaSet/checkout-74d5d8f6b9",
+      "source": {
+        "component": "replicaset-controller"
+      },
+      "involvedObject": {
+        "kind": "ReplicaSet",
+        "name": "checkout-9c7fd98c54",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-06T10:13:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled down replica set checkout-74d5d8f6b9 to 2",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "checkout",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-06T10:17:00Z"
+    }
+  ]
+}

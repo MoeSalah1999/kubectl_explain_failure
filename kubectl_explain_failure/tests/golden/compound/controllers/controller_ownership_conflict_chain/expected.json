@@ -1,0 +1,73 @@
+{
+  "root_cause": "Controller ownership conflict between active ReplicaSets is stalling the workload rollout",
+  "confidence": 0.98,
+  "blocking": true,
+  "resolution": {
+    "winner": "ControllerOwnershipConflictChain",
+    "suppressed": [
+      "ReplicaSetOwnershipConflict",
+      "DeploymentRolloutStalled",
+      "DeploymentProgressDeadlineExceeded",
+      "DeploymentReplicaMismatch",
+      "ReplicaSetUnavailable"
+    ]
+  },
+  "evidence": [
+    "Pod 'checkout-74d5d8f6b9-x7l9m' is owned by ReplicaSet 'checkout-74d5d8f6b9' but its labels now match active ReplicaSet 'checkout-9c7fd98c54' instead",
+    "Recent controller activity spans 17.0 minutes across 5 rollout-related events with 2 ownership conflict signal(s)",
+    "Representative ownership conflict: ReplicaSet \"checkout-9c7fd98c54\" cannot adopt Pod \"checkout-74d5d8f6b9-x7l9m\": Pod already has controller reference to ReplicaSet/checkout-74d5d8f6b9",
+    "Deployment 'checkout' remains at 2/4 available replicas with only 2/4 updated replicas and ProgressDeadlineExceeded",
+    "Pod 'checkout-74d5d8f6b9-x7l9m' is still Pending while controller ownership remains contested"
+  ],
+  "causes": [
+    {
+      "code": "CONFLICTING_CONTROLLER_PATHS",
+      "message": "Multiple active controller paths are targeting the same Pod identity during rollout",
+      "role": "controller_context"
+    },
+    {
+      "code": "CONTROLLER_OWNERSHIP_CONFLICT",
+      "message": "Pod labels and controller ownership metadata disagree about which ReplicaSet should manage the Pod",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "CONTROLLER_RECONCILIATION_CHAIN_STALLED",
+      "message": "Controller reconciliation cannot converge because rollout and adoption decisions keep colliding",
+      "role": "controller_intermediate"
+    },
+    {
+      "code": "WORKLOAD_MANAGEMENT_IMPAIRED",
+      "message": "Workload rollout remains below target availability (2/4) while controller ownership is unresolved",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-74d5d8f6b9-x7l9m": [
+      "Pod 'checkout-74d5d8f6b9-x7l9m' is owned by ReplicaSet 'checkout-74d5d8f6b9' but its labels now match active ReplicaSet 'checkout-9c7fd98c54' instead"
+    ],
+    "replicaset:checkout-74d5d8f6b9": [
+      "Current controller owner recorded in ownerReferences"
+    ],
+    "replicaset:checkout-9c7fd98c54": [
+      "Competing active ReplicaSet also targets the Pod during rollout"
+    ],
+    "deployment:checkout": [
+      "Deployment 'checkout' remains at 2/4 available replicas with only 2/4 updated replicas and ProgressDeadlineExceeded",
+      "Progressing=False (ProgressDeadlineExceeded)",
+      "ReplicaSet \"checkout-9c7fd98c54\" has timed out progressing."
+    ]
+  },
+  "likely_causes": [
+    "A rollout revision or copied controller introduced a selector that overlaps with another active ReplicaSet",
+    "Manual label or ownerReference edits left an existing Pod owned by one ReplicaSet while another controller revision now also matches it",
+    "GitOps or automation reapplied controller objects with broadened selectors, causing competing ownership during rollout",
+    "The workload cannot converge until each Pod is matched by exactly one active controller path"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod checkout-74d5d8f6b9-x7l9m",
+    "Compare ReplicaSet selectors, template labels, and ownerReferences with `kubectl get rs -o yaml`",
+    "Review recent deployment and ReplicaSet controller events around the conflicting rollout window",
+    "kubectl rollout status deployment checkout"
+  ]
+}
