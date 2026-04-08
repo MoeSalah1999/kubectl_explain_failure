@@ -1,0 +1,56 @@
+{
+  "root_cause": "HPA 'checkout-api-hpa' cannot compute desired replicas because autoscaling metrics are unavailable",
+  "confidence": 0.97,
+  "blocking": true,
+  "resolution": {
+    "winner": "HPAMetricsUnavailable",
+    "suppressed": []
+  },
+  "evidence": [
+    "HPA 'checkout-api-hpa' targets Deployment/checkout-api",
+    "HPA condition ScalingActive=False reason=FailedGetResourceMetric",
+    "Recent horizontal-pod-autoscaler warnings repeated 3 times in the last 20 minutes",
+    "Latest HPA metrics warning: invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: no metrics returned from resource metrics API"
+  ],
+  "causes": [
+    {
+      "code": "AUTOSCALER_TARGET_IDENTIFIED",
+      "message": "HPA 'checkout-api-hpa' manages Deployment/checkout-api",
+      "role": "controller_context"
+    },
+    {
+      "code": "HPA_METRICS_UNAVAILABLE",
+      "message": "HorizontalPodAutoscaler cannot calculate desired replicas because required metrics are unavailable or invalid",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "AUTOSCALING_RESPONSE_BLOCKED",
+      "message": "Scale decisions for the workload are stalled until metric collection or adapter access recovers",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "hpa:checkout-api-hpa": [
+      "scaleTargetRef=Deployment/checkout-api",
+      "ScalingActive=False reason=FailedGetResourceMetric",
+      "the HPA was unable to compute the replica count: unable to get metrics for resource cpu: no metrics returned from resource metrics API",
+      "invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: no metrics returned from resource metrics API"
+    ],
+    "pod:checkout-api-7f6c7c89f6-r9l4m": [
+      "Pod belongs to autoscaled workload Deployment/checkout-api"
+    ]
+  },
+  "likely_causes": [
+    "Metrics Server or a custom/external metrics adapter is unavailable or returning errors",
+    "The HPA metric spec no longer matches a serving metric series or selector",
+    "One or more autoscaled containers are missing the resource requests required for utilization-based metrics",
+    "API aggregation or control-plane connectivity problems are preventing the HPA controller from reading metrics"
+  ],
+  "suggested_checks": [
+    "kubectl describe hpa checkout-api-hpa -n payments",
+    "kubectl get hpa checkout-api-hpa -n payments -o yaml",
+    "kubectl get --raw /apis/metrics.k8s.io/v1beta1/  # or inspect the custom/external metrics adapter",
+    "Verify every autoscaled container defines the CPU/memory requests required by the HPA metric type"
+  ]
+}

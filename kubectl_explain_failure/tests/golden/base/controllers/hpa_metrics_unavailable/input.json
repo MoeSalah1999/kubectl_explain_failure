@@ -1,0 +1,175 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-api-7f6c7c89f6-r9l4m",
+      "namespace": "payments",
+      "ownerReferences": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "ReplicaSet",
+          "name": "checkout-api-7f6c7c89f6",
+          "controller": true
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": true,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-08T11:40:00Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "replicaset": {
+      "checkout-api-7f6c7c89f6": {
+        "metadata": {
+          "name": "checkout-api-7f6c7c89f6",
+          "namespace": "payments",
+          "ownerReferences": [
+            {
+              "apiVersion": "apps/v1",
+              "kind": "Deployment",
+              "name": "checkout-api",
+              "controller": true
+            }
+          ]
+        },
+        "spec": {
+          "replicas": 2
+        },
+        "status": {
+          "replicas": 2,
+          "readyReplicas": 2,
+          "availableReplicas": 2
+        }
+      }
+    },
+    "deployment": {
+      "checkout-api": {
+        "metadata": {
+          "name": "checkout-api",
+          "namespace": "payments",
+          "generation": 18
+        },
+        "spec": {
+          "replicas": 2
+        },
+        "status": {
+          "observedGeneration": 18,
+          "replicas": 2,
+          "readyReplicas": 2,
+          "availableReplicas": 2
+        }
+      }
+    },
+    "hpa": {
+      "checkout-api-hpa": {
+        "metadata": {
+          "name": "checkout-api-hpa",
+          "namespace": "payments"
+        },
+        "spec": {
+          "minReplicas": 2,
+          "maxReplicas": 12,
+          "scaleTargetRef": {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "name": "checkout-api"
+          },
+          "metrics": [
+            {
+              "type": "Resource",
+              "resource": {
+                "name": "cpu",
+                "target": {
+                  "type": "Utilization",
+                  "averageUtilization": 70
+                }
+              }
+            }
+          ]
+        },
+        "status": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2,
+          "conditions": [
+            {
+              "type": "AbleToScale",
+              "status": "True",
+              "reason": "SucceededGetScale",
+              "message": "the HPA controller was able to get the target's current scale"
+            },
+            {
+              "type": "ScalingActive",
+              "status": "False",
+              "reason": "FailedGetResourceMetric",
+              "message": "the HPA was unable to compute the replica count: unable to get metrics for resource cpu: no metrics returned from resource metrics API"
+            },
+            {
+              "type": "ScalingLimited",
+              "status": "False",
+              "reason": "DesiredWithinRange",
+              "message": "the desired count is within the acceptable range"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedGetResourceMetric",
+      "message": "the HPA was unable to compute the replica count: unable to get metrics for resource cpu: no metrics returned from resource metrics API",
+      "source": {
+        "component": "horizontal-pod-autoscaler"
+      },
+      "involvedObject": {
+        "kind": "HorizontalPodAutoscaler",
+        "name": "checkout-api-hpa",
+        "namespace": "payments"
+      },
+      "firstTimestamp": "2026-04-08T12:00:00Z",
+      "lastTimestamp": "2026-04-08T12:01:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedGetResourceMetric",
+      "message": "the HPA was unable to compute the replica count: unable to fetch metrics from resource metrics API: the server is currently unable to handle the request (get pods.metrics.k8s.io)",
+      "source": {
+        "component": "horizontal-pod-autoscaler"
+      },
+      "involvedObject": {
+        "kind": "HorizontalPodAutoscaler",
+        "name": "checkout-api-hpa",
+        "namespace": "payments"
+      },
+      "firstTimestamp": "2026-04-08T12:05:00Z",
+      "lastTimestamp": "2026-04-08T12:06:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedComputeMetricsReplicas",
+      "message": "invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: no metrics returned from resource metrics API",
+      "source": {
+        "component": "horizontal-pod-autoscaler"
+      },
+      "involvedObject": {
+        "kind": "HorizontalPodAutoscaler",
+        "name": "checkout-api-hpa",
+        "namespace": "payments"
+      },
+      "firstTimestamp": "2026-04-08T12:10:00Z",
+      "lastTimestamp": "2026-04-08T12:11:00Z"
+    }
+  ]
+}

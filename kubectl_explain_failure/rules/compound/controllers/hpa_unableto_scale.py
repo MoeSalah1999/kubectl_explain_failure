@@ -21,7 +21,7 @@ class HPAUnableToScaleRule(FailureRule):
     category = "Compound"
     priority = 55
     deterministic = True
-    blocks = ["FailedScheduling", "AffinityUnsatisfiable"]
+    blocks = ["FailedScheduling", "AffinityUnsatisfiable", "HPAMetricsUnavailable"]
     requires = {
         "objects": ["hpa", "pod"],
         "context": ["timeline"],

@@ -244,6 +244,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - DeploymentProgressDeadlineExceeded
 - DeploymentReplicaMismatch
 - HeadlessServiceMissingForStatefulSet
+- HPAMetricsUnavailable
 - ImmutableFieldUpdateRejected
 - PodDisruptionBudgetBlocking
 - ReplicaSetAdoptionFailure
