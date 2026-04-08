@@ -1,0 +1,59 @@
+{
+  "root_cause": "HPA 'checkout-api-hpa' cannot scale because scaleTargetRef Deployment/checkout-api-v2 is invalid or missing",
+  "confidence": 0.95,
+  "blocking": true,
+  "resolution": {
+    "winner": "HPAInvalidTargetReference",
+    "suppressed": []
+  },
+  "evidence": [
+    "HPA 'checkout-api-hpa' scaleTargetRef points to Deployment/checkout-api-v2",
+    "Referenced target Deployment/checkout-api-v2 is not present in the current object graph",
+    "HPA condition AbleToScale=False reason=FailedGetScale",
+    "Recent horizontal-pod-autoscaler FailedGetScale warnings repeated 3 times in the last 20 minutes",
+    "Latest HPA target resolution warning: the HPA controller was unable to get the target's current scale: deployments/scale.apps \"checkout-api-v2\" not found",
+    "Analyzed pod belongs to Deployment/checkout-api, the most likely workload associated with HPA 'checkout-api-hpa'"
+  ],
+  "causes": [
+    {
+      "code": "AUTOSCALER_CONFIGURATION_PRESENT",
+      "message": "HPA 'checkout-api-hpa' is configured to scale Deployment/checkout-api-v2",
+      "role": "controller_context"
+    },
+    {
+      "code": "HPA_INVALID_TARGET_REFERENCE",
+      "message": "HorizontalPodAutoscaler cannot fetch the scale subresource because its target reference is invalid, missing, or unsupported",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "AUTOSCALER_CANNOT_RECONCILE_TARGET",
+      "message": "Autoscaling decisions are blocked until scaleTargetRef points at a live scalable workload",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "hpa:checkout-api-hpa": [
+      "scaleTargetRef=Deployment/checkout-api-v2",
+      "Referenced target Deployment/checkout-api-v2 not found",
+      "AbleToScale=False reason=FailedGetScale",
+      "the HPA controller was unable to get the target's current scale: deployments/scale.apps \"checkout-api-v2\" not found",
+      "failed to get scale for Deployment/payments/checkout-api-v2: the server could not find the requested resource"
+    ],
+    "pod:checkout-api-7f6c7c89f6-r9l4m": [
+      "Pod belongs to workload Deployment/checkout-api in namespace payments"
+    ]
+  },
+  "likely_causes": [
+    "The workload named in scaleTargetRef was renamed, deleted, or never created",
+    "The HPA manifest drifted and still points to an old Deployment, ReplicaSet, or StatefulSet name",
+    "scaleTargetRef uses a kind or API resource that does not expose the scale subresource",
+    "GitOps or templating changes updated the workload name but did not update the HPA target reference"
+  ],
+  "suggested_checks": [
+    "kubectl describe hpa checkout-api-hpa -n payments",
+    "kubectl get hpa checkout-api-hpa -n payments -o yaml",
+    "kubectl get deployment checkout-api-v2 -n payments",
+    "Verify scaleTargetRef.apiVersion, kind, and name match a live scalable workload that supports /scale"
+  ]
+}

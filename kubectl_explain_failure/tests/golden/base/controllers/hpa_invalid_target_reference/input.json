@@ -1,0 +1,143 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-api-7f6c7c89f6-r9l4m",
+      "namespace": "payments",
+      "ownerReferences": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "ReplicaSet",
+          "name": "checkout-api-7f6c7c89f6",
+          "controller": true
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "objects": {
+    "replicaset": {
+      "checkout-api-7f6c7c89f6": {
+        "metadata": {
+          "name": "checkout-api-7f6c7c89f6",
+          "namespace": "payments",
+          "ownerReferences": [
+            {
+              "apiVersion": "apps/v1",
+              "kind": "Deployment",
+              "name": "checkout-api",
+              "controller": true
+            }
+          ]
+        },
+        "spec": {
+          "replicas": 2
+        },
+        "status": {
+          "replicas": 2,
+          "readyReplicas": 2,
+          "availableReplicas": 2
+        }
+      }
+    },
+    "deployment": {
+      "checkout-api": {
+        "metadata": {
+          "name": "checkout-api",
+          "namespace": "payments",
+          "generation": 18
+        },
+        "spec": {
+          "replicas": 2
+        },
+        "status": {
+          "observedGeneration": 18,
+          "replicas": 2,
+          "readyReplicas": 2,
+          "availableReplicas": 2
+        }
+      }
+    },
+    "hpa": {
+      "checkout-api-hpa": {
+        "metadata": {
+          "name": "checkout-api-hpa",
+          "namespace": "payments"
+        },
+        "spec": {
+          "minReplicas": 2,
+          "maxReplicas": 10,
+          "scaleTargetRef": {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "name": "checkout-api-v2"
+          }
+        },
+        "status": {
+          "conditions": [
+            {
+              "type": "AbleToScale",
+              "status": "False",
+              "reason": "FailedGetScale",
+              "message": "the HPA controller was unable to get the target's current scale: deployments/scale.apps \"checkout-api-v2\" not found"
+            },
+            {
+              "type": "ScalingActive",
+              "status": "False",
+              "reason": "FailedGetScale",
+              "message": "scaling is disabled because the target deployment could not be resolved"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedGetScale",
+      "message": "the HPA controller was unable to get the target's current scale: deployments/scale.apps \"checkout-api-v2\" not found",
+      "source": {
+        "component": "horizontal-pod-autoscaler"
+      },
+      "involvedObject": {
+        "kind": "HorizontalPodAutoscaler",
+        "name": "checkout-api-hpa",
+        "namespace": "payments"
+      },
+      "firstTimestamp": "2026-04-08T12:00:00Z",
+      "lastTimestamp": "2026-04-08T12:01:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedGetScale",
+      "message": "failed to get scale for Deployment/payments/checkout-api-v2: the server could not find the requested resource",
+      "source": {
+        "component": "horizontal-pod-autoscaler"
+      },
+      "involvedObject": {
+        "kind": "HorizontalPodAutoscaler",
+        "name": "checkout-api-hpa",
+        "namespace": "payments"
+      },
+      "firstTimestamp": "2026-04-08T12:07:00Z",
+      "lastTimestamp": "2026-04-08T12:08:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedGetScale",
+      "message": "the HPA controller was unable to get the target's current scale: deployments/scale.apps \"checkout-api-v2\" not found",
+      "source": {
+        "component": "horizontal-pod-autoscaler"
+      },
+      "involvedObject": {
+        "kind": "HorizontalPodAutoscaler",
+        "name": "checkout-api-hpa",
+        "namespace": "payments"
+      },
+      "firstTimestamp": "2026-04-08T12:14:00Z",
+      "lastTimestamp": "2026-04-08T12:15:00Z"
+    }
+  ]
+}
