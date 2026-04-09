@@ -1,0 +1,228 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "api-6dbf78c7f9-zr8kd",
+      "namespace": "default",
+      "labels": {
+        "app": "api",
+        "pod-template-hash": "6dbf78c7f9"
+      },
+      "ownerReferences": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "ReplicaSet",
+          "name": "api-6dbf78c7f9",
+          "controller": true
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "deployment": {
+    "api": {
+      "metadata": {
+        "name": "api",
+        "namespace": "default",
+        "generation": 12,
+        "managedFields": [
+          {
+            "manager": "horizontal-pod-autoscaler",
+            "operation": "Update",
+            "apiVersion": "apps/v1",
+            "time": "2026-04-08T10:11:00Z",
+            "subresource": "scale",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {
+              "f:spec": {
+                "f:replicas": {}
+              }
+            }
+          },
+          {
+            "manager": "kubectl-scale",
+            "operation": "Update",
+            "apiVersion": "apps/v1",
+            "time": "2026-04-08T10:04:30Z",
+            "subresource": "scale",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {
+              "f:spec": {
+                "f:replicas": {}
+              }
+            }
+          },
+          {
+            "manager": "kubectl-scale",
+            "operation": "Update",
+            "apiVersion": "apps/v1",
+            "time": "2026-04-08T10:13:30Z",
+            "subresource": "scale",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {
+              "f:spec": {
+                "f:replicas": {}
+              }
+            }
+          }
+        ]
+      },
+      "spec": {
+        "replicas": 2,
+        "selector": {
+          "matchLabels": {
+            "app": "api"
+          }
+        }
+      },
+      "status": {
+        "observedGeneration": 12,
+        "replicas": 2,
+        "updatedReplicas": 1,
+        "readyReplicas": 1,
+        "availableReplicas": 1
+      }
+    }
+  },
+  "replicaset": {
+    "api-6dbf78c7f9": {
+      "metadata": {
+        "name": "api-6dbf78c7f9",
+        "namespace": "default",
+        "annotations": {
+          "deployment.kubernetes.io/revision": "12"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "name": "api",
+            "controller": true
+          }
+        ]
+      },
+      "spec": {
+        "replicas": 2
+      },
+      "status": {
+        "replicas": 2,
+        "readyReplicas": 1,
+        "availableReplicas": 1
+      }
+    }
+  },
+  "hpa": {
+    "api-hpa": {
+      "metadata": {
+        "name": "api-hpa",
+        "namespace": "default"
+      },
+      "spec": {
+        "scaleTargetRef": {
+          "apiVersion": "apps/v1",
+          "kind": "Deployment",
+          "name": "api"
+        },
+        "minReplicas": 2,
+        "maxReplicas": 8
+      },
+      "status": {
+        "currentReplicas": 2,
+        "desiredReplicas": 6,
+        "conditions": [
+          {
+            "type": "AbleToScale",
+            "status": "True",
+            "reason": "SucceededGetScale"
+          },
+          {
+            "type": "ScalingActive",
+            "status": "True",
+            "reason": "ValidMetricFound"
+          }
+        ]
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "SuccessfulRescale",
+      "message": "New size: 6; reason: cpu resource utilization above target",
+      "source": {
+        "component": "horizontal-pod-autoscaler"
+      },
+      "involvedObject": {
+        "kind": "HorizontalPodAutoscaler",
+        "name": "api-hpa",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-08T10:00:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set api-6dbf78c7f9 to 6",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "api",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-08T10:01:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled down replica set api-6dbf78c7f9 to 2",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "api",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-08T10:05:00Z"
+    },
+    {
+      "reason": "SuccessfulRescale",
+      "message": "New size: 6; reason: cpu resource utilization above target",
+      "source": {
+        "component": "horizontal-pod-autoscaler"
+      },
+      "involvedObject": {
+        "kind": "HorizontalPodAutoscaler",
+        "name": "api-hpa",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-08T10:10:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set api-6dbf78c7f9 to 6",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "api",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-08T10:11:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled down replica set api-6dbf78c7f9 to 2",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "api",
+        "namespace": "default"
+      },
+      "lastTimestamp": "2026-04-08T10:14:00Z"
+    }
+  ]
+}

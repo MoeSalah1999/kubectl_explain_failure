@@ -1,6 +1,6 @@
 {
   "root_cause": "Replica count is oscillating for the workload instead of converging",
-  "confidence": 0.88,
+  "confidence": 0.79,
   "blocking": true,
   "suppressed": [
     "DeploymentReplicaMismatch"

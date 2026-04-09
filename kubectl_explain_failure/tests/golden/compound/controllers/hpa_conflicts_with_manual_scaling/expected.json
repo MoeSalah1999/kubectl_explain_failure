@@ -1,0 +1,72 @@
+{
+  "root_cause": "HPA 'api-hpa' is conflicting with manual or GitOps replica changes on Deployment/api",
+  "confidence": 0.97,
+  "blocking": true,
+  "suppressed": [
+    "ReplicaOscillation",
+    "DeploymentReplicaMismatch"
+  ],
+  "evidence": [
+    "HPA 'api-hpa' targets Deployment/api and rescaled it as: 6 -> 6",
+    "Deployment/api managedFields show 2 recent external replica write(s) by kubectl-scale",
+    "ReplicaSet 'api-6dbf78c7f9' was alternately scaled as: up to 6 -> down to 2 -> up to 6 -> down to 2",
+    "Deployment 'api' currently asks for 2 replicas while HPA status still wants 6",
+    "Scale ownership conflict lasted 14.0 minutes with 3 controller scale reversals",
+    "Deployment 'api' still reports only 1/2 available replicas and 1/2 updated replicas"
+  ],
+  "causes": [
+    {
+      "code": "AUTOSCALER_AND_EXTERNAL_SCALE_WRITES_OBSERVED",
+      "message": "HPA 'api-hpa' and external scale writers both updated Deployment/api during the same incident window",
+      "role": "controller_context"
+    },
+    {
+      "code": "HPA_MANUAL_SCALING_CONFLICT",
+      "message": "HorizontalPodAutoscaler is fighting with manual or GitOps replica changes on the same workload",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "EXTERNAL_SCALE_WRITES_OVERRIDE_AUTOSCALER",
+      "message": "External manager(s) kubectl-scale kept writing the replica count after HPA reconciliation",
+      "role": "controller_intermediate"
+    },
+    {
+      "code": "WORKLOAD_CAPACITY_UNSTABLE",
+      "message": "Deployment availability remains unstable at 1/2 while competing scale writers keep changing desired size",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:api-6dbf78c7f9-zr8kd": [
+      "Pod belongs to HPA-managed workload Deployment/api"
+    ],
+    "hpa:api-hpa": [
+      "scaleTargetRef=Deployment/api",
+      "SuccessfulRescale sizes observed as 6 -> 6",
+      "currentReplicas=2, desiredReplicas=6"
+    ],
+    "deployment:api": [
+      "specReplicas=2, statusReplicas=2",
+      "updatedReplicas=1, availableReplicas=1",
+      "externalScaleManagers=kubectl-scale",
+      "lastExternalScaleWrite=kubectl-scale at 2026-04-08T10:13:30Z"
+    ],
+    "replicaset:api-6dbf78c7f9": [
+      "scaleUpEvents=2, scaleDownEvents=2",
+      "targetReplicaSizes=2,6"
+    ]
+  },
+  "likely_causes": [
+    "Someone used `kubectl scale` or patched replicas directly while the HPA was still active",
+    "A GitOps or delivery controller is continuously reconciling `spec.replicas` on a workload that is also managed by HPA",
+    "An emergency manual scale change was left in place instead of disabling or removing the HPA first",
+    "Multiple automation systems are writing the scale subresource and Deployment spec at the same time"
+  ],
+  "suggested_checks": [
+    "kubectl get deployment api -n default -o yaml --show-managed-fields",
+    "kubectl describe hpa api-hpa -n default",
+    "Remove `spec.replicas` from GitOps-managed manifests for HPA-controlled workloads or suspend the HPA before manual scaling",
+    "Audit recent scale or patch commands and delivery-controller reconciliations during the incident window"
+  ]
+}
