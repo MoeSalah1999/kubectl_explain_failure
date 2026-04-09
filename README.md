@@ -255,6 +255,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - StatefulSetPartitionMisconfiguration
 - StatefulSetUpdateBlocked
 - StatefulSetVolumeClaimTemplateMissing
+- VerticalPodAutoscalerRecommendationFailure
 
 ### Networking
 

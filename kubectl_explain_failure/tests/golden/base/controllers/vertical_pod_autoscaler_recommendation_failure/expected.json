@@ -1,0 +1,62 @@
+{
+  "root_cause": "VPA 'checkout-api-vpa' is failing to produce resource recommendations for Deployment/checkout-api",
+  "confidence": 0.94,
+  "blocking": true,
+  "resolution": {
+    "winner": "VerticalPodAutoscalerRecommendationFailure",
+    "suppressed": []
+  },
+  "evidence": [
+    "VPA 'checkout-api-vpa' targets Deployment/checkout-api",
+    "VPA 'checkout-api-vpa' has no current recommendation in status.recommendation.containerRecommendations",
+    "VPA condition RecommendationProvided=False reason=NoRecommendationAvailable",
+    "VPA condition FetchingHistory=True persisted for about 70 minutes",
+    "Recent vpa-recommender recommendation-gap signals repeated 2 times in the last 45 minutes",
+    "Latest VPA recommender warning: Cannot compute recommendation yet: recommender is still fetching history for matched pods of VPA checkout-api-vpa"
+  ],
+  "causes": [
+    {
+      "code": "VPA_TARGET_IDENTIFIED",
+      "message": "VerticalPodAutoscaler 'checkout-api-vpa' is configured for Deployment/checkout-api",
+      "role": "controller_context"
+    },
+    {
+      "code": "VPA_RECOMMENDATION_FAILURE",
+      "message": "Vertical Pod Autoscaler is not producing a usable resource recommendation for the workload",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "VPA_RIGHT_SIZING_STALLED",
+      "message": "Automated vertical resource recommendation is stalled until the recommender has enough valid pod history and target matching data",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "vpa:checkout-api-vpa": [
+      "targetRef=Deployment/checkout-api",
+      "status.recommendation.containerRecommendations is empty",
+      "RecommendationProvided=False reason=NoRecommendationAvailable",
+      "no recommendation is available yet for this VPA",
+      "FetchingHistory=True reason=FetchingHistory",
+      "the recommender is still fetching history for the target pods",
+      "Cannot compute recommendation yet: no stable usage history has been collected for all matched pods of VPA checkout-api-vpa",
+      "Cannot compute recommendation yet: recommender is still fetching history for matched pods of VPA checkout-api-vpa"
+    ],
+    "pod:checkout-api-7f6c7c89f6-r9l4m": [
+      "Pod belongs to workload Deployment/checkout-api associated with VPA 'checkout-api-vpa'"
+    ]
+  },
+  "likely_causes": [
+    "The VPA recommender still has insufficient history for the target pods well beyond the normal warm-up window",
+    "Target pods are churning or being recreated too often for the recommender to build stable usage history",
+    "The VPA target matches no live pods, or pod labels/selectors no longer align with the controller referenced by targetRef",
+    "Recommender-side history or checkpoint collection is degraded, leaving RecommendationProvided=False"
+  ],
+  "suggested_checks": [
+    "kubectl describe vpa checkout-api-vpa -n payments",
+    "kubectl get vpa checkout-api-vpa -n payments -o yaml",
+    "Inspect vpa-recommender logs for history/checkpoint or pod-matching errors",
+    "Verify that Deployment/checkout-api currently owns stable pods long enough for VPA history collection"
+  ]
+}
