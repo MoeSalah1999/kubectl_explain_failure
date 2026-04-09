@@ -1,0 +1,63 @@
+{
+  "root_cause": "HPA 'checkout-api-hpa' is oscillating between scale-up and scale-down decisions for Deployment/checkout-api",
+  "confidence": 0.95,
+  "blocking": true,
+  "suppressed": [
+    "DeploymentReplicaMismatch"
+  ],
+  "evidence": [
+    "HPA 'checkout-api-hpa' rescaled Deployment/checkout-api as: 6 -> 3 -> 5",
+    "Autoscaling direction reversed 2 times over 13.0 minutes",
+    "Deployment 'checkout-api' still reports only 3/4 available replicas and 3/4 updated replicas",
+    "SuccessfulRescale reasons alternated between above-target and below-target metric signals"
+  ],
+  "causes": [
+    {
+      "code": "AUTOSCALER_TARGET_IDENTIFIED",
+      "message": "HPA 'checkout-api-hpa' is managing Deployment/checkout-api",
+      "role": "controller_context"
+    },
+    {
+      "code": "AUTOSCALING_OSCILLATION",
+      "message": "Autoscaler replica decisions are oscillating between scale-up and scale-down instead of stabilizing",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "METRIC_SIGNAL_REVERSALS",
+      "message": "Recent autoscaling decisions repeatedly flipped between high-pressure and low-pressure metric signals",
+      "role": "controller_intermediate"
+    },
+    {
+      "code": "WORKLOAD_NOT_YET_STABLE",
+      "message": "Deployment remains below stable capacity at 3/4 available replicas while autoscaling keeps changing target size",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-api-7f6c7c89f6-r9l4m": [
+      "Pod belongs to autoscaled workload Deployment/checkout-api"
+    ],
+    "hpa:checkout-api-hpa": [
+      "scaleTargetRef=Deployment/checkout-api",
+      "SuccessfulRescale sizes alternated as 6 -> 3 -> 5",
+      "currentReplicas=5, desiredReplicas=5"
+    ],
+    "deployment:checkout-api": [
+      "updatedReplicas=3, availableReplicas=3, desiredReplicas=4",
+      "Deployment 'checkout-api' has 3/4 available replicas"
+    ]
+  },
+  "likely_causes": [
+    "CPU or custom metric values are hovering near the HPA target and repeatedly crossing it in opposite directions",
+    "Pods need longer to become Ready than the autoscaler needs to make its next scaling decision",
+    "Scale-down stabilization or scaling policy tuning is too weak for this workload's traffic pattern",
+    "Burst traffic and fast cooldown periods are causing the HPA control loop to over-correct in both directions"
+  ],
+  "suggested_checks": [
+    "kubectl describe hpa checkout-api-hpa -n payments",
+    "kubectl get hpa checkout-api-hpa -n payments -o yaml",
+    "Inspect recent metric history around the HPA target threshold instead of only current utilization",
+    "Review HPA behavior, stabilization windows, and readiness timing for over-correction"
+  ]
+}

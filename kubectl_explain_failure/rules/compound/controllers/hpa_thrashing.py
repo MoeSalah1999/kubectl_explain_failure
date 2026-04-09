@@ -37,6 +37,7 @@ class HPAThrashingRule(FailureRule):
         "optional_objects": ["deployment"],
     }
     blocks = [
+        "AutoscalingOscillation",
         "ReplicaOscillation",
         "DeploymentReplicaMismatch",
         "DeploymentRolloutStalled",

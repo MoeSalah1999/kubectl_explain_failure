@@ -1,0 +1,198 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-api-7f6c7c89f6-r9l4m",
+      "namespace": "payments",
+      "labels": {
+        "app": "checkout-api",
+        "pod-template-hash": "7f6c7c89f6"
+      },
+      "ownerReferences": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "ReplicaSet",
+          "name": "checkout-api-7f6c7c89f6",
+          "controller": true
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "deployment": {
+    "checkout-api": {
+      "metadata": {
+        "name": "checkout-api",
+        "namespace": "payments",
+        "generation": 24
+      },
+      "spec": {
+        "replicas": 4,
+        "progressDeadlineSeconds": 1800,
+        "selector": {
+          "matchLabels": {
+            "app": "checkout-api"
+          }
+        }
+      },
+      "status": {
+        "observedGeneration": 24,
+        "replicas": 4,
+        "updatedReplicas": 3,
+        "readyReplicas": 3,
+        "availableReplicas": 3
+      }
+    }
+  },
+  "replicaset": {
+    "checkout-api-7f6c7c89f6": {
+      "metadata": {
+        "name": "checkout-api-7f6c7c89f6",
+        "namespace": "payments",
+        "annotations": {
+          "deployment.kubernetes.io/revision": "24"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "name": "checkout-api",
+            "controller": true
+          }
+        ]
+      },
+      "spec": {
+        "replicas": 5
+      },
+      "status": {
+        "replicas": 5,
+        "readyReplicas": 3,
+        "availableReplicas": 3
+      }
+    }
+  },
+  "hpa": {
+    "checkout-api-hpa": {
+      "metadata": {
+        "name": "checkout-api-hpa",
+        "namespace": "payments"
+      },
+      "spec": {
+        "scaleTargetRef": {
+          "apiVersion": "apps/v1",
+          "kind": "Deployment",
+          "name": "checkout-api"
+        },
+        "minReplicas": 2,
+        "maxReplicas": 10,
+        "behavior": {
+          "scaleDown": {
+            "stabilizationWindowSeconds": 60
+          }
+        }
+      },
+      "status": {
+        "currentReplicas": 5,
+        "desiredReplicas": 5,
+        "conditions": [
+          {
+            "type": "AbleToScale",
+            "status": "True",
+            "reason": "SucceededGetScale"
+          },
+          {
+            "type": "ScalingActive",
+            "status": "True",
+            "reason": "ValidMetricFound"
+          },
+          {
+            "type": "ScalingLimited",
+            "status": "False",
+            "reason": "DesiredWithinRange"
+          }
+        ]
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "SuccessfulRescale",
+      "message": "New size: 6; reason: cpu resource utilization above target",
+      "source": {
+        "component": "horizontal-pod-autoscaler"
+      },
+      "involvedObject": {
+        "kind": "HorizontalPodAutoscaler",
+        "name": "checkout-api-hpa",
+        "namespace": "payments"
+      },
+      "lastTimestamp": "2026-04-08T09:59:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set checkout-api-7f6c7c89f6 to 6",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "checkout-api",
+        "namespace": "payments"
+      },
+      "lastTimestamp": "2026-04-08T10:00:00Z"
+    },
+    {
+      "reason": "SuccessfulRescale",
+      "message": "New size: 3; reason: all metrics below target",
+      "source": {
+        "component": "horizontal-pod-autoscaler"
+      },
+      "involvedObject": {
+        "kind": "HorizontalPodAutoscaler",
+        "name": "checkout-api-hpa",
+        "namespace": "payments"
+      },
+      "lastTimestamp": "2026-04-08T10:06:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled down replica set checkout-api-7f6c7c89f6 to 3",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "checkout-api",
+        "namespace": "payments"
+      },
+      "lastTimestamp": "2026-04-08T10:07:00Z"
+    },
+    {
+      "reason": "SuccessfulRescale",
+      "message": "New size: 5; reason: cpu resource utilization above target",
+      "source": {
+        "component": "horizontal-pod-autoscaler"
+      },
+      "involvedObject": {
+        "kind": "HorizontalPodAutoscaler",
+        "name": "checkout-api-hpa",
+        "namespace": "payments"
+      },
+      "lastTimestamp": "2026-04-08T10:12:00Z"
+    },
+    {
+      "reason": "ScalingReplicaSet",
+      "message": "Scaled up replica set checkout-api-7f6c7c89f6 to 5",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "checkout-api",
+        "namespace": "payments"
+      },
+      "lastTimestamp": "2026-04-08T10:13:00Z"
+    }
+  ]
+}
