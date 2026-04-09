@@ -28,6 +28,7 @@ class ConfigDependencyMissingChainRule(FailureRule):
     blocks = [
         "ConfigMapNotFound",
         "SecretNotFound",
+        "SecretKeyMissing",
         "InvalidConfigMapKey",
         "ContainerCreateConfigError",
         "FailedMount",
@@ -41,6 +42,14 @@ class ConfigDependencyMissingChainRule(FailureRule):
     )
     SECRET_NOT_FOUND_RE = re.compile(
         r'secret "(?P<name>[^"]+)" not found',
+        re.IGNORECASE,
+    )
+    KEY_IN_SECRET_RE = re.compile(
+        r'couldn\'t find key "?([^"\s]+)"? in Secret (?:(?:[^/\s]+)/)?([^\s",]+)',
+        re.IGNORECASE,
+    )
+    NONEXISTENT_SECRET_KEY_RE = re.compile(
+        r"references non-existent secret key:\s*([^\s\",]+)",
         re.IGNORECASE,
     )
     KEY_IN_CONFIGMAP_RE = re.compile(
@@ -184,13 +193,22 @@ class ConfigDependencyMissingChainRule(FailureRule):
         refs: list[dict[str, str]] = []
         spec = pod.get("spec", {}) or {}
 
-        def add(name: str | None, surface: str, *, optional: bool = False) -> None:
+        def add(
+            name: str | None,
+            surface: str,
+            *,
+            key: str | None = None,
+            volume: str | None = None,
+            optional: bool = False,
+        ) -> None:
             if optional or not name:
                 return
             refs.append(
                 {
                     "kind": "Secret",
                     "name": str(name),
+                    **({"key": str(key)} if key else {}),
+                    **({"volume": str(volume)} if volume else {}),
                     "surface": surface,
                 }
             )
@@ -204,6 +222,7 @@ class ConfigDependencyMissingChainRule(FailureRule):
                     add(
                         ref.get("name"),
                         f"Referenced by env '{env.get('name', '<env>')}' in container '{container_name}'",
+                        key=ref.get("key"),
                         optional=bool(ref.get("optional")),
                     )
 
@@ -218,22 +237,63 @@ class ConfigDependencyMissingChainRule(FailureRule):
         for volume in spec.get("volumes", []) or []:
             volume_name = volume.get("name", "<volume>")
             secret = volume.get("secret") or {}
-            add(
-                secret.get("secretName"),
-                f"Referenced by secret volume '{volume_name}'",
-                optional=bool(secret.get("optional")),
-            )
+            if secret.get("secretName"):
+                items = secret.get("items", []) or []
+                if items:
+                    for item in items:
+                        add(
+                            secret.get("secretName"),
+                            f"Referenced by secret volume '{volume_name}'",
+                            key=item.get("key"),
+                            volume=volume_name,
+                            optional=bool(secret.get("optional")),
+                        )
+                else:
+                    add(
+                        secret.get("secretName"),
+                        f"Referenced by secret volume '{volume_name}'",
+                        volume=volume_name,
+                        optional=bool(secret.get("optional")),
+                    )
 
             projected = volume.get("projected") or {}
             for source in projected.get("sources", []) or []:
                 projected_secret = source.get("secret") or {}
-                add(
-                    projected_secret.get("name"),
-                    f"Referenced by projected volume '{volume_name}'",
-                    optional=bool(projected_secret.get("optional")),
-                )
+                if projected_secret.get("name"):
+                    items = projected_secret.get("items", []) or []
+                    if items:
+                        for item in items:
+                            add(
+                                projected_secret.get("name"),
+                                f"Referenced by projected volume '{volume_name}'",
+                                key=item.get("key"),
+                                volume=volume_name,
+                                optional=bool(projected_secret.get("optional")),
+                            )
+                    else:
+                        add(
+                            projected_secret.get("name"),
+                            f"Referenced by projected volume '{volume_name}'",
+                            volume=volume_name,
+                            optional=bool(projected_secret.get("optional")),
+                        )
 
         return refs
+
+    def _secret_available_keys(self, context: dict, name: str) -> list[str]:
+        secret = (context.get("objects", {}).get("secret", {}) or {}).get(name)
+        if not isinstance(secret, dict):
+            return []
+        data = secret.get("data", {}) or {}
+        binary_data = secret.get("binaryData", {}) or {}
+        string_data = secret.get("stringData", {}) or {}
+        return sorted(
+            {
+                *(str(k) for k in data),
+                *(str(k) for k in binary_data),
+                *(str(k) for k in string_data),
+            }
+        )
 
     def _configmap_available_keys(self, context: dict, name: str) -> list[str]:
         configmap = (context.get("objects", {}).get("configmap", {}) or {}).get(name)
@@ -278,6 +338,48 @@ class ConfigDependencyMissingChainRule(FailureRule):
                     "reason": str(event.get("reason", "")),
                     "timestamp": self._event_time(event),
                 }
+
+        match = self.KEY_IN_SECRET_RE.search(message)
+        if match:
+            key = str(match.group(1))
+            name = str(match.group(2))
+            surfaces = [
+                ref["surface"]
+                for ref in secret_refs
+                if ref["name"] == name and ref.get("key") == key
+            ]
+            if surfaces and key not in self._secret_available_keys(context, name):
+                return {
+                    "kind": "SecretKey",
+                    "name": name,
+                    "key": key,
+                    "surfaces": surfaces,
+                    "reason": str(event.get("reason", "")),
+                    "timestamp": self._event_time(event),
+                }
+
+        match = self.NONEXISTENT_SECRET_KEY_RE.search(message)
+        if match:
+            key = str(match.group(1))
+            volume_match = self.VOLUME_NAME_RE.search(message)
+            volume_name = str(volume_match.group(1)) if volume_match else None
+            candidates = [
+                ref
+                for ref in secret_refs
+                if ref.get("key") == key
+                and (volume_name is None or ref.get("volume") == volume_name)
+            ]
+            if len(candidates) == 1:
+                name = candidates[0]["name"]
+                if key not in self._secret_available_keys(context, name):
+                    return {
+                        "kind": "SecretKey",
+                        "name": name,
+                        "key": key,
+                        "surfaces": [candidates[0]["surface"]],
+                        "reason": str(event.get("reason", "")),
+                        "timestamp": self._event_time(event),
+                    }
 
         match = self.KEY_IN_CONFIGMAP_RE.search(message)
         if match:
@@ -438,6 +540,12 @@ class ConfigDependencyMissingChainRule(FailureRule):
             dependency_desc = f"required key '{key}' from ConfigMap '{dep_name}'"
             root_message = f"Missing ConfigMap key '{key}' blocked startup"
             dependency_code = "CONFIGMAP_KEY_MISSING"
+        elif dep_kind == "SecretKey":
+            dependency_desc = f"required key '{key}' from Secret '{dep_name}'"
+            root_message = (
+                f"Missing Secret key '{key}' in Secret '{dep_name}' blocked startup"
+            )
+            dependency_code = "SECRET_KEY_MISSING"
         elif dep_kind == "Secret":
             dependency_desc = f"Secret '{dep_name}'"
             root_message = f"Missing Secret '{dep_name}' blocked startup"
@@ -493,7 +601,9 @@ class ConfigDependencyMissingChainRule(FailureRule):
             )
 
         object_key = (
-            f"configmap:{dep_name}" if dep_kind != "Secret" else f"secret:{dep_name}"
+            f"secret:{dep_name}"
+            if dep_kind in {"Secret", "SecretKey"}
+            else f"configmap:{dep_name}"
         )
         object_evidence = {
             object_key: [
@@ -506,6 +616,19 @@ class ConfigDependencyMissingChainRule(FailureRule):
         }
         if dep_kind == "ConfigMapKey" and key:
             object_evidence[object_key].insert(0, f"Required key '{key}' is absent")
+        if dep_kind == "SecretKey" and key:
+            object_evidence[object_key].insert(0, f"Required key '{key}' is absent")
+            available_keys = self._secret_available_keys(context, dep_name)
+            if available_keys:
+                object_evidence[object_key].append(
+                    "Available keys: " + ", ".join(available_keys)
+                )
+        if dep_kind == "ConfigMapKey" and key:
+            available_keys = self._configmap_available_keys(context, dep_name)
+            if available_keys:
+                object_evidence[object_key].append(
+                    "Available keys: " + ", ".join(available_keys)
+                )
 
         return {
             "root_cause": root_message,

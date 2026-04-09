@@ -1,0 +1,60 @@
+{
+  "root_cause": "Missing Secret key 'password' in Secret 'app-secret' blocked startup",
+  "blocking": true,
+  "confidence": 0.9,
+  "suppressed": [
+    "SecretKeyMissing",
+    "ContainerCreateConfigError"
+  ],
+  "evidence": [
+    "Configuration dependency failure identified: required key 'password' from Secret 'app-secret'",
+    "Startup-blocking events observed: FailedMount, CreateContainerConfigError",
+    "Container 'app' is waiting with CreateContainerConfigError",
+    "Dependency failure persisted across 2 related events over 3.0 minutes",
+    "No successful container start was observed after the dependency failure"
+  ],
+  "causes": [
+    {
+      "code": "CONFIG_DEPENDENCY_REFERENCED",
+      "message": "Pod depends on required key 'password' from Secret 'app-secret'",
+      "role": "configuration_context"
+    },
+    {
+      "code": "SECRET_KEY_MISSING",
+      "message": "Required configuration dependency is unavailable: required key 'password' from Secret 'app-secret'",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "STARTUP_CONFIGURATION_CHAIN_BROKEN",
+      "message": "Kubelet cannot complete startup because required configuration cannot be resolved",
+      "role": "execution_intermediate"
+    },
+    {
+      "code": "POD_STARTUP_BLOCKED",
+      "message": "Pod remains blocked before normal container startup can complete",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "secret:app-secret": [
+      "Required key 'password' is absent",
+      "Referenced by env 'DB_PASSWORD' in container 'app'",
+      "Available keys: username",
+      "Missing dependency is directly blocking Pod startup"
+    ],
+    "pod:secret-key-chain-pod": [
+      "Pod remains blocked by a missing configuration dependency"
+    ]
+  },
+  "likely_causes": [
+    "The workload references a ConfigMap or Secret that was never created in the Pod namespace",
+    "A configuration object was deleted or renamed while the Pod spec still points to the old dependency",
+    "The manifest expects a configuration key that is absent from the current ConfigMap data"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod secret-key-chain-pod",
+    "kubectl get configmap,secret",
+    "Verify env, envFrom, and volume references in the Pod spec"
+  ]
+}

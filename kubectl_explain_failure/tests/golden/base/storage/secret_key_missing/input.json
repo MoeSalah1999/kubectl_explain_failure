@@ -1,0 +1,82 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "secret-key-missing-pod",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "app",
+          "image": "nginx:1.27",
+          "env": [
+            {
+              "name": "DB_PASSWORD",
+              "valueFrom": {
+                "secretKeyRef": {
+                  "name": "app-secret",
+                  "key": "password"
+                }
+              }
+            }
+          ],
+          "volumeMounts": [
+            {
+              "name": "app-secret-volume",
+              "mountPath": "/etc/app/secret"
+            }
+          ]
+        }
+      ],
+      "volumes": [
+        {
+          "name": "app-secret-volume",
+          "secret": {
+            "secretName": "app-secret",
+            "items": [
+              {
+                "key": "password",
+                "path": "password"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "state": {
+            "waiting": {
+              "reason": "CreateContainerConfigError",
+              "message": "Error: couldn't find key password in Secret default/app-secret"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "secrets": {
+    "app-secret": {
+      "metadata": {
+        "name": "app-secret",
+        "namespace": "default"
+      },
+      "data": {
+        "username": "YWRtaW4="
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedMount",
+      "message": "MountVolume.SetUp failed for volume \"app-secret-volume\" : references non-existent secret key: password"
+    },
+    {
+      "reason": "CreateContainerConfigError",
+      "message": "Error: couldn't find key password in Secret default/app-secret"
+    }
+  ]
+}

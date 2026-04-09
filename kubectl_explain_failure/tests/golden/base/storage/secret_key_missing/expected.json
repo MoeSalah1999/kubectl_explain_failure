@@ -1,0 +1,51 @@
+{
+  "root_cause": "Referenced Secret is missing a required key",
+  "blocking": true,
+  "confidence": 0.9,
+  "suppressed": [
+    "ContainerCreateConfigError",
+    "FailedMount"
+  ],
+  "evidence": [
+    "Secret 'app-secret' is missing required key 'password'",
+    "Event: FailedMount",
+    "Event: CreateContainerConfigError",
+    "Missing Secret key surfaces across multiple kubelet startup checks"
+  ],
+  "causes": [
+    {
+      "code": "SECRET_KEY_REFERENCE",
+      "message": "Pod references key 'password' from Secret 'app-secret'",
+      "role": "workload_context"
+    },
+    {
+      "code": "SECRET_KEY_NOT_FOUND",
+      "message": "Required key 'password' does not exist in Secret 'app-secret'",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "SECRET_DEPENDENCY_BLOCKS_STARTUP",
+      "message": "Kubelet cannot resolve required Secret-backed configuration for startup",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "secret:app-secret": [
+      "Required key 'password' is absent",
+      "Referenced by env 'DB_PASSWORD' in container 'app'",
+      "Referenced by secret volume 'app-secret-volume'",
+      "Available keys: username"
+    ]
+  },
+  "likely_causes": [
+    "Secret key name typo in an env or volume item reference",
+    "Secret was updated and no longer includes the expected key",
+    "Workload manifest expects secret data that was never populated"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod secret-key-missing-pod",
+    "kubectl get secret app-secret -o yaml",
+    "Review secretKeyRef and secret volume item keys in the Pod spec"
+  ]
+}

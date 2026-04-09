@@ -334,6 +334,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - PVCNotBound
 - PVReleasedOrFailed
 - ReadWriteOnceMultiNodeConflict
+- SecretKeyMissing
 - SecretNotFound
 - StorageClassProvisionerMissing
 - VolumeAttachFailed
