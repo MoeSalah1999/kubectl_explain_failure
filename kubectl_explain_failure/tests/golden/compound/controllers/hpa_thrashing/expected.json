@@ -1,0 +1,81 @@
+{
+  "root_cause": "HPA 'api-hpa' is thrashing the workload by repeatedly reversing replica recommendations",
+  "confidence": 0.97,
+  "blocking": true,
+  "suppressed": [
+    "ReplicaOscillation",
+    "DeploymentReplicaMismatch"
+  ],
+  "evidence": [
+    "HPA 'api-hpa' repeatedly rescaled Deployment/api as: 6 -> 4 -> 6 -> 4",
+    "HPA rescale direction reversed 3 times over 17.0 minutes",
+    "ReplicaSet 'api-6dbf78c7f9' was alternately scaled as: up to 6 -> down to 4 -> up to 6 -> down to 4",
+    "Deployment 'api' still reports only 2/4 available replicas and 2/4 updated replicas",
+    "HPA behavior disables downscale damping with scaleDown.stabilizationWindowSeconds=0",
+    "SuccessfulRescale reasons flipped between opposing scaling signals within the same incident window"
+  ],
+  "causes": [
+    {
+      "code": "HPA_THRASHING_PATTERN_OBSERVED",
+      "message": "Timeline shows HPA 'api-hpa' repeatedly rescaling Deployment/api",
+      "role": "temporal_context"
+    },
+    {
+      "code": "HPA_REPLICA_DECISIONS_REVERSING",
+      "message": "HorizontalPodAutoscaler keeps reversing desired replica recommendations instead of converging on a stable size",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "WORKLOAD_CONTROLLER_APPLYING_REVERSALS",
+      "message": "ReplicaSet 'api-6dbf78c7f9' keeps getting scaled up and down in response to those HPA decisions",
+      "role": "controller_intermediate"
+    },
+    {
+      "code": "HPA_DAMPING_REDUCED",
+      "message": "HPA behavior reduces or disables downscale damping, which makes flapping replica recommendations more likely",
+      "role": "controller_configuration"
+    },
+    {
+      "code": "WORKLOAD_CAPACITY_UNSTABLE",
+      "message": "Deployment availability remains unstable at 2/4 available replicas while autoscaling keeps reversing",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:api-6dbf78c7f9-zr8kd": [
+      "Pod belongs to autoscaled workload Deployment/api"
+    ],
+    "hpa:api-hpa": [
+      "scaleTargetRef=Deployment/api",
+      "SuccessfulRescale sizes alternated as 6 -> 4 -> 6 -> 4",
+      "rescaleEvents=4",
+      "scaleDown.stabilizationWindowSeconds=0",
+      "scaleDown.selectPolicy=Max",
+      "scaleDown.policies=Percent:100/15s",
+      "currentReplicas=4, desiredReplicas=4, minReplicas=2, maxReplicas=8"
+    ],
+    "replicaset:api-6dbf78c7f9": [
+      "scaleUpEvents=2, scaleDownEvents=2",
+      "targetReplicaSizes=4,6",
+      "availableReplicas=2/4"
+    ],
+    "deployment:api": [
+      "observedGeneration=7, generation=7",
+      "updatedReplicas=2, availableReplicas=2, desiredReplicas=4"
+    ]
+  },
+  "likely_causes": [
+    "HPA behavior is too aggressive for this workload, especially if downscale stabilization is disabled or too short",
+    "Metrics near the target threshold are noisy enough that the HPA keeps alternating between scale-up and scale-down decisions",
+    "Pods take long enough to become Ready that the HPA reacts to transient startup utilization before capacity stabilizes",
+    "Manual or GitOps writes to spec.replicas are fighting with the autoscaler control loop"
+  ],
+  "suggested_checks": [
+    "kubectl describe deployment api -n default",
+    "kubectl describe hpa api-hpa -n default",
+    "kubectl get hpa api-hpa -n default -o yaml",
+    "kubectl get events --sort-by=.lastTimestamp",
+    "Review HPA behavior.scaleDown stabilization and scaling policies for overly aggressive reversals"
+  ]
+}

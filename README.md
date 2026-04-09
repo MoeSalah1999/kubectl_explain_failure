@@ -365,6 +365,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ControllerOwnershipConflictChain
 - DeploymentRollbackLoop
 - DeploymentRolloutStalled
+- HPAThrashing
 - HPAUnableToScale
 - OwnerBlockedPod
 - StatefulSetOrdinalStartupBlocked
