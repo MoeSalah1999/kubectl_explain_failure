@@ -1,0 +1,67 @@
+{
+  "root_cause": "Sidecar is resource-starved and keeps OOM-killing while the primary workload remains healthy",
+  "blocking": true,
+  "confidence": 0.98,
+  "resolution": {
+    "suppressed": [
+      "SidecarCrashLoop",
+      "OOMKilled",
+      "OOMKilledThenCrashLoop",
+      "CrashLoopBackOff"
+    ]
+  },
+  "evidence": [
+    "Recognized sidecar 'istio-proxy' lastState shows OOMKilled before the current CrashLoopBackOff",
+    "Primary container 'checkout' remains Ready while the sidecar is restarting",
+    "First BackOff retry for sidecar 'istio-proxy' began 8.0s after the recorded OOMKilled termination",
+    "Latest sidecar BackOff: Back-off restarting failed container istio-proxy in pod checkout-sidecar-oom_default(3f5cfe98)",
+    "Sidecar memory request/limit: request=128Mi, limit=192Mi",
+    "OOMKilled termination exit code was 137"
+  ],
+  "causes": [
+    {
+      "code": "SIDECAR_ROLE_IDENTIFIED",
+      "message": "Container 'istio-proxy' is acting as a sidecar alongside the primary workload",
+      "role": "workload_context"
+    },
+    {
+      "code": "SIDECAR_OOM_RESOURCE_STARVATION",
+      "message": "Sidecar container 'istio-proxy' is repeatedly exhausting its runtime memory budget",
+      "role": "resource_root",
+      "blocking": true
+    },
+    {
+      "code": "SIDECAR_CRASHLOOP_AFTER_OOM",
+      "message": "Kubelet keeps restarting the sidecar after OOMKilled termination and enters restart backoff",
+      "role": "platform_semantics"
+    },
+    {
+      "code": "PRIMARY_REMAINS_HEALTHY_WHILE_SIDECAR_DEGRADES",
+      "message": "Primary container 'checkout' remains healthy while the resource-starved sidecar degrades pod functionality",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-sidecar-oom": [
+      "Pod has a healthy primary workload but the sidecar is repeatedly OOM-killing within its memory budget"
+    ],
+    "container:istio-proxy": [
+      "Container restarted 5 times after OOMKilled",
+      "memory request=128Mi, limit=192Mi"
+    ],
+    "container:checkout": [
+      "Primary workload container remains Ready while the sidecar is failing"
+    ]
+  },
+  "likely_causes": [
+    "The sidecar memory limit is too low for proxy bootstrap, buffering, telemetry, or steady-state traffic",
+    "A recent mesh, agent, or logging configuration change increased the sidecar's peak memory footprint",
+    "Node-level memory pressure is amplifying memory spikes for the sidecar process"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod checkout-sidecar-oom",
+    "kubectl logs checkout-sidecar-oom -c istio-proxy --previous",
+    "Review sidecar memory requests and limits against real proxy or agent usage",
+    "Inspect recent sidecar config, telemetry, or bootstrap changes that could increase memory consumption"
+  ]
+}

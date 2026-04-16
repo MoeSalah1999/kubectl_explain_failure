@@ -1,0 +1,111 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-sidecar-oom",
+      "namespace": "default",
+      "annotations": {
+        "sidecar.istio.io/status": "{\"version\":\"1.22.1\"}"
+      }
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "checkout",
+          "image": "example/checkout:v2"
+        },
+        {
+          "name": "istio-proxy",
+          "image": "docker.io/istio/proxyv2:1.22.1",
+          "resources": {
+            "requests": {
+              "memory": "128Mi"
+            },
+            "limits": {
+              "memory": "192Mi"
+            }
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "checkout",
+          "ready": true,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-10T09:58:15Z"
+            }
+          }
+        },
+        {
+          "name": "istio-proxy",
+          "ready": false,
+          "restartCount": 5,
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff",
+              "message": "back-off 5m0s restarting failed container=istio-proxy pod=checkout-sidecar-oom_default(3f5cfe98)"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "OOMKilled",
+              "exitCode": 137,
+              "finishedAt": "2026-04-10T10:05:44Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Started",
+      "message": "Started container checkout",
+      "firstTimestamp": "2026-04-10T09:58:15Z",
+      "lastTimestamp": "2026-04-10T09:58:15Z",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-sidecar-oom",
+        "fieldPath": "spec.containers{checkout}"
+      }
+    },
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container istio-proxy in pod checkout-sidecar-oom_default(3f5cfe98)",
+      "firstTimestamp": "2026-04-10T10:05:52Z",
+      "lastTimestamp": "2026-04-10T10:06:00Z",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-sidecar-oom",
+        "fieldPath": "spec.containers{istio-proxy}"
+      }
+    },
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container istio-proxy in pod checkout-sidecar-oom_default(3f5cfe98)",
+      "firstTimestamp": "2026-04-10T10:08:00Z",
+      "lastTimestamp": "2026-04-10T10:09:15Z",
+      "count": 5,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-sidecar-oom",
+        "fieldPath": "spec.containers{istio-proxy}"
+      }
+    }
+  ]
+}
