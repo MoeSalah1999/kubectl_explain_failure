@@ -1,0 +1,58 @@
+{
+  "root_cause": "Recognized sidecar container timed out during startup before reaching a healthy started state",
+  "blocking": true,
+  "confidence": 0.95,
+  "resolution": {
+    "suppressed": [
+      "ContainerStartTimeout",
+      "ContainerRuntimeStartFailure"
+    ]
+  },
+  "evidence": [
+    "Recognized sidecar container 'istio-proxy' is still waiting to start with reason ContainerCreating and ready=False",
+    "Recent kubelet/runtime failure events show startup timeout markers specific to sidecar 'istio-proxy'",
+    "Estimated timeout signal strength is 7 occurrence(s) within the last 20 minutes",
+    "Dominant timeout error: Error: failed to create containerd task for container \\\"istio-proxy\\\": context deadline exceeded",
+    "Primary container 'checkout' is already Ready, so the sidecar timeout is the remaining degraded component"
+  ],
+  "causes": [
+    {
+      "code": "SIDECAR_ROLE_IDENTIFIED",
+      "message": "Container 'istio-proxy' is acting as a sidecar alongside the primary workload",
+      "role": "workload_context"
+    },
+    {
+      "code": "SIDECAR_START_PATH_TIMED_OUT",
+      "message": "Sidecar container 'istio-proxy' is timing out in the runtime start path before reaching a healthy started state",
+      "role": "execution_root",
+      "blocking": true
+    },
+    {
+      "code": "PRIMARY_WORKLOAD_IMPACT_OBSERVED",
+      "message": "The pod remains degraded because the primary workload and sidecar have not converged to a healthy multi-container state",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-sidecar-timeout": [
+      "Pod has not reached a healthy multi-container state because the supporting sidecar is timing out during startup"
+    ],
+    "container:istio-proxy": [
+      "state=waiting, reason=ContainerCreating, restartCount=0, ready=False"
+    ],
+    "container:checkout": [
+      "Primary workload container is already Ready while the sidecar remains stuck starting"
+    ]
+  },
+  "likely_causes": [
+    "The sidecar bootstrap path depends on mesh, agent, or projected-volume inputs that are not becoming ready in time",
+    "containerd or another runtime component is hanging specifically while creating or starting the sidecar container",
+    "Sidecar-specific startup hooks, iptables setup, or certificate/bootstrap initialization are exceeding kubelet deadlines"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod checkout-sidecar-timeout",
+    "kubectl logs checkout-sidecar-timeout -c istio-proxy --previous",
+    "Check kubelet and container runtime logs for sidecar-specific start timeout or containerd task errors",
+    "Inspect mesh, agent, or bootstrap configuration that must complete before the sidecar can start"
+  ]
+}

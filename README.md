@@ -236,6 +236,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 ### Multi-Container
 
 - SidecarCrashLoop
+- SidecarStartupTimeout
 
 ### Controllers
 
