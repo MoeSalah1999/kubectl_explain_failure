@@ -1,0 +1,69 @@
+{
+  "root_cause": "Workload readiness recovered 8.5 minutes after Service 'orders-db' recovered, indicating dependency-coupled recovery delay",
+  "confidence": 0.96,
+  "blocking": false,
+  "resolution": {
+    "winner": "DependencyRecoveryDelay",
+    "suppressed": [
+      "ReadinessProbeFailure"
+    ]
+  },
+  "evidence": [
+    "Container 'api' references Service 'orders-db' in workload configuration",
+    "Dependency pod 'orders-db-0' for Service 'orders-db' became Ready at 2026-01-15T10:10:00+00:00",
+    "Readiness failures for container 'api' continued after dependency recovery until the pod became Ready at 2026-01-15T10:18:30+00:00",
+    "Workload recovery lag after dependency recovery was 8.5 minutes",
+    "Observed 7 dependency-related failure occurrence(s) and 3 post-recovery readiness failure occurrence(s) in the incident window"
+  ],
+  "causes": [
+    {
+      "code": "SERVICE_DEPENDENCY_CONFIGURED",
+      "message": "Container 'api' is configured to depend on Service 'orders-db'",
+      "role": "configuration_context"
+    },
+    {
+      "code": "DEPENDENCY_RECOVERED_BEFORE_WORKLOAD",
+      "message": "Service 'orders-db' recovered before the workload became Ready",
+      "role": "temporal_context"
+    },
+    {
+      "code": "DEPENDENCY_COUPLED_RECOVERY_PATH",
+      "message": "Workload readiness remained degraded after dependency recovery, indicating reconnect or health-check recovery is tightly coupled to the upstream service",
+      "role": "configuration_root",
+      "blocking": false
+    },
+    {
+      "code": "WORKLOAD_RECOVERY_DELAYED",
+      "message": "The pod recovered only after a prolonged lag following dependency restoration",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-api-6c8d97d77b-9km2q": [
+      "Pod Ready transition happened 8.5 minutes after Service 'orders-db' recovered",
+      "env api:DATABASE_URL=postgres://orders-db.default.svc.cluster.local:5432/checkout"
+    ],
+    "container:api": [
+      "Readiness probe failed: dependency orders-db.default.svc.cluster.local unavailable: dial tcp 10.96.41.22:5432: connect: connection refused",
+      "Readiness probe failed: dependency orders-db.default.svc.cluster.local unavailable: dial tcp 10.96.41.22:5432: i/o timeout"
+    ],
+    "service:orders-db": [
+      "Service currently has ready backends after dependency pod 'orders-db-0' recovered at 2026-01-15T10:10:00+00:00",
+      "Ready endpoint addresses now exist: 10.244.3.18"
+    ],
+    "pod:orders-db-0": [
+      "Dependency pod became Ready before the dependent workload recovered (2026-01-15T10:10:00+00:00 -> 2026-01-15T10:18:30+00:00)"
+    ]
+  },
+  "likely_causes": [
+    "Application readiness depends too directly on upstream dependency health instead of degrading gracefully while reconnecting",
+    "Connection pools, retry backoff, or circuit-breaker state delayed recovery after the dependency itself was already healthy",
+    "Health checks keep reporting NotReady until downstream sessions are rebuilt, which prolongs recovery after service restoration"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod checkout-api-6c8d97d77b-9km2q",
+    "kubectl get endpoints orders-db",
+    "kubectl logs checkout-api-6c8d97d77b-9km2q -c api --since=30m",
+    "Review readiness endpoint behavior, reconnect backoff, and dependency retry settings so recovery tracks upstream restoration more closely"
+  ]
+}

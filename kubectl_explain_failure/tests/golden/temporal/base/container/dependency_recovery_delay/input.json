@@ -1,0 +1,200 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-api-6c8d97d77b-9km2q",
+      "namespace": "default",
+      "labels": {
+        "app": "checkout-api"
+      }
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "ghcr.io/example/checkout-api:v1.9.4",
+          "env": [
+            {
+              "name": "DATABASE_URL",
+              "value": "postgres://orders-db.default.svc.cluster.local:5432/checkout"
+            }
+          ],
+          "readinessProbe": {
+            "httpGet": {
+              "path": "/readyz",
+              "port": 8080
+            },
+            "periodSeconds": 10,
+            "failureThreshold": 3
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "conditions": [
+        {
+          "type": "Ready",
+          "status": "True",
+          "lastTransitionTime": "2026-01-15T10:18:30Z"
+        },
+        {
+          "type": "ContainersReady",
+          "status": "True",
+          "lastTransitionTime": "2026-01-15T10:18:30Z"
+        }
+      ],
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": true,
+          "restartCount": 1,
+          "state": {
+            "running": {
+              "startedAt": "2026-01-15T10:02:10Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "service": {
+      "orders-db": {
+        "metadata": {
+          "name": "orders-db",
+          "namespace": "default"
+        },
+        "spec": {
+          "selector": {
+            "app": "orders-db"
+          },
+          "ports": [
+            {
+              "port": 5432
+            }
+          ]
+        }
+      }
+    },
+    "endpoints": {
+      "orders-db": {
+        "metadata": {
+          "name": "orders-db",
+          "namespace": "default"
+        },
+        "subsets": [
+          {
+            "addresses": [
+              {
+                "ip": "10.244.3.18",
+                "targetRef": {
+                  "kind": "Pod",
+                  "name": "orders-db-0"
+                }
+              }
+            ],
+            "ports": [
+              {
+                "port": 5432
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "pod": {
+      "orders-db-0": {
+        "metadata": {
+          "name": "orders-db-0",
+          "namespace": "default",
+          "labels": {
+            "app": "orders-db"
+          }
+        },
+        "status": {
+          "phase": "Running",
+          "conditions": [
+            {
+              "type": "Ready",
+              "status": "True",
+              "lastTransitionTime": "2026-01-15T10:10:00Z"
+            }
+          ],
+          "containerStatuses": [
+            {
+              "name": "postgres",
+              "ready": true,
+              "state": {
+                "running": {
+                  "startedAt": "2026-01-15T10:09:40Z"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "Started",
+      "message": "Started container api",
+      "firstTimestamp": "2026-01-15T10:02:10Z",
+      "lastTimestamp": "2026-01-15T10:02:10Z",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-6c8d97d77b-9km2q",
+        "fieldPath": "spec.containers{api}"
+      }
+    },
+    {
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: dependency orders-db.default.svc.cluster.local unavailable: dial tcp 10.96.41.22:5432: connect: connection refused",
+      "firstTimestamp": "2026-01-15T10:04:00Z",
+      "lastTimestamp": "2026-01-15T10:09:00Z",
+      "count": 4,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-6c8d97d77b-9km2q",
+        "fieldPath": "spec.containers{api}"
+      }
+    },
+    {
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: dependency orders-db.default.svc.cluster.local unavailable: dial tcp 10.96.41.22:5432: i/o timeout",
+      "firstTimestamp": "2026-01-15T10:12:00Z",
+      "lastTimestamp": "2026-01-15T10:16:00Z",
+      "count": 3,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-6c8d97d77b-9km2q",
+        "fieldPath": "spec.containers{api}"
+      }
+    },
+    {
+      "reason": "Ready",
+      "message": "Readiness probe succeeded for container \"api\"",
+      "firstTimestamp": "2026-01-15T10:18:30Z",
+      "lastTimestamp": "2026-01-15T10:18:30Z",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-6c8d97d77b-9km2q",
+        "fieldPath": "spec.containers{api}"
+      }
+    }
+  ]
+}
