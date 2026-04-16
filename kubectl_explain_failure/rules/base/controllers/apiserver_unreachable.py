@@ -35,6 +35,7 @@ class APIServerUnreachableRule(FailureRule):
     }
     blocks = [
         "CrashLoopBackOff",
+        "ControllerManagerLeaderElectionFailure",
         "ControllerManagerUnavailable",
         "DeploymentReplicaMismatch",
         "DeploymentProgressDeadlineExceeded",

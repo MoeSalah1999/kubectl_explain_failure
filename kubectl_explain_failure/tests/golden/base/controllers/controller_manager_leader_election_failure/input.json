@@ -1,0 +1,234 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "kube-controller-manager-cp-2",
+      "namespace": "kube-system",
+      "labels": {
+        "component": "kube-controller-manager",
+        "tier": "control-plane"
+      }
+    },
+    "spec": {
+      "hostNetwork": true,
+      "containers": [
+        {
+          "name": "kube-controller-manager",
+          "image": "registry.k8s.io/kube-controller-manager:v1.32.1"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "kube-controller-manager",
+          "ready": false,
+          "restartCount": 6,
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff",
+              "message": "back-off 5m0s restarting failed container=kube-controller-manager pod=kube-controller-manager-cp-2_kube-system"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 1,
+              "finishedAt": "2026-04-16T08:02:45Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "pod": {
+      "kube-controller-manager-cp-2": {
+        "metadata": {
+          "name": "kube-controller-manager-cp-2",
+          "namespace": "kube-system",
+          "labels": {
+            "component": "kube-controller-manager",
+            "tier": "control-plane"
+          }
+        },
+        "spec": {
+          "hostNetwork": true,
+          "containers": [
+            {
+              "name": "kube-controller-manager",
+              "image": "registry.k8s.io/kube-controller-manager:v1.32.1"
+            }
+          ]
+        },
+        "status": {
+          "phase": "Running",
+          "containerStatuses": [
+            {
+              "name": "kube-controller-manager",
+              "ready": false,
+              "restartCount": 6,
+              "state": {
+                "waiting": {
+                  "reason": "CrashLoopBackOff",
+                  "message": "back-off 5m0s restarting failed container=kube-controller-manager pod=kube-controller-manager-cp-2_kube-system"
+                }
+              },
+              "lastState": {
+                "terminated": {
+                  "reason": "Error",
+                  "exitCode": 1,
+                  "finishedAt": "2026-04-16T08:02:45Z"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "kube-controller-manager-cp-1": {
+        "metadata": {
+          "name": "kube-controller-manager-cp-1",
+          "namespace": "kube-system",
+          "labels": {
+            "component": "kube-controller-manager",
+            "tier": "control-plane"
+          }
+        },
+        "spec": {
+          "hostNetwork": true,
+          "containers": [
+            {
+              "name": "kube-controller-manager",
+              "image": "registry.k8s.io/kube-controller-manager:v1.32.1"
+            }
+          ]
+        },
+        "status": {
+          "phase": "Running",
+          "containerStatuses": [
+            {
+              "name": "kube-controller-manager",
+              "ready": true,
+              "restartCount": 0,
+              "state": {
+                "running": {
+                  "startedAt": "2026-04-16T07:40:00Z"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "service": {
+      "kubernetes": {
+        "metadata": {
+          "name": "kubernetes",
+          "namespace": "default"
+        },
+        "spec": {
+          "clusterIP": "10.96.0.1",
+          "ports": [
+            {
+              "port": 443,
+              "protocol": "TCP"
+            }
+          ]
+        }
+      }
+    },
+    "endpoints": {
+      "kubernetes": {
+        "metadata": {
+          "name": "kubernetes",
+          "namespace": "default"
+        },
+        "subsets": [
+          {
+            "addresses": [
+              {
+                "ip": "10.0.0.11"
+              }
+            ],
+            "ports": [
+              {
+                "port": 443,
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "LeaderElection",
+      "message": "kube-controller-manager-cp-1 successfully acquired lease kube-system/kube-controller-manager",
+      "count": 1,
+      "source": {
+        "component": "kube-controller-manager"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-controller-manager-cp-1",
+        "namespace": "kube-system",
+        "fieldPath": "spec.containers{kube-controller-manager}"
+      },
+      "firstTimestamp": "2026-04-16T08:00:00Z",
+      "lastTimestamp": "2026-04-16T08:00:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "LeaderElection",
+      "message": "error retrieving resource lock kube-system/kube-controller-manager: Get \"https://10.96.0.1:443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-controller-manager\": dial tcp 10.96.0.1:443: i/o timeout",
+      "count": 2,
+      "source": {
+        "component": "kube-controller-manager"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-controller-manager-cp-2",
+        "namespace": "kube-system",
+        "fieldPath": "spec.containers{kube-controller-manager}"
+      },
+      "firstTimestamp": "2026-04-16T08:00:30Z",
+      "lastTimestamp": "2026-04-16T08:01:20Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "LeaderElection",
+      "message": "leaderelection lost: failed to renew lease kube-system/kube-controller-manager: Put \"https://10.96.0.1:443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-controller-manager?timeout=5s\": context deadline exceeded",
+      "count": 3,
+      "source": {
+        "component": "kube-controller-manager"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-controller-manager-cp-2",
+        "namespace": "kube-system",
+        "fieldPath": "spec.containers{kube-controller-manager}"
+      },
+      "firstTimestamp": "2026-04-16T08:02:00Z",
+      "lastTimestamp": "2026-04-16T08:03:40Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container kube-controller-manager in pod kube-controller-manager-cp-2_kube-system",
+      "count": 4,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-controller-manager-cp-2",
+        "namespace": "kube-system",
+        "fieldPath": "spec.containers{kube-controller-manager}"
+      },
+      "firstTimestamp": "2026-04-16T08:03:50Z",
+      "lastTimestamp": "2026-04-16T08:04:00Z"
+    }
+  ]
+}

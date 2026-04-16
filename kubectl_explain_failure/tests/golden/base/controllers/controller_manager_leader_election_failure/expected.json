@@ -1,0 +1,56 @@
+{
+  "root_cause": "kube-controller-manager cannot maintain its leader-election lease, so the controller-manager pod becomes unhealthy",
+  "confidence": 0.98,
+  "blocking": true,
+  "resolution": {
+    "winner": "ControllerManagerLeaderElectionFailure",
+    "suppressed": [
+      "CrashLoopBackOff",
+      "ControllerManagerUnavailable"
+    ]
+  },
+  "evidence": [
+    "Recent leader-election failures target kube-controller-manager pod 'kube-controller-manager-cp-2' with container 'kube-controller-manager' state=waiting restartCount=6",
+    "Leader-election failures repeat 5 times over 140s within the recent incident window",
+    "Representative leader-election signal: leaderelection lost: failed to renew lease kube-system/kube-controller-manager: Put \"https://10.96.0.1:443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-controller-manager?timeout=5s\": context deadline exceeded",
+    "Kubernetes service 'kubernetes' still has ready API endpoints, which localizes the failure to this controller-manager instance or its path to the API"
+  ],
+  "causes": [
+    {
+      "code": "CONTROLLER_MANAGER_REQUIRES_LEASE_RENEWAL",
+      "message": "kube-controller-manager must keep renewing its coordination lease to remain the active controller leader",
+      "role": "controller_context"
+    },
+    {
+      "code": "CONTROLLER_MANAGER_LEADER_ELECTION_FAILURE",
+      "message": "kube-controller-manager cannot renew or hold its leader-election lease",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "CONTROLLER_MANAGER_POD_UNHEALTHY",
+      "message": "The controller-manager pod becomes unhealthy or restarts after losing leadership",
+      "role": "component_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:kube-controller-manager-cp-2": [
+      "leaderelection lost: failed to renew lease kube-system/kube-controller-manager: Put \"https://10.96.0.1:443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-controller-manager?timeout=5s\": context deadline exceeded"
+    ],
+    "service:kubernetes": [
+      "The kubernetes Service still has ready endpoints during the controller-manager lease-renewal failure"
+    ]
+  },
+  "likely_causes": [
+    "Intermittent connectivity, packet loss, or timeouts between kube-controller-manager and the Kubernetes API endpoint are breaking lease renewals",
+    "Clock skew or long host stalls are causing lease deadlines to be missed",
+    "Coordination Lease updates are failing because of RBAC, coordination API, or etcd-side errors",
+    "The kube-controller-manager process is unstable and restarts after losing leadership"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod kube-controller-manager-cp-2 -n kube-system",
+    "kubectl logs -n kube-system kube-controller-manager-cp-2 -c kube-controller-manager",
+    "kubectl get lease kube-controller-manager -n kube-system -o yaml",
+    "Verify control-plane clock sync and the controller-manager path to the Kubernetes API VIP"
+  ]
+}
