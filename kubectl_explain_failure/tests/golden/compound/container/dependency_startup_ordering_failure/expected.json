@@ -1,0 +1,66 @@
+{
+  "root_cause": "Application startup is coupled to Service 'orders-db' readiness and fails before that dependency stabilizes",
+  "blocking": true,
+  "confidence": 0.94,
+  "suppressed": [
+    "CrashLoopBackOff"
+  ],
+  "evidence": [
+    "Timeline shows container 'api' starting, then failing to connect to Service 'orders-db', then entering restart/backoff",
+    "Observed 2 startup -> dependency failure -> restart chain(s) within the recent incident window",
+    "Container 'api' is currently ready=False, restartCount=4, state=waiting",
+    "Service 'orders-db' currently has ready dependency backends, which makes a persistent outage less likely and points to startup ordering instead",
+    "Workload configuration explicitly references the dependency Service during startup"
+  ],
+  "causes": [
+    {
+      "code": "STARTUP_DEPENDENCY_REFERENCED",
+      "message": "Container 'api' depends on Service 'orders-db' during process startup",
+      "role": "configuration_context"
+    },
+    {
+      "code": "STARTUP_ORDERING_COUPLED_TO_DEPENDENCY",
+      "message": "Application startup exits when Service 'orders-db' is not ready yet instead of waiting or retrying",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "DEPENDENCY_FAILURE_HITS_BOOTSTRAP_PATH",
+      "message": "Dependency connection failures happen immediately after container start, so bootstrap never reaches a stable running state",
+      "role": "execution_intermediate"
+    },
+    {
+      "code": "RESTART_PRESSURE_PERSISTS_AFTER_DEPENDENCY_RECOVERS",
+      "message": "Kubelet keeps restarting the workload even though the dependency is healthy by inspection time",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:orders-api-7dc8f56c8c-l9m2n": [
+      "The workload enters restart pressure because startup depends on immediate dependency availability",
+      "env api:DATABASE_URL=postgres://orders-db.default.svc.cluster.local:5432/orders"
+    ],
+    "container:api": [
+      "Error: failed to connect to postgres://orders-db.default.svc.cluster.local:5432/orders: dial tcp 10.96.42.17:5432: connect: connection refused",
+      "Back-off restarting failed container api in pod orders-api-7dc8f56c8c-l9m2n_default"
+    ],
+    "service:orders-db": [
+      "Ready endpoint addresses now exist: 10.244.3.21",
+      "Selector currently resolves to ready pod(s): orders-db-0"
+    ],
+    "pod:orders-db-0": [
+      "Dependency pod is currently Ready, which suggests the startup failure happened before the backend stabilized"
+    ]
+  },
+  "likely_causes": [
+    "The application exits on initial database or cache connection failure instead of retrying until the dependency is ready",
+    "Startup sequencing assumes dependency pods are ready as soon as the app container starts, which Kubernetes does not guarantee",
+    "Bootstrap logic performs hard dependency checks before the process can stay alive long enough for the dependency to recover"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod orders-api-7dc8f56c8c-l9m2n",
+    "kubectl logs orders-api-7dc8f56c8c-l9m2n -c api --previous",
+    "kubectl get endpoints orders-db",
+    "Add retry/backoff or explicit wait-for-dependency logic so startup tolerates dependency readiness lag"
+  ]
+}

@@ -227,6 +227,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ImagePullUnauthorized
 - InitContainerFailure
 - InvalidEntrypoint
+- InvalidEnvironmentVariableReference
 - OOMKilled
 - PreStopHookFailure
 - ReadOnlyRootFilesystemWriteAttempt
@@ -356,6 +357,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - CrashLoopAfterImageUpdate
 - CrashLoopLivenessProbe
 - CrashLoopOOMKilled
+- DependencyStartupOrderingFailure
 - ImagePullSecretMissingCompound
 - ImageTagMutableDrift
 - OOMKilledThenCrashLoop
