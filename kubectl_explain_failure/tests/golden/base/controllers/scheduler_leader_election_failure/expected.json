@@ -1,0 +1,55 @@
+{
+  "root_cause": "kube-scheduler cannot maintain its leader-election lease, so the scheduler pod becomes unhealthy",
+  "confidence": 0.98,
+  "blocking": true,
+  "resolution": {
+    "winner": "SchedulerLeaderElectionFailure",
+    "suppressed": [
+      "CrashLoopBackOff"
+    ]
+  },
+  "evidence": [
+    "Recent leader-election failures target kube-scheduler pod 'kube-scheduler-cp-3' with container 'kube-scheduler' state=waiting restartCount=5",
+    "Leader-election failures repeat 5 times over 140s within the recent incident window",
+    "Representative leader-election signal: leaderelection lost: failed to renew lease kube-system/kube-scheduler: Put \"https://10.96.0.1:443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-scheduler?timeout=5s\": context deadline exceeded",
+    "Kubernetes service 'kubernetes' still has ready API endpoints, which localizes the failure to this scheduler instance or its path to the API"
+  ],
+  "causes": [
+    {
+      "code": "SCHEDULER_REQUIRES_LEASE_RENEWAL",
+      "message": "kube-scheduler must keep renewing its coordination lease to remain the active scheduling leader",
+      "role": "scheduling_context"
+    },
+    {
+      "code": "SCHEDULER_LEADER_ELECTION_FAILURE",
+      "message": "kube-scheduler cannot renew or hold its leader-election lease",
+      "role": "scheduling_root",
+      "blocking": true
+    },
+    {
+      "code": "SCHEDULER_POD_UNHEALTHY",
+      "message": "The scheduler pod becomes unhealthy or restarts after losing leadership",
+      "role": "component_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:kube-scheduler-cp-3": [
+      "leaderelection lost: failed to renew lease kube-system/kube-scheduler: Put \"https://10.96.0.1:443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-scheduler?timeout=5s\": context deadline exceeded"
+    ],
+    "service:kubernetes": [
+      "The kubernetes Service still has ready endpoints during the scheduler lease-renewal failure"
+    ]
+  },
+  "likely_causes": [
+    "Intermittent connectivity, packet loss, or timeouts between kube-scheduler and the Kubernetes API endpoint are breaking lease renewals",
+    "Clock skew or long host stalls are causing scheduler lease deadlines to be missed",
+    "Coordination Lease updates are failing because of RBAC, coordination API, or etcd-side errors",
+    "The kube-scheduler process is unstable and restarts after losing leadership"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod kube-scheduler-cp-3 -n kube-system",
+    "kubectl logs -n kube-system kube-scheduler-cp-3 -c kube-scheduler",
+    "kubectl get lease kube-scheduler -n kube-system -o yaml",
+    "Verify control-plane clock sync and the scheduler path to the Kubernetes API VIP"
+  ]
+}

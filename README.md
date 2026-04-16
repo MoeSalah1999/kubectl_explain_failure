@@ -257,6 +257,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ReplicaSetCreateFailure
 - ReplicaSetOwnershipConflict
 - ReplicaSetUnavailable
+- SchedulerLeaderElectionFailure
 - StatefulSetPartitionMisconfiguration
 - StatefulSetUpdateBlocked
 - StatefulSetVolumeClaimTemplateMissing

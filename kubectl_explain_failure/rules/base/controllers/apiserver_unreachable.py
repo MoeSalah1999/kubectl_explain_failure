@@ -42,6 +42,7 @@ class APIServerUnreachableRule(FailureRule):
         "LivenessProbeFailure",
         "ReplicaSetCreateFailure",
         "ReplicaSetUnavailable",
+        "SchedulerLeaderElectionFailure",
     ]
 
     WINDOW_MINUTES = 20

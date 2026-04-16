@@ -1,0 +1,234 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "kube-scheduler-cp-3",
+      "namespace": "kube-system",
+      "labels": {
+        "component": "kube-scheduler",
+        "tier": "control-plane"
+      }
+    },
+    "spec": {
+      "hostNetwork": true,
+      "containers": [
+        {
+          "name": "kube-scheduler",
+          "image": "registry.k8s.io/kube-scheduler:v1.32.1"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "kube-scheduler",
+          "ready": false,
+          "restartCount": 5,
+          "state": {
+            "waiting": {
+              "reason": "CrashLoopBackOff",
+              "message": "back-off 5m0s restarting failed container=kube-scheduler pod=kube-scheduler-cp-3_kube-system"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 1,
+              "finishedAt": "2026-04-16T08:11:50Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "pod": {
+      "kube-scheduler-cp-3": {
+        "metadata": {
+          "name": "kube-scheduler-cp-3",
+          "namespace": "kube-system",
+          "labels": {
+            "component": "kube-scheduler",
+            "tier": "control-plane"
+          }
+        },
+        "spec": {
+          "hostNetwork": true,
+          "containers": [
+            {
+              "name": "kube-scheduler",
+              "image": "registry.k8s.io/kube-scheduler:v1.32.1"
+            }
+          ]
+        },
+        "status": {
+          "phase": "Running",
+          "containerStatuses": [
+            {
+              "name": "kube-scheduler",
+              "ready": false,
+              "restartCount": 5,
+              "state": {
+                "waiting": {
+                  "reason": "CrashLoopBackOff",
+                  "message": "back-off 5m0s restarting failed container=kube-scheduler pod=kube-scheduler-cp-3_kube-system"
+                }
+              },
+              "lastState": {
+                "terminated": {
+                  "reason": "Error",
+                  "exitCode": 1,
+                  "finishedAt": "2026-04-16T08:11:50Z"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "kube-scheduler-cp-1": {
+        "metadata": {
+          "name": "kube-scheduler-cp-1",
+          "namespace": "kube-system",
+          "labels": {
+            "component": "kube-scheduler",
+            "tier": "control-plane"
+          }
+        },
+        "spec": {
+          "hostNetwork": true,
+          "containers": [
+            {
+              "name": "kube-scheduler",
+              "image": "registry.k8s.io/kube-scheduler:v1.32.1"
+            }
+          ]
+        },
+        "status": {
+          "phase": "Running",
+          "containerStatuses": [
+            {
+              "name": "kube-scheduler",
+              "ready": true,
+              "restartCount": 0,
+              "state": {
+                "running": {
+                  "startedAt": "2026-04-16T07:45:00Z"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "service": {
+      "kubernetes": {
+        "metadata": {
+          "name": "kubernetes",
+          "namespace": "default"
+        },
+        "spec": {
+          "clusterIP": "10.96.0.1",
+          "ports": [
+            {
+              "port": 443,
+              "protocol": "TCP"
+            }
+          ]
+        }
+      }
+    },
+    "endpoints": {
+      "kubernetes": {
+        "metadata": {
+          "name": "kubernetes",
+          "namespace": "default"
+        },
+        "subsets": [
+          {
+            "addresses": [
+              {
+                "ip": "10.0.0.11"
+              }
+            ],
+            "ports": [
+              {
+                "port": 443,
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "LeaderElection",
+      "message": "kube-scheduler-cp-1 successfully acquired lease kube-system/kube-scheduler",
+      "count": 1,
+      "source": {
+        "component": "kube-scheduler"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-scheduler-cp-1",
+        "namespace": "kube-system",
+        "fieldPath": "spec.containers{kube-scheduler}"
+      },
+      "firstTimestamp": "2026-04-16T08:08:00Z",
+      "lastTimestamp": "2026-04-16T08:08:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "LeaderElection",
+      "message": "error retrieving resource lock kube-system/kube-scheduler: Get \"https://10.96.0.1:443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-scheduler\": dial tcp 10.96.0.1:443: i/o timeout",
+      "count": 2,
+      "source": {
+        "component": "kube-scheduler"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-scheduler-cp-3",
+        "namespace": "kube-system",
+        "fieldPath": "spec.containers{kube-scheduler}"
+      },
+      "firstTimestamp": "2026-04-16T08:08:20Z",
+      "lastTimestamp": "2026-04-16T08:09:10Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "LeaderElection",
+      "message": "leaderelection lost: failed to renew lease kube-system/kube-scheduler: Put \"https://10.96.0.1:443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-scheduler?timeout=5s\": context deadline exceeded",
+      "count": 3,
+      "source": {
+        "component": "kube-scheduler"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-scheduler-cp-3",
+        "namespace": "kube-system",
+        "fieldPath": "spec.containers{kube-scheduler}"
+      },
+      "firstTimestamp": "2026-04-16T08:10:00Z",
+      "lastTimestamp": "2026-04-16T08:11:30Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container kube-scheduler in pod kube-scheduler-cp-3_kube-system",
+      "count": 4,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-scheduler-cp-3",
+        "namespace": "kube-system",
+        "fieldPath": "spec.containers{kube-scheduler}"
+      },
+      "firstTimestamp": "2026-04-16T08:11:40Z",
+      "lastTimestamp": "2026-04-16T08:12:00Z"
+    }
+  ]
+}
