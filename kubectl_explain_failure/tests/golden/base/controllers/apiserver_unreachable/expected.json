@@ -1,0 +1,70 @@
+{
+  "root_cause": "kube-apiserver is unreachable, so control-plane clients cannot talk to the Kubernetes API",
+  "confidence": 0.98,
+  "blocking": true,
+  "resolution": {
+    "winner": "APIServerUnreachable",
+    "suppressed": [
+      "ControllerManagerUnavailable",
+      "DeploymentReplicaMismatch",
+      "DeploymentProgressDeadlineExceeded",
+      "ReplicaSetCreateFailure",
+      "ReplicaSetUnavailable"
+    ]
+  },
+  "evidence": [
+    "Recent kube-apiserver outage targets pod 'kube-apiserver-cp-1' with container 'kube-apiserver' state=waiting restartCount=9",
+    "Representative kube-apiserver outage signal: Readiness probe failed: Get \"https://127.0.0.1:6443/readyz?verbose\": dial tcp 127.0.0.1:6443: connect: connection refused",
+    "Kubernetes service 'kubernetes' currently has no ready API endpoints",
+    "Representative downstream API client failure: leaderelection lost: failed to renew lease kube-system/kube-controller-manager: Get \"https://127.0.0.1:6443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-controller-manager\": dial tcp 127.0.0.1:6443: connect: connection refused",
+    "Workload reconciliation symptom: Deployment 'payments-api' remains at 1/3 available replicas while only 1/3 replicas are updated"
+  ],
+  "causes": [
+    {
+      "code": "CONTROL_PLANE_REQUIRES_APISERVER",
+      "message": "Cluster control-plane components and API-dependent workloads require kube-apiserver reachability",
+      "role": "control_plane_context"
+    },
+    {
+      "code": "APISERVER_UNREACHABLE",
+      "message": "kube-apiserver is not reachable on its control-plane endpoint or through the kubernetes Service VIP",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "DOWNSTREAM_CONTROL_PLANE_STALL",
+      "message": "Control-plane clients and controller-managed workloads stop progressing when the API server cannot be reached",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:kube-apiserver-cp-1": [
+      "Readiness probe failed: Get \"https://127.0.0.1:6443/readyz?verbose\": dial tcp 127.0.0.1:6443: connect: connection refused"
+    ],
+    "service:kubernetes": [
+      "No ready endpoints back the kubernetes Service VIP"
+    ],
+    "pod:kube-controller-manager-cp-1": [
+      "leaderelection lost: failed to renew lease kube-system/kube-controller-manager: Get \"https://127.0.0.1:6443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-controller-manager\": dial tcp 127.0.0.1:6443: connect: connection refused"
+    ],
+    "deployment:payments-api": [
+      "Deployment 'payments-api' remains at 1/3 available replicas while only 1/3 replicas are updated"
+    ],
+    "pod:payments-api-7f8c7d66c4-r8j7l": [
+      "The pod depends on Kubernetes API reachability and is affected while kube-apiserver is unavailable"
+    ]
+  },
+  "likely_causes": [
+    "The kube-apiserver static pod is crashlooping or failing /readyz on the control-plane node",
+    "Port 6443 or host-network reachability on the control-plane node is unavailable",
+    "An etcd or local dependency failure is preventing kube-apiserver from becoming ready",
+    "Static-pod manifest drift, certificate issues, or startup flag errors left kube-apiserver unhealthy"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod kube-apiserver-cp-1 -n kube-system",
+    "kubectl logs -n kube-system kube-apiserver-cp-1 -c kube-apiserver",
+    "kubectl get endpoints kubernetes -n default -o yaml",
+    "Inspect kube-apiserver /readyz and local 6443 listener health on the control-plane node",
+    "kubectl describe pod payments-api-7f8c7d66c4-r8j7l"
+  ]
+}
