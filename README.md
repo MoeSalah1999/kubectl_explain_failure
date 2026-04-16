@@ -472,6 +472,10 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ProbeTooAggressiveCausingRestarts
 - RuntimeFailureBurst
 
+### Multi-Container
+
+- SidecarRestartCascade
+
 ### Networking
 
 - ClusterNetworkPartition

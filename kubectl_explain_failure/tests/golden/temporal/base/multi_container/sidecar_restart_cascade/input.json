@@ -1,0 +1,227 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-api-66d49d8b74-ctsmv",
+      "namespace": "prod",
+      "annotations": {
+        "sidecar.istio.io/status": "{\"version\":\"1.22.1\"}"
+      }
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "checkout",
+          "image": "registry.example.com/checkout-api:2026.04.16",
+          "livenessProbe": {
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8080
+            },
+            "initialDelaySeconds": 20,
+            "periodSeconds": 10,
+            "timeoutSeconds": 2,
+            "failureThreshold": 3
+          }
+        },
+        {
+          "name": "istio-proxy",
+          "image": "docker.io/istio/proxyv2:1.22.1"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "checkout",
+          "ready": false,
+          "restartCount": 2,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-16T11:53:35Z"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 137,
+              "finishedAt": "2026-04-16T11:53:10Z"
+            }
+          }
+        },
+        {
+          "name": "istio-proxy",
+          "ready": true,
+          "restartCount": 2,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-16T11:52:30Z"
+            }
+          },
+          "lastState": {
+            "terminated": {
+              "reason": "Error",
+              "exitCode": 1,
+              "finishedAt": "2026-04-16T11:52:00Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "Killing",
+      "message": "Container istio-proxy failed startup probe, will be restarted",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-66d49d8b74-ctsmv",
+        "namespace": "prod",
+        "fieldPath": "spec.containers{istio-proxy}"
+      },
+      "firstTimestamp": "2026-04-16T11:44:10Z",
+      "lastTimestamp": "2026-04-16T11:44:10Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Liveness probe failed: Get \"http://127.0.0.1:8080/healthz\": dial tcp 127.0.0.1:8080: connect: connection refused",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-66d49d8b74-ctsmv",
+        "namespace": "prod",
+        "fieldPath": "spec.containers{checkout}"
+      },
+      "firstTimestamp": "2026-04-16T11:45:05Z",
+      "lastTimestamp": "2026-04-16T11:45:05Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Killing",
+      "message": "Container checkout failed liveness probe, will be restarted",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-66d49d8b74-ctsmv",
+        "namespace": "prod",
+        "fieldPath": "spec.containers{checkout}"
+      },
+      "firstTimestamp": "2026-04-16T11:45:10Z",
+      "lastTimestamp": "2026-04-16T11:45:10Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Started",
+      "message": "Started container checkout",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-66d49d8b74-ctsmv",
+        "namespace": "prod",
+        "fieldPath": "spec.containers{checkout}"
+      },
+      "firstTimestamp": "2026-04-16T11:45:25Z",
+      "lastTimestamp": "2026-04-16T11:45:25Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Killing",
+      "message": "Container istio-proxy failed startup probe, will be restarted",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-66d49d8b74-ctsmv",
+        "namespace": "prod",
+        "fieldPath": "spec.containers{istio-proxy}"
+      },
+      "firstTimestamp": "2026-04-16T11:52:00Z",
+      "lastTimestamp": "2026-04-16T11:52:00Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Started",
+      "message": "Started container istio-proxy",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-66d49d8b74-ctsmv",
+        "namespace": "prod",
+        "fieldPath": "spec.containers{istio-proxy}"
+      },
+      "firstTimestamp": "2026-04-16T11:52:30Z",
+      "lastTimestamp": "2026-04-16T11:52:30Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Liveness probe failed: Get \"http://127.0.0.1:8080/healthz\": dial tcp 127.0.0.1:8080: connect: connection refused",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-66d49d8b74-ctsmv",
+        "namespace": "prod",
+        "fieldPath": "spec.containers{checkout}"
+      },
+      "firstTimestamp": "2026-04-16T11:53:05Z",
+      "lastTimestamp": "2026-04-16T11:53:05Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Killing",
+      "message": "Container checkout failed liveness probe, will be restarted",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-66d49d8b74-ctsmv",
+        "namespace": "prod",
+        "fieldPath": "spec.containers{checkout}"
+      },
+      "firstTimestamp": "2026-04-16T11:53:10Z",
+      "lastTimestamp": "2026-04-16T11:53:10Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Started",
+      "message": "Started container checkout",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-66d49d8b74-ctsmv",
+        "namespace": "prod",
+        "fieldPath": "spec.containers{checkout}"
+      },
+      "firstTimestamp": "2026-04-16T11:53:35Z",
+      "lastTimestamp": "2026-04-16T11:53:35Z"
+    }
+  ]
+}

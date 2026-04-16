@@ -1,0 +1,68 @@
+{
+  "root_cause": "Recognized sidecar restarts are cascading into main container restarts",
+  "blocking": true,
+  "confidence": 0.94,
+  "resolution": {
+    "suppressed": [
+      "CrashLoopBackOff",
+      "LivenessProbeFailure",
+      "ProbeFailureEscalation"
+    ]
+  },
+  "evidence": [
+    "Recognized sidecar 'istio-proxy' has restartCount=2 while primary container 'checkout' has restartCount=2",
+    "Timeline shows 2 ordered sidecar-restart -> main-restart cascade sequence(s) within the last 20 minutes",
+    "Total coalesced cascade strength across matched sequences: 2 occurrence(s)",
+    "Representative cascade gap between sidecar restart signal and main restart was about 70s",
+    "Representative sidecar restart signal: Container istio-proxy failed startup probe, will be restarted",
+    "Representative main restart signal: Container checkout failed liveness probe, will be restarted"
+  ],
+  "causes": [
+    {
+      "code": "SIDECAR_ROLE_IDENTIFIED",
+      "message": "Container 'istio-proxy' is acting as a sidecar alongside the primary workload",
+      "role": "workload_context"
+    },
+    {
+      "code": "SIDECAR_RESTART_EPISODES_OBSERVED",
+      "message": "Recent kubelet events show restart pressure for sidecar 'istio-proxy'",
+      "role": "temporal_context"
+    },
+    {
+      "code": "SIDECAR_RESTART_CASCADES_TO_MAIN",
+      "message": "Main container 'checkout' restarts shortly after sidecar 'istio-proxy' restart episodes",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_STABILITY_DEGRADED_BY_RESTART_CASCADE",
+      "message": "Pod stability is degraded because sidecar restart episodes propagate into the main workload",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-api-66d49d8b74-ctsmv": [
+      "Ordered kubelet events show sidecar restart activity preceding main-container restarts in the same incident window"
+    ],
+    "container:istio-proxy": [
+      "Container restartCount=2 with recent sidecar-specific restart signals",
+      "Container istio-proxy failed startup probe, will be restarted"
+    ],
+    "container:checkout": [
+      "Container restartCount=2 with restart signals that follow sidecar disruption",
+      "Container checkout failed liveness probe, will be restarted"
+    ]
+  },
+  "likely_causes": [
+    "The main workload is tightly coupled to a proxy or agent sidecar and does not tolerate short sidecar outages",
+    "Sidecar bootstrap, certificate rotation, or config reload is unstable and repeatedly disrupts the application's health path",
+    "Application liveness or startup behavior fails closed when the supporting sidecar is briefly unavailable"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod checkout-api-66d49d8b74-ctsmv",
+    "kubectl logs checkout-api-66d49d8b74-ctsmv -c istio-proxy --previous",
+    "kubectl logs checkout-api-66d49d8b74-ctsmv -c checkout --previous",
+    "Compare main-container liveness or startup failures against sidecar restart timestamps",
+    "Review whether the application can degrade gracefully when the sidecar restarts instead of immediately failing health checks"
+  ]
+}
