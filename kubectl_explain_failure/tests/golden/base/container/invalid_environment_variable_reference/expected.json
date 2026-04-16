@@ -1,0 +1,54 @@
+{
+  "root_cause": "envFrom source 'payments-config' contains keys that are not valid environment variable names",
+  "blocking": false,
+  "confidence": 0.88,
+  "evidence": [
+    "ConfigMap 'payments-config' exposed invalid envFrom key(s): 1badkey, db-host, spring.profiles.active",
+    "Observed 2 InvalidEnvironmentVariableNames warning occurrence(s) for the current Pod",
+    "Container startup continued after the warning, which matches kubelet skipping invalid envFrom keys instead of blocking the Pod"
+  ],
+  "causes": [
+    {
+      "code": "ENVFROM_SOURCE_REFERENCED",
+      "message": "Pod imports environment variables from ConfigMap 'payments-config' using envFrom",
+      "role": "configuration_context"
+    },
+    {
+      "code": "INVALID_ENVIRONMENT_VARIABLE_KEYS",
+      "message": "ConfigMap 'payments-config' contains key names that cannot become environment variables",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "KUBELET_SKIPS_INVALID_ENV_KEYS",
+      "message": "Kubelet skips invalid envFrom keys instead of injecting them into the container environment",
+      "role": "runtime_symptom"
+    },
+    {
+      "code": "APPLICATION_ENV_CONFIGURATION_INCOMPLETE",
+      "message": "The workload may start without configuration values it expected from envFrom",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "configmap:payments-config": [
+      "Kubelet skipped invalid envFrom key(s): 1badkey, db-host, spring.profiles.active",
+      "Referenced by envFrom in container 'app'",
+      "Current source still contains skipped key(s): 1badkey, db-host, spring.profiles.active",
+      "Available keys: 1badkey, LOG_LEVEL, db-host, spring.profiles.active"
+    ],
+    "pod:payments-api": [
+      "Warning event reason=InvalidEnvironmentVariableNames"
+    ]
+  },
+  "likely_causes": [
+    "ConfigMap or Secret keys contain dots, hyphens, or leading digits that are valid data keys but invalid environment variable names",
+    "A file-oriented configuration object was reused with envFrom without renaming the keys for environment-variable consumption",
+    "An envFrom prefix was omitted or was not enough to turn the imported keys into valid environment variable names"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod payments-api",
+    "kubectl get configmap payments-config -o yaml",
+    "Rename the offending keys or replace envFrom with explicit env.valueFrom entries for the keys the container actually needs"
+  ]
+}

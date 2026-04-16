@@ -1,0 +1,79 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-api",
+      "namespace": "default"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "app",
+          "image": "ghcr.io/example/payments-api:1.4.2",
+          "envFrom": [
+            {
+              "configMapRef": {
+                "name": "payments-config"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "app",
+          "ready": true,
+          "state": {
+            "running": {
+              "startedAt": "2026-02-03T10:00:26Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "configmaps": {
+    "payments-config": {
+      "metadata": {
+        "name": "payments-config",
+        "namespace": "default"
+      },
+      "data": {
+        "1badkey": "enabled",
+        "LOG_LEVEL": "info",
+        "db-host": "postgres.default.svc.cluster.local",
+        "spring.profiles.active": "prod"
+      }
+    }
+  },
+  "secrets": {},
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "InvalidEnvironmentVariableNames",
+      "count": 2,
+      "lastTimestamp": "2026-02-03T10:00:12Z",
+      "message": "Keys [1badkey, db-host, spring.profiles.active] from the EnvFrom configMap default/payments-config were skipped since they are considered invalid environment variable names."
+    },
+    {
+      "type": "Normal",
+      "reason": "Pulled",
+      "lastTimestamp": "2026-02-03T10:00:18Z",
+      "message": "Container image \"ghcr.io/example/payments-api:1.4.2\" already present on machine"
+    },
+    {
+      "type": "Normal",
+      "reason": "Created",
+      "lastTimestamp": "2026-02-03T10:00:22Z",
+      "message": "Created container app"
+    },
+    {
+      "type": "Normal",
+      "reason": "Started",
+      "lastTimestamp": "2026-02-03T10:00:26Z",
+      "message": "Started container app"
+    }
+  ]
+}
