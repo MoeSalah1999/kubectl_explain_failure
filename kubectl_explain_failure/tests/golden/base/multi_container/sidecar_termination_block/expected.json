@@ -1,0 +1,60 @@
+{
+  "root_cause": "Recognized sidecar container is blocking pod termination after the primary workload already exited",
+  "blocking": true,
+  "confidence": 0.95,
+  "resolution": {
+    "suppressed": []
+  },
+  "evidence": [
+    "Pod deletion/termination was already in progress by 2026-04-09T10:00:00+00:00",
+    "Primary container 'checkout' had already terminated at 2026-04-09T10:00:12+00:00",
+    "Recognized sidecar 'istio-proxy' is still running with ready=True restartCount=0 while the pod remains alive",
+    "Sidecar-specific termination block signals persisted for about 72s, exceeding terminationGracePeriodSeconds=30",
+    "Representative sidecar termination-block event: Failed to stop container \"istio-proxy\": context deadline exceeded"
+  ],
+  "causes": [
+    {
+      "code": "SIDECAR_ROLE_IDENTIFIED",
+      "message": "Container 'istio-proxy' is acting as a sidecar alongside the primary workload",
+      "role": "workload_context"
+    },
+    {
+      "code": "PRIMARY_WORKLOAD_ALREADY_EXITED",
+      "message": "Primary container 'checkout' has already terminated while pod shutdown is still in progress",
+      "role": "workload_context"
+    },
+    {
+      "code": "SIDECAR_NOT_EXITING_DURING_TERMINATION",
+      "message": "Sidecar container 'istio-proxy' is not exiting within the pod termination grace period",
+      "role": "execution_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_TERMINATION_HELD_OPEN_BY_SIDECAR",
+      "message": "The pod remains stuck terminating because the sidecar is the last container still holding shutdown open",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-sidecar-terminating": [
+      "Pod termination remains open because a recognized sidecar has not exited after the primary workload stopped"
+    ],
+    "container:istio-proxy": [
+      "state=running, ready=True, restartCount=0"
+    ],
+    "container:checkout": [
+      "Primary workload container already terminated at 2026-04-09T10:00:12+00:00"
+    ]
+  },
+  "likely_causes": [
+    "The sidecar is draining or waiting on control-plane/network shutdown longer than the pod grace period allows",
+    "A sidecar PreStop/drain hook or signal handler is hanging and preventing the process from exiting promptly",
+    "The sidecar ignores SIGTERM or is stuck in runtime teardown, so kubelet keeps retrying shutdown past the normal deadline"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod checkout-sidecar-terminating",
+    "kubectl logs checkout-sidecar-terminating -c istio-proxy",
+    "Inspect sidecar drain, PreStop, and terminationGracePeriodSeconds settings for shutdown paths that outlast pod deletion",
+    "Check kubelet/runtime logs for repeated kill attempts or stop timeouts specific to the sidecar container"
+  ]
+}

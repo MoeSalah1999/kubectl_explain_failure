@@ -132,7 +132,9 @@ class SidecarStartupTimeoutRule(FailureRule):
             if self._is_sidecar(pod, str(status.get("name", "")))
         ]
 
-    def _primary_impact(self, pod: dict[str, Any]) -> dict[str, list[dict[str, str]]] | None:
+    def _primary_impact(
+        self, pod: dict[str, Any]
+    ) -> dict[str, list[dict[str, str]]] | None:
         primaries = [
             status
             for status in pod.get("status", {}).get("containerStatuses", []) or []
@@ -212,7 +214,9 @@ class SidecarStartupTimeoutRule(FailureRule):
             if not timeout_events:
                 continue
 
-            total_occurrences = sum(self._occurrences(event) for event in timeout_events)
+            total_occurrences = sum(
+                self._occurrences(event) for event in timeout_events
+            )
             if total_occurrences < 2 and len(timeout_events) < 2:
                 continue
 

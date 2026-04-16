@@ -1,0 +1,121 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-sidecar-terminating",
+      "namespace": "default",
+      "deletionTimestamp": "2026-04-09T10:00:00Z",
+      "annotations": {
+        "sidecar.istio.io/status": "{\"version\":\"1.22.1\"}"
+      }
+    },
+    "spec": {
+      "terminationGracePeriodSeconds": 30,
+      "containers": [
+        {
+          "name": "checkout",
+          "image": "example/checkout:v2"
+        },
+        {
+          "name": "istio-proxy",
+          "image": "docker.io/istio/proxyv2:1.22.1"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "conditions": [
+        {
+          "type": "Ready",
+          "status": "False",
+          "lastTransitionTime": "2026-04-09T10:00:15Z"
+        }
+      ],
+      "containerStatuses": [
+        {
+          "name": "checkout",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "terminated": {
+              "reason": "Completed",
+              "exitCode": 0,
+              "finishedAt": "2026-04-09T10:00:12Z"
+            }
+          }
+        },
+        {
+          "name": "istio-proxy",
+          "ready": true,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-09T09:45:00Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Killing",
+      "message": "Stopping container checkout",
+      "firstTimestamp": "2026-04-09T10:00:00Z",
+      "lastTimestamp": "2026-04-09T10:00:12Z",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-sidecar-terminating",
+        "fieldPath": "spec.containers{checkout}"
+      }
+    },
+    {
+      "reason": "Killing",
+      "message": "Killing container \"istio-proxy\" with a grace period",
+      "firstTimestamp": "2026-04-09T10:00:00Z",
+      "lastTimestamp": "2026-04-09T10:00:28Z",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-sidecar-terminating",
+        "fieldPath": "spec.containers{istio-proxy}"
+      }
+    },
+    {
+      "reason": "Failed",
+      "message": "Failed to stop container \"istio-proxy\": context deadline exceeded",
+      "firstTimestamp": "2026-04-09T10:00:35Z",
+      "lastTimestamp": "2026-04-09T10:01:05Z",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-sidecar-terminating",
+        "fieldPath": "spec.containers{istio-proxy}"
+      }
+    },
+    {
+      "reason": "Failed",
+      "message": "Container \"istio-proxy\" did not exit within 30s of signal 15",
+      "firstTimestamp": "2026-04-09T10:01:05Z",
+      "lastTimestamp": "2026-04-09T10:01:12Z",
+      "count": 1,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-sidecar-terminating",
+        "fieldPath": "spec.containers{istio-proxy}"
+      }
+    }
+  ]
+}
