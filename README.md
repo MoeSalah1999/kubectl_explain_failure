@@ -461,6 +461,10 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - DeploymentRolloutOscillation
 - ReplicaOscillation
 
+### Cluster Infrastructure
+
+- ControlPlaneFlapping
+
 ### Admission
 
 - IntermittentAdmissionWebhookFailure

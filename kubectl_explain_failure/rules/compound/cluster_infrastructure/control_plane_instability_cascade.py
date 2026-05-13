@@ -118,6 +118,24 @@ class ControlPlaneInstabilityCascadeRule(FailureRule):
         "too many requests",
         "unable to connect to the server",
     )
+    RECOVERY_REASONS = {
+        "leaderacquired",
+        "leaderelection",
+        "ready",
+        "started",
+        "healthy",
+    }
+    RECOVERY_MARKERS = (
+        "/readyz ok",
+        "became leader",
+        "became ready",
+        "health check succeeded",
+        "leader election acquired",
+        "new leader elected",
+        "readiness probe succeeded",
+        "renewed lease",
+        "successfully acquired lease",
+    )
     APISERVER_REQUIRED_MARKERS = (
         "apiserver",
         "kube-apiserver",
@@ -272,6 +290,14 @@ class ControlPlaneInstabilityCascadeRule(FailureRule):
         if reason not in self.FAILURE_REASONS and "fail" not in reason:
             return False
         return any(marker in message for marker in self.FAILURE_MARKERS)
+
+    def _event_is_recovery(self, event: dict[str, Any]) -> bool:
+        message = self._message_lower(event)
+        if not message:
+            return False
+        if self._reason(event) not in self.RECOVERY_REASONS:
+            return False
+        return any(marker in message for marker in self.RECOVERY_MARKERS)
 
     def _service_ready(
         self,
@@ -474,6 +500,16 @@ class ControlPlaneInstabilityCascadeRule(FailureRule):
 
         ordered_events = self._ordered_recent(timeline)
         if not ordered_events:
+            return None
+
+        recovery_components = {
+            component
+            for event in ordered_events
+            if self._event_is_recovery(event)
+            for component in [self._component_for_event(event)]
+            if component is not None
+        }
+        if len(recovery_components) >= 2:
             return None
 
         objects = context.get("objects", {}) or {}

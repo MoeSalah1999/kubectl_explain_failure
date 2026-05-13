@@ -1,0 +1,78 @@
+{
+  "root_cause": "Control-plane availability is flapping, causing intermittent controller and scheduler progress",
+  "confidence": 0.95,
+  "blocking": true,
+  "suppressed": [
+    "APIServerUnreachable",
+    "ControllerManagerUnavailable",
+    "DeploymentReplicaMismatch"
+  ],
+  "evidence": [
+    "Control-plane state transitions observed: degraded -> recovered -> degraded -> recovered -> degraded -> recovered -> degraded",
+    "Components involved in flapping: kube-apiserver, kube-controller-manager, kube-scheduler",
+    "Control-plane flapping persisted for 19.0 minutes across 7 transitions",
+    "Deployment 'payments' intermittently stalls at 3/5 available replicas while only 3/5 replicas are updated",
+    "Kubernetes service 'kubernetes' still has ready endpoints, which points to intermittent component or control-plane path flapping rather than a steady API Service outage"
+  ],
+  "causes": [
+    {
+      "code": "CONTROL_PLANE_TRANSITIONS_OBSERVED",
+      "message": "Timeline shows control-plane transitions: degraded -> recovered -> degraded -> recovered -> degraded -> recovered -> degraded",
+      "role": "temporal_context"
+    },
+    {
+      "code": "CONTROL_PLANE_FLAPPING",
+      "message": "Control-plane components repeatedly alternate between degraded and recovered states",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "CONTROL_PLANE_CLIENTS_INTERMITTENTLY_LOSE_PROGRESS",
+      "message": "Controllers and scheduler intermittently lose API or lease progress during the flapping window",
+      "role": "controller_intermediate"
+    },
+    {
+      "code": "WORKLOAD_RECONCILIATION_INTERMITTENT",
+      "message": "Deployment 'payments' intermittently stalls at 3/5 available replicas while only 3/5 replicas are updated",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:payments-65b9c9d8d8-qzn9b": [
+      "The pod belongs to a workload whose reconciliation is exposed to control-plane flapping"
+    ],
+    "deployment:payments": [
+      "Deployment 'payments' intermittently stalls at 3/5 available replicas while only 3/5 replicas are updated"
+    ],
+    "control-plane:kube-apiserver": [
+      "Readiness probe failed: Get \"https://127.0.0.1:6443/readyz\": context deadline exceeded",
+      "kube-apiserver /readyz ok; readiness probe succeeded",
+      "Readiness probe failed: Get \"https://127.0.0.1:6443/readyz\": context deadline exceeded"
+    ],
+    "control-plane:kube-controller-manager": [
+      "kube-controller-manager failed to renew lease kube-system/kube-controller-manager: Put \"https://10.96.0.1:443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-controller-manager\": context deadline exceeded",
+      "kube-controller-manager successfully acquired lease kube-system/kube-controller-manager and became leader"
+    ],
+    "control-plane:kube-scheduler": [
+      "kube-scheduler leader election lost: failed to update lock kube-system/kube-scheduler: dial tcp 10.96.0.1:443: i/o timeout",
+      "kube-scheduler successfully acquired lease kube-system/kube-scheduler and became leader"
+    ],
+    "service:kubernetes": [
+      "Ready endpoints exist while control-plane components still alternate between failure and recovery"
+    ]
+  },
+  "likely_causes": [
+    "Intermittent API server or etcd latency is causing leader-election renewals and health checks to alternate between failure and recovery",
+    "Control-plane node network or host-resource pressure is briefly interrupting API access before recovering",
+    "Load balancer or Service VIP instability is intermittently breaking control-plane client paths",
+    "Control-plane static pods are repeatedly failing readiness probes and then recovering before a stable outage is established"
+  ],
+  "suggested_checks": [
+    "kubectl get events -A --sort-by=.lastTimestamp",
+    "kubectl get pods -n kube-system -l tier=control-plane -o wide",
+    "kubectl get endpoints kubernetes -n default -o yaml",
+    "kubectl get lease -n kube-system",
+    "Compare kube-apiserver, kube-controller-manager, and kube-scheduler logs across the flapping window",
+    "kubectl describe pod payments-65b9c9d8d8-qzn9b"
+  ]
+}

@@ -1,0 +1,307 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-65b9c9d8d8-qzn9b",
+      "namespace": "shop",
+      "labels": {
+        "app": "payments",
+        "pod-template-hash": "65b9c9d8d8"
+      },
+      "ownerReferences": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "ReplicaSet",
+          "name": "payments-65b9c9d8d8",
+          "controller": true
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "payments",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-04-10T08:50:00Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "pods": {
+    "kube-apiserver-cp-1": {
+      "metadata": {
+        "name": "kube-apiserver-cp-1",
+        "namespace": "kube-system",
+        "labels": {
+          "component": "kube-apiserver",
+          "tier": "control-plane"
+        }
+      },
+      "status": {
+        "phase": "Running",
+        "containerStatuses": [
+          {
+            "name": "kube-apiserver",
+            "ready": true,
+            "restartCount": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-04-10T08:00:00Z"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "kube-controller-manager-cp-1": {
+      "metadata": {
+        "name": "kube-controller-manager-cp-1",
+        "namespace": "kube-system",
+        "labels": {
+          "component": "kube-controller-manager",
+          "tier": "control-plane"
+        }
+      },
+      "status": {
+        "phase": "Running",
+        "containerStatuses": [
+          {
+            "name": "kube-controller-manager",
+            "ready": true,
+            "restartCount": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-04-10T08:00:00Z"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "kube-scheduler-cp-1": {
+      "metadata": {
+        "name": "kube-scheduler-cp-1",
+        "namespace": "kube-system",
+        "labels": {
+          "component": "kube-scheduler",
+          "tier": "control-plane"
+        }
+      },
+      "status": {
+        "phase": "Running",
+        "containerStatuses": [
+          {
+            "name": "kube-scheduler",
+            "ready": true,
+            "restartCount": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-04-10T08:00:00Z"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "deployment": {
+    "payments": {
+      "metadata": {
+        "name": "payments",
+        "namespace": "shop",
+        "generation": 18
+      },
+      "spec": {
+        "replicas": 5,
+        "selector": {
+          "matchLabels": {
+            "app": "payments"
+          }
+        }
+      },
+      "status": {
+        "observedGeneration": 18,
+        "replicas": 5,
+        "updatedReplicas": 3,
+        "readyReplicas": 3,
+        "availableReplicas": 3,
+        "unavailableReplicas": 2
+      }
+    }
+  },
+  "replicaset": {
+    "payments-65b9c9d8d8": {
+      "metadata": {
+        "name": "payments-65b9c9d8d8",
+        "namespace": "shop",
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "name": "payments",
+            "controller": true
+          }
+        ]
+      },
+      "spec": {
+        "replicas": 5
+      },
+      "status": {
+        "replicas": 5,
+        "readyReplicas": 3,
+        "availableReplicas": 3
+      }
+    }
+  },
+  "service": {
+    "kubernetes": {
+      "metadata": {
+        "name": "kubernetes",
+        "namespace": "default"
+      },
+      "spec": {
+        "clusterIP": "10.96.0.1",
+        "ports": [
+          {
+            "port": 443,
+            "targetPort": 6443
+          }
+        ]
+      }
+    }
+  },
+  "endpoints": {
+    "kubernetes": {
+      "metadata": {
+        "name": "kubernetes",
+        "namespace": "default"
+      },
+      "subsets": [
+        {
+          "addresses": [
+            {
+              "ip": "192.168.10.11",
+              "nodeName": "cp-1"
+            }
+          ],
+          "ports": [
+            {
+              "port": 6443
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: Get \"https://127.0.0.1:6443/readyz\": context deadline exceeded",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-apiserver-cp-1",
+        "namespace": "kube-system"
+      },
+      "lastTimestamp": "2026-04-10T09:00:00Z"
+    },
+    {
+      "reason": "Ready",
+      "message": "kube-apiserver /readyz ok; readiness probe succeeded",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-apiserver-cp-1",
+        "namespace": "kube-system"
+      },
+      "lastTimestamp": "2026-04-10T09:03:00Z"
+    },
+    {
+      "reason": "LeaderElection",
+      "message": "kube-controller-manager failed to renew lease kube-system/kube-controller-manager: Put \"https://10.96.0.1:443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-controller-manager\": context deadline exceeded",
+      "source": {
+        "component": "kube-controller-manager"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-controller-manager-cp-1",
+        "namespace": "kube-system"
+      },
+      "lastTimestamp": "2026-04-10T09:06:00Z"
+    },
+    {
+      "reason": "LeaderAcquired",
+      "message": "kube-controller-manager successfully acquired lease kube-system/kube-controller-manager and became leader",
+      "source": {
+        "component": "kube-controller-manager"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-controller-manager-cp-1",
+        "namespace": "kube-system"
+      },
+      "lastTimestamp": "2026-04-10T09:09:00Z"
+    },
+    {
+      "reason": "LeaderElection",
+      "message": "kube-scheduler leader election lost: failed to update lock kube-system/kube-scheduler: dial tcp 10.96.0.1:443: i/o timeout",
+      "source": {
+        "component": "kube-scheduler"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-scheduler-cp-1",
+        "namespace": "kube-system"
+      },
+      "lastTimestamp": "2026-04-10T09:12:00Z"
+    },
+    {
+      "reason": "LeaderAcquired",
+      "message": "kube-scheduler successfully acquired lease kube-system/kube-scheduler and became leader",
+      "source": {
+        "component": "kube-scheduler"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-scheduler-cp-1",
+        "namespace": "kube-system"
+      },
+      "lastTimestamp": "2026-04-10T09:15:00Z"
+    },
+    {
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: Get \"https://127.0.0.1:6443/readyz\": context deadline exceeded",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-apiserver-cp-1",
+        "namespace": "kube-system"
+      },
+      "lastTimestamp": "2026-04-10T09:19:00Z"
+    },
+    {
+      "reason": "Failed",
+      "message": "Deployment controller failed to list ReplicaSets for shop/payments: the server was unable to return a response in the time allotted",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "payments",
+        "namespace": "shop"
+      },
+      "lastTimestamp": "2026-04-10T09:20:00Z"
+    }
+  ]
+}
