@@ -1,0 +1,276 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-7d9d4c7f7d-vt6fx",
+      "namespace": "shop",
+      "labels": {
+        "app": "checkout",
+        "pod-template-hash": "7d9d4c7f7d"
+      },
+      "ownerReferences": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "ReplicaSet",
+          "name": "checkout-7d9d4c7f7d",
+          "controller": true
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "pods": {
+    "kube-apiserver-cp-1": {
+      "metadata": {
+        "name": "kube-apiserver-cp-1",
+        "namespace": "kube-system",
+        "labels": {
+          "component": "kube-apiserver",
+          "tier": "control-plane"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "kube-apiserver"
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "containerStatuses": [
+          {
+            "name": "kube-apiserver",
+            "ready": false,
+            "restartCount": 3,
+            "state": {
+              "running": {
+                "startedAt": "2026-04-09T11:49:00Z"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "kube-controller-manager-cp-1": {
+      "metadata": {
+        "name": "kube-controller-manager-cp-1",
+        "namespace": "kube-system",
+        "labels": {
+          "component": "kube-controller-manager",
+          "tier": "control-plane"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "kube-controller-manager"
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "containerStatuses": [
+          {
+            "name": "kube-controller-manager",
+            "ready": false,
+            "restartCount": 2,
+            "state": {
+              "running": {
+                "startedAt": "2026-04-09T11:52:00Z"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "kube-scheduler-cp-1": {
+      "metadata": {
+        "name": "kube-scheduler-cp-1",
+        "namespace": "kube-system",
+        "labels": {
+          "component": "kube-scheduler",
+          "tier": "control-plane"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "kube-scheduler"
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "containerStatuses": [
+          {
+            "name": "kube-scheduler",
+            "ready": false,
+            "restartCount": 1,
+            "state": {
+              "running": {
+                "startedAt": "2026-04-09T11:54:00Z"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "deployment": {
+    "checkout": {
+      "metadata": {
+        "name": "checkout",
+        "namespace": "shop",
+        "generation": 12
+      },
+      "spec": {
+        "replicas": 4,
+        "selector": {
+          "matchLabels": {
+            "app": "checkout"
+          }
+        }
+      },
+      "status": {
+        "observedGeneration": 12,
+        "replicas": 4,
+        "updatedReplicas": 1,
+        "readyReplicas": 1,
+        "availableReplicas": 1,
+        "unavailableReplicas": 3
+      }
+    }
+  },
+  "replicaset": {
+    "checkout-7d9d4c7f7d": {
+      "metadata": {
+        "name": "checkout-7d9d4c7f7d",
+        "namespace": "shop",
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "name": "checkout",
+            "controller": true
+          }
+        ]
+      },
+      "spec": {
+        "replicas": 4
+      },
+      "status": {
+        "replicas": 4,
+        "readyReplicas": 1,
+        "availableReplicas": 1
+      }
+    }
+  },
+  "service": {
+    "kubernetes": {
+      "metadata": {
+        "name": "kubernetes",
+        "namespace": "default"
+      },
+      "spec": {
+        "clusterIP": "10.96.0.1",
+        "ports": [
+          {
+            "port": 443,
+            "targetPort": 6443
+          }
+        ]
+      }
+    }
+  },
+  "endpoints": {
+    "kubernetes": {
+      "metadata": {
+        "name": "kubernetes",
+        "namespace": "default"
+      },
+      "subsets": []
+    }
+  },
+  "events": [
+    {
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: Get \"https://127.0.0.1:6443/readyz\": context deadline exceeded",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-apiserver-cp-1",
+        "namespace": "kube-system"
+      },
+      "lastTimestamp": "2026-04-09T12:00:00Z"
+    },
+    {
+      "reason": "Failed",
+      "message": "kube-apiserver failed to store Lease object: etcdserver: request timed out",
+      "source": {
+        "component": "kube-apiserver"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-apiserver-cp-1",
+        "namespace": "kube-system"
+      },
+      "lastTimestamp": "2026-04-09T12:02:00Z"
+    },
+    {
+      "reason": "LeaderElection",
+      "message": "kube-controller-manager failed to renew lease kube-system/kube-controller-manager: Put \"https://10.96.0.1:443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-controller-manager\": context deadline exceeded",
+      "source": {
+        "component": "kube-controller-manager"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-controller-manager-cp-1",
+        "namespace": "kube-system"
+      },
+      "lastTimestamp": "2026-04-09T12:04:00Z"
+    },
+    {
+      "reason": "LeaderElection",
+      "message": "kube-scheduler leader election lost: failed to update lock kube-system/kube-scheduler: dial tcp 10.96.0.1:443: i/o timeout",
+      "source": {
+        "component": "kube-scheduler"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "kube-scheduler-cp-1",
+        "namespace": "kube-system"
+      },
+      "lastTimestamp": "2026-04-09T12:07:00Z"
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "0/6 nodes are available: no fit; scheduler cache was not updated after API server request timeout.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-7d9d4c7f7d-vt6fx",
+        "namespace": "shop"
+      },
+      "lastTimestamp": "2026-04-09T12:08:00Z"
+    },
+    {
+      "reason": "Failed",
+      "message": "Deployment controller failed to list ReplicaSets for shop/checkout: the server was unable to return a response in the time allotted",
+      "source": {
+        "component": "deployment-controller"
+      },
+      "involvedObject": {
+        "kind": "Deployment",
+        "name": "checkout",
+        "namespace": "shop"
+      },
+      "lastTimestamp": "2026-04-09T12:09:00Z"
+    }
+  ]
+}

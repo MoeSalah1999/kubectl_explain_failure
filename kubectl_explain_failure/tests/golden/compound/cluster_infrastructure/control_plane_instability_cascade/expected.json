@@ -1,0 +1,78 @@
+{
+  "root_cause": "Control-plane instability cascade is preventing controllers and scheduler from making progress",
+  "confidence": 0.98,
+  "blocking": true,
+  "suppressed": [
+    "APIServerUnreachable",
+    "ControllerManagerUnavailable",
+    "DeploymentReplicaMismatch",
+    "FailedScheduling"
+  ],
+  "evidence": [
+    "Control-plane components degraded together: kube-apiserver, kube-controller-manager, kube-scheduler",
+    "Control-plane failure events span 7.0 minutes across 4 corroborating events",
+    "Deployment 'checkout' remains at 1/4 available replicas while only 1/4 replicas are updated",
+    "Kubernetes service 'kubernetes' currently has no ready API endpoints"
+  ],
+  "causes": [
+    {
+      "code": "CONTROL_PLANE_COMPONENTS_SHARE_API_AND_ETCD_PATHS",
+      "message": "kube-apiserver, scheduler, and controller-manager depend on shared API, etcd, lease, and control-plane node paths",
+      "role": "control_plane_context"
+    },
+    {
+      "code": "CONTROL_PLANE_INSTABILITY_CASCADE",
+      "message": "Multiple control-plane components are failing in the same incident window",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "CONTROLLERS_AND_SCHEDULER_LOSE_PROGRESS",
+      "message": "Controllers and scheduler cannot reliably renew leases, reach the API, or reconcile workload state",
+      "role": "controller_intermediate"
+    },
+    {
+      "code": "WORKLOAD_PROGRESS_STALLED",
+      "message": "Deployment 'checkout' remains at 1/4 available replicas while only 1/4 replicas are updated",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-7d9d4c7f7d-vt6fx": [
+      "The pod is a downstream workload symptom while control-plane components are unstable"
+    ],
+    "deployment:checkout": [
+      "Deployment 'checkout' remains at 1/4 available replicas while only 1/4 replicas are updated"
+    ],
+    "pod:kube-apiserver-cp-1": [
+      "kube-apiserver state=running restartCount=3",
+      "kube-apiserver failed to store Lease object: etcdserver: request timed out"
+    ],
+    "pod:kube-controller-manager-cp-1": [
+      "kube-controller-manager state=running restartCount=2",
+      "kube-controller-manager failed to renew lease kube-system/kube-controller-manager: Put \"https://10.96.0.1:443/apis/coordination.k8s.io/v1/namespaces/kube-system/leases/kube-controller-manager\": context deadline exceeded"
+    ],
+    "pod:kube-scheduler-cp-1": [
+      "kube-scheduler state=running restartCount=1",
+      "kube-scheduler leader election lost: failed to update lock kube-system/kube-scheduler: dial tcp 10.96.0.1:443: i/o timeout"
+    ],
+    "service:kubernetes": [
+      "No ready endpoints back the Kubernetes API Service VIP"
+    ]
+  },
+  "likely_causes": [
+    "etcd latency, quorum loss, or disk pressure is making kube-apiserver and leader-election writes unreliable",
+    "Control-plane node network or host-resource pressure is causing API, scheduler, and controller-manager health checks to fail together",
+    "The Kubernetes API endpoint or Service VIP is intermittently unreachable from control-plane components",
+    "Certificate, manifest, or static-pod configuration drift affected multiple control-plane components during the same incident"
+  ],
+  "suggested_checks": [
+    "kubectl get pods -n kube-system -l tier=control-plane -o wide",
+    "kubectl get endpoints kubernetes -n default -o yaml",
+    "kubectl get lease -n kube-system",
+    "kubectl logs -n kube-system -l component=kube-apiserver --tail=200",
+    "kubectl logs -n kube-system -l component=kube-controller-manager --tail=200",
+    "kubectl logs -n kube-system -l component=kube-scheduler --tail=200",
+    "Check etcd health, control-plane node pressure, and API server /readyz"
+  ]
+}

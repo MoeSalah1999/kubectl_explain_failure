@@ -380,6 +380,10 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - StatefulSetOrdinalStartupBlocked
 - WebhookFailureBlocksDeployment
 
+### Cluster Infrastructure
+
+- ControlPlaneInstabilityCascade
+
 ### Cross-Domain
 
 - ClusterResourceStarvationCascade
