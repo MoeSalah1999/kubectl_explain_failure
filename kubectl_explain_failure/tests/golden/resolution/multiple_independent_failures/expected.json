@@ -1,0 +1,63 @@
+{
+  "root_cause": "Multiple independent failures require separate remediation",
+  "confidence": 0.97,
+  "blocking": true,
+  "resolution": {
+    "winner": "MultipleIndependentFailures",
+    "independent_failures": [
+      {
+        "name": "ConfigDependencyMissingChain",
+        "category": "ConfigMap",
+        "root_cause": "Missing ConfigMap 'checkout-worker-config' blocked startup",
+        "confidence": 0.96
+      },
+      {
+        "name": "ImagePullBackOff",
+        "category": "Image",
+        "root_cause": "Image pull repeatedly failing (ImagePullBackOff)",
+        "confidence": 0.83
+      }
+    ]
+  },
+  "evidence": [
+    "Engine found 2 independent active diagnoses: ConfigDependencyMissingChain, ImagePullBackOff",
+    "Independent failure domains involved: ConfigMap, Image",
+    "Recent event timeline contains distinct failure reasons: ImagePullBackOff, CreateContainerConfigError"
+  ],
+  "causes": [
+    {
+      "code": "MULTIPLE_ACTIVE_DIAGNOSES",
+      "message": "Engine resolution left multiple actionable diagnoses active",
+      "role": "diagnostic_context"
+    },
+    {
+      "code": "INDEPENDENT_FAILURE_DOMAINS",
+      "message": "Active diagnoses span independent domains: ConfigMap, Image",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "SEPARATE_REMEDIATION_REQUIRED",
+      "message": "Each independent failure must be investigated and remediated separately",
+      "role": "diagnostic_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-worker-6b8d7c4b77-fq2lm": [
+      "Multiple unsuppressed actionable diagnoses remain active after engine resolution"
+    ],
+    "engine:multiple-independent-failures": [
+      "ConfigDependencyMissingChain: Missing ConfigMap 'checkout-worker-config' blocked startup",
+      "ImagePullBackOff: Image pull repeatedly failing (ImagePullBackOff)"
+    ]
+  },
+  "likely_causes": [
+    "Missing ConfigMap 'checkout-worker-config' blocked startup",
+    "Image pull repeatedly failing (ImagePullBackOff)"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod checkout-worker-6b8d7c4b77-fq2lm",
+    "Address each listed independent diagnosis instead of treating later symptoms as caused by the first one",
+    "Re-run the diagnostic after fixing one failure to confirm the remaining active diagnosis"
+  ]
+}

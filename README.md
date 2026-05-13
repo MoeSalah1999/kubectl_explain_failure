@@ -351,6 +351,10 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ## Compound Rules
 
+### Engine-Level Intelligence
+
+- MultipleIndependentFailures
+
 ### Admission
 
 - PolicyEngineUnavailable

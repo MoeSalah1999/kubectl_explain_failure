@@ -1,0 +1,102 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-worker-6b8d7c4b77-fq2lm",
+      "namespace": "shop",
+      "labels": {
+        "app": "checkout-worker"
+      }
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "registry.example.com/shop/checkout-api:2026.04.13"
+        },
+        {
+          "name": "worker",
+          "image": "registry.example.com/shop/checkout-worker:2026.04.13",
+          "envFrom": [
+            {
+              "configMapRef": {
+                "name": "checkout-worker-config"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "waiting": {
+              "reason": "ImagePullBackOff",
+              "message": "Back-off pulling image \"registry.example.com/shop/checkout-api:2026.04.13\""
+            }
+          }
+        },
+        {
+          "name": "worker",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "waiting": {
+              "reason": "CreateContainerConfigError",
+              "message": "configmap \"checkout-worker-config\" not found"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "configmap": {},
+  "events": [
+    {
+      "reason": "ImagePullBackOff",
+      "message": "Back-off pulling image \"registry.example.com/shop/checkout-api:2026.04.13\" for container \"api\"",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-worker-6b8d7c4b77-fq2lm",
+        "namespace": "shop",
+        "fieldPath": "spec.containers{api}"
+      },
+      "lastTimestamp": "2026-04-13T14:00:00Z"
+    },
+    {
+      "reason": "CreateContainerConfigError",
+      "message": "Error: configmap \"checkout-worker-config\" not found for container \"worker\"",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-worker-6b8d7c4b77-fq2lm",
+        "namespace": "shop",
+        "fieldPath": "spec.containers{worker}"
+      },
+      "lastTimestamp": "2026-04-13T14:01:00Z"
+    },
+    {
+      "reason": "ImagePullBackOff",
+      "message": "Back-off pulling image \"registry.example.com/shop/checkout-api:2026.04.13\" for container \"api\"",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-worker-6b8d7c4b77-fq2lm",
+        "namespace": "shop",
+        "fieldPath": "spec.containers{api}"
+      },
+      "lastTimestamp": "2026-04-13T14:04:00Z"
+    }
+  ]
+}
