@@ -1,0 +1,137 @@
+{
+  "pod": {
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+      "name": "orders-api-6b7467b7f8-gm9tx",
+      "namespace": "payments"
+    },
+    "spec": {
+      "volumes": [
+        {
+          "name": "orders-data",
+          "persistentVolumeClaim": {
+            "claimName": "orders-data"
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "api",
+          "image": "registry.example.com/payments/orders-api:2026.05.15",
+          "readinessProbe": {
+            "httpGet": {
+              "path": "/readyz",
+              "port": 8080
+            },
+            "periodSeconds": 10,
+            "failureThreshold": 3
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-05-14T10:08:00Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "pvc": {
+    "apiVersion": "v1",
+    "kind": "PersistentVolumeClaim",
+    "metadata": {
+      "name": "orders-data",
+      "namespace": "payments"
+    },
+    "spec": {
+      "accessModes": ["ReadWriteOnce"],
+      "resources": {
+        "requests": {
+          "storage": "20Gi"
+        }
+      },
+      "storageClassName": "fast-ssd"
+    },
+    "status": {
+      "phase": "Bound"
+    }
+  },
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "ProvisioningFailed",
+      "message": "failed to provision volume with StorageClass fast-ssd: transient cloud API timeout",
+      "source": {
+        "component": "persistentvolume-controller"
+      },
+      "involvedObject": {
+        "kind": "PersistentVolumeClaim",
+        "name": "orders-data",
+        "namespace": "payments"
+      },
+      "firstTimestamp": "2026-05-14T10:00:00Z",
+      "lastTimestamp": "2026-05-14T10:00:00Z",
+      "eventTime": "2026-05-14T10:00:00Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "ProvisioningSucceeded",
+      "message": "successfully provisioned volume pvc-9f048d1d for claim payments/orders-data",
+      "source": {
+        "component": "persistentvolume-controller"
+      },
+      "involvedObject": {
+        "kind": "PersistentVolumeClaim",
+        "name": "orders-data",
+        "namespace": "payments"
+      },
+      "firstTimestamp": "2026-05-14T10:05:00Z",
+      "lastTimestamp": "2026-05-14T10:05:00Z",
+      "eventTime": "2026-05-14T10:05:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: GET /readyz returned 503 because dependency postgres.payments.svc.cluster.local:5432 is unavailable",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "orders-api-6b7467b7f8-gm9tx",
+        "namespace": "payments",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-05-14T10:12:00Z",
+      "lastTimestamp": "2026-05-14T10:12:00Z",
+      "eventTime": "2026-05-14T10:12:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: GET /readyz returned 503 because dependency postgres.payments.svc.cluster.local:5432 is unavailable",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "orders-api-6b7467b7f8-gm9tx",
+        "namespace": "payments",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-05-14T10:16:00Z",
+      "lastTimestamp": "2026-05-14T10:16:00Z",
+      "eventTime": "2026-05-14T10:16:00Z"
+    }
+  ]
+}

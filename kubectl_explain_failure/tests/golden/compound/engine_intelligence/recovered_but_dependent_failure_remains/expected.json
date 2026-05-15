@@ -1,0 +1,53 @@
+{
+  "root_cause": "Container failing readinessProbe checks",
+  "confidence": 0.95,
+  "evidence": [
+    "Recovered Storage signal 'ProvisioningSucceeded' appears before the active dependent failure",
+    "Active engine winner 'ReadinessProbeFailure' is still in dependent domain 'Container'",
+    "Later dependent failure signal remains present: Unhealthy",
+    "Recent timeline contains recovery followed by failure reasons: Unhealthy, ProvisioningFailed, ProvisioningSucceeded"
+  ],
+  "causes": [
+    {
+      "code": "DEPENDENCY_RECOVERY_OBSERVED",
+      "message": "Timeline shows Storage recovery signal 'ProvisioningSucceeded' before the current failure",
+      "role": "dependency_context"
+    },
+    {
+      "code": "DEPENDENT_FAILURE_REMAINS_ACTIVE",
+      "message": "Active diagnosis 'ReadinessProbeFailure' remains after the dependency or platform recovery",
+      "role": "container_health_root",
+      "blocking": true
+    },
+    {
+      "code": "RECOVERED_SIGNAL_NOT_CURRENT_ROOT",
+      "message": "The recovered precursor should be treated as context, not as the current blocking root cause",
+      "role": "diagnostic_resolution"
+    },
+    {
+      "code": "WORKLOAD_STILL_NOT_READY",
+      "message": "The workload remains degraded because the dependent health or runtime failure continues",
+      "role": "workload_symptom"
+    }
+  ],
+  "resolution": {
+    "winner": "ReadinessProbeFailure",
+    "explained_by": "RecoveredButDependentFailureRemains"
+  },
+  "recovered_but_dependent_failure_remains": {
+    "winner": "ReadinessProbeFailure",
+    "recovered_domain": "Storage",
+    "dependent_failure_domain": "Container",
+    "recovery": {
+      "reason": "ProvisioningSucceeded"
+    },
+    "remaining_failure": {
+      "reason": "Unhealthy"
+    },
+    "recent_event_reasons": [
+      "Unhealthy",
+      "ProvisioningFailed",
+      "ProvisioningSucceeded"
+    ]
+  }
+}

@@ -386,6 +386,11 @@ def _merge_post_resolution_expansion(
     if "secondary_failure_masking" in exp:
         result["secondary_failure_masking"] = exp["secondary_failure_masking"]
 
+    if "recovered_but_dependent_failure_remains" in exp:
+        result["recovered_but_dependent_failure_remains"] = exp[
+            "recovered_but_dependent_failure_remains"
+        ]
+
     result.setdefault("resolution", {})
     result["resolution"].setdefault("explained_by", rule.name)
     return result

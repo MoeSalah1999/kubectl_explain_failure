@@ -354,6 +354,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 ### Engine-Level Intelligence
 
 - MultipleIndependentFailures
+- RecoveredButDependentFailureRemains
 - SecondaryFailureMaskedByPrimary
 
 ### Admission
