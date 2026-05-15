@@ -1,0 +1,44 @@
+{
+  "root_cause": "Requested image manifest or tag does not exist in the registry",
+  "confidence": 0.94,
+  "evidence": [
+    "First ambiguous symptom 'Pulling' preceded the decisive root-cause signal 'ErrImagePull' by 15.0 minutes",
+    "2 earlier ambiguous symptom event(s) appeared before the root-cause event for 'ImagePullManifestUnknown'",
+    "Final engine winner remains 'ImagePullManifestUnknown': Requested image manifest or tag does not exist in the registry"
+  ],
+  "causes": [
+    {
+      "code": "EARLY_AMBIGUOUS_SYMPTOMS",
+      "message": "Timeline initially showed ambiguous symptom event 'Pulling'",
+      "role": "temporal_context"
+    },
+    {
+      "code": "ROOT_CAUSE_SIGNAL_ARRIVED_LATER",
+      "message": "Decisive root-cause event 'ErrImagePull' appeared 15.0 minutes after the first symptom",
+      "role": "diagnostic_context"
+    },
+    {
+      "code": "DELAYED_ROOT_CAUSE_CONFIRMED",
+      "message": "Engine selected 'ImagePullManifestUnknown' only after the later timeline signal made the root cause specific",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "EARLIER_EVENTS_RECLASSIFIED",
+      "message": "Earlier events are retained as symptoms rather than the current root cause",
+      "role": "diagnostic_resolution"
+    }
+  ],
+  "resolution": {
+    "winner": "ImagePullManifestUnknown",
+    "explained_by": "DelayedRootCauseDetection"
+  },
+  "delayed_root_cause_detection": {
+    "winner": "ImagePullManifestUnknown",
+    "winner_root_cause": "Requested image manifest or tag does not exist in the registry",
+    "first_symptom_reason": "Pulling",
+    "decisive_root_cause_reason": "ErrImagePull",
+    "delay_minutes": 15.0,
+    "earlier_symptom_count": 2
+  }
+}

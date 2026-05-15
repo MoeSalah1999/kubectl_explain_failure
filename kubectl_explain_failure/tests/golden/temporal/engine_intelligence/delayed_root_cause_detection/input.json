@@ -1,0 +1,125 @@
+{
+  "pod": {
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+      "name": "catalog-api-7d8d6fcbfd-r2j7p",
+      "namespace": "retail"
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "api",
+          "image": "registry.example.com/retail/catalog-api:2026.05.15-missing"
+        }
+      ],
+      "imagePullSecrets": [
+        {
+          "name": "registry-secret"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "waiting": {
+              "reason": "ImagePullBackOff",
+              "message": "Back-off pulling image 'registry.example.com/retail/catalog-api:2026.05.15-missing': manifest unknown"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "Scheduled",
+      "message": "Successfully assigned retail/catalog-api-7d8d6fcbfd-r2j7p to node-a",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "catalog-api-7d8d6fcbfd-r2j7p",
+        "namespace": "retail"
+      },
+      "firstTimestamp": "2026-05-15T10:00:00Z",
+      "lastTimestamp": "2026-05-15T10:00:00Z",
+      "eventTime": "2026-05-15T10:00:00Z"
+    },
+    {
+      "type": "Normal",
+      "reason": "Pulling",
+      "message": "Pulling image registry.example.com/retail/catalog-api:2026.05.15-missing",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "catalog-api-7d8d6fcbfd-r2j7p",
+        "namespace": "retail",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-05-15T10:01:00Z",
+      "lastTimestamp": "2026-05-15T10:01:00Z",
+      "eventTime": "2026-05-15T10:01:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "Failed to pull image registry.example.com/retail/catalog-api:2026.05.15-missing: rpc error: code = DeadlineExceeded desc = context deadline exceeded",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "catalog-api-7d8d6fcbfd-r2j7p",
+        "namespace": "retail",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-05-15T10:04:00Z",
+      "lastTimestamp": "2026-05-15T10:04:00Z",
+      "eventTime": "2026-05-15T10:04:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "ErrImagePull",
+      "message": "Failed to pull image registry.example.com/retail/catalog-api:2026.05.15-missing: manifest unknown",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "catalog-api-7d8d6fcbfd-r2j7p",
+        "namespace": "retail",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-05-15T10:16:00Z",
+      "lastTimestamp": "2026-05-15T10:16:00Z",
+      "eventTime": "2026-05-15T10:16:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "ImagePullBackOff",
+      "message": "Back-off pulling image registry.example.com/retail/catalog-api:2026.05.15-missing: manifest unknown",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "catalog-api-7d8d6fcbfd-r2j7p",
+        "namespace": "retail",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-05-15T10:17:00Z",
+      "lastTimestamp": "2026-05-15T10:17:00Z",
+      "eventTime": "2026-05-15T10:17:00Z"
+    }
+  ]
+}

@@ -461,6 +461,10 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ## Temporal Rules
 
+### Engine-Level Intelligence
+
+- DelayedRootCauseDetection
+
 ### Controllers
 
 - AutoscalingOscillation

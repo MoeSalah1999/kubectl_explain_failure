@@ -391,6 +391,9 @@ def _merge_post_resolution_expansion(
             "recovered_but_dependent_failure_remains"
         ]
 
+    if "delayed_root_cause_detection" in exp:
+        result["delayed_root_cause_detection"] = exp["delayed_root_cause_detection"]
+
     result.setdefault("resolution", {})
     result["resolution"].setdefault("explained_by", rule.name)
     return result
