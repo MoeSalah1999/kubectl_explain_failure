@@ -1,0 +1,112 @@
+{
+  "pod": {
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+      "name": "checkout-api-7fbb9d9d77-q9x2p",
+      "namespace": "payments"
+    },
+    "spec": {
+      "volumes": [
+        {
+          "name": "checkout-data",
+          "persistentVolumeClaim": {
+            "claimName": "checkout-data"
+          }
+        }
+      ],
+      "containers": [
+        {
+          "name": "api",
+          "image": "registry.example.com/payments/checkout-api:2026.05.14"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "state": {
+            "waiting": {
+              "reason": "ContainerCreating",
+              "message": "waiting for pod volume setup"
+            }
+          },
+          "ready": false,
+          "restartCount": 0
+        }
+      ]
+    }
+  },
+  "pvc": {
+    "apiVersion": "v1",
+    "kind": "PersistentVolumeClaim",
+    "metadata": {
+      "name": "checkout-data",
+      "namespace": "payments"
+    },
+    "spec": {
+      "accessModes": ["ReadWriteOnce"],
+      "resources": {
+        "requests": {
+          "storage": "20Gi"
+        }
+      },
+      "storageClassName": "fast-ssd"
+    },
+    "status": {
+      "phase": "Pending"
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "ExternalProvisioning",
+      "message": "waiting for a volume to be created, either by external provisioner ebs.csi.aws.com or manually created by system administrator",
+      "source": {
+        "component": "persistentvolume-controller"
+      },
+      "involvedObject": {
+        "kind": "PersistentVolumeClaim",
+        "name": "checkout-data",
+        "namespace": "payments"
+      },
+      "firstTimestamp": "2026-05-14T10:00:00Z",
+      "lastTimestamp": "2026-05-14T10:00:00Z",
+      "eventTime": "2026-05-14T10:00:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/6 nodes are available: pod has unbound immediate PersistentVolumeClaims. preemption: 0/6 nodes are available: 6 Preemption is not helpful for scheduling.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-7fbb9d9d77-q9x2p",
+        "namespace": "payments"
+      },
+      "firstTimestamp": "2026-05-14T10:01:30Z",
+      "lastTimestamp": "2026-05-14T10:01:30Z",
+      "eventTime": "2026-05-14T10:01:30Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "0/6 nodes are available: pod has unbound immediate PersistentVolumeClaims.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "name": "checkout-api-7fbb9d9d77-q9x2p",
+        "namespace": "payments"
+      },
+      "firstTimestamp": "2026-05-14T10:03:00Z",
+      "lastTimestamp": "2026-05-14T10:03:00Z",
+      "eventTime": "2026-05-14T10:03:00Z"
+    }
+  ]
+}

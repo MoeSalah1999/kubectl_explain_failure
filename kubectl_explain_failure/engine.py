@@ -361,6 +361,9 @@ def _merge_post_resolution_expansion(
     if "suppressed_signal_explanation" in exp:
         result["suppressed_signal_explanation"] = exp["suppressed_signal_explanation"]
 
+    if "secondary_failure_masking" in exp:
+        result["secondary_failure_masking"] = exp["secondary_failure_masking"]
+
     result.setdefault("resolution", {})
     result["resolution"].setdefault("explained_by", rule.name)
     return result

@@ -1,0 +1,24 @@
+{
+  "root_cause": "PersistentVolumeClaim not bound",
+  "confidence": 0.97,
+  "evidence": [
+    "Primary engine winner 'PVCNotBound' masked secondary matched signal(s): FailedScheduling",
+    "Winner domain 'PersistentVolumeClaim' has startup precedence over the suppressed secondary failure domain(s)",
+    "Recent timeline window contains the overlapping failure signal(s): FailedScheduling, ExternalProvisioning"
+  ],
+  "resolution": {
+    "winner": "PVCNotBound",
+    "suppressed": ["FailedScheduling"],
+    "explained_by": "SecondaryFailureMaskedByPrimary"
+  },
+  "secondary_failure_masking": {
+    "primary": "PVCNotBound",
+    "primary_domain": "PersistentVolumeClaim",
+    "secondary": [
+      {
+        "name": "FailedScheduling"
+      }
+    ],
+    "recent_event_reasons": ["FailedScheduling", "ExternalProvisioning"]
+  }
+}
