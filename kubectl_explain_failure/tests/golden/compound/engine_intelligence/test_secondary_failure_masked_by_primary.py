@@ -72,5 +72,8 @@ def test_secondary_failure_masked_by_primary_golden():
     for reason in expected["secondary_failure_masking"]["recent_event_reasons"]:
         assert reason in masked["recent_event_reasons"]
 
+    for exp_cause in expected["causes"]:
+        assert exp_cause in result["causes"]
+
     for ev in expected["evidence"]:
         assert ev in result["evidence"]

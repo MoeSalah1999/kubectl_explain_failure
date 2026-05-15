@@ -358,6 +358,28 @@ def _merge_post_resolution_expansion(
                 items,
             )
 
+    causes = exp.get("causes")
+    if isinstance(causes, CausalChain):
+        result.setdefault("causes", [])
+        existing = {
+            (str(cause.get("code", "")), str(cause.get("message", "")))
+            for cause in result["causes"]
+            if isinstance(cause, dict)
+        }
+        for cause in causes.causes:
+            cause_key = (cause.code, cause.message)
+            if cause_key in existing:
+                continue
+            result["causes"].append(
+                {
+                    "code": cause.code,
+                    "message": cause.message,
+                    **({"blocking": True} if cause.blocking else {}),
+                    **({"role": cause.role} if cause.role else {}),
+                }
+            )
+            existing.add(cause_key)
+
     if "suppressed_signal_explanation" in exp:
         result["suppressed_signal_explanation"] = exp["suppressed_signal_explanation"]
 

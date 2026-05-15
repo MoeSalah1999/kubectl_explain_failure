@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any, cast
 
+from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import Timeline
 
@@ -44,6 +45,18 @@ class SecondaryFailureMaskedByPrimaryRule(FailureRule):
         "Image": 50,
         "Container": 60,
         "Probes": 70,
+    }
+
+    BLOCKING_ROOT_ROLE_BY_DOMAIN = {
+        "Admission": "admission_root",
+        "PersistentVolumeClaim": "volume_root",
+        "Storage": "volume_root",
+        "Scheduling": "scheduling_root",
+        "Node": "infrastructure_root",
+        "Networking": "infrastructure_root",
+        "Image": "execution_root",
+        "Container": "container_health_root",
+        "Probes": "container_health_root",
     }
 
     ACTIONABLE_DOMAINS = set(DOMAIN_ORDER)
@@ -229,9 +242,50 @@ class SecondaryFailureMaskedByPrimaryRule(FailureRule):
                 f"{', '.join(recent_reasons)}"
             )
 
+        chain = CausalChain(
+            causes=[
+                Cause(
+                    code="ENGINE_PRIMARY_DIAGNOSIS_SELECTED",
+                    message=(
+                        f"Engine selected '{winner_name}' as the primary diagnosis"
+                    ),
+                    role="diagnostic_context",
+                ),
+                Cause(
+                    code="PRIMARY_FAILURE_GATES_WORKLOAD_PROGRESS",
+                    message=(
+                        f"Primary {winner_domain} failure blocks workload progress "
+                        "before the masked secondary failure stage"
+                    ),
+                    role=self.BLOCKING_ROOT_ROLE_BY_DOMAIN.get(
+                        winner_domain,
+                        "workload_root",
+                    ),
+                    blocking=True,
+                ),
+                Cause(
+                    code="SECONDARY_FAILURE_SIGNAL_SUPPRESSED",
+                    message=(
+                        "Suppressed matched signal(s) remain present but are "
+                        f"secondary: {', '.join(secondary_names)}"
+                    ),
+                    role="diagnostic_resolution",
+                ),
+                Cause(
+                    code="TIMELINE_PRECEDENCE_CONFIRMED",
+                    message=(
+                        f"Recent timeline supports {winner_domain} precedence over "
+                        "the masked secondary failure stage"
+                    ),
+                    role="diagnostic_symptom",
+                ),
+            ]
+        )
+
         return {
             "root_cause": str(preliminary.get("root_cause", "Unknown")),
             "confidence": float(preliminary.get("confidence", 0.0) or 0.0),
+            "causes": chain,
             "evidence": evidence,
             "resolution_patch": {
                 "reason": resolution_reason,

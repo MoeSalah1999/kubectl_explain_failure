@@ -6,6 +6,29 @@
     "Winner domain 'PersistentVolumeClaim' has startup precedence over the suppressed secondary failure domain(s)",
     "Recent timeline window contains the overlapping failure signal(s): FailedScheduling, ExternalProvisioning"
   ],
+  "causes": [
+    {
+      "code": "ENGINE_PRIMARY_DIAGNOSIS_SELECTED",
+      "message": "Engine selected 'PVCNotBound' as the primary diagnosis",
+      "role": "diagnostic_context"
+    },
+    {
+      "code": "PRIMARY_FAILURE_GATES_WORKLOAD_PROGRESS",
+      "message": "Primary PersistentVolumeClaim failure blocks workload progress before the masked secondary failure stage",
+      "role": "volume_root",
+      "blocking": true
+    },
+    {
+      "code": "SECONDARY_FAILURE_SIGNAL_SUPPRESSED",
+      "message": "Suppressed matched signal(s) remain present but are secondary: FailedScheduling",
+      "role": "diagnostic_resolution"
+    },
+    {
+      "code": "TIMELINE_PRECEDENCE_CONFIRMED",
+      "message": "Recent timeline supports PersistentVolumeClaim precedence over the masked secondary failure stage",
+      "role": "diagnostic_symptom"
+    }
+  ],
   "resolution": {
     "winner": "PVCNotBound",
     "suppressed": ["FailedScheduling"],
