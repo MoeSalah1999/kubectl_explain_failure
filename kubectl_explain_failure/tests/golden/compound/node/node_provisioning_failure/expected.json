@@ -1,0 +1,74 @@
+{
+  "root_cause": "Newly provisioned nodes failed to join the cluster, leaving pods Pending",
+  "confidence": 0.96,
+  "blocking": true,
+  "resolution": {
+    "winner": "NodeProvisioningFailure",
+    "suppressed": [
+      "InsufficientResources",
+      "NodeNotReady"
+    ]
+  },
+  "evidence": [
+    "Pod payments/payments-worker-5f87bc9f6c-rx7tp remains Pending",
+    "Scheduler reported insufficient capacity: 0/12 nodes are available: 12 Insufficient cpu, 12 Insufficient memory.",
+    "Cluster autoscaler started node provisioning: pod triggered scale-up: [{prod-workers 12->13 (max: 20)}]",
+    "Node provisioning failed to join: Node ip-10-41-18-203.ec2.internal is not ready: kubelet never posted node status",
+    "Cluster autoscaler status reports unregistered or NotReady nodes",
+    "Provisioned node readiness signal: ip-10-41-18-203.ec2.internal Ready=False reason=NodeStatusNeverUpdated",
+    "No successful Scheduled event observed after node provisioning failure",
+    "Scheduler/provisioning failure window lasted 20.0 minutes"
+  ],
+  "causes": [
+    {
+      "code": "SCHEDULER_REQUIRES_ADDITIONAL_CAPACITY",
+      "message": "Scheduler could not place the Pod on existing nodes because cluster capacity was insufficient",
+      "role": "scheduling_context"
+    },
+    {
+      "code": "NODE_PROVISIONING_STARTED",
+      "message": "Cluster autoscaler requested or started provisioning additional node capacity",
+      "role": "controller_context"
+    },
+    {
+      "code": "NEW_NODE_FAILED_TO_JOIN",
+      "message": "A newly provisioned node failed to register or become Ready in the cluster",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_REMAINS_PENDING",
+      "message": "Pod remains Pending because replacement node capacity never became schedulable",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:payments-worker-5f87bc9f6c-rx7tp": [
+      "Pod is Pending after autoscaler provisioning started but new node capacity did not join",
+      "Scheduler message: 0/12 nodes are available: 12 Insufficient cpu, 12 Insufficient memory."
+    ],
+    "controller:cluster-autoscaler": [
+      "TriggeredScaleUp: pod triggered scale-up: [{prod-workers 12->13 (max: 20)}]",
+      "NodeNotReady: Node ip-10-41-18-203.ec2.internal is not ready: kubelet never posted node status",
+      "Cluster-autoscaler status at 2026-05-16 12:20:00 +0000 UTC: ScaleUp: Backoff (unregistered nodes present: ip-10-41-18-203.ec2.internal did not register within max node provision time); NodeGroups: prod-workers currentSize=13 targetSize=13",
+      "ip-10-41-18-203.ec2.internal Ready=False reason=NodeStatusNeverUpdated"
+    ],
+    "configmap:cluster-autoscaler-status": [
+      "Cluster-autoscaler status at 2026-05-16 12:20:00 +0000 UTC: ScaleUp: Backoff (unregistered nodes present: ip-10-41-18-203.ec2.internal did not register within max node provision time); NodeGroups: prod-workers currentSize=13 targetSize=13"
+    ]
+  },
+  "likely_causes": [
+    "Node bootstrap or kubelet registration failed before the node became Ready",
+    "Cloud-init, startup scripts, or node image configuration prevented kubelet from joining the cluster",
+    "Network, IAM, TLS bootstrap, or CSR approval problems blocked node registration",
+    "Cluster autoscaler requested nodes, but the new capacity never became schedulable"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod payments-worker-5f87bc9f6c-rx7tp -n payments",
+    "kubectl -n kube-system logs deployment/cluster-autoscaler",
+    "kubectl -n kube-system get configmap cluster-autoscaler-status -o yaml",
+    "kubectl get nodes -o wide",
+    "Inspect cloud-init, kubelet, bootstrap, and node registration logs for the failed instance",
+    "Check node IAM/identity, network reachability to the API server, and pending CSRs"
+  ]
+}

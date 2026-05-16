@@ -416,15 +416,16 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 ### Node
 
   - ConflictingNodeConditions
+  - ContainerRuntimeUpgradeRegression
   - CrashLoopAfterNodeDrain
   - KubeletRestartLoop
   - NodeDiskPressureThenEviction
   - NodeNetworkUnavailableCascade
   - NodeNotReadyEvicted
   - NodePressureEvictionCascade
+  - NodeProvisioningFailure
   - PVCBoundNodeDiskPressureMount
   - PVCBoundThenNodePressure
-  - ContainerRuntimeUpgradeRegression
   - RuntimeRestartBreaksPod
 
 ### Probes

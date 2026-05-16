@@ -1,0 +1,148 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-worker-5f87bc9f6c-rx7tp",
+      "namespace": "payments",
+      "ownerReferences": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "ReplicaSet",
+          "name": "payments-worker-5f87bc9f6c"
+        }
+      ]
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "worker",
+          "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/payments-worker:v2026.05.16",
+          "resources": {
+            "requests": {
+              "cpu": "4",
+              "memory": "8Gi"
+            }
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "conditions": [
+        {
+          "type": "PodScheduled",
+          "status": "False",
+          "reason": "Unschedulable",
+          "message": "0/12 nodes are available: 12 Insufficient cpu, 12 Insufficient memory."
+        }
+      ]
+    }
+  },
+  "objects": {
+    "node": {
+      "ip-10-41-18-203.ec2.internal": {
+        "metadata": {
+          "name": "ip-10-41-18-203.ec2.internal",
+          "labels": {
+            "eks.amazonaws.com/nodegroup": "prod-workers",
+            "node.kubernetes.io/instance-type": "m6i.xlarge"
+          }
+        },
+        "status": {
+          "conditions": [
+            {
+              "type": "Ready",
+              "status": "False",
+              "reason": "NodeStatusNeverUpdated",
+              "message": "Kubelet never posted node status after the instance was created",
+              "lastTransitionTime": "2026-05-16T12:18:00Z"
+            }
+          ],
+          "allocatable": {
+            "cpu": "0",
+            "memory": "0",
+            "pods": "0"
+          }
+        }
+      }
+    },
+    "configmap": {
+      "cluster-autoscaler-status": {
+        "metadata": {
+          "name": "cluster-autoscaler-status",
+          "namespace": "kube-system"
+        },
+        "data": {
+          "status": "Cluster-autoscaler status at 2026-05-16 12:20:00 +0000 UTC: ScaleUp: Backoff (unregistered nodes present: ip-10-41-18-203.ec2.internal did not register within max node provision time); NodeGroups: prod-workers currentSize=13 targetSize=13"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/12 nodes are available: 12 Insufficient cpu, 12 Insufficient memory.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "type": "Warning",
+      "count": 1,
+      "firstTimestamp": "2026-05-16T12:00:00Z",
+      "lastTimestamp": "2026-05-16T12:00:00Z"
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "0/12 nodes are available: 12 Insufficient cpu, 12 Insufficient memory.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "type": "Warning",
+      "count": 2,
+      "firstTimestamp": "2026-05-16T12:03:00Z",
+      "lastTimestamp": "2026-05-16T12:03:00Z"
+    },
+    {
+      "reason": "TriggeredScaleUp",
+      "message": "pod triggered scale-up: [{prod-workers 12->13 (max: 20)}]",
+      "source": {
+        "component": "cluster-autoscaler"
+      },
+      "type": "Normal",
+      "count": 1,
+      "firstTimestamp": "2026-05-16T12:04:00Z",
+      "lastTimestamp": "2026-05-16T12:04:00Z"
+    },
+    {
+      "reason": "NodeProvisioning",
+      "message": "creating instance for node group prod-workers to satisfy pending pods",
+      "source": {
+        "component": "cluster-autoscaler"
+      },
+      "type": "Normal",
+      "count": 1,
+      "firstTimestamp": "2026-05-16T12:05:00Z",
+      "lastTimestamp": "2026-05-16T12:05:00Z"
+    },
+    {
+      "reason": "NodeNotReady",
+      "message": "Node ip-10-41-18-203.ec2.internal is not ready: kubelet never posted node status",
+      "source": {
+        "component": "node-controller"
+      },
+      "type": "Warning",
+      "count": 1,
+      "firstTimestamp": "2026-05-16T12:18:00Z",
+      "lastTimestamp": "2026-05-16T12:18:00Z"
+    },
+    {
+      "reason": "NodeProvisioningFailed",
+      "message": "node group prod-workers increased, but node ip-10-41-18-203.ec2.internal failed to register within max node provision time",
+      "source": {
+        "component": "cluster-autoscaler"
+      },
+      "type": "Warning",
+      "count": 1,
+      "firstTimestamp": "2026-05-16T12:20:00Z",
+      "lastTimestamp": "2026-05-16T12:20:00Z"
+    }
+  ]
+}
