@@ -1,0 +1,60 @@
+{
+  "root_cause": "Cluster autoscaler failed to add nodes for a Pending pod",
+  "confidence": 0.96,
+  "blocking": true,
+  "resolution": {
+    "winner": "ClusterAutoscalerScaleUpFailed",
+    "suppressed": [
+      "InsufficientResources"
+    ]
+  },
+  "evidence": [
+    "Pod payments/checkout-api-7f6c7c89f6-r9l4m remains Pending",
+    "Scheduler reported insufficient capacity: 0/6 nodes are available: 6 Insufficient cpu, 6 Insufficient memory.",
+    "Cluster autoscaler reported NotTriggerScaleUp: pod didn't trigger scale-up: 1 max node group size reached, 1 node group would not fit pod",
+    "No successful Scheduled event observed after autoscaler failure",
+    "Scheduler/autoscaler failure window lasted 5.0 minutes"
+  ],
+  "causes": [
+    {
+      "code": "SCHEDULER_REQUIRES_ADDITIONAL_CAPACITY",
+      "message": "Scheduler could not place the Pod on existing nodes because cluster capacity was insufficient",
+      "role": "scheduling_context"
+    },
+    {
+      "code": "CLUSTER_AUTOSCALER_SCALE_UP_FAILED",
+      "message": "Cluster autoscaler did not add nodes for the Pending Pod",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_REMAINS_PENDING",
+      "message": "Pod remains Pending because the required replacement capacity was not provisioned",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-api-7f6c7c89f6-r9l4m": [
+      "Pod is Pending after scheduler capacity rejection and autoscaler scale-up failure",
+      "Scheduler message: 0/6 nodes are available: 6 Insufficient cpu, 6 Insufficient memory."
+    ],
+    "controller:cluster-autoscaler": [
+      "NotTriggerScaleUp: pod didn't trigger scale-up: 1 max node group size reached, 1 node group would not fit pod"
+    ],
+    "configmap:cluster-autoscaler-status": [
+      "Cluster-autoscaler status at 2026-05-16 09:05:00 +0000 UTC: ScaleUp: NoActivity (max node group size reached for prod-workers); ScaleDown: NoCandidates"
+    ]
+  },
+  "likely_causes": [
+    "Node group or cloud provider quota prevents scale-up",
+    "Cluster autoscaler reached the node group maximum size",
+    "No scalable node group can fit the pod's requested CPU, memory, pods, or ephemeral storage",
+    "Cloud provider node provisioning is failing or in backoff"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod checkout-api-7f6c7c89f6-r9l4m -n payments",
+    "kubectl -n kube-system logs deployment/cluster-autoscaler",
+    "kubectl -n kube-system get configmap cluster-autoscaler-status -o yaml",
+    "Check node group max size, cloud quota, and autoscaler backoff events"
+  ]
+}
