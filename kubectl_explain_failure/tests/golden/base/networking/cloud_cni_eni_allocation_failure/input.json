@@ -1,0 +1,136 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "orders-api-66c5f8fd8f-v8q2n",
+      "namespace": "commerce"
+    },
+    "spec": {
+      "nodeName": "ip-10-18-42-91.ec2.internal",
+      "containers": [
+        {
+          "name": "api",
+          "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/orders-api:v2026.05.16"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "state": {
+            "waiting": {
+              "reason": "ContainerCreating",
+              "message": "waiting for pod sandbox network"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "node": {
+      "ip-10-18-42-91.ec2.internal": {
+        "metadata": {
+          "name": "ip-10-18-42-91.ec2.internal",
+          "labels": {
+            "eks.amazonaws.com/nodegroup": "commerce-workers",
+            "node.kubernetes.io/instance-type": "m6i.large"
+          }
+        },
+        "status": {
+          "conditions": [
+            {
+              "type": "Ready",
+              "status": "True",
+              "reason": "KubeletReady",
+              "message": "kubelet is posting ready status"
+            }
+          ],
+          "allocatable": {
+            "cpu": "1900m",
+            "memory": "7340Mi",
+            "pods": "29"
+          }
+        }
+      }
+    },
+    "pod": {
+      "catalog-api-6b8496f5fb-rz82q": {
+        "metadata": {
+          "name": "catalog-api-6b8496f5fb-rz82q",
+          "namespace": "commerce"
+        },
+        "spec": {
+          "nodeName": "ip-10-18-42-91.ec2.internal"
+        },
+        "status": {
+          "phase": "Pending"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "Scheduled",
+      "message": "Successfully assigned commerce/orders-api-66c5f8fd8f-v8q2n to ip-10-18-42-91.ec2.internal",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "type": "Normal",
+      "firstTimestamp": "2026-05-16T14:00:00Z",
+      "lastTimestamp": "2026-05-16T14:00:00Z"
+    },
+    {
+      "reason": "FailedCreatePodSandBox",
+      "message": "Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"7e2fd9\": plugin type=\"aws-cni\" failed (add): add cmd: failed to assign pod ENI/IP: ipamd: failed to call ec2:AssignPrivateIpAddresses for eni-0d80c7e0f3a1b4f6a: InsufficientFreeAddressesInSubnet: subnet subnet-09f8bca has insufficient free addresses",
+      "source": {
+        "component": "kubelet"
+      },
+      "type": "Warning",
+      "count": 1,
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "commerce",
+        "name": "orders-api-66c5f8fd8f-v8q2n",
+        "nodeName": "ip-10-18-42-91.ec2.internal"
+      },
+      "firstTimestamp": "2026-05-16T14:02:00Z",
+      "lastTimestamp": "2026-05-16T14:02:00Z"
+    },
+    {
+      "reason": "FailedCreatePodSandBox",
+      "message": "Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"7e2fd9\": plugin type=\"aws-cni\" failed (add): add cmd: failed to assign pod ENI/IP: ipamd: failed to call ec2:AssignPrivateIpAddresses for eni-0d80c7e0f3a1b4f6a: InsufficientFreeAddressesInSubnet: subnet subnet-09f8bca has insufficient free addresses",
+      "source": {
+        "component": "kubelet"
+      },
+      "type": "Warning",
+      "count": 4,
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "commerce",
+        "name": "orders-api-66c5f8fd8f-v8q2n",
+        "nodeName": "ip-10-18-42-91.ec2.internal"
+      },
+      "firstTimestamp": "2026-05-16T14:04:00Z",
+      "lastTimestamp": "2026-05-16T14:10:00Z"
+    },
+    {
+      "reason": "FailedCreatePodSandBox",
+      "message": "Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"c180af\": plugin type=\"aws-cni\" failed (add): failed to increase IP pool: failed to allocate ENI: CreateNetworkInterface failed for subnet subnet-09f8bca: InsufficientFreeAddressesInSubnet",
+      "source": {
+        "component": "kubelet"
+      },
+      "type": "Warning",
+      "count": 2,
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "commerce",
+        "name": "catalog-api-6b8496f5fb-rz82q",
+        "nodeName": "ip-10-18-42-91.ec2.internal"
+      },
+      "firstTimestamp": "2026-05-16T14:11:00Z",
+      "lastTimestamp": "2026-05-16T14:15:00Z"
+    }
+  ]
+}

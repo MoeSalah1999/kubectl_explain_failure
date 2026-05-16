@@ -265,6 +265,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ### Networking
 
+- CloudCNIENIAllocationFailure
 - CNIConfigMissing
 - CNIIPAMExhausted
 - CNIPluginFailure

@@ -1,0 +1,65 @@
+{
+  "root_cause": "AWS VPC CNI failed to allocate ENI or private IP capacity for pod networking",
+  "confidence": 0.97,
+  "blocking": true,
+  "resolution": {
+    "winner": "CloudCNIENIAllocationFailure",
+    "suppressed": [
+      "CNIIPAMExhausted",
+      "CNIPluginFailure"
+    ]
+  },
+  "evidence": [
+    "Pod commerce/orders-api-66c5f8fd8f-v8q2n remains Pending during sandbox creation",
+    "Latest ENI allocation failure event reason: FailedCreatePodSandBox",
+    "Latest ENI allocation failure message: Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"7e2fd9\": plugin type=\"aws-cni\" failed (add): add cmd: failed to assign pod ENI/IP: ipamd: failed to call ec2:AssignPrivateIpAddresses for eni-0d80c7e0f3a1b4f6a: InsufficientFreeAddressesInSubnet: subnet subnet-09f8bca has insufficient free addresses",
+    "Observed 7 AWS VPC CNI ENI/IP allocation failure occurrence(s) within 30 minutes",
+    "No successful container start observed after the latest ENI allocation failure",
+    "Pod is assigned to node ip-10-18-42-91.ec2.internal",
+    "Timeline affected pod(s): orders-api-66c5f8fd8f-v8q2n, catalog-api-6b8496f5fb-rz82q",
+    "AWS VPC CNI ENI/IP allocation failures persisted for 13.0 minutes"
+  ],
+  "causes": [
+    {
+      "code": "POD_SANDBOX_NETWORK_SETUP",
+      "message": "Kubelet attempted to create the Pod sandbox and attach AWS VPC CNI networking",
+      "role": "runtime_context"
+    },
+    {
+      "code": "AWS_VPC_CNI_ENI_ALLOCATION_FAILED",
+      "message": "AWS VPC CNI could not allocate or attach ENI/private-IP capacity for the Pod",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_SANDBOX_CREATION_BLOCKED",
+      "message": "Pod sandbox creation failed because cloud CNI networking could not allocate pod network capacity",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:orders-api-66c5f8fd8f-v8q2n": [
+      "Pod sandbox creation is blocked by AWS VPC CNI ENI/private-IP allocation failure",
+      "Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"7e2fd9\": plugin type=\"aws-cni\" failed (add): add cmd: failed to assign pod ENI/IP: ipamd: failed to call ec2:AssignPrivateIpAddresses for eni-0d80c7e0f3a1b4f6a: InsufficientFreeAddressesInSubnet: subnet subnet-09f8bca has insufficient free addresses"
+    ],
+    "node:ip-10-18-42-91.ec2.internal": [
+      "Assigned node could not obtain AWS VPC CNI ENI/private-IP capacity"
+    ],
+    "timeline:eni_failures": [
+      "Affected pod(s): orders-api-66c5f8fd8f-v8q2n, catalog-api-6b8496f5fb-rz82q"
+    ]
+  },
+  "likely_causes": [
+    "Subnet free IP addresses are exhausted for the node group",
+    "The instance reached its ENI or secondary private IP limit",
+    "AWS VPC CNI ipamd cannot attach an ENI or assign private IPs through the EC2 API",
+    "EC2 API throttling or IAM permissions are preventing ENI/private-IP allocation"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod orders-api-66c5f8fd8f-v8q2n -n commerce",
+    "kubectl -n kube-system logs daemonset/aws-node -c aws-node",
+    "Inspect aws-node/ipamd logs for AssignPrivateIpAddresses, AttachNetworkInterface, or CreateNetworkInterface errors",
+    "Check subnet free IP count, instance ENI/IP limits, WARM_IP_TARGET, and WARM_ENI_TARGET",
+    "Verify the aws-node IAM role can call required EC2 network-interface and private-IP APIs"
+  ]
+}
