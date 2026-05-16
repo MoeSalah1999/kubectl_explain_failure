@@ -1,0 +1,64 @@
+{
+  "root_cause": "Cluster autoscaler cannot add nodes because cloud provider quota is exhausted",
+  "confidence": 0.97,
+  "blocking": true,
+  "resolution": {
+    "winner": "ClusterAutoscalerInsufficientCloudQuota",
+    "suppressed": [
+      "ClusterAutoscalerScaleUpFailed",
+      "InsufficientResources"
+    ]
+  },
+  "evidence": [
+    "Pod ml-prod/ml-batch-trainer-85f6d7c985-p9sz8 remains Pending",
+    "Scheduler reported insufficient capacity: 0/10 nodes are available: 10 Insufficient cpu, 10 Insufficient memory.",
+    "Cluster autoscaler reported ScaleUpFailed: failed to increase node group size: googleapi: Error 403: QUOTA_EXCEEDED: Quota 'CPUS_ALL_REGIONS' exceeded. Limit: 240.0 globally.",
+    "Cluster autoscaler status reports cloud quota exhaustion",
+    "No successful Scheduled event observed after quota failure",
+    "Scheduler/autoscaler quota failure window lasted 7.0 minutes"
+  ],
+  "causes": [
+    {
+      "code": "SCHEDULER_REQUIRES_ADDITIONAL_CAPACITY",
+      "message": "Scheduler could not place the Pod on existing nodes because cluster capacity was insufficient",
+      "role": "scheduling_context"
+    },
+    {
+      "code": "CLOUD_QUOTA_EXHAUSTED",
+      "message": "Cluster autoscaler could not create replacement nodes because cloud provider quota was exhausted",
+      "role": "controller_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_REMAINS_PENDING",
+      "message": "Pod remains Pending until cloud quota is increased, released, or capacity is added elsewhere",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:ml-batch-trainer-85f6d7c985-p9sz8": [
+      "Pod is Pending after scheduler capacity rejection and cloud quota exhaustion",
+      "Scheduler message: 0/10 nodes are available: 10 Insufficient cpu, 10 Insufficient memory."
+    ],
+    "controller:cluster-autoscaler": [
+      "ScaleUpFailed: failed to increase node group size: googleapi: Error 403: QUOTA_EXCEEDED: Quota 'CPUS_ALL_REGIONS' exceeded. Limit: 240.0 globally.",
+      "Cluster-autoscaler status at 2026-05-16 11:27:00 +0000 UTC: ScaleUp: Backoff (GCE quota exceeded: QUOTA_EXCEEDED: Quota 'CPUS_ALL_REGIONS' exceeded. Limit: 240.0 globally); NodeGroups: prod-gpu-pool currentSize=10 targetSize=10"
+    ],
+    "configmap:cluster-autoscaler-status": [
+      "Cluster-autoscaler status at 2026-05-16 11:27:00 +0000 UTC: ScaleUp: Backoff (GCE quota exceeded: QUOTA_EXCEEDED: Quota 'CPUS_ALL_REGIONS' exceeded. Limit: 240.0 globally); NodeGroups: prod-gpu-pool currentSize=10 targetSize=10"
+    ]
+  },
+  "likely_causes": [
+    "AWS vCPU, instance, ENI, or address limits prevent node creation",
+    "GCP regional CPU, address, disk, or project quota prevents node creation",
+    "Azure VM family cores, public IP, or regional quota prevents node creation",
+    "Cluster autoscaler found a fitting node group but the cloud provider rejected scale-up for quota reasons"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod ml-batch-trainer-85f6d7c985-p9sz8 -n ml-prod",
+    "kubectl -n kube-system logs deployment/cluster-autoscaler",
+    "kubectl -n kube-system get configmap cluster-autoscaler-status -o yaml",
+    "Check cloud provider quota dashboards for regional CPU, VM, IP, disk, or instance limits",
+    "Request a quota increase or scale a node group in a region/zone with available quota"
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "ml-batch-trainer-85f6d7c985-p9sz8",
+      "namespace": "ml-prod",
+      "ownerReferences": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "ReplicaSet",
+          "name": "ml-batch-trainer-85f6d7c985"
+        }
+      ]
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "trainer",
+          "image": "us-docker.pkg.dev/example/ml/trainer:v2026.05.16",
+          "resources": {
+            "requests": {
+              "cpu": "12",
+              "memory": "48Gi"
+            }
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "conditions": [
+        {
+          "type": "PodScheduled",
+          "status": "False",
+          "reason": "Unschedulable",
+          "message": "0/10 nodes are available: 10 Insufficient cpu, 10 Insufficient memory."
+        }
+      ]
+    }
+  },
+  "objects": {
+    "node": {
+      "gke-prod-gpu-pool-1a2b3c4d-7x8p": {
+        "metadata": {
+          "name": "gke-prod-gpu-pool-1a2b3c4d-7x8p",
+          "labels": {
+            "cloud.google.com/gke-nodepool": "prod-gpu-pool",
+            "topology.kubernetes.io/region": "us-central1"
+          }
+        },
+        "status": {
+          "allocatable": {
+            "cpu": "7800m",
+            "memory": "30120Mi",
+            "pods": "110"
+          }
+        }
+      }
+    },
+    "configmap": {
+      "cluster-autoscaler-status": {
+        "metadata": {
+          "name": "cluster-autoscaler-status",
+          "namespace": "kube-system"
+        },
+        "data": {
+          "status": "Cluster-autoscaler status at 2026-05-16 11:27:00 +0000 UTC: ScaleUp: Backoff (GCE quota exceeded: QUOTA_EXCEEDED: Quota 'CPUS_ALL_REGIONS' exceeded. Limit: 240.0 globally); NodeGroups: prod-gpu-pool currentSize=10 targetSize=10"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/10 nodes are available: 10 Insufficient cpu, 10 Insufficient memory.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "type": "Warning",
+      "count": 1,
+      "firstTimestamp": "2026-05-16T11:20:00Z",
+      "lastTimestamp": "2026-05-16T11:20:00Z"
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "0/10 nodes are available: 10 Insufficient cpu, 10 Insufficient memory.",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "type": "Warning",
+      "count": 2,
+      "firstTimestamp": "2026-05-16T11:23:00Z",
+      "lastTimestamp": "2026-05-16T11:23:00Z"
+    },
+    {
+      "reason": "ScaleUpFailed",
+      "message": "failed to increase node group size: googleapi: Error 403: QUOTA_EXCEEDED: Quota 'CPUS_ALL_REGIONS' exceeded. Limit: 240.0 globally.",
+      "source": {
+        "component": "cluster-autoscaler"
+      },
+      "type": "Warning",
+      "count": 1,
+      "firstTimestamp": "2026-05-16T11:25:00Z",
+      "lastTimestamp": "2026-05-16T11:25:00Z"
+    },
+    {
+      "reason": "NoScaleUp",
+      "message": "pod didn't trigger scale-up: cloud provider returned ResourceExhausted for regional CPU quota",
+      "source": {
+        "component": "cluster-autoscaler"
+      },
+      "type": "Normal",
+      "count": 2,
+      "firstTimestamp": "2026-05-16T11:27:00Z",
+      "lastTimestamp": "2026-05-16T11:27:00Z"
+    }
+  ]
+}

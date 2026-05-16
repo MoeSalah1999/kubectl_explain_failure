@@ -77,7 +77,7 @@
           "namespace": "kube-system"
         },
         "data": {
-          "status": "Cluster-autoscaler status at 2026-05-16 09:05:00 +0000 UTC: ScaleUp: Backoff (cloud provider regional CPU quota exceeded for prod-workers); ScaleDown: NoCandidates"
+          "status": "Cluster-autoscaler status at 2026-05-16 09:05:00 +0000 UTC: ScaleUp: Backoff (cloud provider returned transient InternalError while creating instances for prod-workers); ScaleDown: NoCandidates"
         }
       }
     }
@@ -107,7 +107,7 @@
     },
     {
       "reason": "NotTriggerScaleUp",
-      "message": "pod didn't trigger scale-up: 1 node group would fit pod but cloud provider regional CPU quota is exhausted",
+      "message": "pod didn't trigger scale-up: 1 node group would fit pod but cloud provider provisioning is in backoff after transient InternalError",
       "source": {
         "component": "cluster-autoscaler"
       },
@@ -118,7 +118,7 @@
     },
     {
       "reason": "ScaleUpFailed",
-      "message": "failed to increase node group size: cloud provider quota exceeded for regional CPUs",
+      "message": "failed to increase node group size: cloud provider returned transient InternalError while creating instances",
       "source": {
         "component": "cluster-autoscaler"
       },
