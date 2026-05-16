@@ -11,7 +11,7 @@
   "evidence": [
     "Pod payments/checkout-api-7f6c7c89f6-r9l4m remains Pending",
     "Scheduler reported insufficient capacity: 0/6 nodes are available: 6 Insufficient cpu, 6 Insufficient memory.",
-    "Cluster autoscaler reported NotTriggerScaleUp: pod didn't trigger scale-up: 1 max node group size reached, 1 node group would not fit pod",
+    "Cluster autoscaler reported NotTriggerScaleUp: pod didn't trigger scale-up: 1 node group would fit pod but cloud provider regional CPU quota is exhausted",
     "No successful Scheduled event observed after autoscaler failure",
     "Scheduler/autoscaler failure window lasted 5.0 minutes"
   ],
@@ -39,10 +39,10 @@
       "Scheduler message: 0/6 nodes are available: 6 Insufficient cpu, 6 Insufficient memory."
     ],
     "controller:cluster-autoscaler": [
-      "NotTriggerScaleUp: pod didn't trigger scale-up: 1 max node group size reached, 1 node group would not fit pod"
+      "NotTriggerScaleUp: pod didn't trigger scale-up: 1 node group would fit pod but cloud provider regional CPU quota is exhausted"
     ],
     "configmap:cluster-autoscaler-status": [
-      "Cluster-autoscaler status at 2026-05-16 09:05:00 +0000 UTC: ScaleUp: NoActivity (max node group size reached for prod-workers); ScaleDown: NoCandidates"
+      "Cluster-autoscaler status at 2026-05-16 09:05:00 +0000 UTC: ScaleUp: Backoff (cloud provider regional CPU quota exceeded for prod-workers); ScaleDown: NoCandidates"
     ]
   },
   "likely_causes": [
