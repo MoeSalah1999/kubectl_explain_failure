@@ -1,0 +1,136 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-api-7bb9d86f97-xm4qz",
+      "namespace": "payments"
+    },
+    "spec": {
+      "nodeName": "ip-10-42-7-19.ec2.internal",
+      "containers": [
+        {
+          "name": "api",
+          "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/checkout-api:v2026.05.16"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Pending",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "state": {
+            "waiting": {
+              "reason": "ContainerCreating",
+              "message": "waiting for pod sandbox network"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "node": {
+      "ip-10-42-7-19.ec2.internal": {
+        "metadata": {
+          "name": "ip-10-42-7-19.ec2.internal",
+          "labels": {
+            "kubernetes.io/os": "linux",
+            "eks.amazonaws.com/nodegroup": "prod-workers"
+          }
+        },
+        "status": {
+          "conditions": [
+            {
+              "type": "Ready",
+              "status": "True",
+              "reason": "KubeletReady",
+              "message": "kubelet is posting ready status"
+            }
+          ],
+          "allocatable": {
+            "cpu": "7900m",
+            "memory": "31200Mi",
+            "pods": "110"
+          }
+        }
+      }
+    },
+    "pod": {
+      "billing-api-5d88487c7f-jqf4h": {
+        "metadata": {
+          "name": "billing-api-5d88487c7f-jqf4h",
+          "namespace": "payments"
+        },
+        "spec": {
+          "nodeName": "ip-10-42-7-19.ec2.internal"
+        },
+        "status": {
+          "phase": "Pending"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "Scheduled",
+      "message": "Successfully assigned payments/checkout-api-7bb9d86f97-xm4qz to ip-10-42-7-19.ec2.internal",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "type": "Normal",
+      "firstTimestamp": "2026-05-16T13:00:00Z",
+      "lastTimestamp": "2026-05-16T13:00:00Z"
+    },
+    {
+      "reason": "FailedCreatePodSandBox",
+      "message": "Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"e2f8a1\": plugin type=\"aws-cni\" failed (add): add cmd: failed to assign an IP address to container",
+      "source": {
+        "component": "kubelet"
+      },
+      "type": "Warning",
+      "count": 1,
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "payments",
+        "name": "checkout-api-7bb9d86f97-xm4qz",
+        "nodeName": "ip-10-42-7-19.ec2.internal"
+      },
+      "firstTimestamp": "2026-05-16T13:02:00Z",
+      "lastTimestamp": "2026-05-16T13:02:00Z"
+    },
+    {
+      "reason": "FailedCreatePodSandBox",
+      "message": "Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"e2f8a1\": plugin type=\"aws-cni\" failed (add): add cmd: failed to assign an IP address to container; no available IP addresses in subnet subnet-0d3f8a9c",
+      "source": {
+        "component": "kubelet"
+      },
+      "type": "Warning",
+      "count": 3,
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "payments",
+        "name": "checkout-api-7bb9d86f97-xm4qz",
+        "nodeName": "ip-10-42-7-19.ec2.internal"
+      },
+      "firstTimestamp": "2026-05-16T13:05:00Z",
+      "lastTimestamp": "2026-05-16T13:08:00Z"
+    },
+    {
+      "reason": "FailedCreatePodSandBox",
+      "message": "Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"9ab412\": plugin type=\"aws-cni\" failed (add): IPAM exhausted: no available IP addresses in subnet subnet-0d3f8a9c",
+      "source": {
+        "component": "kubelet"
+      },
+      "type": "Warning",
+      "count": 2,
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "payments",
+        "name": "billing-api-5d88487c7f-jqf4h",
+        "nodeName": "ip-10-42-7-19.ec2.internal"
+      },
+      "firstTimestamp": "2026-05-16T13:09:00Z",
+      "lastTimestamp": "2026-05-16T13:12:00Z"
+    }
+  ]
+}

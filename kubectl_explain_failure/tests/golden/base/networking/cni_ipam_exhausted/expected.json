@@ -1,0 +1,65 @@
+{
+  "root_cause": "CNI/IPAM address pool exhausted during pod sandbox creation",
+  "confidence": 0.97,
+  "blocking": true,
+  "resolution": {
+    "winner": "CNIIPAMExhausted",
+    "suppressed": [
+      "CNIIPExhaustion",
+      "CNIPluginFailure"
+    ]
+  },
+  "evidence": [
+    "Pod payments/checkout-api-7bb9d86f97-xm4qz remains Pending during sandbox creation",
+    "Latest IPAM exhaustion event reason: FailedCreatePodSandBox",
+    "Latest IPAM exhaustion message: Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"e2f8a1\": plugin type=\"aws-cni\" failed (add): add cmd: failed to assign an IP address to container; no available IP addresses in subnet subnet-0d3f8a9c",
+    "Observed 6 IPAM allocation failure occurrence(s) within 30 minutes",
+    "No successful container start observed after the latest IPAM failure",
+    "Pod is assigned to node ip-10-42-7-19.ec2.internal",
+    "Timeline affected pod(s): checkout-api-7bb9d86f97-xm4qz, billing-api-5d88487c7f-jqf4h",
+    "IPAM allocation failures persisted for 10.0 minutes"
+  ],
+  "causes": [
+    {
+      "code": "POD_SANDBOX_NETWORK_SETUP",
+      "message": "Kubelet attempted to create the Pod sandbox and attach pod networking",
+      "role": "runtime_context"
+    },
+    {
+      "code": "CNI_IPAM_EXHAUSTED",
+      "message": "CNI/IPAM could not allocate a pod IP address from the available pool or subnet",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_SANDBOX_CREATION_BLOCKED",
+      "message": "Pod sandbox creation failed because pod networking could not receive an IP address",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-api-7bb9d86f97-xm4qz": [
+      "Pod sandbox creation is blocked by CNI/IPAM address exhaustion",
+      "Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"e2f8a1\": plugin type=\"aws-cni\" failed (add): add cmd: failed to assign an IP address to container; no available IP addresses in subnet subnet-0d3f8a9c"
+    ],
+    "node:ip-10-42-7-19.ec2.internal": [
+      "Assigned node or subnet has no available pod IP addresses"
+    ],
+    "timeline:ipam_failures": [
+      "Affected pod(s): checkout-api-7bb9d86f97-xm4qz, billing-api-5d88487c7f-jqf4h"
+    ]
+  },
+  "likely_causes": [
+    "Subnet or secondary IP range has no free pod IP addresses",
+    "Node-local CNI warm IP target or ENI/IP capacity is exhausted",
+    "Calico, Cilium, Azure CNI, AWS VPC CNI, or Whereabouts IPAM pool is depleted",
+    "Pods per node or subnet sizing is too small for current workload density"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod checkout-api-7bb9d86f97-xm4qz -n payments",
+    "kubectl get events --sort-by=.lastTimestamp",
+    "Check CNI daemon logs on the assigned node for IPAM allocation errors",
+    "Inspect subnet, PodCIDR, secondary range, ENI, or IP pool free-address capacity",
+    "Add pod IP capacity, expand the subnet/IP pool, or reduce pod density on affected nodes"
+  ]
+}
