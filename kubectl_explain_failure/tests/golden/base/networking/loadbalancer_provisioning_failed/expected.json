@@ -1,0 +1,65 @@
+{
+  "root_cause": "Cloud LoadBalancer provisioning failed for Service",
+  "confidence": 0.97,
+  "blocking": true,
+  "resolution": {
+    "winner": "LoadBalancerProvisioningFailed",
+    "suppressed": [
+      "ServiceEndpointsEmpty",
+      "EndpointSliceMissing",
+      "ServicePortMismatch"
+    ]
+  },
+  "evidence": [
+    "Service shop/checkout-public is type LoadBalancer and selects pod checkout-api-6c8d9f7d95-x4m2q",
+    "Service status.loadBalancer.ingress is empty, so no external address has been assigned",
+    "Latest LoadBalancer provisioning failure reason: SyncLoadBalancerFailed",
+    "Latest LoadBalancer provisioning failure message: Error syncing load balancer: failed to ensure load balancer: AccessDenied for elasticloadbalancing:CreateLoadBalancer using the cluster service role",
+    "Observed 5 cloud LoadBalancer provisioning failure occurrence(s) within 30 minutes",
+    "No successful LoadBalancer provisioning event was observed after the latest failure",
+    "LoadBalancer provisioning failures persisted for 5.0 minutes"
+  ],
+  "causes": [
+    {
+      "code": "SERVICE_REQUIRES_CLOUD_LOAD_BALANCER",
+      "message": "Service 'checkout-public' exposes the workload through a cloud LoadBalancer",
+      "role": "service_context"
+    },
+    {
+      "code": "LOAD_BALANCER_PROVISIONING_FAILED",
+      "message": "The cloud provider could not provision or reconcile the external load balancer",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "EXTERNAL_TRAFFIC_BLOCKED",
+      "message": "External clients cannot reach the workload until the LoadBalancer is provisioned",
+      "role": "service_symptom"
+    }
+  ],
+  "object_evidence": {
+    "service:checkout-public": [
+      "LoadBalancer Service has no assigned external ingress",
+      "Error syncing load balancer: failed to ensure load balancer: AccessDenied for elasticloadbalancing:CreateLoadBalancer using the cluster service role"
+    ],
+    "pod:checkout-api-6c8d9f7d95-x4m2q": [
+      "Pod is selected by Service 'checkout-public', whose external LoadBalancer is not provisioned"
+    ],
+    "timeline:loadbalancer": [
+      "Error syncing load balancer: failed to ensure load balancer: AccessDenied for elasticloadbalancing:CreateLoadBalancer using the cluster service role"
+    ]
+  },
+  "likely_causes": [
+    "Cloud subnet tags or route configuration do not allow load balancer placement",
+    "Cloud quota or load balancer limits prevent creating another load balancer",
+    "The cloud-controller-manager or load balancer controller lacks required IAM permissions",
+    "Security group, firewall, or availability-zone constraints prevent provider reconciliation"
+  ],
+  "suggested_checks": [
+    "kubectl describe service checkout-public -n shop",
+    "Check cloud-controller-manager or cloud load balancer controller logs for reconciliation errors",
+    "Verify subnet tags, availability zones, security groups, and cloud load balancer quotas",
+    "Confirm controller IAM permissions for creating and tagging load balancers, listeners, target groups, and security groups",
+    "kubectl get endpoints checkout-public -n shop"
+  ]
+}
