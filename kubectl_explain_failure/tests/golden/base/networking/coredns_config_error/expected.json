@@ -1,0 +1,71 @@
+{
+  "root_cause": "CoreDNS configuration error is breaking cluster DNS",
+  "confidence": 0.99,
+  "blocking": true,
+  "resolution": {
+    "winner": "CoreDNSConfigError",
+    "suppressed": [
+      "CoreDNSUnavailable",
+      "DNSResolutionFailure",
+      "DNSFailureThenCrashLoop",
+      "ServiceEndpointsEmpty",
+      "EndpointSliceMissing"
+    ]
+  },
+  "evidence": [
+    "Pod payments/checkout-api-5dfc66f6f9-t8l2m has DNS failures while CoreDNS reports configuration errors",
+    "Representative workload DNS failure: DNS lookup failed for auth.payments.svc.cluster.local: lookup auth.payments.svc.cluster.local on 10.96.0.10:53: server misbehaving",
+    "Observed 3 DNS failure occurrence(s) for the current Pod within 20 minutes",
+    "Observed 5 DNS failure occurrence(s) across affected workload Pod(s) within 20 minutes",
+    "Affected workload Pod(s): payments/checkout-api-5dfc66f6f9-t8l2m, payments/payments-worker-6b99877c98-vt9jh",
+    "Representative CoreDNS config error: Readiness probe failed: Corefile:5 - Error during parsing: Unknown directive 'kubernets'",
+    "Observed 2 CoreDNS config error occurrence(s) within 20 minutes",
+    "DNS failures target hostname 'auth.payments.svc.cluster.local'",
+    "CoreDNS Corefile contains suspicious directive 'kubernets'",
+    "CoreDNS Corefile forwards DNS back to CoreDNS itself",
+    "CoreDNS config and workload DNS failure signals persisted for 7.0 minutes"
+  ],
+  "causes": [
+    {
+      "code": "WORKLOADS_REQUIRE_CLUSTER_DNS",
+      "message": "Workloads depend on CoreDNS for cluster service discovery",
+      "role": "runtime_context"
+    },
+    {
+      "code": "COREDNS_CONFIG_INVALID",
+      "message": "CoreDNS is loading an invalid or recursively broken Corefile",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "CLUSTER_DNS_RESOLUTION_BROKEN",
+      "message": "Pod-local DNS lookups fail because CoreDNS cannot serve the configured zone correctly",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-api-5dfc66f6f9-t8l2m": [
+      "DNS lookup failed for auth.payments.svc.cluster.local: lookup auth.payments.svc.cluster.local on 10.96.0.10:53: server misbehaving"
+    ],
+    "configmap:coredns": [
+      "CoreDNS Corefile contains suspicious directive 'kubernets'",
+      "CoreDNS Corefile forwards DNS back to CoreDNS itself"
+    ],
+    "timeline:coredns": [
+      "Readiness probe failed: Corefile:5 - Error during parsing: Unknown directive 'kubernets'"
+    ]
+  },
+  "likely_causes": [
+    "The kube-system/coredns ConfigMap contains an invalid Corefile directive or syntax error",
+    "CoreDNS is forwarding recursively to itself or through a node resolver that points back to kube-dns",
+    "A recent CoreDNS ConfigMap rollout introduced an invalid plugin stanza or zone block",
+    "CoreDNS reload failed, so all Pods see generic DNS lookup failures while the root cause is shared config"
+  ],
+  "suggested_checks": [
+    "kubectl -n kube-system get configmap coredns -o yaml",
+    "kubectl -n kube-system logs -l k8s-app=kube-dns --tail=100",
+    "kubectl -n kube-system describe configmap coredns",
+    "Validate the Corefile syntax and plugin names before rolling CoreDNS",
+    "kubectl describe pod checkout-api-5dfc66f6f9-t8l2m -n payments"
+  ]
+}

@@ -1,0 +1,203 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-api-5dfc66f6f9-t8l2m",
+      "namespace": "payments"
+    },
+    "spec": {
+      "nodeName": "worker-az1-04",
+      "containers": [
+        {
+          "name": "api",
+          "image": "registry.internal.example/payments/checkout-api:2026.05.19",
+          "env": [
+            {
+              "name": "AUTH_URL",
+              "value": "http://auth.payments.svc.cluster.local"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "restartCount": 1,
+          "state": {
+            "waiting": {
+              "reason": "Error",
+              "message": "startup dependency check failed after DNS lookup errors"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "configmap": {
+      "coredns": {
+        "apiVersion": "v1",
+        "kind": "ConfigMap",
+        "metadata": {
+          "name": "coredns",
+          "namespace": "kube-system",
+          "creationTimestamp": "2026-05-19T07:55:00Z"
+        },
+        "data": {
+          "Corefile": ".:53 {\n    errors\n    health\n    ready\n    kubernets cluster.local in-addr.arpa ip6.arpa {\n        pods insecure\n        fallthrough in-addr.arpa ip6.arpa\n    }\n    forward . 10.96.0.10\n    cache 30\n    loop\n    reload\n    loadbalance\n}\n"
+        }
+      }
+    },
+    "service": {
+      "kube-dns": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "metadata": {
+          "name": "kube-dns",
+          "namespace": "kube-system",
+          "labels": {
+            "k8s-app": "kube-dns"
+          }
+        },
+        "spec": {
+          "clusterIP": "10.96.0.10",
+          "selector": {
+            "k8s-app": "kube-dns"
+          }
+        }
+      }
+    },
+    "endpoints": {
+      "kube-dns": {
+        "apiVersion": "v1",
+        "kind": "Endpoints",
+        "metadata": {
+          "name": "kube-dns",
+          "namespace": "kube-system"
+        },
+        "subsets": [
+          {
+            "addresses": [
+              {
+                "ip": "10.244.2.41"
+              },
+              {
+                "ip": "10.244.7.18"
+              }
+            ],
+            "ports": [
+              {
+                "name": "dns",
+                "port": 53,
+                "protocol": "UDP"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "pod": {
+      "coredns-76f75df574-8xq42": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "metadata": {
+          "name": "coredns-76f75df574-8xq42",
+          "namespace": "kube-system",
+          "labels": {
+            "k8s-app": "kube-dns"
+          }
+        },
+        "status": {
+          "phase": "Running",
+          "conditions": [
+            {
+              "type": "Ready",
+              "status": "True"
+            }
+          ],
+          "containerStatuses": [
+            {
+              "name": "coredns",
+              "restartCount": 3,
+              "state": {
+                "running": {
+                  "startedAt": "2026-05-19T08:00:20Z"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "Scheduled",
+      "message": "Successfully assigned payments/checkout-api-5dfc66f6f9-t8l2m to worker-az1-04",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "type": "Normal",
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "payments",
+        "name": "checkout-api-5dfc66f6f9-t8l2m"
+      },
+      "firstTimestamp": "2026-05-19T08:00:00Z",
+      "lastTimestamp": "2026-05-19T08:00:00Z"
+    },
+    {
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: Corefile:5 - Error during parsing: Unknown directive 'kubernets'",
+      "source": {
+        "component": "kubelet"
+      },
+      "type": "Warning",
+      "count": 2,
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "kube-system",
+        "name": "coredns-76f75df574-8xq42",
+        "fieldPath": "spec.containers{coredns}"
+      },
+      "firstTimestamp": "2026-05-19T08:02:00Z",
+      "lastTimestamp": "2026-05-19T08:05:00Z"
+    },
+    {
+      "reason": "Failed",
+      "message": "DNS lookup failed for auth.payments.svc.cluster.local: lookup auth.payments.svc.cluster.local on 10.96.0.10:53: server misbehaving",
+      "source": {
+        "component": "kubelet"
+      },
+      "type": "Warning",
+      "count": 3,
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "payments",
+        "name": "checkout-api-5dfc66f6f9-t8l2m",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-05-19T08:06:00Z",
+      "lastTimestamp": "2026-05-19T08:10:00Z"
+    },
+    {
+      "reason": "Failed",
+      "message": "DNS lookup failed for auth.payments.svc.cluster.local: lookup auth.payments.svc.cluster.local on 10.96.0.10:53: server misbehaving",
+      "source": {
+        "component": "kubelet"
+      },
+      "type": "Warning",
+      "count": 2,
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "payments",
+        "name": "payments-worker-6b99877c98-vt9jh",
+        "fieldPath": "spec.containers{worker}"
+      },
+      "firstTimestamp": "2026-05-19T08:08:00Z",
+      "lastTimestamp": "2026-05-19T08:12:00Z"
+    }
+  ]
+}
