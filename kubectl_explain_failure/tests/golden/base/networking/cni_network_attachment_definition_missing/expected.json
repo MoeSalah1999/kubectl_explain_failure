@@ -1,0 +1,65 @@
+{
+  "root_cause": "Multus NetworkAttachmentDefinition referenced by Pod is missing",
+  "confidence": 0.98,
+  "blocking": true,
+  "resolution": {
+    "winner": "CNINetworkAttachmentDefinitionMissing",
+    "suppressed": [
+      "CNIPluginFailure"
+    ]
+  },
+  "evidence": [
+    "Pod payments/claims-processor-6f8d7f6bc9-rx4b2 is Pending while kubelet creates the sandbox",
+    "Pod declares Multus network attachment(s): net-ops/vlan-120, payments/sriov-canary",
+    "Missing NetworkAttachmentDefinition reference(s): net-ops/vlan-120",
+    "Latest missing-NAD event reason: FailedCreatePodSandBox",
+    "Latest missing-NAD message: Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"f9db1a\": plugin type=\"multus\" failed (add): Multus: [payments/claims-processor-6f8d7f6bc9-rx4b2]: error adding container to network \"net-ops/vlan-120\": error in getting k8s network for pod: GetNetworkDelegates: failed getting the delegate: failed getting network \"net-ops/vlan-120\": network-attachment-definitions.k8s.cni.cncf.io \"vlan-120\" not found",
+    "Observed 4 missing NetworkAttachmentDefinition failure occurrence(s) within 30 minutes",
+    "No successful pod start or Multus AddedInterface event observed after the latest missing-NAD failure",
+    "Pod is assigned to node worker-edge-03",
+    "Missing NetworkAttachmentDefinition failures persisted for 8.0 minutes"
+  ],
+  "causes": [
+    {
+      "code": "MULTUS_SECONDARY_NETWORK_REQUESTED",
+      "message": "Pod requests one or more Multus secondary networks via k8s.v1.cni.cncf.io/networks",
+      "role": "configuration_context"
+    },
+    {
+      "code": "NETWORK_ATTACHMENT_DEFINITION_MISSING",
+      "message": "A referenced NetworkAttachmentDefinition could not be found",
+      "role": "configuration_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_SANDBOX_NETWORKING_BLOCKED",
+      "message": "Pod sandbox creation cannot complete because Multus cannot build the requested network delegates",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:claims-processor-6f8d7f6bc9-rx4b2": [
+      "Pod sandbox creation is blocked by a missing Multus NetworkAttachmentDefinition",
+      "Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox \"f9db1a\": plugin type=\"multus\" failed (add): Multus: [payments/claims-processor-6f8d7f6bc9-rx4b2]: error adding container to network \"net-ops/vlan-120\": error in getting k8s network for pod: GetNetworkDelegates: failed getting the delegate: failed getting network \"net-ops/vlan-120\": network-attachment-definitions.k8s.cni.cncf.io \"vlan-120\" not found"
+    ],
+    "networkattachmentdefinition:missing": [
+      "Missing reference(s): net-ops/vlan-120"
+    ],
+    "node:worker-edge-03": [
+      "Kubelet on the assigned node could not complete Multus delegate lookup"
+    ]
+  },
+  "likely_causes": [
+    "The referenced NetworkAttachmentDefinition was never created in the Pod namespace or the explicitly referenced namespace",
+    "The Pod annotation references the wrong NetworkAttachmentDefinition name or namespace",
+    "A Helm, GitOps, or namespace provisioning step created the workload before creating the NetworkAttachmentDefinition",
+    "The NetworkAttachmentDefinition was deleted or recreated under a different name while workloads still reference it"
+  ],
+  "suggested_checks": [
+    "kubectl describe pod claims-processor-6f8d7f6bc9-rx4b2 -n payments",
+    "kubectl get network-attachment-definitions.k8s.cni.cncf.io -A",
+    "Verify the k8s.v1.cni.cncf.io/networks annotation names and namespaces",
+    "Create or restore the missing NetworkAttachmentDefinition before restarting the Pod",
+    "Check Multus logs on the assigned node for delegate lookup failures"
+  ]
+}
