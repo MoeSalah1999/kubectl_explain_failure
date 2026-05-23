@@ -1,6 +1,5 @@
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
-from kubectl_explain_failure.timeline import timeline_has_pattern
 
 
 class CrashLoopLivenessProbeCompoundRule(FailureRule):
@@ -40,13 +39,59 @@ class CrashLoopLivenessProbeCompoundRule(FailureRule):
         "context": ["timeline"],
     }
 
+    def _event_targets_current_pod(self, event, pod) -> bool:
+        involved = event.get("involvedObject", {})
+        if not isinstance(involved, dict):
+            return True
+
+        kind = str(involved.get("kind", "") or "").lower()
+        if kind and kind != "pod":
+            return False
+
+        pod_name = pod.get("metadata", {}).get("name")
+        namespace = pod.get("metadata", {}).get("namespace")
+        if pod_name and involved.get("name") and involved.get("name") != pod_name:
+            return False
+        if (
+            namespace
+            and involved.get("namespace")
+            and involved.get("namespace") != namespace
+        ):
+            return False
+        return True
+
+    def _is_current_pod_backoff(self, event, pod) -> bool:
+        if not self._event_targets_current_pod(event, pod):
+            return False
+        return str(event.get("reason", "") or "").lower() == "backoff"
+
+    def _is_current_pod_unhealthy_probe_failure(self, event, pod) -> bool:
+        if not self._event_targets_current_pod(event, pod):
+            return False
+        reason = str(event.get("reason", "") or "").lower()
+        message = str(event.get("message", "") or "").lower()
+        if reason not in {"unhealthy", "failed", "killing"}:
+            return False
+        return "probe" in message and (
+            "fail" in message or "restart" in message or "restarted" in message
+        )
+
     def matches(self, pod, events, context) -> bool:
         timeline = context.get("timeline")
         if not timeline:
             return False
 
-        crashloop = timeline_has_pattern(timeline, r"BackOff")
-        unhealthy = timeline_has_pattern(timeline, r"Unhealthy")
+        recent_events = timeline.events_within_window(20)
+        if not recent_events:
+            recent_events = timeline.raw_events
+
+        crashloop = any(
+            self._is_current_pod_backoff(event, pod) for event in recent_events
+        )
+        unhealthy = any(
+            self._is_current_pod_unhealthy_probe_failure(event, pod)
+            for event in recent_events
+        )
 
         return crashloop and unhealthy
 

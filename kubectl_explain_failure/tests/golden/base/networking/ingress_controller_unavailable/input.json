@@ -1,0 +1,234 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "portal-api-789db9c4c6-7xk2h",
+      "namespace": "customer-portal"
+    },
+    "spec": {
+      "nodeName": "worker-az2-08",
+      "containers": [
+        {
+          "name": "api",
+          "image": "registry.internal.example/customer-portal/api:2026.05.20",
+          "env": [
+            {
+              "name": "PUBLIC_CALLBACK_URL",
+              "value": "https://portal.example.com/oauth/callback"
+            },
+            {
+              "name": "INGRESS_HEALTH_URL",
+              "value": "http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/healthz"
+            }
+          ],
+          "readinessProbe": {
+            "httpGet": {
+              "path": "/readyz",
+              "port": 8080
+            },
+            "periodSeconds": 10,
+            "failureThreshold": 3
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "api",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-05-20T11:00:30Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "service": {
+      "ingress-nginx-controller": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "metadata": {
+          "name": "ingress-nginx-controller",
+          "namespace": "ingress-nginx",
+          "labels": {
+            "app.kubernetes.io/name": "ingress-nginx",
+            "app.kubernetes.io/component": "controller"
+          }
+        },
+        "spec": {
+          "type": "LoadBalancer",
+          "selector": {
+            "app.kubernetes.io/name": "ingress-nginx",
+            "app.kubernetes.io/component": "controller"
+          },
+          "ports": [
+            {
+              "name": "http",
+              "port": 80,
+              "targetPort": "http"
+            },
+            {
+              "name": "https",
+              "port": 443,
+              "targetPort": "https"
+            }
+          ]
+        }
+      }
+    },
+    "endpoints": {
+      "ingress-nginx-controller": {
+        "apiVersion": "v1",
+        "kind": "Endpoints",
+        "metadata": {
+          "name": "ingress-nginx-controller",
+          "namespace": "ingress-nginx"
+        },
+        "subsets": []
+      }
+    },
+    "pod": {
+      "ingress-nginx-controller-68d7f7d8d7-9tqmw": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "metadata": {
+          "name": "ingress-nginx-controller-68d7f7d8d7-9tqmw",
+          "namespace": "ingress-nginx",
+          "labels": {
+            "app.kubernetes.io/name": "ingress-nginx",
+            "app.kubernetes.io/component": "controller"
+          }
+        },
+        "status": {
+          "phase": "Running",
+          "conditions": [
+            {
+              "type": "Ready",
+              "status": "False",
+              "reason": "ContainersNotReady"
+            }
+          ],
+          "containerStatuses": [
+            {
+              "name": "controller",
+              "restartCount": 7,
+              "state": {
+                "waiting": {
+                  "reason": "CrashLoopBackOff",
+                  "message": "back-off 5m0s restarting failed container=controller pod=ingress-nginx-controller-68d7f7d8d7-9tqmw_ingress-nginx"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ingress-nginx-controller-68d7f7d8d7-lq2m6": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "metadata": {
+          "name": "ingress-nginx-controller-68d7f7d8d7-lq2m6",
+          "namespace": "ingress-nginx",
+          "labels": {
+            "app.kubernetes.io/name": "ingress-nginx",
+            "app.kubernetes.io/component": "controller"
+          }
+        },
+        "status": {
+          "phase": "Running",
+          "conditions": [
+            {
+              "type": "Ready",
+              "status": "False",
+              "reason": "ContainersNotReady"
+            }
+          ],
+          "containerStatuses": [
+            {
+              "name": "controller",
+              "restartCount": 6,
+              "state": {
+                "waiting": {
+                  "reason": "CrashLoopBackOff",
+                  "message": "back-off 5m0s restarting failed container=controller pod=ingress-nginx-controller-68d7f7d8d7-lq2m6_ingress-nginx"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "reason": "Scheduled",
+      "message": "Successfully assigned customer-portal/portal-api-789db9c4c6-7xk2h to worker-az2-08",
+      "source": {
+        "component": "default-scheduler"
+      },
+      "type": "Normal",
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "customer-portal",
+        "name": "portal-api-789db9c4c6-7xk2h"
+      },
+      "firstTimestamp": "2026-05-20T11:00:00Z",
+      "lastTimestamp": "2026-05-20T11:00:00Z"
+    },
+    {
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container controller in pod ingress-nginx-controller-68d7f7d8d7-9tqmw_ingress-nginx",
+      "source": {
+        "component": "kubelet"
+      },
+      "type": "Warning",
+      "count": 4,
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "ingress-nginx",
+        "name": "ingress-nginx-controller-68d7f7d8d7-9tqmw",
+        "fieldPath": "spec.containers{controller}"
+      },
+      "firstTimestamp": "2026-05-20T11:02:00Z",
+      "lastTimestamp": "2026-05-20T11:08:00Z"
+    },
+    {
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: Get \"http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/healthz\": dial tcp 10.96.88.17:80: connect: connection refused",
+      "source": {
+        "component": "kubelet"
+      },
+      "type": "Warning",
+      "count": 3,
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "customer-portal",
+        "name": "portal-api-789db9c4c6-7xk2h",
+        "fieldPath": "spec.containers{api}"
+      },
+      "firstTimestamp": "2026-05-20T11:04:00Z",
+      "lastTimestamp": "2026-05-20T11:09:00Z"
+    },
+    {
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: Get \"http://127.0.0.1:10254/healthz\": dial tcp 127.0.0.1:10254: connect: connection refused",
+      "source": {
+        "component": "kubelet"
+      },
+      "type": "Warning",
+      "count": 2,
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "ingress-nginx",
+        "name": "ingress-nginx-controller-68d7f7d8d7-lq2m6",
+        "fieldPath": "spec.containers{controller}"
+      },
+      "firstTimestamp": "2026-05-20T11:05:00Z",
+      "lastTimestamp": "2026-05-20T11:10:00Z"
+    }
+  ]
+}

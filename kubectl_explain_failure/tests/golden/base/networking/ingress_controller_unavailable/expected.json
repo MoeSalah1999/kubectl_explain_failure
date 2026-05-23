@@ -1,0 +1,76 @@
+{
+  "root_cause": "Ingress controller is unavailable and blocking application readiness",
+  "confidence": 0.98,
+  "blocking": true,
+  "resolution": {
+    "winner": "IngressControllerUnavailable",
+    "suppressed": [
+      "ReadinessProbeFailure",
+      "ProbeEndpointConnectionRefused",
+      "ProbeTimeout",
+      "CrashLoopBackOff",
+      "RepeatedCrashLoop",
+      "ServiceEndpointsEmpty",
+      "EndpointSliceMissing"
+    ]
+  },
+  "evidence": [
+    "Pod customer-portal/portal-api-789db9c4c6-7xk2h has readiness failures tied to an ingress dependency",
+    "Representative workload readiness failure: Readiness probe failed: Get \"http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/healthz\": dial tcp 10.96.88.17:80: connect: connection refused",
+    "Observed 3 ingress-dependent readiness failure occurrence(s) within 20 minutes",
+    "Ingress controller degradation is evidenced separately from the app readiness symptom",
+    "Ingress controller Service 'ingress-nginx-controller' has no ready endpoints",
+    "No ready ingress controller pods; degraded pod(s): ingress-nginx-controller-68d7f7d8d7-9tqmw, ingress-nginx-controller-68d7f7d8d7-lq2m6",
+    "Recent ingress controller event: Readiness probe failed: Get \"http://127.0.0.1:10254/healthz\": dial tcp 127.0.0.1:10254: connect: connection refused",
+    "Observed 6 ingress controller failure event occurrence(s) within 20 minutes",
+    "Ingress controller and workload readiness failure signals persisted for 2.0 minutes"
+  ],
+  "causes": [
+    {
+      "code": "WORKLOAD_READINESS_DEPENDS_ON_INGRESS",
+      "message": "Application readiness depends on ingress-controller managed routes or callbacks",
+      "role": "runtime_context"
+    },
+    {
+      "code": "INGRESS_CONTROLLER_UNAVAILABLE",
+      "message": "Ingress controller has no ready serving endpoints or is failing health checks",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "APPLICATION_READINESS_BLOCKED",
+      "message": "Application readiness check fails because the ingress dependency is unavailable",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:portal-api-789db9c4c6-7xk2h": [
+      "Readiness probe failed: Get \"http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/healthz\": dial tcp 10.96.88.17:80: connect: connection refused"
+    ],
+    "service:ingress-nginx-controller": [
+      "Ingress controller Service 'ingress-nginx-controller' has no ready endpoints"
+    ],
+    "pod:ingress-nginx-controller-68d7f7d8d7-9tqmw": [
+      "Ingress controller pod is not Ready during app readiness failures"
+    ],
+    "pod:ingress-nginx-controller-68d7f7d8d7-lq2m6": [
+      "Ingress controller pod is not Ready during app readiness failures"
+    ],
+    "timeline:ingress_controller": [
+      "Readiness probe failed: Get \"http://127.0.0.1:10254/healthz\": dial tcp 127.0.0.1:10254: connect: connection refused"
+    ]
+  },
+  "likely_causes": [
+    "Ingress controller pods are crashlooping, failing probes, or not Ready",
+    "The ingress controller Service has no ready endpoints",
+    "Ingress controller reload or listener startup failed after a configuration change",
+    "The application readiness check depends on an ingress-managed callback, route, or public URL"
+  ],
+  "suggested_checks": [
+    "kubectl get pods -A | grep -E 'ingress|traefik|gateway'",
+    "kubectl describe service ingress-nginx-controller -n ingress-nginx",
+    "kubectl logs -n ingress-nginx -l app.kubernetes.io/component=controller --tail=100",
+    "Check ingress controller readiness/liveness probe events and endpoint availability",
+    "kubectl describe pod portal-api-789db9c4c6-7xk2h -n customer-portal"
+  ]
+}

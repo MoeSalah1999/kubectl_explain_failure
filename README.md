@@ -274,6 +274,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - CoreDNSUnavailable
 - DNSResolutionFailure
 - EndpointSliceMissing
+- IngressControllerUnavailable
 - NodeNetworkUnavailable
 - PodCIDRConflict
 - ServiceEndpointsEmpty

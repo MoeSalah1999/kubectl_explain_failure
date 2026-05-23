@@ -32,6 +32,7 @@ class OOMKilledThenCrashLoopRule(FailureRule):
 
     blocks = [
         "CrashLoopBackOff",
+        "CrashLoopLivenessProbe",
         "OOMKilled",
     ]
 
