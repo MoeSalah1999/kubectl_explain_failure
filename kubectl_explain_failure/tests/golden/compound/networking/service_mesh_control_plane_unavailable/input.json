@@ -1,0 +1,298 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "payments-api-7c8db9f79b-2kq9m",
+      "namespace": "payments",
+      "annotations": {
+        "sidecar.istio.io/status": "{\"version\":\"1.22.1\"}",
+        "sidecar.istio.io/rewriteAppHTTPProbers": "true"
+      },
+      "labels": {
+        "app": "payments-api"
+      }
+    },
+    "spec": {
+      "containers": [
+        {
+          "name": "payments-api",
+          "image": "ghcr.io/example/payments-api:2026.05.23",
+          "readinessProbe": {
+            "httpGet": {
+              "path": "/ready",
+              "port": 8080
+            },
+            "periodSeconds": 10,
+            "failureThreshold": 3
+          }
+        },
+        {
+          "name": "istio-proxy",
+          "image": "docker.io/istio/proxyv2:1.22.1",
+          "readinessProbe": {
+            "httpGet": {
+              "path": "/healthz/ready",
+              "port": 15021
+            },
+            "periodSeconds": 5,
+            "failureThreshold": 3
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "payments-api",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-05-23T08:00:30Z"
+            }
+          }
+        },
+        {
+          "name": "istio-proxy",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-05-23T08:00:20Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "service": {
+      "istiod": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "metadata": {
+          "name": "istiod",
+          "namespace": "istio-system",
+          "labels": {
+            "app": "istiod",
+            "istio": "pilot"
+          }
+        },
+        "spec": {
+          "selector": {
+            "app": "istiod"
+          },
+          "ports": [
+            {
+              "name": "grpc-xds",
+              "port": 15010
+            },
+            {
+              "name": "https-dns",
+              "port": 15012
+            }
+          ]
+        }
+      }
+    },
+    "endpoints": {
+      "istiod": {
+        "apiVersion": "v1",
+        "kind": "Endpoints",
+        "metadata": {
+          "name": "istiod",
+          "namespace": "istio-system"
+        },
+        "subsets": []
+      }
+    },
+    "deployment": {
+      "istiod": {
+        "apiVersion": "apps/v1",
+        "kind": "Deployment",
+        "metadata": {
+          "name": "istiod",
+          "namespace": "istio-system",
+          "labels": {
+            "app": "istiod",
+            "istio": "pilot"
+          }
+        },
+        "spec": {
+          "replicas": 2
+        },
+        "status": {
+          "replicas": 2,
+          "availableReplicas": 0,
+          "unavailableReplicas": 2,
+          "conditions": [
+            {
+              "type": "Available",
+              "status": "False",
+              "reason": "MinimumReplicasUnavailable",
+              "message": "Deployment does not have minimum availability"
+            }
+          ]
+        }
+      }
+    },
+    "pod": {
+      "istiod-6d8f8c7755-g4q2n": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "metadata": {
+          "name": "istiod-6d8f8c7755-g4q2n",
+          "namespace": "istio-system",
+          "labels": {
+            "app": "istiod",
+            "istio": "pilot"
+          }
+        },
+        "status": {
+          "phase": "Running",
+          "conditions": [
+            {
+              "type": "Ready",
+              "status": "False",
+              "reason": "ContainersNotReady"
+            }
+          ],
+          "containerStatuses": [
+            {
+              "name": "discovery",
+              "ready": false,
+              "restartCount": 6,
+              "state": {
+                "waiting": {
+                  "reason": "CrashLoopBackOff",
+                  "message": "back-off 5m0s restarting failed container=discovery pod=istiod-6d8f8c7755-g4q2n_istio-system"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "istiod-6d8f8c7755-mxq7r": {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "metadata": {
+          "name": "istiod-6d8f8c7755-mxq7r",
+          "namespace": "istio-system",
+          "labels": {
+            "app": "istiod",
+            "istio": "pilot"
+          }
+        },
+        "status": {
+          "phase": "Running",
+          "conditions": [
+            {
+              "type": "Ready",
+              "status": "False",
+              "reason": "ContainersNotReady"
+            }
+          ],
+          "containerStatuses": [
+            {
+              "name": "discovery",
+              "ready": false,
+              "restartCount": 4,
+              "state": {
+                "waiting": {
+                  "reason": "CrashLoopBackOff",
+                  "message": "back-off 5m0s restarting failed container=discovery pod=istiod-6d8f8c7755-mxq7r_istio-system"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "Started",
+      "message": "Started container istio-proxy",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "payments",
+        "name": "payments-api-7c8db9f79b-2kq9m",
+        "fieldPath": "spec.containers{istio-proxy}"
+      },
+      "firstTimestamp": "2026-05-23T08:00:20Z",
+      "lastTimestamp": "2026-05-23T08:00:20Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "BackOff",
+      "message": "Back-off restarting failed container discovery in pod istiod-6d8f8c7755-g4q2n_istio-system",
+      "count": 4,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "istio-system",
+        "name": "istiod-6d8f8c7755-g4q2n",
+        "fieldPath": "spec.containers{discovery}"
+      },
+      "firstTimestamp": "2026-05-23T08:01:00Z",
+      "lastTimestamp": "2026-05-23T08:05:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: Get \"http://10.42.12.88:15014/ready\": dial tcp 10.42.12.88:15014: connect: connection refused",
+      "count": 3,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "istio-system",
+        "name": "istiod-6d8f8c7755-mxq7r",
+        "fieldPath": "spec.containers{discovery}"
+      },
+      "firstTimestamp": "2026-05-23T08:02:00Z",
+      "lastTimestamp": "2026-05-23T08:06:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "Envoy proxy is NOT ready: config not received from Istiod: xDS connection error: rpc error: code = Unavailable desc = connection error: transport is closing",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "payments",
+        "name": "payments-api-7c8db9f79b-2kq9m",
+        "fieldPath": "spec.containers{istio-proxy}"
+      },
+      "firstTimestamp": "2026-05-23T08:06:10Z",
+      "lastTimestamp": "2026-05-23T08:07:10Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: HTTP probe failed with statuscode: 503",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "payments",
+        "name": "payments-api-7c8db9f79b-2kq9m",
+        "fieldPath": "spec.containers{payments-api}"
+      },
+      "firstTimestamp": "2026-05-23T08:07:20Z",
+      "lastTimestamp": "2026-05-23T08:08:00Z"
+    }
+  ]
+}

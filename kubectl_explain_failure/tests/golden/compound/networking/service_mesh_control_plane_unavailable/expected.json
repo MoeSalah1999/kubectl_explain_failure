@@ -1,0 +1,88 @@
+{
+  "root_cause": "Service mesh control plane is unavailable and blocking sidecar traffic",
+  "confidence": 0.98,
+  "blocking": true,
+  "resolution": {
+    "winner": "ServiceMeshControlPlaneUnavailable",
+    "suppressed": [
+      "ServiceMeshSidecarNetworkBlock",
+      "ReadinessProbeFailure",
+      "ServiceEndpointsEmpty"
+    ]
+  },
+  "evidence": [
+    "Pod payments/payments-api-7c8db9f79b-2kq9m has a service-mesh sidecar reporting control-plane sync failure",
+    "Representative sidecar control-plane failure: Envoy proxy is NOT ready: config not received from Istiod: xDS connection error: rpc error: code = Unavailable desc = connection error: transport is closing",
+    "Observed 2 sidecar control-plane sync failure occurrence(s) within 20 minutes",
+    "Mesh control-plane degradation is evidenced separately from the workload sidecar symptom",
+    "Representative application impact: Readiness probe failed: HTTP probe failed with statuscode: 503",
+    "Mesh control-plane Service 'istiod' has no ready endpoints",
+    "Mesh control-plane Deployment 'istiod' has desired=2, available=0, unavailable=2",
+    "No ready mesh control-plane pods; degraded pod(s): istiod-6d8f8c7755-g4q2n, istiod-6d8f8c7755-mxq7r",
+    "Recent mesh control-plane event: Readiness probe failed: Get \"http://10.42.12.88:15014/ready\": dial tcp 10.42.12.88:15014: connect: connection refused",
+    "Observed 7 mesh control-plane failure event occurrence(s) within 20 minutes",
+    "Mesh control-plane and sidecar sync failures persisted for 2.2 minutes"
+  ],
+  "causes": [
+    {
+      "code": "WORKLOAD_USES_SERVICE_MESH_SIDECAR",
+      "message": "Pod includes service-mesh sidecar 'istio-proxy' that depends on mesh control-plane state",
+      "role": "network_context"
+    },
+    {
+      "code": "SERVICE_MESH_CONTROL_PLANE_UNAVAILABLE",
+      "message": "The mesh control plane has no ready serving endpoints or is failing health checks",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "SIDECAR_CANNOT_SYNC_MESH_CONFIG",
+      "message": "Sidecar 'istio-proxy' cannot receive mesh configuration, identity, or discovery updates",
+      "role": "network_intermediate"
+    },
+    {
+      "code": "APPLICATION_TRAFFIC_BLOCKED_BY_MESH",
+      "message": "Application traffic or probes are blocked while the sidecar is unsynchronized",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:payments-api-7c8db9f79b-2kq9m": [
+      "Envoy proxy is NOT ready: config not received from Istiod: xDS connection error: rpc error: code = Unavailable desc = connection error: transport is closing"
+    ],
+    "container:istio-proxy": [
+      "Sidecar cannot sync mesh configuration from the control plane"
+    ],
+    "container:payments-api": [
+      "Readiness probe failed: HTTP probe failed with statuscode: 503"
+    ],
+    "service:istiod": [
+      "Mesh control-plane Service 'istiod' has no ready endpoints"
+    ],
+    "deployment:istiod": [
+      "Mesh control-plane Deployment 'istiod' has desired=2, available=0, unavailable=2"
+    ],
+    "pod:istiod-6d8f8c7755-g4q2n": [
+      "Mesh control-plane pod is not Ready while sidecars cannot sync"
+    ],
+    "pod:istiod-6d8f8c7755-mxq7r": [
+      "Mesh control-plane pod is not Ready while sidecars cannot sync"
+    ],
+    "timeline:mesh_control_plane": [
+      "Readiness probe failed: Get \"http://10.42.12.88:15014/ready\": dial tcp 10.42.12.88:15014: connect: connection refused"
+    ]
+  },
+  "likely_causes": [
+    "Mesh control-plane pods are crashlooping, failing probes, or not Ready",
+    "The mesh control-plane Service has no ready endpoints for sidecar xDS or identity traffic",
+    "Control-plane certificate, discovery, or webhook components are unavailable",
+    "A control-plane rollout or configuration change broke sidecar discovery and identity sync"
+  ],
+  "suggested_checks": [
+    "kubectl get pods -n istio-system -l app=istiod -o wide",
+    "kubectl get endpoints istiod -n istio-system",
+    "kubectl logs -n istio-system deploy/istiod --tail=100",
+    "kubectl logs payments-api-7c8db9f79b-2kq9m -n payments -c istio-proxy",
+    "Check mesh proxy sync status and control-plane readiness before debugging the app container"
+  ]
+}
