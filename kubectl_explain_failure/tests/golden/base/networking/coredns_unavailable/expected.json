@@ -1,0 +1,73 @@
+{
+  "root_cause": "CoreDNS is unavailable or has no ready endpoints",
+  "confidence": 0.98,
+  "blocking": true,
+  "resolution": {
+    "winner": "CoreDNSUnavailable",
+    "suppressed": [
+      "DNSResolutionFailure",
+      "EndpointSliceMissing",
+      "ServiceEndpointsEmpty"
+    ]
+  },
+  "evidence": [
+    "Pod storefront/catalog-api-7d5c78b8f9-k2p7v has DNS resolution failures in the recent incident window",
+    "Representative workload DNS failure: DNS lookup failed for redis.cache.svc.cluster.local: lookup redis.cache.svc.cluster.local on 10.96.0.10:53: read udp 10.244.7.42:52731->10.96.0.10:53: i/o timeout",
+    "Observed 6 workload DNS failure occurrence(s) within 20 minutes",
+    "CoreDNS degradation is evidenced separately from the workload DNS symptom",
+    "DNS failures target hostname 'redis.cache.svc.cluster.local'",
+    "kube-dns Endpoints object has no ready addresses",
+    "No ready CoreDNS pods; degraded pod(s): coredns-76f75df574-8xq42, coredns-76f75df574-pv6rc",
+    "Recent CoreDNS event: Readiness probe failed: HTTP probe failed with statuscode: 503",
+    "Observed 3 CoreDNS failure event occurrence(s) within 20 minutes",
+    "DNS/CoreDNS failure signals persisted for 7.0 minutes"
+  ],
+  "causes": [
+    {
+      "code": "WORKLOAD_REQUIRES_CLUSTER_DNS",
+      "message": "Workload depends on cluster DNS resolution for service discovery or startup dependencies",
+      "role": "runtime_context"
+    },
+    {
+      "code": "COREDNS_UNAVAILABLE",
+      "message": "CoreDNS/kube-dns is degraded and cannot reliably answer DNS queries",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "POD_DNS_RESOLUTION_BLOCKED",
+      "message": "Pod DNS lookups fail because the cluster DNS backend is unavailable",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:catalog-api-7d5c78b8f9-k2p7v": [
+      "DNS lookup failed for redis.cache.svc.cluster.local: lookup redis.cache.svc.cluster.local on 10.96.0.10:53: read udp 10.244.7.42:52731->10.96.0.10:53: i/o timeout"
+    ],
+    "service:kube-dns": [
+      "kube-dns Endpoints object has no ready addresses"
+    ],
+    "pod:coredns-76f75df574-8xq42": [
+      "CoreDNS pod is not Ready during workload DNS failures"
+    ],
+    "pod:coredns-76f75df574-pv6rc": [
+      "CoreDNS pod is not Ready during workload DNS failures"
+    ],
+    "timeline:coredns": [
+      "Readiness probe failed: HTTP probe failed with statuscode: 503"
+    ]
+  },
+  "likely_causes": [
+    "CoreDNS pods are crashlooping, failing probes, or unavailable",
+    "The kube-dns Service has no ready CoreDNS endpoints",
+    "The CoreDNS Deployment cannot maintain available replicas",
+    "CoreDNS configuration, upstream DNS forwarding, or node pressure is causing the DNS backend to fail"
+  ],
+  "suggested_checks": [
+    "kubectl get pods -n kube-system -l k8s-app=kube-dns -o wide",
+    "kubectl describe deployment coredns -n kube-system",
+    "kubectl get endpoints kube-dns -n kube-system",
+    "kubectl logs -n kube-system -l k8s-app=kube-dns --tail=100",
+    "kubectl describe pod catalog-api-7d5c78b8f9-k2p7v -n storefront"
+  ]
+}

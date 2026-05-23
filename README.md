@@ -270,6 +270,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - CNIIPAMExhausted
 - CNINetworkAttachmentDefinitionMissing
 - CNIPluginFailure
+- CoreDNSUnavailable
 - DNSResolutionFailure
 - EndpointSliceMissing
 - NodeNetworkUnavailable
