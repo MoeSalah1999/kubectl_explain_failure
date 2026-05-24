@@ -1,0 +1,199 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "checkout-api-6f74bdc8d7-v2m9p",
+      "namespace": "checkout",
+      "annotations": {
+        "sidecar.istio.io/status": "{\"version\":\"1.22.1\"}",
+        "sidecar.istio.io/rewriteAppHTTPProbers": "true"
+      },
+      "labels": {
+        "app": "checkout-api",
+        "security.istio.io/tlsMode": "istio"
+      }
+    },
+    "spec": {
+      "serviceAccountName": "checkout-api",
+      "containers": [
+        {
+          "name": "checkout-api",
+          "image": "ghcr.io/example/checkout-api:2026.05.23",
+          "readinessProbe": {
+            "httpGet": {
+              "path": "/ready",
+              "port": 8080
+            },
+            "periodSeconds": 10,
+            "failureThreshold": 3
+          }
+        },
+        {
+          "name": "istio-proxy",
+          "image": "docker.io/istio/proxyv2:1.22.1",
+          "readinessProbe": {
+            "httpGet": {
+              "path": "/healthz/ready",
+              "port": 15021
+            },
+            "periodSeconds": 5,
+            "failureThreshold": 3
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "checkout-api",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-05-23T10:00:25Z"
+            }
+          }
+        },
+        {
+          "name": "istio-proxy",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-05-23T10:00:20Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "certificate": {
+      "checkout-api-mtls": {
+        "apiVersion": "cert-manager.io/v1",
+        "kind": "Certificate",
+        "metadata": {
+          "name": "checkout-api-mtls",
+          "namespace": "checkout",
+          "labels": {
+            "app": "checkout-api",
+            "mesh": "istio"
+          }
+        },
+        "spec": {
+          "secretName": "checkout-api-istio-certs",
+          "dnsNames": [
+            "checkout-api.checkout.svc"
+          ],
+          "issuerRef": {
+            "name": "istio-workload-ca",
+            "kind": "Issuer"
+          }
+        },
+        "status": {
+          "notAfter": "2026-05-23T09:55:00Z",
+          "conditions": [
+            {
+              "type": "Ready",
+              "status": "False",
+              "reason": "RenewalFailed",
+              "message": "Failed to renew mesh workload certificate: x509: certificate has expired or is not yet valid; CSR signing timed out",
+              "lastTransitionTime": "2026-05-23T10:01:00Z"
+            }
+          ]
+        }
+      }
+    },
+    "secret": {
+      "checkout-api-istio-certs": {
+        "apiVersion": "v1",
+        "kind": "Secret",
+        "metadata": {
+          "name": "checkout-api-istio-certs",
+          "namespace": "checkout",
+          "annotations": {
+            "cert-manager.io/expiry-date": "2026-05-23T09:55:00Z",
+            "istio.io/key-and-cert": "true"
+          },
+          "labels": {
+            "app": "checkout-api"
+          }
+        },
+        "type": "kubernetes.io/tls",
+        "data": {
+          "tls.crt": "<redacted>",
+          "tls.key": "<redacted>"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "Started",
+      "message": "Started container istio-proxy",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "checkout",
+        "name": "checkout-api-6f74bdc8d7-v2m9p",
+        "fieldPath": "spec.containers{istio-proxy}"
+      },
+      "firstTimestamp": "2026-05-23T10:00:20Z",
+      "lastTimestamp": "2026-05-23T10:00:20Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Failed",
+      "message": "Istio agent failed to fetch workload certificate from istiod: rpc error: code = Unavailable desc = CSR signing failed: x509: certificate has expired or is not yet valid",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "checkout",
+        "name": "checkout-api-6f74bdc8d7-v2m9p",
+        "fieldPath": "spec.containers{istio-proxy}"
+      },
+      "firstTimestamp": "2026-05-23T10:01:00Z",
+      "lastTimestamp": "2026-05-23T10:02:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Envoy proxy is NOT ready: failed to warm certificate: secret is not supplied by SDS; workload certificate is expired",
+      "count": 3,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "checkout",
+        "name": "checkout-api-6f74bdc8d7-v2m9p",
+        "fieldPath": "spec.containers{istio-proxy}"
+      },
+      "firstTimestamp": "2026-05-23T10:02:30Z",
+      "lastTimestamp": "2026-05-23T10:03:30Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: HTTP probe failed with statuscode: 503",
+      "count": 3,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "checkout",
+        "name": "checkout-api-6f74bdc8d7-v2m9p",
+        "fieldPath": "spec.containers{checkout-api}"
+      },
+      "firstTimestamp": "2026-05-23T10:04:00Z",
+      "lastTimestamp": "2026-05-23T10:04:30Z"
+    }
+  ]
+}

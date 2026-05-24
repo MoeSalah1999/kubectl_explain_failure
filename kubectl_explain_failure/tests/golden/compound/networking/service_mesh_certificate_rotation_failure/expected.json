@@ -1,0 +1,78 @@
+{
+  "root_cause": "Service mesh mTLS certificate rotation failed",
+  "confidence": 0.98,
+  "blocking": true,
+  "resolution": {
+    "winner": "ServiceMeshCertificateRotationFailure",
+    "suppressed": [
+      "ServiceMeshSidecarNetworkBlock",
+      "ReadinessProbeFailure"
+    ]
+  },
+  "evidence": [
+    "Pod checkout/checkout-api-6f74bdc8d7-v2m9p uses service-mesh sidecar 'istio-proxy' for mTLS",
+    "Observed 5 mesh certificate rotation/expiry failure occurrence(s) within 30 minutes",
+    "Representative certificate failure: Envoy proxy is NOT ready: failed to warm certificate: secret is not supplied by SDS; workload certificate is expired",
+    "Service-mesh sidecar 'istio-proxy' is Ready=False while certificate material is failing",
+    "Representative application impact after certificate failure: Readiness probe failed: HTTP probe failed with statuscode: 503",
+    "Certificate rotation failures persisted for 1.5 minutes",
+    "Certificate 'checkout-api-mtls' reports Ready=False reason=RenewalFailed",
+    "Secret 'checkout-api-istio-certs' contains expired mesh TLS material"
+  ],
+  "causes": [
+    {
+      "code": "SERVICE_MESH_MTLS_ENABLED",
+      "message": "Pod traffic is mediated by service-mesh sidecar 'istio-proxy' and mTLS identity",
+      "role": "network_context"
+    },
+    {
+      "code": "MESH_WORKLOAD_CERTIFICATE_ROTATION_FAILED",
+      "message": "The mesh cannot issue, rotate, or trust current workload mTLS certificates",
+      "role": "infrastructure_root",
+      "blocking": true
+    },
+    {
+      "code": "SIDECAR_LACKS_VALID_MTLS_IDENTITY",
+      "message": "Sidecar 'istio-proxy' cannot establish valid mTLS identity for mesh traffic",
+      "role": "network_intermediate"
+    },
+    {
+      "code": "APPLICATION_TRAFFIC_FAILS_THROUGH_MESH",
+      "message": "Application probes or upstream calls fail after mesh certificate material becomes invalid",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:checkout-api-6f74bdc8d7-v2m9p": [
+      "Workload is impacted by service-mesh mTLS certificate rotation failure"
+    ],
+    "container:istio-proxy": [
+      "Envoy proxy is NOT ready: failed to warm certificate: secret is not supplied by SDS; workload certificate is expired"
+    ],
+    "timeline:mesh_certificate_rotation": [
+      "5 certificate failure occurrence(s) in the recent timeline"
+    ],
+    "container:checkout-api": [
+      "Readiness probe failed: HTTP probe failed with statuscode: 503"
+    ],
+    "certificate:checkout-api-mtls": [
+      "Ready=False reason=RenewalFailed"
+    ],
+    "secret:checkout-api-istio-certs": [
+      "TLS Secret expired at 2026-05-23T09:55:00Z"
+    ]
+  },
+  "likely_causes": [
+    "Workload mTLS certificate expired before the sidecar received a renewed certificate",
+    "Mesh CA or identity service cannot sign workload CSRs",
+    "SDS or secret distribution is serving stale or missing certificate material",
+    "Trust bundle or CA bundle rotation is out of sync across the mesh"
+  ],
+  "suggested_checks": [
+    "kubectl logs checkout-api-6f74bdc8d7-v2m9p -n checkout -c istio-proxy",
+    "kubectl describe pod checkout-api-6f74bdc8d7-v2m9p -n checkout",
+    "Inspect mesh identity or CA logs for CSR signing and certificate rotation errors",
+    "Check workload certificate NotAfter/NotBefore values and mesh trust bundle freshness",
+    "Verify SDS/secret distribution health before restarting application containers"
+  ]
+}
