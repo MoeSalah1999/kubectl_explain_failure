@@ -1,0 +1,76 @@
+{
+  "root_cause": "Service mesh authorization policy denied app-to-app traffic",
+  "confidence": 0.97,
+  "blocking": true,
+  "resolution": {
+    "winner": "ServiceMeshAuthorizationPolicyDenied",
+    "suppressed": [
+      "ReadinessProbeFailure"
+    ]
+  },
+  "evidence": [
+    "Pod shop/frontend-api-5c6f7d7f9b-s8k2m uses service-mesh sidecar 'istio-proxy' for app-to-app authorization",
+    "Observed 3 mesh authorization denial occurrence(s) within 20 minutes",
+    "Representative mesh authorization denial: Envoy RBAC: access denied by Istio AuthorizationPolicy deny-frontend-to-reviews-v1 for outbound GET http://reviews.shop.svc.cluster.local:9080/v1/reviews from principal cluster.local/ns/shop/sa/frontend-api",
+    "Mesh authorization policy object 'deny-frontend-to-reviews-v1' is present for this workload path",
+    "Representative application impact after mesh denial: Readiness probe failed: GET http://localhost:8080/ready returned 503 because upstream reviews.shop.svc.cluster.local:9080 returned 403 Forbidden: RBAC: access denied",
+    "Mesh authorization denials persisted for 2.0 minutes",
+    "Destination Service 'reviews' has 2 ready endpoint(s), making a Kubernetes NetworkPolicy or backend outage less likely"
+  ],
+  "causes": [
+    {
+      "code": "SERVICE_MESH_AUTHORIZATION_ENFORCED",
+      "message": "Pod traffic is evaluated by service-mesh sidecar 'istio-proxy' before reaching peer workloads",
+      "role": "network_context"
+    },
+    {
+      "code": "MESH_AUTHORIZATION_POLICY_DENIES_REQUEST",
+      "message": "A service-mesh authorization policy denies the app-to-app request after network connectivity succeeds",
+      "role": "authorization_root",
+      "blocking": true
+    },
+    {
+      "code": "KUBERNETES_NETWORKPOLICY_NOT_PRIMARY",
+      "message": "The denial is explicit mesh RBAC/authorization feedback rather than a CNI NetworkPolicy timeout",
+      "role": "policy_context"
+    },
+    {
+      "code": "APPLICATION_REQUESTS_FAIL_WITH_FORBIDDEN",
+      "message": "Application health checks or upstream calls fail because the mesh returns authorization denial",
+      "role": "workload_symptom"
+    }
+  ],
+  "object_evidence": {
+    "pod:frontend-api-5c6f7d7f9b-s8k2m": [
+      "Application traffic reaches the mesh proxy but is denied by mesh authorization"
+    ],
+    "container:istio-proxy": [
+      "Envoy RBAC: access denied by Istio AuthorizationPolicy deny-frontend-to-reviews-v1 for outbound GET http://reviews.shop.svc.cluster.local:9080/v1/reviews from principal cluster.local/ns/shop/sa/frontend-api"
+    ],
+    "timeline:mesh_authorization": [
+      "3 authorization denial occurrence(s) in the recent timeline"
+    ],
+    "authorizationpolicy:deny-frontend-to-reviews-v1": [
+      "Mesh policy is the authorization layer implicated by the denial"
+    ],
+    "container:frontend-api": [
+      "Readiness probe failed: GET http://localhost:8080/ready returned 503 because upstream reviews.shop.svc.cluster.local:9080 returned 403 Forbidden: RBAC: access denied"
+    ],
+    "service:reviews": [
+      "2 ready endpoint(s) available while mesh authorization denies traffic"
+    ]
+  },
+  "likely_causes": [
+    "Istio AuthorizationPolicy, Linkerd policy, or Consul intention denies the source identity, method, path, or destination",
+    "The workload service account or SPIFFE identity does not match the mesh policy principal selector",
+    "A recent mesh policy rollout introduced a DENY rule or removed an ALLOW rule for this app-to-app path",
+    "Kubernetes Services and endpoints are healthy, but L7 mesh authorization rejects the request"
+  ],
+  "suggested_checks": [
+    "kubectl logs frontend-api-5c6f7d7f9b-s8k2m -n shop -c istio-proxy",
+    "kubectl describe pod frontend-api-5c6f7d7f9b-s8k2m -n shop",
+    "Inspect mesh AuthorizationPolicy/ServerAuthorization/intentions for source principal, namespace, method, and path selectors",
+    "Check mesh proxy access logs for RBAC denied or HTTP 403 responses on the failing route",
+    "Verify this is not Kubernetes NetworkPolicy by testing DNS and TCP reachability separately from the HTTP request"
+  ]
+}

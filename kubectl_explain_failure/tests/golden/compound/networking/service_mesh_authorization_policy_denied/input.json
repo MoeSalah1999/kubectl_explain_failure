@@ -1,0 +1,250 @@
+{
+  "pod": {
+    "metadata": {
+      "name": "frontend-api-5c6f7d7f9b-s8k2m",
+      "namespace": "shop",
+      "annotations": {
+        "sidecar.istio.io/status": "{\"version\":\"1.22.1\"}",
+        "sidecar.istio.io/rewriteAppHTTPProbers": "true"
+      },
+      "labels": {
+        "app": "frontend-api",
+        "version": "v2"
+      }
+    },
+    "spec": {
+      "serviceAccountName": "frontend-api",
+      "containers": [
+        {
+          "name": "frontend-api",
+          "image": "ghcr.io/example/frontend-api:2026.05.23",
+          "readinessProbe": {
+            "httpGet": {
+              "path": "/ready",
+              "port": 8080
+            },
+            "periodSeconds": 10,
+            "failureThreshold": 3
+          }
+        },
+        {
+          "name": "istio-proxy",
+          "image": "docker.io/istio/proxyv2:1.22.1",
+          "readinessProbe": {
+            "httpGet": {
+              "path": "/healthz/ready",
+              "port": 15021
+            },
+            "periodSeconds": 5,
+            "failureThreshold": 3
+          }
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running",
+      "containerStatuses": [
+        {
+          "name": "frontend-api",
+          "ready": false,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-05-23T11:00:20Z"
+            }
+          }
+        },
+        {
+          "name": "istio-proxy",
+          "ready": true,
+          "restartCount": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-05-23T11:00:15Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "authorizationpolicy": {
+      "deny-frontend-to-reviews-v1": {
+        "apiVersion": "security.istio.io/v1beta1",
+        "kind": "AuthorizationPolicy",
+        "metadata": {
+          "name": "deny-frontend-to-reviews-v1",
+          "namespace": "shop",
+          "labels": {
+            "app": "reviews",
+            "managed-by": "platform-security"
+          }
+        },
+        "spec": {
+          "selector": {
+            "matchLabels": {
+              "app": "reviews"
+            }
+          },
+          "action": "DENY",
+          "rules": [
+            {
+              "from": [
+                {
+                  "source": {
+                    "principals": [
+                      "cluster.local/ns/shop/sa/frontend-api"
+                    ]
+                  }
+                }
+              ],
+              "to": [
+                {
+                  "operation": {
+                    "methods": [
+                      "GET"
+                    ],
+                    "paths": [
+                      "/v1/reviews"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "service": {
+      "reviews": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "metadata": {
+          "name": "reviews",
+          "namespace": "shop",
+          "labels": {
+            "app": "reviews"
+          }
+        },
+        "spec": {
+          "clusterIP": "10.96.42.17",
+          "selector": {
+            "app": "reviews"
+          },
+          "ports": [
+            {
+              "name": "http",
+              "port": 9080,
+              "targetPort": 9080
+            }
+          ]
+        }
+      }
+    },
+    "endpoints": {
+      "reviews": {
+        "apiVersion": "v1",
+        "kind": "Endpoints",
+        "metadata": {
+          "name": "reviews",
+          "namespace": "shop"
+        },
+        "subsets": [
+          {
+            "addresses": [
+              {
+                "ip": "10.42.7.31",
+                "targetRef": {
+                  "kind": "Pod",
+                  "name": "reviews-v1-7d8bd57d8c-q2l8j"
+                }
+              },
+              {
+                "ip": "10.42.8.44",
+                "targetRef": {
+                  "kind": "Pod",
+                  "name": "reviews-v1-7d8bd57d8c-z9m4f"
+                }
+              }
+            ],
+            "ports": [
+              {
+                "name": "http",
+                "port": 9080
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "events": [
+    {
+      "type": "Normal",
+      "reason": "Started",
+      "message": "Started container istio-proxy",
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "shop",
+        "name": "frontend-api-5c6f7d7f9b-s8k2m",
+        "fieldPath": "spec.containers{istio-proxy}"
+      },
+      "firstTimestamp": "2026-05-23T11:00:15Z",
+      "lastTimestamp": "2026-05-23T11:00:15Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Denied",
+      "message": "Envoy RBAC: access denied by Istio AuthorizationPolicy deny-frontend-to-reviews-v1 for outbound GET http://reviews.shop.svc.cluster.local:9080/v1/reviews from principal cluster.local/ns/shop/sa/frontend-api",
+      "count": 2,
+      "source": {
+        "component": "istio-proxy"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "shop",
+        "name": "frontend-api-5c6f7d7f9b-s8k2m",
+        "fieldPath": "spec.containers{istio-proxy}"
+      },
+      "firstTimestamp": "2026-05-23T11:02:00Z",
+      "lastTimestamp": "2026-05-23T11:03:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Unhealthy",
+      "message": "Readiness probe failed: GET http://localhost:8080/ready returned 503 because upstream reviews.shop.svc.cluster.local:9080 returned 403 Forbidden: RBAC: access denied",
+      "count": 2,
+      "source": {
+        "component": "kubelet"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "shop",
+        "name": "frontend-api-5c6f7d7f9b-s8k2m",
+        "fieldPath": "spec.containers{frontend-api}"
+      },
+      "firstTimestamp": "2026-05-23T11:03:30Z",
+      "lastTimestamp": "2026-05-23T11:04:00Z"
+    },
+    {
+      "type": "Warning",
+      "reason": "Denied",
+      "message": "Envoy RBAC: access denied by Istio AuthorizationPolicy deny-frontend-to-reviews-v1 for outbound GET http://reviews.shop.svc.cluster.local:9080/v1/reviews from principal cluster.local/ns/shop/sa/frontend-api",
+      "count": 1,
+      "source": {
+        "component": "istio-proxy"
+      },
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "shop",
+        "name": "frontend-api-5c6f7d7f9b-s8k2m",
+        "fieldPath": "spec.containers{istio-proxy}"
+      },
+      "firstTimestamp": "2026-05-23T11:05:00Z",
+      "lastTimestamp": "2026-05-23T11:05:00Z"
+    }
+  ]
+}
