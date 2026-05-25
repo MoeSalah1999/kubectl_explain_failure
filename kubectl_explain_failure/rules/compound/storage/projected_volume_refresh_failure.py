@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import re
-from datetime import datetime, timedelta
-from typing import Any, Callable
+from collections.abc import Callable
+from datetime import datetime
+from typing import Any
 
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
@@ -163,10 +163,7 @@ class ProjectedVolumeRefreshFailureRule(FailureRule):
         if involved.get("name") and involved.get("name") != pod_name:
             return False
 
-        if (
-            involved.get("namespace")
-            and involved.get("namespace") != namespace
-        ):
+        if involved.get("namespace") and involved.get("namespace") != namespace:
             return False
 
         return True
@@ -250,9 +247,8 @@ class ProjectedVolumeRefreshFailureRule(FailureRule):
 
         reason = self._reason(event).lower()
 
-        if (
-            reason not in self.PROJECTION_RELATED_REASONS
-            and not any(marker in text for marker in self.REFRESH_FAILURE_MARKERS)
+        if reason not in self.PROJECTION_RELATED_REASONS and not any(
+            marker in text for marker in self.REFRESH_FAILURE_MARKERS
         ):
             return False
 
@@ -355,10 +351,7 @@ class ProjectedVolumeRefreshFailureRule(FailureRule):
         for target in targets:
             target_types.add(target.split(":", 1)[0])
 
-        total_occurrences = sum(
-            self._occurrences(event)
-            for event in refresh_failures
-        )
+        total_occurrences = sum(self._occurrences(event) for event in refresh_failures)
 
         return {
             "namespace": namespace,
