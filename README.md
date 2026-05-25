@@ -392,6 +392,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - HPAThrashing
 - HPAUnableToScale
 - OwnerBlockedPod
+- StaleSecretMounted
 - StatefulSetOrdinalStartupBlocked
 - WebhookFailureBlocksDeployment
 
