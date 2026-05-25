@@ -1,11 +1,25 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, TypedDict
 
 from kubectl_explain_failure.causality import CausalChain, Cause
 from kubectl_explain_failure.rules.base_rule import FailureRule
 from kubectl_explain_failure.timeline import Timeline, parse_time
+
+
+class ConfigMapRolloutCandidate(TypedDict):
+    configmap_name: str
+    config_time: datetime
+    update_source: str
+    surfaces: list[str]
+    controllers: list[dict[str, Any]]
+    checksum_present: bool
+    symptoms: list[dict[str, Any]]
+    pod_start: datetime
+    latest_container_start: datetime
+    owner_names: list[str]
+    span_seconds: float
 
 
 class ConfigMapRolloutDriftRule(FailureRule):
@@ -481,7 +495,7 @@ class ConfigMapRolloutDriftRule(FailureRule):
         pod: dict[str, Any],
         events: list[dict[str, Any]],
         context: dict[str, Any],
-    ) -> dict[str, Any] | None:
+    ) -> ConfigMapRolloutCandidate | None:
         timeline = context.get("timeline")
         if not isinstance(timeline, Timeline):
             return None
@@ -506,7 +520,7 @@ class ConfigMapRolloutDriftRule(FailureRule):
         owner_names = self._owner_names(pod, context)
         owner_names.update(controller["name"] for controller in controllers)
 
-        best: dict[str, Any] | None = None
+        best: ConfigMapRolloutCandidate | None = None
         for cm_name, surfaces in refs.items():
             restart_required_surfaces = self._restart_required_surfaces(surfaces)
             if not restart_required_surfaces:
@@ -560,7 +574,7 @@ class ConfigMapRolloutDriftRule(FailureRule):
                     or self._reason(event) in self.CONFIG_UPDATE_REASONS
                 )
 
-            candidate = {
+            candidate: ConfigMapRolloutCandidate = {
                 "configmap_name": cm_name,
                 "config_time": config_time,
                 "update_source": update_source,
