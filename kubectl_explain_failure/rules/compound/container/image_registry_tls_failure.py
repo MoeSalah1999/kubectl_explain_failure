@@ -25,7 +25,7 @@ class ImageRegistryTLSFailureRule(FailureRule):
     """
 
     name = "ImageRegistryTLSFailure"
-    category = "Container / Supply Chain"
+    category = "Compound"
     priority = 91
     deterministic = True
 

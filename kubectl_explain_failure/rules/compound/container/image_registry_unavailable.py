@@ -26,7 +26,7 @@ class ImageRegistryUnavailableRule(FailureRule):
     """
 
     name = "ImageRegistryUnavailable"
-    category = "Container / Supply Chain"
+    category = "Compound"
     priority = 84
     deterministic = True
 
