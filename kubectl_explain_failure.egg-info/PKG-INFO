@@ -482,6 +482,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - CrossZoneSchedulingConflict
 - PendingUnschedulable
 - PriorityPreemptionChain
+- RuntimeClassHandlerUnavailable
 - SchedulerPreemptionLoop
 - SchedulingFlapping
 - UnschedulableDueToPDB
