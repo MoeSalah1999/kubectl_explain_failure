@@ -377,6 +377,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - CrashLoopLivenessProbe
 - CrashLoopOOMKilled
 - DependencyStartupOrderingFailure
+- ImageRegistryUnavailable
 - ImagePullSecretMissingCompound
 - ImageTagMutableDrift
 - OOMKilledThenCrashLoop
