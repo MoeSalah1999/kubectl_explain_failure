@@ -445,6 +445,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
   - PVCBoundNodeDiskPressureMount
   - PVCBoundThenNodePressure
   - RuntimeRestartBreaksPod
+  - TopologyManagerAdmissionFailure
 
 ### Probes
 
