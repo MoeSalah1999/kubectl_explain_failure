@@ -366,8 +366,10 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ### Admission
 
+- EphemeralContainerDebugPolicyDenied
 - ExternalSecretsSyncFailure
 - ImageSignaturePolicyRejected
+- NamespaceTerminatingBlocksPod
 - PolicyEngineUnavailable
 - SBOMOrVulnerabilityPolicyRejected
 
