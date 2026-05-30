@@ -28,7 +28,7 @@ class TopologyManagerAdmissionFailureRule(FailureRule):
     """
 
     name = "TopologyManagerAdmissionFailure"
-    category = "Node / Scheduling"
+    category = "Compound"
     priority = 89
     deterministic = True
 
