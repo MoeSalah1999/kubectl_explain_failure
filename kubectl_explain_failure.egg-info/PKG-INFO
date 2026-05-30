@@ -457,6 +457,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
   - ConflictingNodeConditions
   - ContainerRuntimeUpgradeRegression
   - CrashLoopAfterNodeDrain
+  - DevicePluginUnavailable
   - KubeletRestartLoop
   - NodeDiskPressureThenEviction
   - NodeNetworkUnavailableCascade
