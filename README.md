@@ -407,6 +407,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - HPAConflictsWithManualScaling
 - HPAThrashing
 - HPAUnableToScale
+- LeaseObjectConflict
 - OwnerBlockedPod
 - StaleSecretMounted
 - StatefulSetOrdinalStartupBlocked
