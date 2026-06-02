@@ -188,14 +188,9 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 ### Admission
 
 - AdmissionWebhookDenied
-- AdmissionWebhookServiceUnavailable
-- AdmissionWebhookCABundleMismatch
-- AdmissionWebhookDNSFailure
-- EtcdObjectSizeLimitExceeded
 - ImagePolicyWebhookRejected
 - LimitRangeViolation
 - MutatingWebhookPatchConflict
-- MutatingWebhookTimeout
 - OPAConstraintViolation
 - PrivilegedNotAllowed
 - PSARestrictedViolation
@@ -205,6 +200,17 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ServiceAccountMissing
 - ServiceAccountRBAC
 - TokenProjectionFailure
+
+### API Machinery
+
+- AdmissionWebhookCABundleMismatch
+- AdmissionWebhookDNSFailure
+- AdmissionWebhookServiceUnavailable
+- APIServiceUnavailable
+- APIServerUnreachable
+- CRDConversionWebhookFailure
+- EtcdObjectSizeLimitExceeded
+- MutatingWebhookTimeout
 - ValidatingWebhookTimeout
 - WebhookCertificateExpired
 
@@ -241,10 +247,8 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ### Controllers
 
-- APIServerUnreachable
 - ControllerManagerLeaderElectionFailure
 - ControllerManagerUnavailable
-- CRDConversionWebhookFailure
 - DaemonSetNodeSelectorMismatch
 - DeploymentProgressDeadlineExceeded
 - DeploymentReplicaMismatch
@@ -369,9 +373,13 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - EphemeralContainerDebugPolicyDenied
 - ExternalSecretsSyncFailure
 - ImageSignaturePolicyRejected
+- SBOMOrVulnerabilityPolicyRejected
+
+### API Machinery
+
 - NamespaceTerminatingBlocksPod
 - PolicyEngineUnavailable
-- SBOMOrVulnerabilityPolicyRejected
+- WebhookFailureBlocksDeployment
 
 ### Container
 
@@ -400,7 +408,6 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - OwnerBlockedPod
 - StaleSecretMounted
 - StatefulSetOrdinalStartupBlocked
-- WebhookFailureBlocksDeployment
 
 ### Cluster Infrastructure
 
