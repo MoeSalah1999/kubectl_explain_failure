@@ -30,7 +30,7 @@ class APIServiceUnavailableRule(FailureRule):
     """
 
     name = "APIServiceUnavailable"
-    category = "API Machinery"
+    category = "APIMachinery"
     priority = 94
     deterministic = True
 
