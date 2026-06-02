@@ -209,6 +209,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - APIServiceUnavailable
 - APIServerUnreachable
 - CRDConversionWebhookFailure
+- CRDVersionRemovedOrUnserved
 - EtcdObjectSizeLimitExceeded
 - MutatingWebhookTimeout
 - ValidatingWebhookTimeout
