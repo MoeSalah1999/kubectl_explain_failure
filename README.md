@@ -378,6 +378,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 
 ### API Machinery
 
+- FinalizerBlocksReplacement
 - NamespaceTerminatingBlocksPod
 - PolicyEngineUnavailable
 - WebhookFailureBlocksDeployment
