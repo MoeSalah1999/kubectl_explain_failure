@@ -330,6 +330,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - PreemptionIneffectiveDueToAffinity
 - PreemptionIneffectiveDueToPDB
 - PreemptionIneffectiveDueToTopologySpread
+- PriorityClassNotFound
 - RegistryRateLimited
 - RuntimeClassNotFound
 - SchedulerExtenderFailure
