@@ -62,6 +62,8 @@ class FailedSchedulingRule(FailureRule):
             "nodeunder",
             "unschedulable",
             "runtimeclass",
+            "priorityclass",
+            "priority class",
             "overhead",
             "gpu",
             "nvidia.com/",
