@@ -323,9 +323,10 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - NodeSelectorMismatch
 - NodeUnschedulableCordoned
 - PodAntiAffinityDeadlock
-- PodOverheadExceededNodeCapacity
+- PodSchedulingGateBlocked
 - PodTopologySpreadLabelMismatch
 - PodTopologySpreadSkewTooHigh
+- PodOverheadExceededNodeCapacity
 - PreemptedByHigherPriority
 - PreemptionIneffectiveDueToAffinity
 - PreemptionIneffectiveDueToPDB
