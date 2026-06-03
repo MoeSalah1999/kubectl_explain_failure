@@ -111,6 +111,10 @@ class PendingUnschedulableRule(FailureRule):
             # PodSchedulingReadiness / scheduling gates
             "schedulinggated",
             "scheduling gate",
+            # Dynamic Resource Allocation
+            "resourceclaim",
+            "resource claim",
+            "resource.k8s.io",
         )
 
         for e in recent_failed_scheduling:
