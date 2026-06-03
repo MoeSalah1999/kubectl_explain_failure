@@ -43,6 +43,9 @@ class PendingUnschedulableRule(FailureRule):
         if get_pod_phase(pod) != "Pending":
             return False
 
+        if pod.get("spec", {}).get("schedulingGates"):
+            return False
+
         # Exclude DaemonSets (handled elsewhere)
         owners = pod.get("metadata", {}).get("ownerReferences", [])
         if any(o.get("kind") == "DaemonSet" for o in owners):
@@ -105,6 +108,9 @@ class PendingUnschedulableRule(FailureRule):
             "port is already allocated",
             "ports are already allocated",
             "port conflicts",
+            # PodSchedulingReadiness / scheduling gates
+            "schedulinggated",
+            "scheduling gate",
         )
 
         for e in recent_failed_scheduling:

@@ -64,6 +64,8 @@ class FailedSchedulingRule(FailureRule):
             "runtimeclass",
             "priorityclass",
             "priority class",
+            "schedulinggated",
+            "scheduling gate",
             "overhead",
             "gpu",
             "nvidia.com/",
