@@ -316,6 +316,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - DynamicResourceAllocationFailed
 - ExtendedResourceUnavailable
 - FailedScheduling
+- GPUDeviceAllocationFailed
 - HostPortAlreadyAllocated
 - HostPortConflict
 - InsufficientResources
