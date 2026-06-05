@@ -330,6 +330,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - PodSchedulingGateBlocked
 - PodTopologySpreadLabelMismatch
 - PodTopologySpreadSkewTooHigh
+- PodFitsOnlyTerminatingNodes
 - PodOverheadExceededNodeCapacity
 - PreemptedByHigherPriority
 - PreemptionIneffectiveDueToAffinity
