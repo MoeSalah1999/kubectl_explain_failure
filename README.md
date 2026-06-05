@@ -313,6 +313,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 ### Scheduling
 
 - AffinityUnsatisfiable
+- CapacityReservationMismatch
 - DynamicResourceAllocationFailed
 - ExtendedResourceUnavailable
 - FailedScheduling
