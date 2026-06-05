@@ -322,6 +322,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - InsufficientResources
 - NodeAffinityRequiredMismatch
 - NodeFragmentationPreventsPreemption
+- NodePoolLabelDrift
 - NodeSelectorMismatch
 - NodeUnschedulableCordoned
 - PodAntiAffinityDeadlock
