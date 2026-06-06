@@ -281,6 +281,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - DNSResolutionFailure
 - EndpointSliceMissing
 - IngressControllerUnavailable
+- KubeProxyUnavailable
 - LoadBalancerProvisioningFailed
 - NodeNetworkUnavailable
 - PodCIDRConflict
