@@ -329,7 +329,6 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - PodAntiAffinityDeadlock
 - PodSchedulingGateBlocked
 - PodTopologySpreadLabelMismatch
-- PodTopologySpreadSkewTooHigh
 - PodFitsOnlyTerminatingNodes
 - PodOverheadExceededNodeCapacity
 - PreemptedByHigherPriority
@@ -342,8 +341,10 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ResourceClassDriverUnavailable
 - RuntimeClassNotFound
 - SchedulerExtenderFailure
-- TopologySpreadUnsatisfiable
+- SchedulerProfileMissing
 - TopologyKeyMissing
+- TopologySpreadUnsatisfiable
+- TopologySpreadSkewTooHigh
 - UnschedulableTaint
 - VolumeNodeAffinityConflict
 

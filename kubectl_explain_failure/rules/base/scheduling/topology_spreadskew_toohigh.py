@@ -9,7 +9,7 @@ SKEW_REGEX = re.compile(r"skew.*?(\d+).*?maxskew.*?(\d+)", re.IGNORECASE)
 TOPOLOGY_KEY_REGEX = re.compile(r"topology.*?key.*?([a-zA-Z0-9\.\-\/]+)", re.IGNORECASE)
 
 
-class PodTopologySpreadSkewTooHighRule(FailureRule):
+class TopologySpreadSkewTooHighRule(FailureRule):
     """
     Detects scheduling failures where topology spread skew exceeds maxSkew.
 
@@ -32,7 +32,7 @@ class PodTopologySpreadSkewTooHighRule(FailureRule):
     - Deterministic when constraints are present
     """
 
-    name = "PodTopologySpreadSkewTooHigh"
+    name = "TopologySpreadSkewTooHigh"
     category = "Scheduling"
     priority = 20
     deterministic = True
