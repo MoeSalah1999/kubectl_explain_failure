@@ -282,6 +282,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - DNSResolutionFailure
 - EndpointSliceMissing
 - IngressControllerUnavailable
+- IPTablesRestoreFailure
 - KubeProxySyncFailure
 - KubeProxyUnavailable
 - LoadBalancerProvisioningFailed
