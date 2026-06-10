@@ -287,6 +287,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - KubeProxySyncFailure
 - KubeProxyUnavailable
 - LoadBalancerProvisioningFailed
+- MTUMismatch
 - NodeNetworkUnavailable
 - PodCIDRConflict
 - ServiceEndpointsEmpty
