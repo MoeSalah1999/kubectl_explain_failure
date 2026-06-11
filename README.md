@@ -281,6 +281,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - CoreDNSUnavailable
 - DNSResolutionFailure
 - EBPFDataplaneProgramFailure
+- EgressNATGatewayUnavailable
 - EndpointSliceMissing
 - IngressControllerUnavailable
 - IPTablesRestoreFailure
