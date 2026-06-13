@@ -302,6 +302,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - CoreDNSConfigError
 - CoreDNSUnavailable
 - DNSResolutionFailure
+- DualStackIPFamilyMismatch
 - EBPFDataplaneProgramFailure
 - EgressNATGatewayUnavailable
 - EndpointSliceMissing
