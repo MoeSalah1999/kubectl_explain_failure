@@ -283,6 +283,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - DualStackIPFamilyMismatch
 - EBPFDataplaneProgramFailure
 - EgressNATGatewayUnavailable
+- EndpointSliceTerminatingOnly
 - EndpointSliceMissing
 - ExternalNameDNSLoop
 - HeadlessServiceSRVRecordMismatch
