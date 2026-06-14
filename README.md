@@ -286,6 +286,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - EndpointSliceTerminatingOnly
 - EndpointSliceMissing
 - ExternalNameDNSLoop
+- GatewayClassUnavailable
 - HeadlessServiceSRVRecordMismatch
 - IngressBackendServiceInvalid
 - IngressClassMissing
