@@ -287,6 +287,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - EndpointSliceMissing
 - ExternalNameDNSLoop
 - HeadlessServiceSRVRecordMismatch
+- IngressClassMissing
 - IngressControllerUnavailable
 - IPTablesRestoreFailure
 - KubeProxySyncFailure
