@@ -415,19 +415,24 @@ class ServiceSessionAffinityBlackholeRule(FailureRule):
         chain = CausalChain(
             causes=[
                 Cause(
-                    code="SERVICE_CLIENTIP_AFFINITY",
-                    message="Service uses ClientIP session affinity",
+                    code="SERVICE_USES_CLIENTIP_AFFINITY",
+                    message="Service maintains per-client backend affinity",
                     role="runtime_context",
                 ),
                 Cause(
-                    code="AFFINITY_POINTS_TO_STALE_ENDPOINT",
-                    message="Existing affinity mapping points to an unhealthy or terminating backend",
+                    code="AFFINITY_TARGET_BECAME_UNHEALTHY",
+                    message="A backend endpoint previously selected by affinity became unhealthy or terminated",
                     role="infrastructure_root",
                     blocking=True,
                 ),
                 Cause(
-                    code="CLIENT_REQUESTS_BLACKHOLED",
-                    message="Requests continue reaching the stale endpoint until affinity expires",
+                    code="CLIENT_REMAINS_PINNED_TO_STALE_ENDPOINT",
+                    message="Existing affinity mapping continues directing traffic to the stale backend",
+                    role="propagation",
+                ),
+                Cause(
+                    code="PARTIAL_SERVICE_BLACKHOLE",
+                    message="Only clients pinned to the stale endpoint experience failures",
                     role="workload_symptom",
                 ),
             ]
