@@ -378,6 +378,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - CSINodeTopologyLabelsMissing
 - CSIPluginNotRegistered
 - CSIProvisioningFailed
+- CSIVolumeLimitExceeded
 - FailedMount
 - FilesystemResizePending
 - InvalidConfigMapKey
