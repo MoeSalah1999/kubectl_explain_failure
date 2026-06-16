@@ -375,6 +375,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ConfigMapNotFound
 - CSIControllerUnavailable
 - CSIDriverNotFound
+- CSINodeTopologyLabelsMissing
 - CSIPluginNotRegistered
 - CSIProvisioningFailed
 - FailedMount
