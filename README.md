@@ -289,6 +289,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - GatewayClassUnavailable
 - GatewayListenerNotProgrammed
 - HeadlessServiceSRVRecordMismatch
+- HTTPRouteNotAccepted
 - IngressBackendServiceInvalid
 - IngressClassMissing
 - IngressControllerUnavailable
