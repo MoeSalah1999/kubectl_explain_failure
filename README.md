@@ -391,6 +391,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ReadWriteOnceMultiNodeConflict
 - SecretKeyMissing
 - SecretNotFound
+- StorageBackendUnavailable
 - StorageClassProvisionerMissing
 - VolumeAttachFailed
 - VolumeAttachmentStuck
