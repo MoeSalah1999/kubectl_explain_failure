@@ -393,6 +393,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - SecretNotFound
 - StorageClassProvisionerMissing
 - VolumeAttachFailed
+- VolumeAttachmentStuck
 - VolumeDeviceConflict
 - VolumeExpansionFailed
 - VolumeMountPermissionDenied
