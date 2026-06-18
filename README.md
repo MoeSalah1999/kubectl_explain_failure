@@ -377,6 +377,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - CSIDriverNotFound
 - CSIExternalAttacherUnavailable
 - CSIExternalResizerUnavailable
+- CSIExternalSnapshotterUnavailable
 - CSINodeTopologyLabelsMissing
 - CSIPluginNotRegistered
 - CSIProvisioningFailed
