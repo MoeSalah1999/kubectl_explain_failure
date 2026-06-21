@@ -322,6 +322,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - NodeMemoryPressure
 - NodeNotReady
 - NodePIDPressure
+- SeccompProfileMissing
 
 ### Probes
 
