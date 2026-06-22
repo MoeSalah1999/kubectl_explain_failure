@@ -312,6 +312,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 ### Node
 
 - AppArmorProfileMissing
+- ContainerRuntimeImageGCFailure
 - ContainerRuntimeUnavailable
 - ContainerRuntimeVersionMismatch
 - EphemeralStorageExceeded
