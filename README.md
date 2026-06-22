@@ -317,6 +317,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ContainerRuntimeVersionMismatch
 - EphemeralStorageExceeded
 - Evicted
+- ImageFilesystemFull
 - KubeletCertificateExpired
 - KubeletNotResponding
 - NodeDiskPressure
