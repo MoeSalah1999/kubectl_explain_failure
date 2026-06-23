@@ -315,6 +315,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - ContainerRuntimeImageGCFailure
 - ContainerRuntimeUnavailable
 - ContainerRuntimeVersionMismatch
+- CPUCFSQuotaThrottlingProbeFailure
 - EphemeralStorageExceeded
 - Evicted
 - ImageFilesystemFull
