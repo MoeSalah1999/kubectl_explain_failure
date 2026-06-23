@@ -329,6 +329,7 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - NodePIDPressure
 - SELinuxDenied
 - SeccompProfileMissing
+- SystemOOMKillsPod
 
 ### Probes
 
