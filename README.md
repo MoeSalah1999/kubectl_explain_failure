@@ -323,8 +323,9 @@ This list mirrors the codebase taxonomy under `rules/base`, `rules/compound`,
 - KubeletNotResponding
 - KubeletPLEGUnhealthy
 - KubeletPodSyncFailure
-- NodeDiskPressure
 - NodeClockSkewDetected
+- NodeDiskPressure
+- NodeInodePressure
 - NodeMemoryPressure
 - NodeNotReady
 - NodePIDPressure
